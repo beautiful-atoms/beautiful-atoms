@@ -1,0 +1,175 @@
+HETATM    1  PA  ATP   802       5.562  20.965  11.527  1.00 11.56           P  
+HETATM    2  PB  ATP   802       3.828  23.334  11.082  1.00  8.29           P  
+HETATM    3  PG  ATP   802       0.942  23.641  11.956  1.00 23.47           P  
+HETATM    4  C5* ATP   802       4.892  19.279   9.602  1.00  9.40           C  
+HETATM    5  O5* ATP   802       5.945  19.986  10.293  1.00 11.00           O  
+HETATM    6  C4* ATP   802       5.249  17.800   9.447  1.00 11.76           C  
+HETATM    7  O4* ATP   802       6.419  17.604   8.615  1.00  9.86           O  
+HETATM    8  C3* ATP   802       5.505  17.072  10.772  1.00 10.89           C  
+HETATM    9  O3* ATP   802       5.039  15.707  10.788  1.00 11.09           O  
+HETATM   10  C2* ATP   802       7.022  17.119  10.877  1.00 11.15           C  
+HETATM   11  O2* ATP   802       7.520  16.069  11.726  1.00 11.27           O  
+HETATM   12  C1* ATP   802       7.440  16.999   9.417  1.00 10.57           C  
+HETATM   13  N1  ATP   802      12.416  16.845   8.061  1.00  9.13           N  
+HETATM   14  O1A ATP   802       6.859  21.523  12.024  1.00 11.30           O1-
+HETATM   15  O1B ATP   802       4.221  23.589  12.489  1.00  7.33           O1-
+HETATM   16  O1G ATP   802       0.128  22.494  12.468  1.00 19.64           O  
+HETATM   17  C2  ATP   802      11.528  15.839   8.106  1.00  9.63           C  
+HETATM   18  O2A ATP   802       4.642  20.301  12.470  1.00 10.53           O  
+HETATM   19  O2B ATP   802       4.030  24.384  10.053  1.00  8.31           O  
+HETATM   20  O2G ATP   802       0.294  24.710  11.096  1.00 20.82           O1-
+HETATM   21  N3  ATP   802      10.268  16.049   8.468  1.00  9.90           N  
+HETATM   22  O3A ATP   802       4.750  22.102  10.688  1.00  9.56           O  
+HETATM   23  O3B ATP   802       2.266  22.960  11.124  1.00 13.27           O  
+HETATM   24  O3G ATP   802       1.474  24.522  13.215  1.00 16.19           O  
+HETATM   25  C4  ATP   802       9.871  17.284   8.794  1.00  9.17           C  
+HETATM   26  C5  ATP   802      10.762  18.341   8.753  1.00  9.02           C  
+HETATM   27  C6  ATP   802      12.074  18.102   8.373  1.00  7.61           C  
+HETATM   28  N6  ATP   802      12.978  19.070   8.320  1.00  6.14           N  
+HETATM   29  N7  ATP   802      10.089  19.427   9.115  1.00 10.29           N  
+HETATM   30  C8  ATP   802       8.832  19.082   9.389  1.00  9.82           C  
+HETATM   31  N9  ATP   802       8.695  17.771   9.196  1.00 11.16           N  
+HETATM   32  H01 ATP   802       8.045  19.761   9.717  1.00  9.82           H  
+HETATM   33  H02 ATP   802       4.751  19.720   8.615  1.00  9.40           H  
+HETATM   34  H03 ATP   802       4.362  17.373   8.979  1.00 11.76           H  
+HETATM   35  H04 ATP   802       4.970  17.537  11.600  1.00 10.89           H  
+HETATM   36  H05 ATP   802       4.937  15.414  11.696  1.00 11.09           H  
+HETATM   37  H06 ATP   802       7.425  18.017  11.345  1.00 11.15           H  
+HETATM   38  H07 ATP   802       7.710  15.291  11.196  1.00 11.27           H  
+HETATM   39  H08 ATP   802       7.589  15.950   9.160  1.00 10.57           H  
+HETATM   40  H09 ATP   802      -0.014  22.598  13.412  1.00 19.64           H  
+HETATM   41  H10 ATP   802      11.847  14.831   7.840  1.00  9.63           H  
+HETATM   42  H11 ATP   802      12.719  20.017   8.558  1.00  6.14           H  
+HETATM   43  H12 ATP   802      13.926  18.861   8.042  1.00  6.14           H  
+HETATM   44  H13 ATP   802       3.974  19.360  10.184  1.00  9.40           H  
+CONECT    1    5   14
+CONECT    1   18
+CONECT    1   18
+CONECT    1   22
+CONECT    2   15
+CONECT    2   19
+CONECT    2   19
+CONECT    2   22   23
+CONECT    3   16   20   23
+CONECT    3   24
+CONECT    3   24
+CONECT    4    5    6   33   44
+CONECT    5    1    4
+CONECT    6    4    7    8   34
+CONECT    7    6   12
+CONECT    8    6    9   10   35
+CONECT    9    8   36
+CONECT   10    8   11   12   37
+CONECT   11   10   38
+CONECT   12    7   10   31   39
+CONECT   13   17
+CONECT   13   17
+CONECT   13   17
+CONECT   13   17
+CONECT   13   27
+CONECT   13   27
+CONECT   13   27
+CONECT   13   27
+CONECT   14    1
+CONECT   15    2
+CONECT   16    3   40
+CONECT   17   13
+CONECT   17   13
+CONECT   17   13
+CONECT   17   13
+CONECT   17   21
+CONECT   17   21
+CONECT   17   21
+CONECT   17   21
+CONECT   17   41
+CONECT   18    1
+CONECT   18    1
+CONECT   19    2
+CONECT   19    2
+CONECT   20    3
+CONECT   21   17
+CONECT   21   17
+CONECT   21   17
+CONECT   21   17
+CONECT   21   25
+CONECT   21   25
+CONECT   21   25
+CONECT   21   25
+CONECT   22    1    2
+CONECT   23    2    3
+CONECT   24    3
+CONECT   24    3
+CONECT   25   21
+CONECT   25   21
+CONECT   25   21
+CONECT   25   21
+CONECT   25   26
+CONECT   25   26
+CONECT   25   26
+CONECT   25   26
+CONECT   25   31
+CONECT   25   31
+CONECT   25   31
+CONECT   25   31
+CONECT   26   25
+CONECT   26   25
+CONECT   26   25
+CONECT   26   25
+CONECT   26   27
+CONECT   26   27
+CONECT   26   27
+CONECT   26   27
+CONECT   26   29
+CONECT   26   29
+CONECT   26   29
+CONECT   26   29
+CONECT   27   13
+CONECT   27   13
+CONECT   27   13
+CONECT   27   13
+CONECT   27   26
+CONECT   27   26
+CONECT   27   26
+CONECT   27   26
+CONECT   27   28
+CONECT   28   27   42   43
+CONECT   29   26
+CONECT   29   26
+CONECT   29   26
+CONECT   29   26
+CONECT   29   30
+CONECT   29   30
+CONECT   29   30
+CONECT   29   30
+CONECT   30   29
+CONECT   30   29
+CONECT   30   29
+CONECT   30   29
+CONECT   30   31
+CONECT   30   31
+CONECT   30   31
+CONECT   30   31
+CONECT   30   32
+CONECT   31   12
+CONECT   31   25
+CONECT   31   25
+CONECT   31   25
+CONECT   31   25
+CONECT   31   30
+CONECT   31   30
+CONECT   31   30
+CONECT   31   30
+CONECT   32   30
+CONECT   33    4
+CONECT   34    6
+CONECT   35    8
+CONECT   36    9
+CONECT   37   10
+CONECT   38   11
+CONECT   39   12
+CONECT   40   16
+CONECT   41   17
+CONECT   42   28
+CONECT   43   28
+CONECT   44    4
+END

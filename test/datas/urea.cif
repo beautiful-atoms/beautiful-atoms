@@ -1,0 +1,61 @@
+data_global
+_chemical_name_mineral 'Urea'
+loop_
+_publ_author_name
+'Worsham J'
+'Levy H'
+'Peterson S'
+_journal_name_full 'Acta Crystallographica'
+_journal_volume 10 
+_journal_year 1957
+_journal_page_first 319
+_journal_page_last 323
+_publ_section_title
+;
+ The positions of hydrogen atoms in urea by neutron diffraction
+ _cod_database_code 1008776
+;
+_database_code_amcsd 0016652
+_chemical_formula_sum 'C O N2 H4'
+_cell_length_a 5.661
+_cell_length_b 5.661
+_cell_length_c 4.712
+_cell_angle_alpha 90
+_cell_angle_beta 90
+_cell_angle_gamma 90
+_cell_volume 151.005
+_exptl_crystal_density_diffrn      1.321
+_symmetry_space_group_name_H-M 'P -4 21 m'
+loop_
+_space_group_symop_operation_xyz
+  'x,y,z'
+  '1/2-y,1/2-x,z'
+  'y,-x,-z'
+  '1/2-x,1/2+y,-z'
+  '-x,-y,z'
+  '1/2+y,1/2+x,z'
+  '-y,x,-z'
+  '1/2+x,1/2-y,-z'
+loop_
+_atom_site_label
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+C1   0.00000   0.50000   0.33300
+O1   0.00000   0.50000   0.59680
+N1   0.14390   0.64390   0.18320
+H1   0.25220   0.75220   0.28390
+H2   0.13650   0.63650   0.97240
+loop_
+_atom_site_aniso_label
+_atom_site_aniso_U_11
+_atom_site_aniso_U_22
+_atom_site_aniso_U_33
+_atom_site_aniso_U_12
+_atom_site_aniso_U_13
+_atom_site_aniso_U_23
+C1 3.81526 3.81526 0.95609 0.00000 0.00000 0.00000
+O1 6.07195 6.07195 0.89985 0.00000 0.00000 0.00000
+N1 7.89029 7.89029 1.56349 0.00000 -0.09459 -0.09459
+H1 10.27685 10.27685 3.98184 0.00000 -0.45946 -0.45946
+H2 10.91002 10.91002 2.04716 0.00000 -0.31081 -0.31081
