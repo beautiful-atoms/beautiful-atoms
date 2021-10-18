@@ -16,7 +16,7 @@ from bpy.props import (StringProperty,
                        PointerProperty,
                        )
 from batoms.gui_io import import_batoms
-from batoms.butils import read_batoms_collection_list
+from batoms.butils import read_batoms_select
 from batoms.batoms import Batoms
 
 # The panel.
@@ -28,17 +28,10 @@ class Batoms_PT_prepare(Panel):
     bl_category = "Batoms"
     bl_idname = "BATOMS_PT_Tools"
 
-    filename: StringProperty(
-        name = "Filename", default='batoms-output.xyz',
-        description = "Export atoms to file.")
-
     def draw(self, context):
         layout = self.layout
         blpanel = context.scene.blpanel
 
-        box = layout.box()
-        col = box.row()
-        col.prop(blpanel, "collection_list")
         box = layout.box()
         col = box.column()
         col.label(text="Model")
@@ -59,37 +52,32 @@ class Batoms_PT_prepare(Panel):
 
         box = layout.box()
         col = box.column(align=True)
-        col.label(text="Render atoms")
-        col.prop(blpanel, "output_image")
+        col.label(text="Export atoms")
+        col.prop(blpanel, "filetype")
 
 
 
 class BatomsProperties(bpy.types.PropertyGroup):
+    @property
+    def batoms_list(self):
+        return self.get_batoms_list()
+    def get_batoms_list(self):
+        batoms_list = read_batoms_select()
+        return batoms_list
     def Callback_model_type(self, context):
         blpanel = bpy.context.scene.blpanel
         print('Callback_model_type')
         model_type = list(blpanel.model_type)[0]
-        modify_model_type(blpanel.collection_list, model_type)
-    
-    def Callback_collection_list(self, context):
-        print('Callback_collection_list')
-        items = read_batoms_collection_list()
-        items = [(item, item, "") for item in items]
-        items = tuple(items)
-        return items
+        modify_model_type(self.batoms_list, model_type)
     def Callback_modify_scale(self, context):
         blpanel = bpy.context.scene.blpanel
         print('Callback_modify_scale')
-        modify_scale(blpanel.collection_list, blpanel.scale)
-    def Callback_render_atoms(self, context):
+        modify_scale(self.batoms_list, blpanel.scale)
+    def Callback_export_atoms(self, context):
         blpanel = bpy.context.scene.blpanel
-        print('Callback_render_atoms')
-        render_atoms(blpanel.collection_list, blpanel.output_image)
+        print('Callback_export_atoms')
+        export_atoms(self.batoms_list, blpanel.filetype)
     
-    collection_list: EnumProperty(
-        name="Collection",
-        description="Collection",
-        items=Callback_collection_list)
     model_type: EnumProperty(
         name="Model",
         description="Structural models",
@@ -104,18 +92,15 @@ class BatomsProperties(bpy.types.PropertyGroup):
     scale: FloatProperty(
         name="scale", default=1.0,
         description = "scale", update = Callback_modify_scale)
-    output: StringProperty(
-        name = "Output", default='batoms-output.xyz',
-        description = "Output file")
     atoms_str: StringProperty(
         name = "Formula", default='H2O',
         description = "atoms_str")
     atoms_name: StringProperty(
         name = "Name", default='h2o',
         description = "name")
-    output_image: StringProperty(
-        name = "Output image", default='batoms.png',
-        description = "output render image", update = Callback_render_atoms)
+    filetype: StringProperty(
+        name = "File type", default='xyz',
+        description = "save batoms to file", update = Callback_export_atoms)
     
 
 class AddMolecule(Operator):
@@ -147,13 +132,16 @@ class AddAtoms(Operator):
         import_batoms(atoms, name = blpanel.atoms_name)
         return {'FINISHED'}     
 
-def modify_model_type(collection_name, model_type):
-    batoms = Batoms(label = collection_name)
-    batoms.model_type = model_type
-def modify_scale(collection_name, scale):
-    batoms = Batoms(label = collection_name)
-    for species, ba in batoms.batoms.items():
-        ba.scale = scale
-def render_atoms(collection_name, output_image = 'bout.png'):
-    batoms = Batoms(label = collection_name)
-    batoms.render.run(output = output_image)
+def modify_model_type(batoms_name_list, model_type):
+    for name in batoms_name_list:
+        batoms = Batoms(label = name)
+        batoms.model_type = model_type
+def modify_scale(batoms_name_list, scale):
+    for name in batoms_name_list:
+        batoms = Batoms(label = name)
+        for species, ba in batoms.batoms.items():
+            ba.scale = scale
+def export_atoms(batoms_name_list, filetype = 'xyz'):
+    for name in batoms_name_list:
+        batoms = Batoms(label = name)
+        batoms.write('%s.%s'%(batoms.label, filetype))

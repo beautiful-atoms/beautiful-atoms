@@ -8,62 +8,21 @@ def object_mode():
             if object.mode == 'EDIT':
                 bpy.ops.object.mode_set(mode = 'OBJECT')
 
-def read_batoms_collection_list():
+def read_batoms_list():
     """
     Read all batoms collection 
     """
     items = [col.name for col in bpy.data.collections if col.batoms.is_batoms]
     return items
-def read_atoms_list(coll):
-    '''   
-    '''
-    coll_atom_kinds = [coll for coll in coll.children if 'atoms' in coll.name][0]
-    elements = []
-    for obj in coll_atom_kinds.all_objects:
-        ele = obj.name.split('_')[2]
-        elements.append(ele)
-    return elements
 
-def read_atoms_select():
+def read_batoms_select():
     '''   
     '''
-    from ase import Atoms, Atom
-    atoms = Atoms()
-    cell_vertexs = []
+    batoms_list = []
     for obj in bpy.context.selected_objects:
-        if "BOND" in obj.name.upper():
-            continue
-        if obj.type not in {'MESH', 'SURFACE', 'META'}:
-            continue
-        name = ""
-        if 'atom_kind_' == obj.name[0:10]:
-            print(obj.name)
-            ind = obj.name.index('atom_kind_')
-            ele = obj.name[ind + 10:].split('_')[0]
-            if len(obj.children) != 0:
-                for vertex in obj.data.vertices:
-                    location = obj.matrix_world @ vertex.co
-                    atoms.append(Atom(ele, location))
-            else:
-                if not obj.parent:
-                    location = obj.location
-                    atoms.append(Atom(ele, location))
-        # cell
-        if 'point_cell' == obj.name[0:10]:
-            print(obj.name)
-            if len(obj.children) != 0:
-                for vertex in obj.data.vertices:
-                    location = obj.matrix_world @ vertex.co
-                    # print(location)
-                    cell_vertexs.append(location)
-    # print(atoms)
-    # print(cell_vertexs)
-    if cell_vertexs:
-        cell = [cell_vertexs[4], cell_vertexs[2], cell_vertexs[1]]
-        atoms.cell = cell
-        atoms.pbc = [True, True, True]
-    # self.atoms = atoms
-    return atoms
+        if obj.batom.is_batom:
+            batoms_list.append(obj.batom.label)
+    return batoms_list
 
 def remove_collection(name):
     """

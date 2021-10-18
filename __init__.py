@@ -27,7 +27,8 @@ from bpy.types import (Panel,
 from . import (
         custom_property,
         gui_io,
-        gui_batoms
+        gui_batoms,
+        # gui_volume,
         )
 
 # Register
@@ -51,6 +52,8 @@ classes = [
         gui_batoms.AddMolecule,
         gui_batoms.AddBulk,
         gui_batoms.AddAtoms,
+        # gui_volume.Volume_PT_prepare,
+        # gui_volume.VolumeProperties,
     ]
 #
 def register():
