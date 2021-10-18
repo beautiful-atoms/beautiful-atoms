@@ -126,7 +126,7 @@ class AddMolecule(Operator):
         #print(molecule_str)
         blpanel = context.scene.blpanel
         atoms = molecule(blpanel.atoms_str)
-        Batoms(label = blpanel.atoms_name, atoms = atoms, model_type = blpanel.model_type_add)
+        Batoms(label = blpanel.atoms_name, atoms = atoms)
         return {'FINISHED'}
 class AddBulk(Operator):
     bl_idname = "batoms.add_bulk"
@@ -135,7 +135,7 @@ class AddBulk(Operator):
     def execute(self, context):
         blpanel = context.scene.blpanel
         atoms = bulk(blpanel.atoms_str)
-        import_batoms(atoms, name = blpanel.atoms_name, model_type = blpanel.model_type_add, search_pbc_atoms={}, show_unit_cell=True)
+        import_batoms(atoms, name = blpanel.atoms_name)
         return {'FINISHED'}     
 class AddAtoms(Operator):
     bl_idname = "batoms.add_atoms"
@@ -144,7 +144,7 @@ class AddAtoms(Operator):
     def execute(self, context):
         blpanel = context.scene.blpanel
         atoms = Atoms(blpanel.atoms_str)
-        import_batoms(atoms, name = blpanel.atoms_name, model_type = blpanel.model_type_add)
+        import_batoms(atoms, name = blpanel.atoms_name)
         return {'FINISHED'}     
 
 def modify_model_type(collection_name, model_type):

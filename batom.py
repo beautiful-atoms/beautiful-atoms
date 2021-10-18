@@ -4,8 +4,6 @@ This module defines the Batom object in the batoms package.
 
 """
 
-from operator import pos
-from os import name
 from time import time
 import bpy
 import bmesh
@@ -13,44 +11,6 @@ from batoms.butils import object_mode
 from batoms.data import material_styles_dict
 from batoms.tools import get_atom_kind
 import numpy as np
-
-subcollections = ['atom', 'bond', 'instancer', 'instancer_atom', 'polyhedra', 'isosurface', 'text']
-
-class Vertice():
-    """Vertice Class
-    
-    Parameters:
-
-    species: list of str
-        The atomic structure built using ASE
-
-    positions: array
-
-    Examples:
-
-    >>> from batoms.batom import Batom
-    >>> c = Batom('C', [[0, 0, 0], [1.2, 0, 0]])
-    >>> c.draw_atom()
-
-    """
-    
-
-    def __init__(self, 
-                species = None,
-                position = None,
-                element = None,
-                x = None,
-                y = None,
-                z = None,
-                ):
-        #
-        self.species = species
-        self.position = position
-        self.element = element
-        self.x = x
-        self.y = y
-        self.z = z
-
 
 class Batom():
     """Batom Class
@@ -93,14 +53,13 @@ class Batom():
                 subdivisions = 2,
                 props = {},
                 color = None,
-                transmit = None,
+                radii_style = 'covalent',
                 color_style = 'JMOL',
                 material_style = 'default',
                 material = None,
                 bsdf_inputs = None,
                  ):
         #
-        self.scene = bpy.context.scene
         if species:
             self.label = label
             self.species = species
@@ -110,16 +69,16 @@ class Batom():
                 self.element = element
             self.name = 'atom_%s_%s'%(self.label, self.species)
             self.props = props
-            self.color_style = color_style
             self.material_style = material_style
             self.bsdf_inputs = bsdf_inputs
-            self.species_data = get_atom_kind(self.element, scale = scale, props = self.props, color_style = self.color_style)
+            self.species_data = get_atom_kind(self.element, scale = scale, 
+                                props = self.props, radii_style = radii_style, 
+                                color_style = color_style)
             if color:
                 self.species_data['color'] = color
-            if transmit:
-                self.species_data['color'] = transmit
             self.set_material(material)
-            self.set_instancer(segments = segments, subdivisions = subdivisions, shape = shape)
+            self.set_instancer(segments = segments, 
+                            subdivisions = subdivisions, shape = shape)
             self.set_object(positions, location)
             self.batom.batom.radius = self.species_data['radius']
         else:
@@ -133,32 +92,36 @@ class Batom():
             if not self.bsdf_inputs:
                 bsdf_inputs = material_styles_dict[self.material_style]
             material = bpy.data.materials.new(name)
-            material.diffuse_color = np.append(self.species_data['color'], self.species_data['transmit'])
+            material.diffuse_color = self.species_data['color']
             material.metallic = bsdf_inputs['Metallic']
             material.roughness = bsdf_inputs['Roughness']
             material.blend_method = 'BLEND'
             material.show_transparent_back = False
             material.use_nodes = True
             principled_node = material.node_tree.nodes['Principled BSDF']
-            principled_node.inputs['Base Color'].default_value = np.append(self.species_data['color'], self.species_data['transmit'])
-            principled_node.inputs['Alpha'].default_value = self.species_data['transmit']
+            principled_node.inputs['Base Color'].default_value = self.species_data['color']
+            principled_node.inputs['Alpha'].default_value = self.species_data['color'][3]
             for key, value in bsdf_inputs.items():
                 principled_node.inputs[key].default_value = value
     def object_mode(self):
         for object in bpy.data.objects:
             if object.mode == 'EDIT':
                 bpy.ops.object.mode_set(mode = 'OBJECT')
-    def set_instancer(self, segments = [32, 16], subdivisions = 2, shape = 'UV_SPHERE', shade_smooth = True):
+    def set_instancer(self, segments = [32, 16], subdivisions = 2, 
+                        shape = 'UV_SPHERE', shade_smooth = True):
         object_mode()
         name = 'instancer_atom_{0}_{1}'.format(self.label, self.species)
         if name not in bpy.data.objects:
             if shape.upper() == 'UV_SPHERE':
-                bpy.ops.mesh.primitive_uv_sphere_add(segments = segments[0], ring_count = segments[1], radius = self.species_data['radius']) #, segments=32, ring_count=16)
+                bpy.ops.mesh.primitive_uv_sphere_add(segments = segments[0], 
+                                    ring_count = segments[1], 
+                                    radius = self.species_data['radius'])
             if shape.upper() == 'ICO_SPHERE':
                 shade_smooth = False
-                bpy.ops.mesh.primitive_ico_sphere_add(subdivisions = subdivisions, radius = self.species_data['radius']) #, segments=32, ring_count=16)
+                bpy.ops.mesh.primitive_ico_sphere_add(subdivisions = subdivisions, 
+                            radius = self.species_data['radius'])
             if shape.upper() == 'CUBE':
-                bpy.ops.mesh.primitive_cube_add(size = self.species_data['radius']) #, segments=32, ring_count=16)
+                bpy.ops.mesh.primitive_cube_add(size = self.species_data['radius'])
                 shade_smooth = False
             obj = bpy.context.view_layer.objects.active
             if isinstance(self.species_data['scale'], float):
@@ -200,6 +163,11 @@ class Batom():
         self.species = ba.batom.species
         self.label = ba.batom.label
         self.element = ba.batom.element
+    @property
+    def scene(self):
+        return self.get_scene()
+    def get_scene(self):
+        return bpy.data.scenes['Scene']
     @property
     def batom(self):
         return self.get_batom()
@@ -296,7 +264,18 @@ class Batom():
         cell = Cell.new(cell)
         scaled_positions = cell.scaled_positions(self.local_positions)
         return scaled_positions
-        
+    @property
+    def frames(self):
+        return self.get_frames()
+    @frames.setter
+    def frames(self, frames):
+        self.set_frames(frames)
+    def get_frames(self):
+        frames = []
+        for f in range(bpy.context.scene.frame_start, bpy.context.scene.frame_end):
+            bpy.context.scene.frame_set(f)
+            frames.append(self.positions)
+        return frames
     @property
     def color(self):
         return self.get_color()
@@ -427,33 +406,34 @@ class Batom():
                 for n, i in enumerate(c.index):
                     self.constrainatom += [i]
     
-    def load_frames(self, images = []):
+    def set_frames(self, frames = []):
         """
 
-        images: list
+        frames: list
             list of positions
         
         >>> from batoms import Batom
         >>> import numpy as np
         >>> positions = np.array([[0, 0 ,0], [1.52, 0, 0]])
         >>> h = Batom('h2o', 'H', positions)
-        >>> images = []
+        >>> frames = []
         >>> for i in range(10):
-                images.append(positions + [0, 0, i])
-        >>> h.load_frames(images)
+                frames.append(positions + [0, 0, i])
+        >>> h.load_frames(frames)
         
         """
         # render settings
-        nimage = len(images)
+        nframe = len(frames)
+        if nframe == 0: return
         batom = self.batom
         nverts = len(batom.data.vertices)
-        for i in range(0, nimage):
-            positions = images[i]
+        for i in range(0, nframe):
+            positions = frames[i]
             for j in range(nverts):
                 batom.data.vertices[j].co = np.array(positions[j]) - np.array(batom.location)
                 batom.data.vertices[j].keyframe_insert('co', frame=i + 1)
         self.scene.frame_start = 1
-        self.scene.frame_end = nimage
+        self.scene.frame_end = nframe
     
     def __len__(self):
         return len(self.batom.data.vertices)
@@ -548,7 +528,9 @@ class Batom():
 
         """
         object_mode()
-        batom = Batom(label, species, self.local_positions, location = self.batom.location, scale = self.scale, material=self.material)
+        batom = Batom(label, species, self.local_positions, 
+                    location = self.batom.location, 
+                    scale = self.scale, material=self.material)
         return batom
     def extend(self, other):
         """
@@ -627,7 +609,8 @@ class Batom():
         object_mode()
         bpy.ops.object.select_all(action='DESELECT')
         self.batom.select_set(True)
-        bpy.ops.transform.rotate(value=angle, orient_axis=axis.upper(), orient_type = orient_type)
+        bpy.ops.transform.rotate(value=angle, orient_axis=axis.upper(), 
+                        orient_type = orient_type)
     def get_cell(self):
         if not self.label in bpy.data.collections:
             return None

@@ -251,54 +251,7 @@ class Boundary:
         a, b, c = normal
         # d = np.dot(normal, points[2])
         return normal    
-def build_bondlists(atoms, cutoff):
-    """
-    The default bonds are stored in 'default_bonds'
-    Get all pairs of bonding atoms
-    remove_bonds
-    """
-    from neighborlist import neighbor_list
-    if len(cutoff) == 0: return {}
-    #
-    tstart = time()
-    nli, nlj, nlS = neighbor_list('ijS', atoms, cutoff, self_interaction=False)
-    bondlists = np.append(np.array([nli, nlj], dtype=int).T, np.array(nlS, dtype=int), axis = 1)
-    # print('build_bondlists: {0:10.2f} s'.format(time() - tstart))
-    return bondlists
 
 
 if __name__ == "__main__":
-    from ase.io import read, write
-    from ase.build import molecule, bulk
-    from ase.visualize import view
-    from ase import Atom, Atoms
-    # atoms = bulk('Pt', cubic = True)
-    # atoms = atoms*[6, 6, 6]
-    # cl = Boundary(atoms, boundary_list = [{'d': 10.0, 'index': [2, 2, 1]}])
-    # atoms = cl.build()
-    # view(atoms)
-    # atoms = bulk('Pt', cubic = True)
-    # atoms.write('pt.in')
-    # view(atoms)
-    # atoms = atoms*[3, 3, 3]
-    atoms = read('docs/source/_static/datas/tio2.cif')
-    atoms.info['species'] = atoms.get_chemical_symbols()
-    # atoms = read('docs/source/_static/datas/mof-5.cif')
-    # atoms.positions -= atoms.get_center_of_mass()
-    # positions1, positions2, offset2 = search_boundary(atoms.positions, atoms.cell, boundary=[[0., 1.], [0., 1.], [0., 1.]])
-    #positions1, positions2, offset2 = search_boundary(atoms.positions, atoms.cell, boundary=[[-2.6, 1.6], [-2.6, 1.6], [-2.6, 1.6]])
-    cutoff = {('Ti', 'O'): [0, 3.0]}
-    bondlists = build_bondlists(atoms, cutoff)
-    print(bondlists)
-    skins = np.array([[1, 4, 1, 1]])
-    bondsetting = [('Ti', 'O')]
-    boundary = np.array([[-0.6, 1.6], [-0.6, 1.6], [-0.6, 1.6]])
-    # bondlists, only search bond
-    # skins, only search atoms
-    skins = search_bond(atoms.positions, skins, bondlists, boundary)
-    print(skins)
-    # skin = Atoms('Au'*len(positions2), positions = positions2)
-    # view(atoms + skin)
-    # bondsetting = {('Ti', 'O'): [0, 2.5, False, False], ('O', 'O'): [0, 1.5, False, False]}
-    # bondpairs_boundary = search_skin(atoms, bondsetting, boundary=[[-0.6, 1.6], [-0.6, 1.6], [-0.6, 1.6]])
-    # print(bondpairs_boundary)
+    pass

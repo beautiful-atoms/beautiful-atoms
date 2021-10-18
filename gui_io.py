@@ -9,7 +9,6 @@ from bpy.props import (
         IntProperty,
         FloatProperty,
         )
-from ase.io.cube import read_cube_data
 from batoms.batoms import Batoms
 
 class IMPORT_OT_batoms(Operator, ImportHelper):
@@ -36,9 +35,6 @@ class IMPORT_OT_batoms(Operator, ImportHelper):
                ('2',"Polyhedral","Use polyhedral"),
                ('3',"Stick", "Use stick")),
                default='0',)
-    label: StringProperty(
-        name = "label", 
-        description = "Label")
     show_unit_cell: BoolProperty(
         name = "Show_unit_cell", default=False,
         description = "Show unit cell")
@@ -51,7 +47,6 @@ class IMPORT_OT_batoms(Operator, ImportHelper):
         row.label(text="Adding Structure")
         box = layout.box()
         row = box.row()
-        row.prop(self, "label")
         #
         row = layout.row()
         row.prop(self, "camera")
@@ -86,7 +81,6 @@ class IMPORT_OT_batoms(Operator, ImportHelper):
                self.light,
                self.world,
                self.show_unit_cell,
-               self.label,
                )
 
         return {'FINISHED'}
@@ -98,16 +92,9 @@ def import_batoms(inputfile,
                light = 'True',
                world = 'False',
                show_unit_cell = False,
-               label = None,
                ):
     #
-    from ase.io import read
-    if not label:
-        label = inputfile
-    if inputfile.split('.')[-1] == 'cube':
-        images, volume = read_cube_data(inputfile)
-        batoms = Batoms(label = label, atoms = images, model_type=model_type, volume=volume)
-    else:
-        images = read(inputfile)
-        batoms = Batoms(label = label, atoms = images, model_type=model_type)
+    from batoms.bio import read
+    read(inputfile)
+    
     

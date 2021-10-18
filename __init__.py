@@ -6,8 +6,8 @@
 bl_info = {
     "name": "Batoms toolbar",
     "author": "Xing Wang",
-    "version": (0, 5),
-    "blender": (2, 93, 0),
+    "version": (0, 1, 0),
+    "blender": (2, 80, 0),
     "location": "File -> Import -> Batoms (xyz, cif, pdb, ...)",
     "description": "Python module for drawing and rendering ASE (Atomic Simulation Environment) atoms and molecules objects using blender.",
     "warning": "",

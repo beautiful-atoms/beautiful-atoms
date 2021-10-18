@@ -4,6 +4,8 @@ import bpy
 import numpy as np
 from time import time
 
+default_colors = [(1, 1, 0, 0.8), (0.0, 0.0, 1.0, 0.8)]
+
 class Isosurfacesetting():
     """
     Isosurfacesetting object
@@ -16,20 +18,26 @@ class Isosurfacesetting():
         The label define the batoms object that a Setting belong to.
 
     """
-    def __init__(self, label, volume) -> None:
+    def __init__(self, label, volume = None, isosurfacesetting = None) -> None:
         self.label = label
         self.name = 'bisosurface'
-        self.volume = volume
-        self[1] = [0.002, [1, 1, 0, 0.5]]
+        self._volume = None
+        self[1] = [0.002, [1, 1, 0, 0.8]]
+        if isosurfacesetting is not None:
+            for key, data in isosurfacesetting.items():
+                self[key] = data
+        if volume is not None:
+            self.volume = volume
     def draw_volume(self, volume):
         """
         Draw unit cell by edge, however, can not be rendered.
         """
         # remove old volume point
+        tstart = time()
         if volume is None: return
         name = "volume_%s"%self.label
         if name in bpy.data.objects:
-            bpy.data.objects.remove(bpy.data.objects[name], du_unlink = True)
+            bpy.data.objects.remove(bpy.data.objects[name], do_unlink = True)
         shape = volume.shape
         volume = volume.reshape(-1, 1)
         npoint = len(volume)
@@ -46,6 +54,8 @@ class Isosurfacesetting():
         obj.bvolume.npoint = npoint
         bpy.data.collections[self.label].children['%s_volume'%self.label].objects.link(obj)
         obj.hide_set(True)
+        obj.hide_render = True
+        print('Draw volume: {0:1.2f}'.format(time() - tstart))
     @property
     def collection(self):
         return self.get_collection()
@@ -80,16 +90,26 @@ class Isosurfacesetting():
     def volume(self):
         return self.get_volume()
     def get_volume(self):
+        if self._volume is not None:
+            return self._volume
+        tstart = time()
         n = len(self.mesh.vertices)
         volume = np.empty(n*3, dtype=np.float64)
         self.mesh.vertices.foreach_get('co', volume)  
         volume = volume.reshape(-1, 1)
         volume = volume[:self.npoint]
         volume = volume.reshape(self.shape)
+        print('Read volume: {0:1.2f}'.format(time() - tstart))
         return volume
     @volume.setter
     def volume(self, volume):
         self.draw_volume(volume)
+        self._volume = volume
+    def __getitem__(self, index):
+        item = self.find(index)
+        if item is None:
+            raise Exception('%s not in %s setting'%(index, self.name))
+        return item
     def __setitem__(self, index, value):
         """
         Add isosurface one by one
@@ -103,6 +123,10 @@ class Isosurfacesetting():
         p.level = value[0]
         if len(value) == 2:
             p.color = value[1]
+        else:
+            n = len(self) - 1
+            n = n%2
+            p.color = default_colors[n]
     def set_default(self):
         """
         """
@@ -156,6 +180,12 @@ def calc_isosurface(volume, cell, level,
     Computes an isosurface from a volume grid.
     
     Parameters:
+
+    volume: np.array
+
+    cell: np.array
+
+    level: float
     
     """
     from batoms.tools import get_cell_vertices

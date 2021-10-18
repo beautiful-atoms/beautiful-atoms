@@ -34,32 +34,6 @@ class Batoms():
     Batoms object
 
     The Batoms object is a interface to a batoms collection in Blender.
-    A batoms collections is organised in the following way, 
-    take water molecule as a example:
-
-    * h2o                          # main collection
-
-      * h2o_atom                   # atoms collection
-    
-        * atom_h2o_H               # atoms object
-    
-        * atom_h2o_O               # atoms object
-
-      * h2o_bond                   # bonds collection
-
-        * bond_h2o_H               # bond object
-    
-        * bond_h2o_O               # bond object
-    
-      * h2o_cell                   # cell collection
-    
-      * h2o_instancer              # instancer collection
-    
-        * instancer_atom_h2o_H     # sphere object
-    
-        * instancer_atom_h2o_O     # sphere object
-    
-    Then, a Batoms object is linked to this main collection in Blender. 
 
     Parameters:
 
@@ -88,6 +62,8 @@ class Batoms():
 
     boundary:  list 
         search atoms at the boundary
+    radii_style: str
+        enum in ['covalent', 'vdw', 'ionic']
 
     Examples:
 
@@ -112,6 +88,7 @@ class Batoms():
                 pbc = False, cell = None,
                 bondsetting = None,
                 polyhedrasetting = None,
+                isosurfacesetting = None,
                 render = None,
                 model_type = 0, 
                 polyhedra_type = 0, 
@@ -120,8 +97,8 @@ class Batoms():
                 volume = None,
                 segments = [32, 16],
                 shape = 'UV_SPHERE',
-                kind_props = {},
-                radius_style = None,
+                species_props = {},
+                radii_style = 'covalent',
                 color_style = 'JMOL',
                 material_style = 'default',
                 bsdf_inputs = None,
@@ -135,8 +112,9 @@ class Batoms():
         self.render = render
         self.segments = segments
         self.shape = shape
-        self.kind_props = kind_props
+        self.species_props = species_props
         self.label = label
+        self.radii_style = radii_style
         self.color_style = color_style
         self.material_style = material_style
         self.bsdf_inputs = bsdf_inputs
@@ -148,42 +126,61 @@ class Batoms():
             self.from_species(species, pbc, cell)
         elif atoms:
             if isinstance(atoms, list):
-                self.images = atoms
-                atoms = self.images[0]
+                frames = atoms
+                atoms = frames[0]
             self.set_collection(model_type, polyhedra_type, boundary)
             if 'ase' in str(type(atoms)):
                 self.from_ase(atoms)
             elif 'pymatgen' in str(type(atoms)):
                 self.from_pymatgen(atoms)
+            self.frames = frames
         elif self.label:
             print('Build from collection')
             self.from_collection(self.label)
+            draw = False
+            movie = False
         else:
             raise Exception("Failed, species, atoms or coll  \
                   should be provided!"%self.label)
-        if not self.bondsetting:
+        if bondsetting is None:
             self.bondsetting = Bondsetting(self.label)
-        if not self.polyhedrasetting:
+        elif isinstance(bondsetting, dict):
+            self.bondsetting = Bondsetting(self.label, 
+                            bondsetting = bondsetting)
+        elif isinstance(bondsetting, Bondsetting):
+            self.bondsetting = bondsetting
+        if self.polyhedrasetting is None:
             self.polyhedrasetting = Polyhedrasetting(self.label)
-        self.isosurfacesetting = Isosurfacesetting(self.label, volume = volume)
+        elif isinstance(polyhedrasetting, dict):
+            self.polyhedrasetting = Polyhedrasetting(self.label,   
+                            polyhedrasetting = polyhedrasetting)
+        elif isinstance(polyhedrasetting, Polyhedrasetting):
+            self.polyhedrasetting = polyhedrasetting
+        if isosurfacesetting is None:
+            self.isosurfacesetting = Isosurfacesetting(self.label, volume = volume)
+        elif isinstance(isosurfacesetting, dict):
+            self.isosurfacesetting = Isosurfacesetting(self.label, volume = volume, 
+                            isosurfacesetting = isosurfacesetting)
+        elif isinstance(isosurfacesetting, Isosurfacesetting):
+            self.isosurfacesetting = isosurfacesetting
         self.coll.batoms.show_unit_cell = show_unit_cell
         if not self.render:
             self.render = Render(self.label, batoms = self)
         if draw:
             self.draw()
         if movie:
-            self.load_frames()
+            self.set_frames()
         self.show_index()
     def from_species(self, species, pbc = None, cell = None):
         """
         """
         if isinstance(species, dict):
             for sp, positions in species.items():
-                if sp not in self.kind_props: self.kind_props[sp] = {}
+                if sp not in self.species_props: self.species_props[sp] = {}
                 ba = Batom(self.label, sp, positions, segments = self.segments, 
-                            shape = self.shape, props = self.kind_props[sp], 
+                            shape = self.shape, props = self.species_props[sp], 
                             material_style=self.material_style, 
-                            bsdf_inputs=self.bsdf_inputs, color_style=self.color_style)
+                            bsdf_inputs=self.bsdf_inputs, radii_style = self.radii_style, color_style=self.color_style)
                 self.coll.children['%s_atom'%self.label].objects.link(ba.batom)
                 self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
         elif isinstance(species, list):
@@ -205,12 +202,13 @@ class Batoms():
         for species in species_list:
             indices = [index for index, x in enumerate(atoms.info['species']) 
                         if x == species]
-            if species not in self.kind_props: self.kind_props[species] = {}
+            if species not in self.species_props: self.species_props[species] = {}
             ba = Batom(self.label, species, atoms.positions[indices], 
                         segments = self.segments, shape = self.shape, 
-                        props = self.kind_props[species], 
+                        props = self.species_props[species], 
                         material_style=self.material_style, 
                         bsdf_inputs=self.bsdf_inputs, 
+                        radii_style = self.radii_style, 
                         color_style=self.color_style)
             self.coll.children['%s_atom'%self.label].objects.link(ba.batom)
             self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
@@ -234,7 +232,9 @@ class Batoms():
                            in enumerate(symbols) if x == species]
             ba = Batom(self.label, species, positions, segments = self.segments, 
                        shape = self.shape, material_style=self.material_style, 
-                       bsdf_inputs=self.bsdf_inputs, color_style=self.color_style)
+                       bsdf_inputs=self.bsdf_inputs, 
+                       radii_style = self.radii_style, 
+                       color_style=self.color_style)
             self.coll.children['%s_atom'%self.label].objects.link(ba.batom)
             self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
         self.set_pbc(pbc)
@@ -249,7 +249,6 @@ class Batoms():
             raise Exception("%s is not Batoms collection!"%collection_name)
         self.label = collection_name
         self._cell = Bcell(label = collection_name)
-        self.bondsetting = Bondsetting(self.label)
 
     def npbool2bool(self, pbc):
         """
@@ -356,46 +355,13 @@ class Batoms():
         positions = find_cage_sphere(self.cell, self.atoms.positions, radius, boundary = boundary)
         ba = Batom(self.label, 'X', positions, scale = radius*0.9, 
                    material_style='default', bsdf_inputs=self.bsdf_inputs, 
+                   radii_style = self.radii_style, 
                    color_style=self.color_style)
         
         # ba.color = [ba.color[0], ba.color[1], ba.color[2], 0.8]
         self.coll.children['%s_ghost'%self.label].objects.link(ba.batom)
         self.coll.children['%s_ghost'%self.label].objects.link(ba.instancer)
-    def draw_cavity(self, bondlists = None):
-        """
-        cavity
-        for porous materials
-        >>> from ase.io import read
-        >>> atoms = read('docs/source/_static/datas/mof-5.cif')
-        """
-        from batoms.tools import find_cage
-        from batoms.bdraw import draw_cavity
-        object_mode()
-        self.clean_atoms_objects('ghost')
-        atoms = self.get_atoms_with_boundary()
-        positions = atoms.positions
-        if bondlists is None:
-            bondlists = build_bondlists(atoms, self.bondsetting.cutoff_dict)
-        # calc data
-        vertices = []
-        edges = []
-        # offset = bondlists[:, 2:5]
-        # R = np.dot(offset, atoms.cell)
-        # pos1 = positions[bondlists[:, 0]]
-        # pos2 = positions[bondlists[:, 1]] + R
-        # n = len(pos1)
-        # vertices = np.append(pos1, pos2, axis = 0)
-        # index1 = np.array(range(n)).reshape(-1, 1)
-        # index2 = np.array(range(n)).reshape(-1, 1) + n
-        # edges = np.append(index1, index2, axis = 1)
-        edges = bondlists[:, [0, 1]]
-        edges.astype(int)
-        edges = edges.tolist()
-        # draw edge based on bonds
-        kind = 'cavity'
-        datas = {'vertices': positions, 'edges': edges, 'color': [0.4, 0.4, 0.1], 'transmit': 1.0}
-        draw_cavity(kind, datas, self.label, coll = self.coll.children['%s_polyhedra'%self.label])
-        
+    
     def clean_atoms_objects(self, coll, names = None):
         """
         remove all bond object in the bond collection
@@ -438,7 +404,7 @@ class Batoms():
         for coll in [self.batoms, self.batoms_boundary, self.batoms_skin]:
             for batom in coll.values():
                 batom.scale = scale
-    def draw(self, model_type = None):
+    def draw(self, model_type = None, draw_isosurface = True):
         """
         Draw atoms, bonds, polyhedra.
 
@@ -484,7 +450,7 @@ class Batoms():
         elif model_type == 3:
             self.scale = 0.01
             self.draw_bonds()
-        if self.isosurfacesetting.npoint > 0:
+        if self.isosurfacesetting.npoint > 0 and draw_isosurface:
             self.draw_isosurface()
     def replace(self, species1, species2, index = []):
         """
@@ -516,7 +482,9 @@ class Batoms():
         else:
             ba = Batom(self.label, species2, positions, segments = self.segments, 
                        shape = self.shape, material_style=self.material_style, 
-                       bsdf_inputs=self.bsdf_inputs, color_style=self.color_style)
+                       bsdf_inputs=self.bsdf_inputs, 
+                       radii_style = self.radii_style, 
+                       color_style=self.color_style)
             self.coll.children['%s_atom'%self.label].objects.link(ba.batom)
             self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
             for sp in self.species:
@@ -648,7 +616,9 @@ class Batoms():
         remove_collection(other.label)
     def __imul__(self, m):
         """
+        Todo: better use for loop for all species to speedup
         """
+
         for species, batom in self.batoms.items():
             batom.repeat(m, self.cell)
         self.cell.repeat(m)
@@ -781,6 +751,7 @@ class Batoms():
                 raise Exception('Wrong boundary setting!')
             self.coll.batoms.boundary = boundary[:].flatten()
         self.update_boundary()
+        self.draw()
     def get_boundary(self):
         boundary = np.array(self.coll.batoms.boundary)
         return boundary.reshape(3, -1)
@@ -852,7 +823,7 @@ class Batoms():
         return int(self.coll.batoms.model_type)
     def set_model_type(self, model_type):
         self.coll.batoms.model_type = str(model_type)
-        self.draw()
+        self.draw(draw_isosurface = False)
     @property
     def polyhedra_type(self):
         return self.get_polyhedra_type()
@@ -898,6 +869,18 @@ class Batoms():
         atoms.info['species'] = species
         atoms.pbc = False
         return atoms
+    @property
+    def frames(self):
+        return self.get_frames()
+    @frames.setter
+    def frames(self, frames):
+        self.set_frames(frames)
+    def get_frames(self):
+        frames = []
+        for f in range(bpy.context.scene.frame_start, bpy.context.scene.frame_end):
+            bpy.context.scene.frame_set(f)
+            frames.append(self.atoms)
+        return frames
     @property
     def positions(self):
         return self.get_positions()
@@ -973,7 +956,7 @@ class Batoms():
                     self.constrainatoms += [i]
     
     def highlight_atoms(self, indexs, shape = 'sphere', radius_scale=1.4,
-                           color=(0.0, 1.0, 0.0), transmit=0.6):
+                           color=(0.0, 1.0, 0.0, 0.6)):
         """
         """
         object_mode()
@@ -990,31 +973,31 @@ class Batoms():
             ball.data.materials.append(material)
             ball.show_transparent = True
             self.coll_highlight.objects.link(ball)
-    def load_frames(self, images = None):
+    def set_frames(self, frames = None):
         """
 
-        images: list
+        frames: list
             list of atoms. All atoms show have same species and length.
             
         >>> from ase.io import read
         >>> from batoms import Batoms
-        >>> images = read('h2o-animation.xyz', index = ':')
-        >>> h2o = Batoms(label = 'h2o', atoms = images)
-        >>> h2o.load_frames()
+        >>> frames = read('h2o-animation.xyz', index = ':')
+        >>> h2o = Batoms(label = 'h2o', atoms = frames)
+        >>> h2o.set_frames()
         >>> h2o.render(animation = True)
-
         """
-        if not images:
-            images = self.images
-        if len(self.atoms) != len(images[0]):
-            raise Exception("Number of atoms %s is not equal to %s."%(len(self.atoms), len(images[0])))
-        atoms = images[0]
+        if frames is None:
+            frames = self.frames
+        if len(frames) == 0: return
+        if len(self.atoms) != len(frames[0]):
+            raise Exception("Number of atoms %s is not equal to %s."%(len(self.atoms), len(frames[0])))
+        atoms = frames[0]
         if 'species' not in atoms.info:
             atoms.info['species'] = atoms.get_chemical_symbols()
-        positions = np.array([atoms.positions for atoms in images])
+        positions = np.array([atoms.positions for atoms in frames])
         for species, ba in self.batoms.items():
             index = [atom.index for atom in atoms if atoms.info['species'][atom.index] == species]
-            ba.load_frames(positions[:, index])
+            ba.set_frames(positions[:, index])
     
     def calc_camera_data(self, canvas, canvas1, direction = (0, 0, 1)):
         """
@@ -1081,3 +1064,18 @@ class Batoms():
         If scaled=True the center of mass in scaled coordinates
         is returned."""
         return self.atoms.get_center_of_mass(scaled = scaled)
+    @property
+    def hide(self):
+        return self.get_hide()
+    @hide.setter
+    def hide(self, state):
+        self.set_hide(state)
+    def get_hide(self):
+        return 'Unknown'
+    def set_hide(self, state):
+        names = self.coll.all_objects.keys()
+        for name in names:
+            obj = bpy.data.objects.get(name)
+            obj.hide_render = state
+            obj.hide_set(state)
+

@@ -1,5 +1,5 @@
 """
-Rendering ase atoms objects using blender.
+Rendering Batoms object using blender.
 
 """
 import bpy
@@ -13,7 +13,7 @@ default_render_settings = {
         'resolution_y': None,  # 
         'lock_camera_to_view': True,
         'lock_light_to_camera': True,
-        'camera_loc': [0, 0, 100],  # x, y is the image plane, z is *out* of the screen
+        'camera_loc': [0, 0, 100],  
         'camera_target': [0, 0, 0], #
         'camera_type': 'ORTHO',  #  ['PERSP', 'ORTHO']
         'ortho_scale': None, #
@@ -122,7 +122,8 @@ class Render():
         rgb_node = node_tree.nodes.new(type="ShaderNodeRGB")
         rgb_node.outputs["Color"].default_value = color
         node_tree.nodes["Background"].inputs["Strength"].default_value = 1.0
-        node_tree.links.new(rgb_node.outputs["Color"], node_tree.nodes["Background"].inputs["Color"])
+        node_tree.links.new(rgb_node.outputs["Color"], 
+                    node_tree.nodes["Background"].inputs["Color"])
     def set_camera(self, camera_type = None, camera_lens = None,):
         '''
 
@@ -225,7 +226,8 @@ class Render():
             sizes = [ba.size.max() for ba in batoms.batoms.values()]
             margin = max(sizes) + 0.5
         if canvas is None:
-            canvas, canvas1 = get_canvas(atoms = atoms, direction = direction, margin = margin)
+            canvas, canvas1 = get_canvas(atoms = atoms, 
+                                    direction = direction, margin = margin)
         else:
             if isinstance(canvas, (int, float)):
                 canvas = np.array([[0, 0, 0], [canvas, canvas, canvas]])
@@ -248,7 +250,8 @@ class Render():
         self.prepare()
         if self.save_to_blend:
             print('saving to {0}.blend'.format(self.output))
-            bpy.ops.wm.save_as_mainfile('EXEC_SCREEN', filepath = '{0}.blend'.format(self.output))
+            bpy.ops.wm.save_as_mainfile('EXEC_SCREEN', 
+                                filepath = '{0}.blend'.format(self.output))
         elif self.run_render:
             bpy.ops.render.render(write_still = 1, animation = self.animation)
     def prepare(self, ):

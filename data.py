@@ -1,6 +1,16 @@
+"""
+Todo: add ionic_radii
+
+"""
 from ase.data.colors import jmol_colors, cpk_colors
-from ase.data import covalent_radii
+from ase.data import covalent_radii, vdw_radii
+vdw_radii.flags.writeable = True
+
 covalent_radii[0] = 1.0
+vdw_radii[0] = 1.0
+ionic_radii = {}
+
+
 jmol_colors[0] = [0.8, 0.8, 0.0]
 cpk_colors[0] = [0.8, 0.8, 0.0]
 

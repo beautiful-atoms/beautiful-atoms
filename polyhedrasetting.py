@@ -16,10 +16,13 @@ class Polyhedrasetting(Setting):
         The label define the batoms object that a Setting belong to.
 
     """
-    def __init__(self, label) -> None:
+    def __init__(self, label, polyhedrasetting = None) -> None:
         Setting.__init__(self, label)
         self.name = 'bpolyhedra'
         self.set_default(self.species)
+        if polyhedrasetting is not None:
+            for key, data in polyhedrasetting.items():
+                self[key] = data
     def __setitem__(self, index, value):
         """
         Add polyhedra one by one
@@ -56,9 +59,6 @@ class Polyhedrasetting(Setting):
 
 def build_polyhedralists(atoms, bondlists, bondsetting, polyhedrasetting):
         """
-        Two modes:
-        (1) Search atoms bonded to kind
-        polyhedra_dict: {'kind': ligands}
         """
         from scipy.spatial import ConvexHull
         from batoms.tools import get_polyhedra_kind

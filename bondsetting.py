@@ -105,12 +105,15 @@ class Bondsetting(Setting):
     cutoff: float
         Cutoff used to calculate the maxmium bondlength for bond pairs.
     """
-    def __init__(self, label, cutoff = 1.3) -> None:
+    def __init__(self, label, bondsetting = None, cutoff = 1.3) -> None:
         Setting.__init__(self, label)
         self.label = label
         self.name = 'bbond'
         self.cutoff = cutoff
         self.set_default(self.species, cutoff)
+        if bondsetting is not None:
+            for key, data in bondsetting.items():
+                self[key] = data
     def __setitem__(self, index, value):
         """
         Add bondpair one by one
@@ -246,8 +249,8 @@ def build_bondlists(atoms, cutoff):
     #
     tstart = time()
     nli, nlj, nlS = neighbor_list('ijS', atoms, cutoff, self_interaction=False)
-    bondlists = np.append(np.array([nli, nlj], dtype=int).T, np.array(nlS, dtype=int), axis = 1)
     # print('build_bondlists: {0:10.2f} s'.format(time() - tstart))
+    bondlists = np.append(np.array([nli, nlj], dtype=int).T, np.array(nlS, dtype=int), axis = 1)
     return bondlists
 
 def calc_bond_data(batoms, bondlists, bondsetting):
@@ -297,7 +300,7 @@ def calc_bond_data(batoms, bondlists, bondsetting):
                 ]
         for kind, color in kinds:
             if kind not in bond_kinds:
-                bond_kinds[kind] = {'color': color[:3], 'verts': [], 'transmit': color[3], 
+                bond_kinds[kind] = {'color': color, 'verts': [],
                                     'width': b.width,
                                     'centers': [],
                                     'lengths': [],
@@ -367,17 +370,4 @@ def calc_bond_data(batoms, bondlists, bondsetting):
 
 
 if __name__ == "__main__":
-    from ase.build import bulk, molecule
-    from ase.atoms import Atoms
-    from ase.io import read
-    from ase.visualize import view
-    from ase.neighborlist import neighbor_list
-    from boundary import search_boundary
-    # atoms = bulk('Pt', cubic = True)
-    atoms = read('docs/source/_static/datas/tio2.cif')
-    # atoms = read('docs/source/_static/datas/mof-5.cif')
-    atoms = atoms*[4, 4, 4]
-    # positions1, offsets1, positions2, offsets2 = search_boundary(atoms.positions, atoms.cell, boundary=[[-0.6, 1.6], [-0.6, 1.6], [-0.6, 1.6]])
-    bondsetting = {('Ti', 'O'): [0, 2.5, True, False], ('O', 'O'): [0, 1.5, False, False]}
-    bondlists = build_bondlists(atoms, bondsetting)
-    
+    pass

@@ -23,7 +23,6 @@ def read_atoms_list(coll):
         ele = obj.name.split('_')[2]
         elements.append(ele)
     return elements
-        
 
 def read_atoms_select():
     '''   
@@ -67,19 +66,26 @@ def read_atoms_select():
     return atoms
 
 def remove_collection(name):
-        collection = bpy.data.collections.get(name)
-        for obj in collection.all_objects:
-            bpy.data.objects.remove(obj, do_unlink=True)
-        for coll in collection.children:
-            bpy.data.collections.remove(coll)
-        bpy.data.collections.remove(collection)
+    """
+    """
+    collection = bpy.data.collections.get(name)
+    objs = collection.all_objects.keys()
+    for obj in objs:
+        obj = bpy.data.objects.get(obj)
+        bpy.data.objects.remove(obj, do_unlink=True)
+    collection = bpy.data.collections.get(name)
+    colls = collection.children.keys()
+    for coll in colls:
+        coll = bpy.data.collections.get(coll)
+        bpy.data.collections.remove(coll)
+    collection = bpy.data.collections.get(name)
+    bpy.data.collections.remove(collection)
         
 def clean_objects():
     for item in bpy.data.objects:
         bpy.data.objects.remove(item)
 
 def removeAll():
-    #types =  ['MESH', 'CURVE', 'SURFACE', 'META', 'FONT', 'ARMATURE', 'LATTICE', 'EMPTY', 'GPENCIL', 'CAMERA', 'LIGHT', 'SPEAKER', 'LIGHT_PROBE']
     for mesh in bpy.data.meshes:
         bpy.data.meshes.remove(mesh)
     for obj in bpy.data.objects:

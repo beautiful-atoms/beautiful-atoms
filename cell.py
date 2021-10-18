@@ -47,9 +47,11 @@ class Bcell():
             obj_edge.bcell.is_bcell = True
             bpy.data.collections['Collection'].objects.link(obj_edge)
         elif bpy.data.objects[self.name].bcell.is_bcell:
-            print('%s exist and is bcell, use it.'%self.name)
+            # print('%s exist and is bcell, use it.'%self.name)
+            pass
         else:
-            raise Exception("Failed, the name %s already in use and is not Bcell object!"%self.name)
+            raise Exception("Failed, the name %s already \
+                in use and is not Bcell object!"%self.name)
         bpy.context.view_layer.update()
     def __repr__(self) -> str:
         numbers = self.array.tolist()
@@ -104,7 +106,8 @@ class Bcell():
     def verts(self):
         return self.get_verts()
     def get_verts(self):
-        return np.array([self.bcell.matrix_world @ self.bcell.data.vertices[i].co for i in range(8)])
+        return np.array([self.bcell.matrix_world @ \
+                self.bcell.data.vertices[i].co for i in range(8)])
     def array2verts(self, array):
         """
         """
