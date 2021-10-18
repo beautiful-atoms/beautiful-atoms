@@ -128,6 +128,8 @@ class Batoms():
             if isinstance(atoms, list):
                 frames = atoms
                 atoms = frames[0]
+            else:
+                frames = [atoms]
             self.set_collection(model_type, polyhedra_type, boundary)
             if 'ase' in str(type(atoms)):
                 self.from_ase(atoms)
