@@ -1,7 +1,4 @@
-from ase.build import molecule, bulk
-from ase import Atom, Atoms
 import bpy
-import bmesh
 from bpy.types import (Panel,
                        Operator,
                        )
@@ -15,7 +12,7 @@ from bpy.props import (StringProperty,
                        EnumProperty,
                        PointerProperty,
                        )
-from batoms.butils import read_batoms_select
+from batoms.butils import get_selected_batoms, get_selected_objects
 from batoms.batoms import Batoms
 
 # The panel.
@@ -29,33 +26,40 @@ class Volume_PT_prepare(Panel):
 
     def draw(self, context):
         layout = self.layout
-        blpanel = context.scene.blpanel
+        vopanel = context.scene.vopanel
 
         box = layout.box()
         row = box.row()
-        row.prop(blpanel, "level")
+        row.prop(vopanel, "level")
 
 
 
 class VolumeProperties(bpy.types.PropertyGroup):
     @property
-    def batoms_list(self):
-        return self.get_batoms_list()
-    def get_batoms_list(self):
-        batoms_list = read_batoms_select()
-        return batoms_list
-    
+    def selected_batoms(self):
+        return get_selected_batoms()
+    @property
+    def selected_isosurface(self):
+        return get_selected_objects('bisosurface')
     def Callback_modify_level(self, context):
-        blpanel = bpy.context.scene.blpanel
-        print('Callback_modify_level')
-        modify_level(self.batoms_list, blpanel.level)
+        vopanel = bpy.context.scene.vopanel
+        modify_volume_attr(self.selected_batoms, self.selected_isosurface, 'level', vopanel.level)
     
     level: FloatProperty(
         name="Level", default=0.01,
         description = "level for isosurface", update = Callback_modify_level)
     
 
-def modify_level(batoms_name_list, level):
-    for name in batoms_name_list:
-        batoms = Batoms(label = name)
-        batoms.isosurfacesetting.level = level
+def modify_volume_attr(batoms_name_list, bisosurface_name_list, key, value):
+    selected_isosurface_new = []
+    for batoms_name in batoms_name_list:
+        batoms = Batoms(label = batoms_name)
+        for isosurface_name in bisosurface_name_list:
+            iso = bpy.data.objects[isosurface_name]
+            if iso.bisosurface.label == batoms_name:
+                setattr(batoms.isosurfacesetting[iso.bisosurface.name], key, value)
+            selected_isosurface_new.append(isosurface_name)
+        batoms.draw_isosurface()
+    for name in selected_isosurface_new:
+        obj = bpy.data.objects.get(name)
+        obj.select_set(True)        

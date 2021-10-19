@@ -99,7 +99,7 @@ class Isosurfacesetting():
         volume = volume.reshape(-1, 1)
         volume = volume[:self.npoint]
         volume = volume.reshape(self.shape)
-        print('Read volume: {0:1.2f}'.format(time() - tstart))
+        # print('Read volume: {0:1.2f}'.format(time() - tstart))
         return volume
     @volume.setter
     def volume(self, volume):
@@ -114,19 +114,20 @@ class Isosurfacesetting():
         """
         Add isosurface one by one
         """
-        p = self.find(index)
-        if p is None:
-            p = self.collection.add()
-        p.name = str(index)
+        iso = self.find(index)
+        if iso is None:
+            iso = self.collection.add()
+        iso.label = self.label
+        iso.name = str(index)
         if isinstance(value, (int, float)):
             value = [value]
-        p.level = value[0]
+        iso.level = value[0]
         if len(value) == 2:
-            p.color = value[1]
+            iso.color = value[1]
         else:
             n = len(self) - 1
             n = n%2
-            p.color = default_colors[n]
+            iso.color = default_colors[n]
     def set_default(self):
         """
         """
@@ -165,10 +166,11 @@ class Isosurfacesetting():
         volume = self.volume
         isosurface = []
         for iso in self.collection:
+            name = iso.name
             level = iso.level
             color = iso.color
             verts, faces = calc_isosurface(volume, cell, level)
-            isosurface.append((verts, faces, color))
+            isosurface.append((name, verts, faces, color))
         return isosurface
 
 

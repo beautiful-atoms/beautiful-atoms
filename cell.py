@@ -1,6 +1,5 @@
 """
 """
-from operator import add
 import bpy
 import numpy as np
 from ase.cell import Cell
@@ -44,9 +43,9 @@ class Bcell():
             obj_edge = bpy.data.objects.new("cell_%s_edge"%self.label, mesh)
             obj_edge.data = mesh
             obj_edge.location = location
-            obj_edge.bcell.is_bcell = True
+            obj_edge.bcell.flag = True
             bpy.data.collections['Collection'].objects.link(obj_edge)
-        elif bpy.data.objects[self.name].bcell.is_bcell:
+        elif bpy.data.objects[self.name].bcell.flag:
             # print('%s exist and is bcell, use it.'%self.name)
             pass
         else:
@@ -70,8 +69,6 @@ class Bcell():
         Examples:
 
         """
-        from ase.cell import Cell
-        from ase.geometry.cell import complete_cell
         bcell = self.bcell
         array = self.array
         array[index] = value

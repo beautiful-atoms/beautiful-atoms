@@ -142,12 +142,12 @@ class Batom():
             obj_atom = bpy.data.objects.new(self.name, mesh)
             obj_atom.data.from_pydata(positions, [], [])
             obj_atom.location = location
-            obj_atom.batom.is_batom = True
+            obj_atom.batom.flag = True
             obj_atom.batom.species = self.species
             obj_atom.batom.element = self.element
             obj_atom.batom.label = self.label
             bpy.data.collections['Collection'].objects.link(obj_atom)
-        elif bpy.data.objects[self.name].batom.is_batom:
+        elif bpy.data.objects[self.name].batom.flag:
             obj_atom = bpy.data.objects[self.name]
         else:
             raise Exception("Failed, the name %s already in use and is not Batom object!"%self.name)
@@ -157,12 +157,16 @@ class Batom():
     def from_batom(self, label):
         if label not in bpy.data.objects:
             raise Exception("%s is not a object!"%label)
-        elif not bpy.data.objects[label].batom.is_batom:
+        elif not bpy.data.objects[label].batom.flag:
             raise Exception("%s is not Batom object!"%label)
         ba = bpy.data.objects[label]
         self.species = ba.batom.species
         self.label = ba.batom.label
         self.element = ba.batom.element
+        self.species_data = {
+            'radius':ba.batom.radius,
+            'scale':ba.scale,
+        }
     @property
     def scene(self):
         return self.get_scene()
@@ -349,10 +353,14 @@ class Batom():
         # nverts = len(self.instancer.data.vertices)
         return 'to do'
     def set_shape(self, shape):
-        if shape.upper() not in ["UV_SPHERE", "ICO_SPHERE", "CUBE"]:
+        """
+        "UV_SPHERE", "ICO_SPHERE", "CUBE"
+        """
+        shapes = ["UV_SPHERE", "ICO_SPHERE", "CUBE"]
+        if shape not in [0, 1, 2]:
             raise Exception('Shape %s is not supported!'%shape)
         self.clean_batoms_objects('instancer_atom_%s_%s'%(self.label, self.species))
-        self.set_instancer(shape = shape)
+        self.set_instancer(shape = shapes[shape])
         self.instancer.parent = self.batom
     def clean_batoms_objects(self, obj):
         obj = bpy.data.objects[obj]
@@ -617,3 +625,24 @@ class Batom():
         bcell = bpy.data.collections['%s_cell'%self.label]
         cell = np.array([bcell.matrix_world @ bcell.data.vertices[i].co for i in range(3)])
         return cell
+    @property
+    def hide(self):
+        return self.get_hide()
+    @hide.setter
+    def hide(self, state):
+        self.set_hide(state)
+    def get_hide(self):
+        return 'Unknown'
+    def set_hide(self, state):
+        self.batom.hide_render = state
+        self.batom.hide_set(state)
+    @property
+    def select(self):
+        return self.get_select()
+    @select.setter
+    def select(self, state):
+        self.set_select(state)
+    def get_select(self):
+        return 'Unknown'
+    def set_select(self, state):
+        self.batom.select_set(state)

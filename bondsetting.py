@@ -110,7 +110,8 @@ class Bondsetting(Setting):
         self.label = label
         self.name = 'bbond'
         self.cutoff = cutoff
-        self.set_default(self.species, cutoff)
+        if len(self) == 0:
+            self.set_default(self.species, cutoff)
         if bondsetting is not None:
             for key, data in bondsetting.items():
                 self[key] = data
@@ -121,8 +122,9 @@ class Bondsetting(Setting):
         bond = self.find(index)
         if bond is None:
             bond = self.collection.add()
-        bond.symbol1 = index.split('-')[0]
-        bond.symbol2 = index.split('-')[1]
+        bond.label = self.label
+        bond.species1 = index.split('-')[0]
+        bond.species2 = index.split('-')[1]
         bond.name = index
         bond.min = value[0]
         bond.max = value[1]
@@ -175,7 +177,7 @@ class Bondsetting(Setting):
     def cutoff_dict(self):
         cutoff_dict = {}
         for b in self.collection:
-            cutoff_dict[(b.symbol1, b.symbol2)] = [b.min, b.max]
+            cutoff_dict[(b.species1, b.species2)] = [b.min, b.max]
         return cutoff_dict
     @property
     def maxcutoff(self):
@@ -192,23 +194,23 @@ class Bondsetting(Setting):
         speciesarray = np.array(atoms.info['species'])
         for b in self:
             if b.search == 1:
-                temp = bondlists0[(speciesarray[bondlists0[:, 0]] == b.symbol1) 
-                              & (speciesarray[bondlists0[:, 1]] == b.symbol2)]
+                temp = bondlists0[(speciesarray[bondlists0[:, 0]] == b.species1) 
+                              & (speciesarray[bondlists0[:, 1]] == b.species2)]
                 bondlist1.extend(temp)
-                temp = offsets_skin0[(speciesarray[offsets_skin0[:, 0]] == b.symbol1)]
+                temp = offsets_skin0[(speciesarray[offsets_skin0[:, 0]] == b.species1)]
                 offsets_skin1.extend(temp)
             elif b.search == 2:
                 #  recursively if either sp1 or sp2
-                temp = bondlists0[((speciesarray[bondlists0[:, 0]] == b.symbol1) 
-                                  & (speciesarray[bondlists0[:, 1]] == b.symbol2))]
+                temp = bondlists0[((speciesarray[bondlists0[:, 0]] == b.species1) 
+                                  & (speciesarray[bondlists0[:, 1]] == b.species2))]
                 bondlist2.extend(temp)
                 temp1 = temp.copy()
                 temp1[:, 0] = temp[:, 1]
                 temp1[:, 1] = temp[:, 0]
                 temp1[:, 2:] = -temp[:, 2:]
                 bondlist2.extend(temp1)
-                temp = offsets_skin0[(speciesarray[offsets_skin0[:, 0]] == b.symbol1)
-                                   | (speciesarray[offsets_skin0[:, 0]] == b.symbol2)]
+                temp = offsets_skin0[(speciesarray[offsets_skin0[:, 0]] == b.species1)
+                                   | (speciesarray[offsets_skin0[:, 0]] == b.species2)]
                 offsets_skin2.extend(temp)
         return np.array(offsets_skin1), np.array(bondlist1), np.array(offsets_skin2), np.array(bondlist2)
 
@@ -269,8 +271,8 @@ def calc_bond_data(batoms, bondlists, bondsetting):
         return
     tstart = time()
     for b in bondsetting:
-        spi = b.symbol1
-        spj = b.symbol2
+        spi = b.species1
+        spj = b.species2
         bondlists1 = bondlists[(speciesarray[bondlists[:, 0]] == spi) 
                     & (speciesarray[bondlists[:, 1]] == spj)]
         if len(bondlists1) == 0: continue
@@ -294,13 +296,15 @@ def calc_bond_data(batoms, bondlists, bondsetting):
         # tempv = np.cross(nvec, v11)
         # v22 = (tempv.T*(length*length)).T
         #
-        kinds = [('%s_%s'%(spi, spj), b.color1), 
-                    ('%s_%s_%s'%(spi, spj, spi), b.color1), 
-                    ('%s_%s_%s'%(spi, spj, spj), b.color2),
+        kinds = [('%s_%s'%(spi, spj), spi, b.color1), 
+                    ('%s_%s_%s'%(spi, spj, spi), spi, b.color1), 
+                    ('%s_%s_%s'%(spi, spj, spj), spj, b.color2),
                 ]
-        for kind, color in kinds:
+        for kind, species, color in kinds:
             if kind not in bond_kinds:
-                bond_kinds[kind] = {'color': color, 'verts': [],
+                bond_kinds[kind] = {'bbond': b, 
+                                    'species': species,
+                                    'color': color, 'verts': [],
                                     'width': b.width,
                                     'centers': [],
                                     'lengths': [],
@@ -331,7 +335,7 @@ def calc_bond_data(batoms, bondlists, bondsetting):
                 bond_kinds[kinds[i][0]]['centers'] = []
                 bond_kinds[kinds[i][0]]['lengths'] = []
                 bond_kinds[kinds[i][0]]['normals'] = []
-                step = 0.2
+                step = 0.1
                 maxlength = length.max()
                 center = (center0 + pos[i - 1])/2.0
                 for d in np.arange(-maxlength, maxlength, step):

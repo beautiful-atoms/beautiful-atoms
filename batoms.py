@@ -137,7 +137,7 @@ class Batoms():
                 self.from_pymatgen(atoms)
             self.frames = frames
         elif self.label:
-            print('Build from collection')
+            # print('Build from collection')
             self.from_collection(self.label)
             draw = False
             movie = False
@@ -173,6 +173,7 @@ class Batoms():
         if movie:
             self.set_frames()
         self.show_index()
+        self.select = True
     def from_species(self, species, pbc = None, cell = None):
         """
         """
@@ -247,7 +248,7 @@ class Batoms():
         """
         if collection_name not in bpy.data.collections:
             raise Exception("%s is not a collection!"%collection_name)
-        elif not bpy.data.collections[collection_name].batoms.is_batoms:
+        elif not bpy.data.collections[collection_name].batoms.flag:
             raise Exception("%s is not Batoms collection!"%collection_name)
         self.label = collection_name
         self._cell = Bcell(label = collection_name)
@@ -270,7 +271,7 @@ class Batoms():
             if self.label == coll.name:
                 raise Exception("Failed, the name %s already in use!"%self.label)
         coll = bpy.data.collections.new(self.label)
-        self.coll.batoms.is_batoms = True
+        self.coll.batoms.flag = True
         self.scene.collection.children.link(self.coll)
         for sub_name in subcollections:
             subcoll = bpy.data.collections.new('%s_%s'%(self.label, sub_name))
@@ -341,9 +342,9 @@ class Batoms():
         object_mode()
         self.clean_atoms_objects('volume', ['isosurface'])
         isosurface = self.isosurfacesetting.build_isosurface(self.cell)
-        for verts, faces, color in isosurface:
-            draw_isosurface(self.coll.children['%s_volume'%self.label],
-                            verts, faces, color = color)
+        for name, verts, faces, color in isosurface:
+            draw_isosurface(name, self.coll.children['%s_volume'%self.label],
+                            verts, faces, color = color, label = self.label)
     def draw_cavity_sphere(self, radius, boundary = [[0, 1], [0, 1], [0, 1]]):
         """
         cavity
@@ -444,7 +445,7 @@ class Batoms():
                 self.scale = 0.01
                 for b in self.bondsetting:
                     if b.polyhedra:
-                        self.batoms[b.symbol1].scale = 0.4
+                        self.batoms[b.species1].scale = 0.4
                 self.draw_polyhedras()
             elif self.polyhedra_type == 3:
                 self.scale = 0.01
@@ -1080,4 +1081,17 @@ class Batoms():
             obj = bpy.data.objects.get(name)
             obj.hide_render = state
             obj.hide_set(state)
+    @property
+    def select(self):
+        return self.get_select()
+    @select.setter
+    def select(self, state):
+        self.set_select(state)
+    def get_select(self):
+        return 'Unknown'
+    def set_select(self, state):
+        names = self.coll.all_objects.keys()
+        for name in names:
+            obj = bpy.data.objects.get(name)
+            obj.select_set(state)
 

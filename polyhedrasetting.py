@@ -19,7 +19,8 @@ class Polyhedrasetting(Setting):
     def __init__(self, label, polyhedrasetting = None) -> None:
         Setting.__init__(self, label)
         self.name = 'bpolyhedra'
-        self.set_default(self.species)
+        if len(self) == 0:
+            self.set_default(self.species)
         if polyhedrasetting is not None:
             for key, data in polyhedrasetting.items():
                 self[key] = data
@@ -30,7 +31,8 @@ class Polyhedrasetting(Setting):
         p = self.find(index)
         if p is None:
             p = self.collection.add()
-        p.symbol = index
+        p.flag = True
+        p.species = index
         p.name = index
         p.color = value[0]
         p.edgewidth = value[1]
@@ -52,7 +54,7 @@ class Polyhedrasetting(Setting):
         s = 'Center                color         edgewidth \n'
         for p in self.collection:
             s += '{0:10s}   [{1:1.2f}  {2:1.2f}  {3:1.2f}  {4:1.2f}]   {5:1.3f} \n'.format(\
-                p.symbol, p.color[0], p.color[1], p.color[2], p.color[3], p.edgewidth)
+                p.species, p.color[0], p.color[1], p.color[2], p.color[3], p.edgewidth)
         s += '-'*60 + '\n'
         return s
 
@@ -64,14 +66,14 @@ def build_polyhedralists(atoms, bondlists, bondsetting, polyhedrasetting):
         from batoms.tools import get_polyhedra_kind
         tstart = time()
         if 'species' not in atoms.info:
-            atoms.info['species'] = atoms.get_chemical_symbols()
+            atoms.info['species'] = atoms.get_chemical_speciess()
         speciesarray = np.array(atoms.info['species'])
         positions = atoms.positions
         polyhedra_kinds = {}
         polyhedra_dict = {}
         for b in bondsetting:
-            spi = b.symbol1
-            spj = b.symbol2
+            spi = b.species1
+            spj = b.species2
             if b.polyhedra:
                 if spi not in polyhedra_dict: polyhedra_dict[spi] = []
                 polyhedra_dict[spi].append(spj)
@@ -110,7 +112,7 @@ def build_polyhedralists(atoms, bondlists, bondsetting, polyhedrasetting):
                         length = np.linalg.norm(vec)
                         nvec = vec/length
                         # print(center, nvec, length)
-                        polyhedra_kind['edge_cylinder']['lengths'].append(length/2.0)
+                        polyhedra_kind['edge_cylinder']['lengths'].append(length)
                         polyhedra_kind['edge_cylinder']['centers'].append(center)
                         polyhedra_kind['edge_cylinder']['normals'].append(nvec)
             if len(polyhedra_kind['vertices']) > 0:

@@ -12,17 +12,29 @@ def read_batoms_list():
     """
     Read all batoms collection 
     """
-    items = [col.name for col in bpy.data.collections if col.batoms.is_batoms]
+    items = [col.name for col in bpy.data.collections if col.batoms.flag]
     return items
 
-def read_batoms_select():
+def get_selected_batoms():
     '''   
     '''
     batoms_list = []
     for obj in bpy.context.selected_objects:
-        if obj.batom.is_batom:
-            batoms_list.append(obj.batom.label)
+        for p in ['batom', 'bbond', 'bisosurface', 'bpolyhedra']:
+            if getattr(obj, p).flag:
+                batoms_list.append(getattr(obj, p).label)
+    batoms_list = list(set(batoms_list))
     return batoms_list
+
+def get_selected_objects(name):
+    '''
+    '''
+    bond_list = []
+    for obj in bpy.context.selected_objects:
+        if getattr(obj, name).flag:
+            bond_list.append(obj.name)
+    return bond_list
+
 
 def remove_collection(name):
     """

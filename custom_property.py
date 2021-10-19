@@ -13,7 +13,7 @@ from bpy.props import (StringProperty,
 class Batoms(bpy.types.PropertyGroup):
     """
     """
-    is_batoms: BoolProperty(name="is_batoms", default=False)
+    flag: BoolProperty(name="flag", default=False)
     model_type: EnumProperty(
         name="model_type",
         description="Structural models",
@@ -38,7 +38,7 @@ class Batoms(bpy.types.PropertyGroup):
 class Batom(bpy.types.PropertyGroup):
     """
     """
-    is_batom: BoolProperty(name="is_batom", default=False)
+    flag: BoolProperty(name="flag", default=False)
     label: StringProperty(name="species", default = 'X')
     species: StringProperty(name="species", default = 'X')
     element: StringProperty(name="element", default = '')
@@ -46,14 +46,17 @@ class Batom(bpy.types.PropertyGroup):
 class Bcell(bpy.types.PropertyGroup):
     """
     """
-    is_bcell: BoolProperty(name="is_bcell", default=False)
+    flag: BoolProperty(name="flag", default=False)
     label: StringProperty(name="label", default = '')
 
 class BBond(bpy.types.PropertyGroup):
     """
     """
-    symbol1: StringProperty(name="symbol1")
-    symbol2: StringProperty(name="symbol2")
+    flag: BoolProperty(name="flag", default=False)
+    label: StringProperty(name="label", default = '')
+    species1: StringProperty(name="species1")
+    species2: StringProperty(name="species2")
+    species: StringProperty(name="species")
     name:StringProperty(name = "name")
     min: FloatProperty(name="min", description = "min", default = 0.0)
     max: FloatProperty(name="max", description = "max", default = 2.0)
@@ -83,7 +86,9 @@ class BBond(bpy.types.PropertyGroup):
 class BPolyhedra(bpy.types.PropertyGroup):
     """
     """
-    symbol: StringProperty(name="symbol")
+    flag: BoolProperty(name="flag", default=False)
+    label: StringProperty(name="label", default = '')
+    species: StringProperty(name="species")
     name:StringProperty(name = "name")
     color: FloatVectorProperty(name="color", size = 4)
     edgewidth: FloatProperty(name="edgewidth", default = 0.10)
@@ -93,7 +98,7 @@ class BPolyhedra(bpy.types.PropertyGroup):
         s = '-'*60 + '\n'
         s = 'Center                color           edgewidth \n'
         s += '{0:10s}   [{1:1.2f}  {2:1.2f}  {3:1.2f}  {4:1.2f}]   {5:1.3f} \n'.format(\
-                self.symbol, self.color[0], self.color[1], self.color[2], self.color[3], self.edgewidth)
+                self.species, self.color[0], self.color[1], self.color[2], self.color[3], self.edgewidth)
         s += '-'*60 + '\n'
         return s
 
@@ -101,8 +106,9 @@ class BPolyhedra(bpy.types.PropertyGroup):
 class BIsosurface(bpy.types.PropertyGroup):
     """
     """
+    flag: BoolProperty(name="flag", default=False)
     name: StringProperty(name = "name")
-    npoint: IntProperty(name="npoint")
+    label: StringProperty(name="label", default = '')
     level: FloatProperty(name="level", default = 0.10)
     color: FloatVectorProperty(name="color", size = 4, default = [1, 1, 0, 0.5])
 
@@ -119,6 +125,7 @@ class BIsosurface(bpy.types.PropertyGroup):
 class BVolume(bpy.types.PropertyGroup):
     """
     """
-    is_bvolume: BoolProperty(name="is_bvolume", default=False)
+    flag: BoolProperty(name="flag", default=False)
+    label: StringProperty(name="label", default = '')
     npoint: IntProperty(name="npoint")
     shape: IntVectorProperty(name="shape", size = 3)

@@ -128,6 +128,11 @@ def draw_bond_kind(kind,
     obj_bond = bpy.data.objects.new("bond_{0}_{1}".format(label, kind), mesh)
     obj_bond.data = mesh
     obj_bond.data.materials.append(material)
+    obj_bond.bbond.flag = True
+    obj_bond.bbond.label = datas['bbond'].label
+    obj_bond.bbond.species = datas['species']
+    obj_bond.bbond.species1 = datas['bbond'].species1
+    obj_bond.bbond.species2 = datas['bbond'].species2
     bpy.ops.object.shade_smooth()
     coll.objects.link(obj_bond)
     # print('bonds: {0}   {1:10.2f} s'.format(kind, time.time() - tstart))
@@ -165,6 +170,9 @@ def draw_polyhedra_kind(kind,
         obj_polyhedra = bpy.data.objects.new("polyhedra_{0}_{1}_face".format(label, kind), mesh)
         obj_polyhedra.data = mesh
         obj_polyhedra.data.materials.append(material)
+        obj_polyhedra.bpolyhedra.flag = True
+        obj_polyhedra.bpolyhedra.label = label
+        obj_polyhedra.bpolyhedra.species = kind
         # bpy.ops.object.shade_smooth()
         # bpy.ops.object.shade_flat()
         coll.objects.link(obj_polyhedra)
@@ -195,7 +203,7 @@ def draw_polyhedra_kind(kind,
         # print('polyhedras: {0}   {1:10.2f} s'.format(kind, time.time() - tstart))
 
 
-def draw_isosurface(coll_isosurface, verts, faces, color,
+def draw_isosurface(name, coll_isosurface, verts, faces, color, label,
                     bsdf_inputs = None, material_style = 'default'):
     """Computes an isosurface from a volume grid.
     
@@ -217,14 +225,17 @@ def draw_isosurface(coll_isosurface, verts, faces, color,
     for key, value in bsdf_inputs.items():
             principled_node.inputs[key].default_value = value
     # create new mesh structure
-    mesh = bpy.data.meshes.new("isosurface")
+    mesh = bpy.data.meshes.new("isosurface_%s"%name)
     mesh.from_pydata(verts, [], faces)  
     mesh.update()
     mesh.polygons.foreach_set('use_smooth', [True]*len(mesh.polygons))
-    iso_object = bpy.data.objects.new("isosurface", mesh)
+    iso_object = bpy.data.objects.new("isosurface_%s"%name, mesh)
     iso_object.data = mesh
     iso_object.data.materials.append(material)
     bpy.ops.object.shade_smooth()
+    iso_object.bisosurface.flag = True
+    iso_object.bisosurface.label = label
+    iso_object.bisosurface.name = name
     coll_isosurface.objects.link(iso_object)
 
 # draw bonds
@@ -336,7 +347,7 @@ def cylinder_mesh_from_instance_vec(centers, normals, lengths, scale, source):
     faces1 = faces1.reshape(-1, nf1)
     faces2 = faces2 + offset
     faces2 = faces2.reshape(-1, nf2)
-    faces = list(faces1) + list(face2)
+    faces = list(faces1) + list(faces2)
     # print('cylinder_mesh_from_instance: {0:10.2f} s'.format( time.time() - tstart))
     return verts, faces
 
