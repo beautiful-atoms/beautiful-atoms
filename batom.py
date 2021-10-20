@@ -441,8 +441,17 @@ class Batom():
         
         """
         # render settings
+        """
+       
+        """
         nframe = len(frames)
-        if nframe == 0: return
+        """
+        Becareful!
+        Only one frame, we will not register keyframe.
+        If we registered keyframes here. Any change or the batoms has to be registered.
+        Register new change before rendering, or delete existing keyframes.
+        """
+        if nframe <= 1: return
         batom = self.batom
         nverts = len(batom.data.vertices)
         for i in range(0, nframe):

@@ -30,7 +30,7 @@ default_render_settings = {
         'motion_blur_position': 'START', 
         'motion_blur_steps': 10,
         'motion_blur_shutter': 30.0,
-        'frame': 0,
+        'frame': None,
         'functions': [],
         'run_render': True,
         'output': None,
@@ -255,7 +255,9 @@ class Render():
         elif self.run_render:
             bpy.ops.render.render(write_still = 1, animation = self.animation)
     def prepare(self, ):
-        self.scene.frame_set(self.frame)
+        # frame_set(1) is wrong when mesh is modified.
+        if self.frame is not None:
+            self.scene.frame_set(self.frame)
         if self.output is None:
             self.output = self.batoms.label
         self.directory = os.path.split(self.output)[0]

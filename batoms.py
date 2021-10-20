@@ -999,7 +999,7 @@ class Batoms():
         """
         if frames is None:
             frames = self.frames
-        if len(frames) == 0: return
+        if len(frames) <= 1: return
         if len(self.atoms) != len(frames[0]):
             raise Exception("Number of atoms %s is not equal to %s."%(len(self.atoms), len(frames[0])))
         atoms = frames[0]

@@ -9,7 +9,9 @@ bl_info = {
     "version": (0, 1, 0),
     "blender": (2, 83, 0),
     "location": "File -> Import -> Batoms (xyz, cif, pdb, ...)",
-    "description": "Python module for drawing and rendering ASE (Atomic Simulation Environment) atoms and molecules objects using blender.",
+    "description": """Python module for drawing and 
+rendering ASE (Atomic Simulation Environment) atoms and 
+molecules objects using blender.""",
     "warning": "",
     "category": "Import-Export",
 }
@@ -19,13 +21,18 @@ from batoms.batom import Batom
 
 
 import bpy
-from bpy.types import (Panel,
-                       Operator,
-                       AddonPreferences,
-                       PropertyGroup,
-                       )
+from bpy.types import (
+    Collection,
+    Object,
+)
+from bpy.props import (
+    PointerProperty,
+    CollectionProperty,
+)
 from . import (
-        custom_property,
+    custom_property,
+)
+from .gui import (
         gui_io,
         gui_batoms,
         gui_batom,
@@ -39,7 +46,8 @@ from . import (
 
 def menu_func_import_batoms(self, context):
     lay = self.layout
-    lay.operator(gui_io.IMPORT_OT_batoms.bl_idname,text="batoms file (xyz, cif, pdb, ...)")
+    lay.operator(gui_io.IMPORT_OT_batoms.bl_idname, 
+                    text="Batoms file (xyz, cif, pdb, ...)")
 
 
 classes = [
@@ -76,22 +84,32 @@ def register():
     for cls in classes:
         bpy.utils.register_class(cls)
     scene = bpy.types.Scene
-    scene.bapanel = bpy.props.PointerProperty(type=gui_batoms.BatomsProperties)
-    scene.btpanel = bpy.props.PointerProperty(type=gui_batom.BatomProperties)
-    scene.clpanel = bpy.props.PointerProperty(type=gui_cell.CellProperties)
-    scene.bbpanel = bpy.props.PointerProperty(type=gui_bond.BondProperties)
-    scene.plpanel = bpy.props.PointerProperty(type=gui_polyhedra.PolyhedraProperties)
-    scene.vopanel = bpy.props.PointerProperty(type=gui_volume.VolumeProperties)
-    bpy.types.Collection.batoms = bpy.props.PointerProperty(name = 'Batoms', type = custom_property.Batoms)
-    bpy.types.Collection.bbond = bpy.props.CollectionProperty(name = 'BBond', type = custom_property.BBond)
-    bpy.types.Collection.bpolyhedra = bpy.props.CollectionProperty(name = 'BPolyhedra', type = custom_property.BPolyhedra)
-    bpy.types.Collection.bisosurface = bpy.props.CollectionProperty(name = 'BIsosurface', type = custom_property.BIsosurface)
-    bpy.types.Object.batom = bpy.props.PointerProperty(name = 'Batom', type = custom_property.Batom)
-    bpy.types.Object.bcell = bpy.props.PointerProperty(name = 'Bcell', type = custom_property.Bcell)
-    bpy.types.Object.bbond = bpy.props.PointerProperty(name = 'BBond', type = custom_property.BBond)
-    bpy.types.Object.bpolyhedra = bpy.props.PointerProperty(name = 'BPolyhedra', type = custom_property.BPolyhedra)
-    bpy.types.Object.bisosurface = bpy.props.PointerProperty(name = 'BIsosurface', type = custom_property.BIsosurface)
-    bpy.types.Object.bvolume = bpy.props.PointerProperty(name = 'BVolume', type = custom_property.BVolume)
+    scene.bapanel = PointerProperty(type=gui_batoms.BatomsProperties)
+    scene.btpanel = PointerProperty(type=gui_batom.BatomProperties)
+    scene.clpanel = PointerProperty(type=gui_cell.CellProperties)
+    scene.bbpanel = PointerProperty(type=gui_bond.BondProperties)
+    scene.plpanel = PointerProperty(type=gui_polyhedra.PolyhedraProperties)
+    scene.vopanel = PointerProperty(type=gui_volume.VolumeProperties)
+    Collection.batoms = PointerProperty(name = 'Batoms', 
+                            type = custom_property.Batoms)
+    Collection.bbond = CollectionProperty(name = 'BBond', 
+                            type = custom_property.BBond)
+    Collection.bpolyhedra = CollectionProperty(name = 'BPolyhedra', 
+                            type = custom_property.BPolyhedra)
+    Collection.bisosurface = CollectionProperty(name = 'BIsosurface', 
+                            type = custom_property.BIsosurface)
+    Object.batom = PointerProperty(name = 'Batom', 
+                            type = custom_property.Batom)
+    Object.bcell = PointerProperty(name = 'Bcell', 
+                            type = custom_property.Bcell)
+    Object.bbond = PointerProperty(name = 'BBond', 
+                            type = custom_property.BBond)
+    Object.bpolyhedra = PointerProperty(name = 'BPolyhedra', 
+                            type = custom_property.BPolyhedra)
+    Object.bisosurface = PointerProperty(name = 'BIsosurface', 
+                            type = custom_property.BIsosurface)
+    Object.bvolume = PointerProperty(name = 'BVolume', 
+                            type = custom_property.BVolume)
     
 
 def unregister():
