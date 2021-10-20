@@ -6,6 +6,9 @@ from batoms.butils import removeAll
 def test_batom():
     """
     """
+    from batoms import Batom
+    import numpy as np
+    from batoms.butils import removeAll
     removeAll()
     positions = np.array([[0, 0, 0], [1.52, 0, 0]])
     h = Batom('h2o', 'H', positions = positions)
@@ -25,8 +28,9 @@ def test_batom():
     assert isinstance(h3, Batom)
 
 def test_positions():
-    from batoms.batom import Batom
+    from batoms import Batom
     import numpy as np
+    from batoms.butils import removeAll
     removeAll()
     positions = np.array([[0, 0, 0], [1.52, 0, 0]])
     h = Batom('h2o', 'H', positions = positions)
@@ -35,15 +39,17 @@ def test_positions():
 
 
 def test_batom_animation():
-    from batoms.batom import Batom
+    from batoms import Batom
     import numpy as np
+    from batoms.butils import removeAll
     removeAll()
     positions = np.array([[0, 0 ,0], [1.52, 0, 0]])
     o = Batom('co2', 'O', positions)
     images = []
     for i in range(10):
         images.append(positions + np.array([i, 0, 0]))
-    o.load_frames(images)
+
+    o.frames = images
 
 
 if __name__ == '__main__':

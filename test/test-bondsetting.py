@@ -21,7 +21,7 @@ def test_polyhedra():
     from batoms.bio import read
     from batoms.butils import removeAll
     removeAll()
-    tio2 = read('../../docs/source/_static/datas/tio2.cif')
+    tio2 = read('datas/tio2.cif')
     tio2.boundary = 0.01
 
 
@@ -29,7 +29,7 @@ def test_search_bond():
     from batoms.bio import read
     from batoms.butils import removeAll
     removeAll()
-    pk = read('../../docs/source/_static/datas/perovskite.cif')
+    pk = read('datas/perovskite.cif')
     pk.repeat([2, 2, 2])
     pk.boundary = 0.01
     pk.model_type = 2
@@ -41,7 +41,7 @@ def test_search_bond_2():
     from batoms.bio import read
     from batoms.butils import removeAll
     removeAll()
-    mol = read('../../docs/source/_static/datas/anthraquinone.cif')
+    mol = read('datas/anthraquinone.cif')
     mol.boundary = 0.01
     mol.draw_cell()
     mol.model_type = 1
@@ -51,7 +51,7 @@ def test_search_bond_urea():
     from batoms.bio import read
     from batoms.butils import removeAll
     removeAll()
-    mol = read('../../docs/source/_static/datas/urea.cif')
+    mol = read('datas/urea.cif')
     mol.boundary = 2
     mol.draw_cell()
     mol.model_type = 1
@@ -65,7 +65,7 @@ def test_search_bond_3():
     from batoms.bio import read
     from batoms.butils import removeAll
     removeAll()
-    mof = read('../../docs/source/_static/datas/mof-5.cif')
+    mof = read('datas/mof-5.cif')
     mof.boundary = 0.01
     mof.bondsetting[('Zn-O')].polyhedra = True
     mof.model_type = 1
@@ -95,10 +95,10 @@ def test_hydrogen_bond():
 
 
 if __name__ == '__main__':
-    # test_replace()
-    # test_polyhedra()
-    # test_hydrogen_bond()
-    # test_search_bond()
-    # test_search_bond_2()
+    test_replace()
+    test_polyhedra()
+    test_hydrogen_bond()
+    test_search_bond()
+    test_search_bond_2()
     test_search_bond_3()
     print('\n Bondsetting: All pass! \n')

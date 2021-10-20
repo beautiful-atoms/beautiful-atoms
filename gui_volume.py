@@ -21,7 +21,7 @@ class Volume_PT_prepare(Panel):
     bl_space_type  = "VIEW_3D"
     bl_region_type = "UI"
     # bl_options     = {}
-    bl_category = "Batoms"
+    bl_category = "Volumetric"
     bl_idname = "VOLUME_PT_Tools"
 
     def draw(self, context):
@@ -31,6 +31,14 @@ class Volume_PT_prepare(Panel):
         box = layout.box()
         row = box.row()
         row.prop(vopanel, "level")
+        col = box.column(align=True)
+        row = box.row()
+        row.prop(vopanel, "color")
+
+        box = layout.box()
+        col = box.column(align=True)
+        col.operator("batoms.add_level")
+        col.prop(vopanel, "label")
 
 
 
@@ -44,11 +52,25 @@ class VolumeProperties(bpy.types.PropertyGroup):
     def Callback_modify_level(self, context):
         vopanel = bpy.context.scene.vopanel
         modify_volume_attr(self.selected_batoms, self.selected_isosurface, 'level', vopanel.level)
+    def Callback_modify_color(self, context):
+        vopanel = bpy.context.scene.vopanel
+        color = vopanel.color
+        modify_volume_attr(self.selected_batoms, self.selected_isosurface, 'color', color)
+
     
     level: FloatProperty(
         name="Level", default=0.01,
         description = "level for isosurface", update = Callback_modify_level)
-    
+    color: FloatVectorProperty(
+        name="color", 
+        subtype='COLOR',
+        default=(0.1, 0.8, 0.4 ,1.0),
+        size =4,
+        description="color picker",
+        update = Callback_modify_color)
+    label: StringProperty(
+        name="label", default='2',
+        description = "new level")
 
 def modify_volume_attr(batoms_name_list, bisosurface_name_list, key, value):
     selected_isosurface_new = []
@@ -63,3 +85,23 @@ def modify_volume_attr(batoms_name_list, bisosurface_name_list, key, value):
     for name in selected_isosurface_new:
         obj = bpy.data.objects.get(name)
         obj.select_set(True)        
+    
+
+def add_level(name, level, color):
+    """
+    """
+    selected_batoms = get_selected_batoms()
+    for batoms_name in selected_batoms:
+        batoms = Batoms(label = batoms_name)
+        batoms.isosurfacesetting[name] = [level, color]
+        batoms.draw_isosurface()
+
+class AddButton(Operator):
+    bl_idname = "batoms.add_level"
+    bl_label = "Add"
+    bl_description = "Add distance, angle and dihedra angle"
+
+    def execute(self, context):
+        bvoanel = context.scene.vopanel
+        add_level(bvoanel.label, bvoanel.level, bvoanel.color)
+        return {'FINISHED'}

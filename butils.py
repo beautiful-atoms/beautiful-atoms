@@ -16,8 +16,8 @@ def read_batoms_list():
     return items
 
 def get_selected_batoms():
-    '''   
-    '''
+    """
+    """
     batoms_list = []
     for obj in bpy.context.selected_objects:
         for p in ['batom', 'bbond', 'bisosurface', 'bpolyhedra']:
@@ -26,15 +26,38 @@ def get_selected_batoms():
     batoms_list = list(set(batoms_list))
     return batoms_list
 
-def get_selected_objects(name):
-    '''
-    '''
+def get_selected_objects(attr):
+    """
+    """
     bond_list = []
     for obj in bpy.context.selected_objects:
-        if getattr(obj, name).flag:
+        if getattr(obj, attr).flag:
             bond_list.append(obj.name)
     return bond_list
 
+def get_selected_vertices():
+    """
+    change to 'Object' mode
+    in order
+    """
+    import numpy as np
+    objs = []
+    for obj in bpy.context.objects_in_mode:
+        if obj.batom.flag:
+            objs.append(obj)
+    dict_mode = {}
+    for obj in objs:
+        dict_mode[obj.name] = obj.mode
+    bpy.ops.object.mode_set(mode='OBJECT')
+    selected_vertices = []
+    for obj in objs:
+        count = len(obj.data.vertices)
+        sel = np.zeros(count, dtype=np.bool)
+        obj.data.vertices.foreach_get('select', sel)
+        selected_vertices.append((obj.name, sel))
+    # back to whatever mode we were in
+    # bpy.ops.object.mode_set(mode=mode)
+    return selected_vertices
 
 def remove_collection(name):
     """

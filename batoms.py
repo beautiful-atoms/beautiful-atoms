@@ -96,7 +96,7 @@ class Batoms():
                 show_unit_cell = True,
                 volume = None,
                 segments = [32, 16],
-                shape = 'UV_SPHERE',
+                shape = 0,
                 species_props = {},
                 radii_style = 'covalent',
                 color_style = 'JMOL',
@@ -611,12 +611,19 @@ class Batoms():
                 self.batoms[species].extend(batom)
             else:
                 ba = batom.copy(self.label, species)
-                t = self.cell.location - ba.location
-                ba.batom.location = self.cell.location
-                bpy.context.view_layer.update()
-                ba.positions = ba.positions - t
+                # reset the location of batom, same as the unit cell
                 self.coll.children['%s_atom'%self.label].objects.link(ba.batom)
+        self.reset_batom_location()
         remove_collection(other.label)
+    def reset_batom_location(self):
+        """
+        Important!
+        """
+        for species, ba in self.batoms.items():
+            t = self.cell.location - ba.location
+            ba.batom.location = self.cell.location
+            bpy.context.view_layer.update()
+            ba.positions = ba.positions - t
     def __imul__(self, m):
         """
         Todo: better use for loop for all species to speedup
@@ -769,7 +776,7 @@ class Batoms():
         """
         tstart = time()
         boundary = self.boundary
-        atoms0 = self.atoms
+        atoms0 = self.batoms2atoms(self.batoms, local=True)
         if atoms0.pbc.any():
             # find boudary atoms
             atoms_boundary, offsets_skin = search_boundary(atoms0, boundary, self.bondsetting.maxcutoff)
@@ -853,13 +860,13 @@ class Batoms():
         return self.batoms2atoms(batoms)
     @property
     def atoms(self):
-        return self.get_atoms(self.batoms)
+        return self.batoms2atoms(self.batoms)
     @property
     def atoms_boundary(self):
-        return self.get_atoms(self.batoms_boundary)
+        return self.batoms2atoms(self.batoms_boundary)
     @property
     def atoms_skin(self):
-        return self.get_atoms(self.batoms_skin)
+        return self.batoms2atoms(self.batoms_skin)
     def get_atoms_with_boundary(self, X = False):
         """
         build ASE atoms from batoms dict.
@@ -928,6 +935,7 @@ class Batoms():
         return batoms_skin
     def batoms2atoms(self, batoms, local = False, X = False):
         object_mode()
+        self.reset_batom_location()
         atoms = Atoms()
         species_list = []
         symbols = []

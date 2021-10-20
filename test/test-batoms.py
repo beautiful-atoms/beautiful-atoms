@@ -68,19 +68,19 @@ def test_batoms_animation():
         temp.rotate(18*i, 'z')
         images.append(temp)
     c2h6so = Batoms(label = 'c2h6so', atoms = images)
-    c2h6so.load_frames()
+    c2h6so.set_frames()
     # c2h6so.render(animation = True)
 
 def test_cavity():
     from batoms.bio import read
     from batoms.butils import removeAll
     removeAll()
-    mof = read('../docs/source/_static/datas/mof-5.cif')
+    mof = read('datas/mof-5.cif')
     mof.draw_cavity_sphere(9.0, boundary = [[0.2, 0.8], [0.2, 0.8], [0.2, 0.8]])
     mof.model_type = 2
     mof.draw_cell()
-    mof.render.light_energy = 30
-    mof.render.run([1, 0, 0], engine = 'eevee')
+    mof.render.light_energy = 5
+    mof.render.run([1, 0, 0])
 
 def test_get_angles():
     from ase.build import molecule

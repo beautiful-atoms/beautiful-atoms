@@ -23,7 +23,7 @@ def test_bond_search():
     from batoms.batoms import Batoms
     from batoms.bio import read
     removeAll()
-    tio2 = read('../../docs/source/_static/datas/tio2.cif')
+    tio2 = read('datas/tio2.cif')
     tio2.boundary = 0.01
     tio2.model_type = 2
     atoms = tio2.get_atoms_with_boundary()

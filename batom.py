@@ -12,15 +12,18 @@ from batoms.data import material_styles_dict
 from batoms.tools import get_atom_kind
 import numpy as np
 
+shapes = ["UV_SPHERE", "ICO_SPHERE", "CUBE"]
+
+
 class Batom():
     """Batom Class
     
-    Then, a Batom object is linked to this main collection in Blender. 
+    A Batom object is linked to this main collection in Blender. 
 
     Parameters:
 
     label: str
-        Name of the batom
+        Name of the Batoms.
     species: str
         species of the atoms.
     positions: array
@@ -29,8 +32,18 @@ class Batom():
         The object’s origin location in global coordinates.
     element: str
         element of the atoms
+    segments: list of 2 Int
+        Number of segments used to draw the UV_Sphere
+        Default: [32, 16]
+    subdivisions: Int
+        Number of subdivision used to draw the ICO_Sphere
+        Default: 2
     color_style: str
         "JMOL", "ASE", "VESTA"
+    radii_style: str
+        "covelent", "vdw", "ionic"
+    shape: Int
+        0, 1, or 2. ["UV_SPHERE", "ICO_SPHERE", "CUBE"]
 
     Examples:
 
@@ -49,7 +62,7 @@ class Batom():
                 element = None,
                 scale = 1.0, 
                 segments = [32, 16],
-                shape = 'UV_SPHERE',
+                shape = 0,
                 subdivisions = 2,
                 props = {},
                 color = None,
@@ -69,28 +82,26 @@ class Batom():
                 self.element = element
             self.name = 'atom_%s_%s'%(self.label, self.species)
             self.props = props
-            self.material_style = material_style
-            self.bsdf_inputs = bsdf_inputs
             self.species_data = get_atom_kind(self.element, scale = scale, 
                                 props = self.props, radii_style = radii_style, 
                                 color_style = color_style)
             if color:
                 self.species_data['color'] = color
-            self.set_material(material)
+            self.set_material(bsdf_inputs, material_style, material)
             self.set_instancer(segments = segments, 
-                            subdivisions = subdivisions, shape = shape)
+                            subdivisions = subdivisions, shape = shapes[shape])
             self.set_object(positions, location)
             self.batom.batom.radius = self.species_data['radius']
         else:
             self.from_batom(label)
-    def set_material(self, material = None):
+    def set_material(self, bsdf_inputs = None, material_style = 'default', material = None):
         name = 'material_atom_{0}_{1}'.format(self.label, self.species)
         if material:
             material = material.copy()
             material.name = name
         elif name not in bpy.data.materials:
-            if not self.bsdf_inputs:
-                bsdf_inputs = material_styles_dict[self.material_style]
+            if not bsdf_inputs:
+                bsdf_inputs = material_styles_dict[material_style]
             material = bpy.data.materials.new(name)
             material.diffuse_color = self.species_data['color']
             material.metallic = bsdf_inputs['Metallic']
@@ -356,7 +367,6 @@ class Batom():
         """
         "UV_SPHERE", "ICO_SPHERE", "CUBE"
         """
-        shapes = ["UV_SPHERE", "ICO_SPHERE", "CUBE"]
         if shape not in [0, 1, 2]:
             raise Exception('Shape %s is not supported!'%shape)
         self.clean_batoms_objects('instancer_atom_%s_%s'%(self.label, self.species))
@@ -514,7 +524,7 @@ class Batom():
                                  'vector')
         M = np.product(m)
         n = len(self)
-        positions = np.tile(self.local_positions, (M,) + (1,) * (len(self.local_positions.shape) - 1))
+        positions = np.tile(self.positions, (M,) + (1,) * (len(self.positions.shape) - 1))
         i0 = 0
         for m0 in range(m[0]):
             for m1 in range(m[1]):
@@ -577,8 +587,10 @@ class Batom():
         return s
     def add_vertices(self, positions):
         """
+        Todo: find a fast way.
         """
         object_mode()
+        positions = positions - self.location
         bm = bmesh.new()
         bm.from_mesh(self.batom.data)
         bm.verts.ensure_lookup_table()
