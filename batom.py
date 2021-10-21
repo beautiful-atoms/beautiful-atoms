@@ -239,10 +239,10 @@ class Batom():
         using foreach_get and foreach_set to improve performance.
         """
         n = len(self)
-        positions = np.empty(n*3, dtype=np.float64)
-        self.batom.data.vertices.foreach_get('co', positions)  
-        positions = positions.reshape((n, 3))
-        return positions
+        local_positions = np.empty(n*3, dtype=np.float64)
+        self.batom.data.vertices.foreach_get('co', local_positions)  
+        local_positions = local_positions.reshape((n, 3))
+        return local_positions
     @property
     def positions(self):
         return self.get_positions()
@@ -251,25 +251,37 @@ class Batom():
         self.set_positions(positions)
     def get_positions(self):
         """
-        Get array of positions.
+        Get global positions.
         """
         local_positions = self.local_positions
         n = len(local_positions)
+        # positions (natom, 3) to (natom, 4)
         local_positions = np.append(local_positions, np.ones((n, 1)), axis = 1)
         mat= np.array(self.batom.matrix_world)
         positions = mat.dot(local_positions.T).T
-        return positions[:, :3]
+        # (natom, 4) back to (natom, 3)
+        positions = positions[:, :3]
+        return positions
     def set_positions(self, positions):
         """
-        Set positions
+        Set global positions to local vertices
         """
         natom = len(self)
         if len(positions) != natom:
             raise ValueError('positions has wrong shape %s != %s.' %
                                 (len(positions), natom))
-        positions = positions - np.array(self.batom.location)
-        positions = positions.reshape((natom*3, 1))
-        self.batom.data.vertices.foreach_set('co', positions)
+        mat= np.array(self.batom.matrix_world)
+        # positions (natom, 3) to (natom, 4)
+        n = len(positions)
+        positions = np.append(positions, np.ones((n, 1)), axis = 1)
+        # inverse of transformation matrix
+        mat = np.linalg.inv(mat)
+        local_positions = mat.dot(positions.T).T
+        # (natom, 4) back to (natom, 3)
+        local_positions = local_positions[:, :3]
+        # rashpe to (natoms*3, 1) and use forseach_set
+        local_positions = local_positions.reshape((natom*3, 1))
+        self.batom.data.vertices.foreach_set('co', local_positions)
         self.batom.data.update()
     def get_scaled_positions(self, cell):
         """
@@ -301,10 +313,14 @@ class Batom():
         """
         self.set_color(color)
     def get_color(self):
+        """
+
+        """
         Viewpoint_color = self.material.diffuse_color
-        BSDF_color = self.bsdf['Base bsdf'].default_value
+        BSDF_color = self.bsdf['Base Color'].default_value[:]
         Alpha = self.bsdf['Alpha'].default_value
-        return Viewpoint_color, BSDF_color, Alpha
+        color = [BSDF_color[0], BSDF_color[1], BSDF_color[2], Alpha]
+        return color
     def set_color(self, color):
         if len(color) == 3:
             color = [color[0], color[1], color[2], 1]

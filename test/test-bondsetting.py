@@ -5,6 +5,7 @@ from batoms.bio import read
 import numpy as np
 
 
+
 def test_replace():
     from ase.build import molecule
     from batoms.batoms import Batoms
@@ -72,6 +73,24 @@ def test_search_bond_3():
     mof.render.run([0, 1, 0], engine = 'eevee', output = 'mof-5.png')
 
 
+def test_high_order_bond():
+    """
+    High order bond
+    """
+    from ase.build import molecule
+    from batoms import Batoms
+    from batoms.butils import removeAll
+    removeAll()
+    c6h6 = molecule('C6H6')
+    c6h6 = Batoms('c6h6', atoms = c6h6)
+    for i in range(6):
+        c6h6.replace('C', 'C_%s'%i, [0])
+
+    c6h6.bondsetting['C_1-C_0'].order = 2
+    c6h6.bondsetting['C_3-C_2'].order = 2
+    c6h6.bondsetting['C_5-C_4'].order = 2
+    c6h6.model_type = 1
+    c6h6.render.run([0, 0, 1], engine = 'eevee', output = 'c6h6.png')
 
 
 def test_hydrogen_bond():
@@ -101,4 +120,5 @@ if __name__ == '__main__':
     test_search_bond()
     test_search_bond_2()
     test_search_bond_3()
+    test_high_order_bond()
     print('\n Bondsetting: All pass! \n')

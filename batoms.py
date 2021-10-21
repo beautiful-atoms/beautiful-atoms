@@ -483,11 +483,13 @@ class Batoms():
         if species2 in self.batoms:
             self.batoms[species2].add_vertices(positions)
         else:
-            ba = Batom(self.label, species2, positions, segments = self.segments, 
-                       shape = self.shape, material_style=self.material_style, 
-                       bsdf_inputs=self.bsdf_inputs, 
-                       radii_style = self.radii_style, 
-                       color_style=self.color_style)
+            ba = Batom(self.label, species2, positions, 
+                    scale = self.batoms[species1].scale,
+                    segments = self.segments, 
+                    shape = self.shape, material_style=self.material_style, 
+                    bsdf_inputs=self.bsdf_inputs, 
+                    radii_style = self.radii_style, 
+                    color_style=self.color_style)
             self.coll.children['%s_atom'%self.label].objects.link(ba.batom)
             self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
             for sp in self.species:
@@ -495,7 +497,27 @@ class Batoms():
             self.polyhedrasetting.add_polyhedras([sp])
         self.batoms[species1].delete(index)
             
-    
+    def fragmentate(self, species, index = [], suffix = 'f'):
+        """
+        species: str
+            species to be fragmentated
+        index: list of Int
+        
+        suffix: str
+            suffix of label of new species. The index will be used too.
+        """
+        positions = self.batoms[species].positions[index]
+        n = len(positions)
+        species_dict = {'%s_%s%s'%(species, suffix, i): [positions[i]] 
+                                    for i in range(n)}
+        frag = self.__class__(label = 'frag_%s'%suffix, 
+                                species = species_dict,
+                                segments = self.segments)
+        for sp, batom in frag.batoms.items():
+            batom.scale = self.batoms[species].scale
+            batom.color = self.batoms[species].color
+        self.delete(species, index)
+        self.extend(frag)
     def delete(self, species, index = []):
         """
         delete atoms.
@@ -624,6 +646,7 @@ class Batoms():
             ba.batom.location = self.cell.location
             bpy.context.view_layer.update()
             ba.positions = ba.positions - t
+            bpy.context.view_layer.update()
     def __imul__(self, m):
         """
         Todo: better use for loop for all species to speedup
@@ -671,14 +694,14 @@ class Batoms():
         batoms.bondsetting = self.bondsetting.copy(label)
         batoms.polyhedrasetting = self.polyhedrasetting.copy(label)
         return batoms
-    def write(self, filename, local = True):
+    def write(self, filename):
         """
         Save atoms to file.
 
         >>> h2o.write('h2o.cif')
         
         """
-        atoms = self.batoms2atoms(self.batoms, local = local)
+        atoms = self.batoms2atoms(self.batoms)
         atoms.write(filename)
     def update(self):
         """
@@ -776,7 +799,7 @@ class Batoms():
         """
         tstart = time()
         boundary = self.boundary
-        atoms0 = self.batoms2atoms(self.batoms, local=True)
+        atoms0 = self.batoms2atoms(self.batoms)
         if atoms0.pbc.any():
             # find boudary atoms
             atoms_boundary, offsets_skin = search_boundary(atoms0, boundary, self.bondsetting.maxcutoff)
@@ -933,13 +956,25 @@ class Batoms():
         for ba in self.coll_skin.objects:
             batoms_skin[ba.batom.species] = Batom(ba.name)
         return batoms_skin
-    def batoms2atoms(self, batoms, local = False, X = False):
+    def batoms2atoms(self, batoms, X = False):
+        """
+        save batoms objects to ASE atoms
+
+        Parameters:
+
+        batoms: dict
+            batom objects
+        X: bool
+            save X species or not
+            
+        """
         object_mode()
-        self.reset_batom_location()
+        # self.reset_batom_location()
         atoms = Atoms()
         species_list = []
         symbols = []
         positions = []
+        origin = self.cell.verts[3]
         for species, batom in batoms.items():
             # ghost site will not save 
             if not X and batom.element == 'X': continue
@@ -948,10 +983,11 @@ class Batoms():
             species_list.extend([species]*len(batom))
             symbol = [batom.element]*len(batom)
             symbols.extend(symbol)
-            if local:
-                positions.extend(batom.local_positions)
-            else:
-                positions.extend(batom.positions)
+            positions.extend(batom.positions - origin)
+        """
+        Because no file format will save the location of the cell
+        We have to shfit it to origin.
+        """
         atoms = Atoms(symbols, positions, cell = self.cell, pbc = self.pbc)
         atoms.info['species'] = species_list
         return atoms

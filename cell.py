@@ -89,9 +89,9 @@ class Bcell():
     def array(self):
         return self.get_array()
     def get_array(self):
-        cell = np.array([self.local_verts[0] - self.local_verts[3],
-                         self.local_verts[1] - self.local_verts[3],
-                         self.local_verts[2] - self.local_verts[3]])
+        cell = np.array([self.verts[0] - self.verts[3],
+                         self.verts[1] - self.verts[3],
+                         self.verts[2] - self.verts[3]])
         return cell
     @property
     def local_verts(self):

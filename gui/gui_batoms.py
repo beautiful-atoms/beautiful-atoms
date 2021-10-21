@@ -43,13 +43,21 @@ class Batoms_PT_prepare(Panel):
         row.prop(bapanel, "polyhedra_type", expand  = True)
         row = box.row()
         row.prop(bapanel, "hide", expand  = True)
+        
         row = box.row()
         row.prop(bapanel, "scale")
 
         box = layout.box()
         col = box.column(align=True)
-        col.label(text="Replace by:")
-        col.prop(bapanel, "species")
+        col.operator("batoms.replace")
+        row = box.row(align=True)
+        row.prop(bapanel, "species")
+
+        row = box.row(align=True)
+        col = box.column(align=True)
+        col.operator("batoms.fragmentate")
+        row = box.row(align=True)
+        row.prop(bapanel, "suffix", expand  = True)
 
         box = layout.box()
         col = box.column(align=True)
@@ -98,9 +106,6 @@ class BatomsProperties(bpy.types.PropertyGroup):
     def Callback_export_atoms(self, context):
         bapanel = bpy.context.scene.bapanel
         export_atoms(self.selected_batoms, bapanel.filetype)
-    def Callback_replace_atoms(self, context):
-        bapanel = bpy.context.scene.bapanel
-        replace_atoms(self.selected_vertices, bapanel.species)
     
     model_type: EnumProperty(
         name="model_type",
@@ -124,8 +129,13 @@ class BatomsProperties(bpy.types.PropertyGroup):
         update=Callback_polyhedra_type,
         options={'ENUM_FLAG'},
         )
-    hide: BoolProperty(name="hide", default=False, 
+    hide: BoolProperty(name="hide",
+                default=False, 
+                description = "Hide all object for view and rendering",
                 update = Callback_modify_hide)
+    single: BoolProperty(name="single", 
+                default=False, 
+                description = "Separate the species into single atom")
     scale: FloatProperty(
         name="scale", default=1.0,
         description = "scale", update = Callback_modify_scale)
@@ -133,8 +143,11 @@ class BatomsProperties(bpy.types.PropertyGroup):
         name="value", default='',
         description = "measurement in Angstrom, degree")
     species: StringProperty(
-        name="", default='O_1',
-        description = "replaced by species", update = Callback_replace_atoms)
+        name="species", default='O_1',
+        description = "Replaced by this species")
+    suffix: StringProperty(
+        name="suffix", default='f',
+        description = "Replaced by this suffix")
     atoms_str: StringProperty(
         name = "Formula", default='H2O',
         description = "atoms_str")
@@ -166,8 +179,9 @@ def export_atoms(selected_batoms, filetype = 'xyz'):
     for batoms in batoms_list:
         batoms.select = True
 
-def replace_atoms(selected_vertices, species):
+def replace_atoms(species):
     batom_list = []
+    selected_vertices = get_selected_vertices()
     for name, index in selected_vertices:
         obj = bpy.data.objects[name]
         batoms = Batoms(label = obj.batom.label)
@@ -178,6 +192,16 @@ def replace_atoms(selected_vertices, species):
             obj = bpy.data.objects.get(name)
             bpy.context.view_layer.objects.active = obj
             bpy.ops.object.mode_set(mode='EDIT')
+class ReplaceButton(Operator):
+    bl_idname = "batoms.replace"
+    bl_label = "Replace by"
+    bl_description = "Replace selected atoms by new species"
+
+    def execute(self, context):
+        bapanel = context.scene.bapanel
+        replace_atoms(bapanel.species)
+        return {'FINISHED'}
+
 def measurement():
     """
     Todo: only distance works.
@@ -233,6 +257,30 @@ class MeasureButton(Operator):
         bapanel = context.scene.bapanel
         result = measurement()
         bapanel.measurement = result
+        return {'FINISHED'}
+
+
+def fragmentate(suffix):
+    batom_list = []
+    selected_vertices = get_selected_vertices()
+    for name, index in selected_vertices:
+        obj = bpy.data.objects[name]
+        batoms = Batoms(label = obj.batom.label)
+        batoms.fragmentate(obj.batom.species, index, suffix)
+        batom_list.append(name)
+    for name in batom_list:
+        if name in bpy.data.objects:
+            obj = bpy.data.objects.get(name)
+            bpy.context.view_layer.objects.active = obj
+            bpy.ops.object.mode_set(mode='EDIT')
+class FragmentateButton(Operator):
+    bl_idname = "batoms.fragmentate"
+    bl_label = "Fragmentate"
+    bl_description = "Fragmentate selected atoms"
+
+    def execute(self, context):
+        bapanel = context.scene.bapanel
+        fragmentate(bapanel.suffix)
         return {'FINISHED'}
 
 class AddMolecule(Operator):

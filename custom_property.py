@@ -65,6 +65,8 @@ class BBond(bpy.types.PropertyGroup):
     color1: FloatVectorProperty(name="color1", size = 4)
     color2: FloatVectorProperty(name="color1", size = 4)
     width: FloatProperty(name="width", default = 0.10)
+    order: IntProperty(name="order", default = 1)
+    order_offset: FloatProperty(name="order_offset", default = 0.1)
     style: EnumProperty(
         name="style",
         description="bond style",
@@ -73,8 +75,26 @@ class BBond(bpy.types.PropertyGroup):
                ('2',"Dashed line", ""),
                ('3',"Dotted line", "")),
                default='1')
-    def as_list(self) -> list:
-        return [self.min, self.max, self.search, self.polyhedra, self.color1, self.color2, self.width, self.style]
+    def as_dict(self) -> dict:
+        setdict = {
+                 'flag': self.flag, 
+                  'label': self.label, 
+                  'species1': self.species1, 
+                  'species2': self.species2, 
+                  'species': self.species, 
+                  'name': self.name, 
+                  'min': self.min, 
+                  'max': self.max, 
+                  'search': self.search,
+                  'polyhedra': self.polyhedra,
+                  'color1': self.color1,
+                  'color2': self.color2,
+                  'width': self.width,
+                  'order': self.order,
+                  'order_offset': self.order_offset,
+                  'style': self.style
+        }
+        return setdict
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
         s = 'Bondpair      min     max   Search_bond    Polyhedra \n'
@@ -92,8 +112,16 @@ class BPolyhedra(bpy.types.PropertyGroup):
     name:StringProperty(name = "name")
     color: FloatVectorProperty(name="color", size = 4)
     edgewidth: FloatProperty(name="edgewidth", default = 0.10)
-    def as_list(self) -> list:
-        return [self.color, self.edgewidth]
+    def as_dict(self) -> dict:
+        setdict = {
+            'flag': self.flag, 
+            'label': self.label, 
+            'species': self.species, 
+            'name': self.name, 
+            'color': self.color,
+            'edgewidth': self.edgewidth,
+        }
+        return setdict
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
         s = 'Center                color           edgewidth \n'
@@ -112,8 +140,15 @@ class BIsosurface(bpy.types.PropertyGroup):
     level: FloatProperty(name="level", default = 0.10)
     color: FloatVectorProperty(name="color", size = 4, default = [1, 1, 0, 0.5])
 
-    def as_list(self) -> list:
-        return [self.level, self.color]
+    def as_dict(self) -> dict:
+        setdict = {
+            'flag': self.flag, 
+            'label': self.label, 
+            'name': self.name, 
+            'color': self.color,
+            'level': self.level,
+        }
+        return setdict
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
         s = 'Name        level        color            \n'

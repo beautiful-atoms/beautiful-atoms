@@ -24,23 +24,13 @@ class Polyhedrasetting(Setting):
         if polyhedrasetting is not None:
             for key, data in polyhedrasetting.items():
                 self[key] = data
-    def __setitem__(self, index, value):
-        """
-        Add polyhedra one by one
-        """
-        p = self.find(index)
-        if p is None:
-            p = self.collection.add()
-        p.flag = True
-        p.species = index
-        p.name = index
-        p.color = value[0]
-        p.edgewidth = value[1]
     def set_default(self, species):
         """
         """
         for sp, data in species.items():
-            self[sp] = [np.append(data['color'][:3], 0.3), 0.005]
+            self[sp] = {'color': np.append(data['color'][:3], 0.3),
+                        'edgewidth': 0.005,
+            }
     def add_polyhedras(self, polyhedras):
         species = {sp: self.species[sp] for sp in polyhedras}
         self.set_default(species)

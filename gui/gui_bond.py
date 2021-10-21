@@ -37,19 +37,26 @@ class Bond_PT_prepare(Panel):
         col.prop(bbpanel, "bond_style", expand  = True)
         box = layout.box()
         col = box.column(align=True)
-        col.label(text="Length")
         row = box.row()
         row.prop(bbpanel, "min")
+        row = box.row()
         row.prop(bbpanel, "max")
         row = box.row()
         row.prop(bbpanel, "bondwidth")
 
+        box = layout.box()
+        row = box.row()
+        row.prop(bbpanel, "order")
+        row = box.row()
+        row.prop(bbpanel, "order_offset")
 
+        box = layout.box()
         row = box.row()
         row.prop(bbpanel, "search")
         row = box.row()
         row.prop(bbpanel, "polyhedra")
 
+        box = layout.box()
         col = box.column(align=True)
         row = box.row()
         row.prop(bbpanel, "bondcolor")
@@ -89,6 +96,14 @@ class BondProperties(bpy.types.PropertyGroup):
         bbpanel = bpy.context.scene.bbpanel
         bondcolor = bbpanel.bondcolor
         modify_bond_attr(self.selected_batoms, self.selected_bond, 'color', bondcolor)
+    def Callback_modify_order(self, context):
+        bbpanel = bpy.context.scene.bbpanel
+        order = bbpanel.order
+        modify_bond_attr(self.selected_batoms, self.selected_bond, 'order', order)
+    def Callback_modify_order_offset(self, context):
+        bbpanel = bpy.context.scene.bbpanel
+        order_offset = bbpanel.order_offset
+        modify_bond_attr(self.selected_batoms, self.selected_bond, 'order_offset', order_offset)
 
     bond_style: EnumProperty(
         name="style",
@@ -102,15 +117,15 @@ class BondProperties(bpy.types.PropertyGroup):
         options={'ENUM_FLAG'},
         )
     bondwidth: FloatProperty(
-        name="bondwidth", default=0.2,
+        name="bondwidth", default=0.1,
         description = "bondwidth", update = Callback_modify_bondwidth)
     min: FloatProperty(
-        name="min", default=0,
+        name="Length min", default=0,
         description = "min", update = Callback_modify_min)
     max: FloatProperty(
-        name="max", default=2.0,
+        name="Length max", default=2.0,
         description = "max", update = Callback_modify_max)
-    search: IntProperty(name="search", default=0, 
+    search: IntProperty(name="Search mode", default=0, 
                 update = Callback_modify_search)
     polyhedra: BoolProperty(name="polyhedra", default=False, 
                 update = Callback_modify_polyhedra)
@@ -121,6 +136,10 @@ class BondProperties(bpy.types.PropertyGroup):
         size =4,
         description="color picker",
         update = Callback_modify_bondcolor)
+    order: IntProperty(name="Bond order", default=1, 
+                update = Callback_modify_order)
+    order_offset: FloatProperty(name="order_offset", default=0.15, 
+                update = Callback_modify_order_offset)
 
 def modify_bond_attr(selected_batoms, selected_bond, key, value):
     selected_bond_new = []

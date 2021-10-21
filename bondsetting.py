@@ -55,18 +55,22 @@ class Setting():
         if item is None:
             raise Exception('%s not in %s setting'%(index, self.name))
         return item
-    def __setitem__(self, index, value):
+    def __setitem__(self, index, setdict):
         """
-        Add bondpair one by one
+        Set properties
         """
-        collection = self.collection
-        item = self.find(index)
-        
+        subset = self.find(index)
+        if subset is None:
+            subset = self.collection.add()
+        subset.name = str(index)
+        for key, value in setdict.items():
+            setattr(subset, key, value)
+        subset.label = self.label
     def copy(self, label):
         object_mode()
         bondsetting = self.__class__(label)
         for key, b in self.data.items():
-            bondsetting[key] = b.as_list()
+            bondsetting[key] = b.as_dict()
         return bondsetting
     def __add__(self, other):
         self += other
@@ -76,7 +80,7 @@ class Setting():
         return self
     def extend(self, other):
         for key, value in other.data.items():
-            self[key] = value.as_list()
+            self[key] = value.as_dict()
         return self
     def __iter__(self):
         item = self.collection
@@ -85,7 +89,7 @@ class Setting():
     def __len__(self):
         return len(self.collection)
     def find(self, name):
-        i = self.collection.find(name)
+        i = self.collection.find(str(name))
         if i == -1:
             return None
         else:
@@ -115,35 +119,15 @@ class Bondsetting(Setting):
         if bondsetting is not None:
             for key, data in bondsetting.items():
                 self[key] = data
-    def __setitem__(self, index, value):
-        """
-        Add bondpair one by one
-        """
-        bond = self.find(index)
-        if bond is None:
-            bond = self.collection.add()
-        bond.label = self.label
-        bond.species1 = index.split('-')[0]
-        bond.species2 = index.split('-')[1]
-        bond.name = index
-        bond.min = value[0]
-        bond.max = value[1]
-        bond.search = value[2]
-        bond.polyhedra = value[3]
-        if len(value) == 8:
-            bond.color1 = value[4]
-            bond.color2 = value[5]
-            bond.width = value[6]
-            bond.style = value[7]
     def set_default(self, species, cutoff = 1.3):
         """
         """
         bondtable = get_bondtable(species, cutoff=cutoff)
         for key, value in bondtable.items():
-            self['%s-%s'%(key[0], key[1])] = value
+            self[key] = value
     def extend(self, other):
         for key, value in other.data.items():
-            self[key] = value.as_list()
+            self[key] = value.as_dict()
         # new
         species1 = set(self.species)
         species2 = set(other.species)
@@ -228,16 +212,38 @@ def get_bondtable(speciesdict, cutoff = 1.3):
             element2 = species2.split('_')[0]
             pair = (element1, element2)
             if pair not in default_bonds: continue
+            name12 = '%s-%s'%(species1, species2)
+            name21 = '%s-%s'%(species2, species1)
+            # only add bond once, except for hedrogen bond
+            if name21 in bondtable and ((element1 != 'H') and (element2 !='H')): continue
             color2 = speciesdict[species2]['color']
             radius2 = cutoff * speciesdict[species2]['radius']
             bondmax = radius1 + radius2
-            bondtable[(species1, species2)] = [0.5, bondmax, default_bonds[pair][0], 
-                            default_bonds[pair][1], color1, color2, 0.10, '1']
+            bondtable[name12] = {
+                    'species1': species1, 
+                    'species2': species2, 
+                    'name': name12, 
+                    'min': 0.5, 
+                    'max': bondmax,
+                    'search': default_bonds[pair][0], 
+                    'polyhedra': default_bonds[pair][1],
+                    'color1': color1,
+                    'color2': color2,
+                    'width': 0.10,
+                    'order': 1,
+                    'order_offset': 0.15,
+                    'style': '1',
+                    }
     # special for hydrogen bond
-    if ('H', 'O') in bondtable:
-        bondtable[('H', 'O')] = [1.2, 2.1, 0, False, [0.1, 0.1, 0.1, 1.0], [0.1, 0.1, 0.1, 1.0], 0.03, '2']
-    if ('H', 'N') in bondtable:
-        bondtable[('H', 'N')] = [1.2, 2.1, 0, False, [0.1, 0.1, 0.1, 1.0], [0.1, 0.1, 0.1, 1.0], 0.03, '2']
+    hbs = ['H-O', 'H-N']
+    for key in hbs:
+        if key in bondtable:
+            bondtable[key]['min'] = 1.2
+            bondtable[key]['max'] = 2.1
+            bondtable[key]['search'] = 0
+            bondtable[key]['color1'] = [0.1, 0.1, 0.1, 1.0]
+            bondtable[key]['width'] = 0.03
+            bondtable[key]['style'] = '2'
     return bondtable
 
 def build_bondlists(atoms, cutoff):
@@ -273,9 +279,12 @@ def calc_bond_data(batoms, bondlists, bondsetting):
     for b in bondsetting:
         spi = b.species1
         spj = b.species2
-        bondlists1 = bondlists[(speciesarray[bondlists[:, 0]] == spi) 
-                    & (speciesarray[bondlists[:, 1]] == spj)]
+        indi = (speciesarray[bondlists[:, 0]] == spi)
+        indj = (speciesarray[bondlists[:, 1]] == spj)
+        bondlists1 = bondlists[indi & indj]
         if len(bondlists1) == 0: continue
+        #------------------------------------
+        # bond vector and length
         offset = bondlists1[:, 2:5]
         R = np.dot(offset, atoms.cell)
         vec = positions[bondlists1[:, 0]] - (positions[bondlists1[:, 1]] + R)
@@ -287,6 +296,7 @@ def calc_bond_data(batoms, bondlists, bondsetting):
         length = np.linalg.norm(vec, axis = 1)
         nvec = vec/length[:, None]
         nvec = nvec + 1e-8
+        center0 = (pos[0] + pos[1])/2.0
         # verts, faces, for instancing
         # v1 = nvec + np.array([1.2323, 0.493749, 0.5604937284])
         # tempv = np.einsum("ij, ij->i", v1, nvec)
@@ -295,10 +305,11 @@ def calc_bond_data(batoms, bondlists, bondsetting):
         # v11 = v11/templengh[:, None]/2.828427
         # tempv = np.cross(nvec, v11)
         # v22 = (tempv.T*(length*length)).T
-        #
-        kinds = [('%s_%s'%(spi, spj), spi, b.color1), 
-                    ('%s_%s_%s'%(spi, spj, spi), spi, b.color1), 
-                    ('%s_%s_%s'%(spi, spj, spj), spj, b.color2),
+        #---------------------------------------------
+        # name of bond objects
+        kinds = [('%s_%s'%(spi, spj), spi, b.color1[:]), 
+                    ('%s_%s_%s'%(spi, spj, spi), spi, b.color1[:]), 
+                    ('%s_%s_%s'%(spi, spj, spj), spj, b.color2[:]),
                 ]
         for kind, species, color in kinds:
             if kind not in bond_kinds:
@@ -309,8 +320,39 @@ def calc_bond_data(batoms, bondlists, bondsetting):
                                     'centers': [],
                                     'lengths': [],
                                     'normals': [], 
+                                    # 'high_order_offsets': [],
                                     'style': b.style}
-        center0 = (pos[0] + pos[1])/2.0
+        #--------------------
+        # bond order
+        if b.order > 1:
+            nbond = len(bondlists1)
+            bondlists2 = bondlists[indi | indj]
+            high_order_offsets = []
+            for i in range(nbond):
+                localbondlist = bondlists2[((bondlists2[:, 0] == bondlists1[i, 0]) 
+                        & (bondlists2[:, 1] != bondlists1[i, 1]))
+                        | ((bondlists2[:, 0] != bondlists1[i, 0]) 
+                        & (bondlists2[:, 1] == bondlists1[i, 1]))]
+                # determine the plane of high order bond
+                if len(localbondlist) == 0:
+                    second_bond = np.array([0.0, 0.0, 1])
+                else:
+                    second_bond = positions[localbondlist[0, 0]] - positions[localbondlist[0, 1]]
+                norml = np.cross(second_bond, nvec[i]) + np.array([0.000000001, 0, 0])
+                high_order_offset = np.cross(norml, nvec[i]) + np.array([0.000000001, 0, 0])
+                high_order_offset = high_order_offset/np.linalg.norm(high_order_offset)
+                high_order_offsets.append(high_order_offset)
+            high_order_offsets = np.array(high_order_offsets)
+            center1 = center0 + high_order_offsets*b.order_offset
+            center2 = center0 - high_order_offsets*b.order_offset
+            if b.order == 2:
+                center0 = np.concatenate((center1, center2), axis = 0)
+                nvec = np.tile(nvec, (2, 1))
+                length = np.tile(length, 2)
+            if b.order == 3:
+                center0 = np.concatenate((center0, center1, center2), axis = 0)
+                nvec = np.tile(nvec, (3, 1))
+                length = np.tile(length, 3)
         # Unicolor cylinder
         if b.style == '0':
                 bond_kinds[kinds[0][0]]['centers'] = center0
@@ -320,7 +362,7 @@ def calc_bond_data(batoms, bondlists, bondsetting):
         elif b.style == '1':
             length = length/2.0
             for i in range(1, 3):
-                center = (center0 + pos[i - 1])/2.0
+                center = center0 - (i - 1.5)*nvec*length[:, None]
                 bond_kinds[kinds[i][0]]['centers'] = center
                 bond_kinds[kinds[i][0]]['lengths'] = length
                 bond_kinds[kinds[i][0]]['normals'] = nvec
@@ -330,47 +372,38 @@ def calc_bond_data(batoms, bondlists, bondsetting):
                 # bond_kinds[kinds[i][0]]['verts'] = np.append(bond_kinds[kinds[i][0]]['verts'], center - v22, axis = 0)
         # Dashed line
         elif b.style == '2':
-            length = length/4.0
+            length = length/2.0
             for i in range(1, 3):
-                bond_kinds[kinds[i][0]]['centers'] = []
-                bond_kinds[kinds[i][0]]['lengths'] = []
-                bond_kinds[kinds[i][0]]['normals'] = []
                 step = 0.1
                 maxlength = length.max()
-                center = (center0 + pos[i - 1])/2.0
-                for d in np.arange(-maxlength, maxlength, step):
+                center = center0 - (i - 1.5)*nvec*step
+                for d in np.arange(0, maxlength, step):
                     # offset0 = np.linspace(-2, 2, nc)
                     # np.where(offset0>-length/2.0 & offset<length/2.0)
-                    offset = nvec*d
+                    offset = 2*(i - 1.5)*nvec*d
                     center1 = center + offset
-                    ind = np.where( (d>-length) & (d<length))[0]
+                    ind = np.where(d<length)[0]
                     bond_kinds[kinds[i][0]]['centers'].extend(center1[ind])
                     bond_kinds[kinds[i][0]]['lengths'].extend([step/2]*len(ind))
                     bond_kinds[kinds[i][0]]['normals'].extend(nvec[ind])
         # Dotted line
         elif b.style == '3':
-            length = length/4.0
+            length = length/2.0
             for i in range(1, 3):
-                bond_kinds[kinds[i][0]]['centers'] = []
-                bond_kinds[kinds[i][0]]['lengths'] = []
-                bond_kinds[kinds[i][0]]['normals'] = []
                 step = 0.05
                 maxlength = length.max()
-                center = (center0 + pos[i - 1])/2.0
-                for d in np.arange(-maxlength, maxlength, step):
+                center = center0 - (i - 1.5)*nvec*step
+                for d in np.arange(0, maxlength, step):
                     # offset0 = np.linspace(-2, 2, nc)
                     # np.where(offset0>-length/2.0 & offset<length/2.0)
-                    offset = nvec*d
+                    offset = 2*(i - 1.5)*nvec*d
                     center1 = center + offset
-                    ind = np.where( (d>-length) & (d<length))[0]
+                    ind = np.where(d<length)[0]
                     bond_kinds[kinds[i][0]]['centers'].extend(center1[ind])
                     bond_kinds[kinds[i][0]]['lengths'].extend([step/4]*len(ind))
                     bond_kinds[kinds[i][0]]['normals'].extend(nvec[ind])
     # print('calc_bond_data: {0:10.2f} s'.format(time() - tstart))
     return bond_kinds
-
-
-
 
 
 if __name__ == "__main__":

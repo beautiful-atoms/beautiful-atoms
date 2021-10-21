@@ -3,10 +3,11 @@
 import bpy
 import numpy as np
 from time import time
+from batoms.bondsetting import Setting
 
 default_colors = [(1, 1, 0, 0.8), (0.0, 0.0, 1.0, 0.8)]
 
-class Isosurfacesetting():
+class Isosurfacesetting(Setting):
     """
     Isosurfacesetting object
 
@@ -19,10 +20,11 @@ class Isosurfacesetting():
 
     """
     def __init__(self, label, volume = None, isosurfacesetting = None) -> None:
+        Setting.__init__(self, label)
         self.label = label
         self.name = 'bisosurface'
         self._volume = None
-        self[1] = [0.002, [1, 1, 0, 0.8]]
+        self['1'] = {'level': 0.002, 'color': [1, 1, 0, 0.8]}
         if isosurfacesetting is not None:
             for key, data in isosurfacesetting.items():
                 self[key] = data
@@ -56,12 +58,6 @@ class Isosurfacesetting():
         obj.hide_set(True)
         obj.hide_render = True
         print('Draw volume: {0:1.2f}'.format(time() - tstart))
-    @property
-    def collection(self):
-        return self.get_collection()
-    def get_collection(self):
-        collection = getattr(bpy.data.collections[self.label], self.name)
-        return collection
     @property
     def npoint(self):
         return self.get_npoint()
@@ -105,29 +101,6 @@ class Isosurfacesetting():
     def volume(self, volume):
         self.draw_volume(volume)
         self._volume = volume
-    def __getitem__(self, index):
-        item = self.find(index)
-        if item is None:
-            raise Exception('%s not in %s setting'%(index, self.name))
-        return item
-    def __setitem__(self, index, value):
-        """
-        Add isosurface one by one
-        """
-        iso = self.find(index)
-        if iso is None:
-            iso = self.collection.add()
-        iso.label = self.label
-        iso.name = str(index)
-        if isinstance(value, (int, float)):
-            value = [value]
-        iso.level = value[0]
-        if len(value) == 2:
-            iso.color = value[1]
-        else:
-            n = len(self) - 1
-            n = n%2
-            iso.color = default_colors[n]
     def set_default(self):
         """
         """
@@ -150,18 +123,6 @@ class Isosurfacesetting():
                 iso.name, iso.level, iso.color[0], iso.color[1], iso.color[2], iso.color[3])
         s += '-'*60 + '\n'
         return s
-    def __iter__(self):
-        item = self.collection
-        for i in range(len(item)):
-            yield item[i]
-    def __len__(self):
-        return len(self.collection)
-    def find(self, name):
-        i = self.collection.find(str(name))
-        if i == -1:
-            return None
-        else:
-            return self.collection[i]
     def build_isosurface(self, cell):
         volume = self.volume
         isosurface = []
