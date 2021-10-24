@@ -494,7 +494,7 @@ def neighbor_list(quantities, a, cutoff, self_interaction=False,
     """
     return primitive_neighbor_list(quantities, a.pbc,
                                    a.get_cell(complete=True),
-                                   a.positions, cutoff, species=a.info['species'],
+                                   a.positions, cutoff, species=a.arrays['species'],
                                    self_interaction=self_interaction,
                                    max_nbins=max_nbins)
 
@@ -505,9 +505,9 @@ if __name__ == "__main__":
     from ase.visualize import view
     from ase import Atom, Atoms
     atoms = read('docs/source/_static/datas/tio2.cif')
-    atoms.info['species'] = atoms.get_chemical_symbols()
+    atoms.arrays['species'] = atoms.get_chemical_symbols()
     # atoms = read('docs/source/_static/datas/mof-5.cif')
-    atoms.info['species'][0] = 'Ti_1'
+    atoms.arrays['species'][0] = 'Ti_1'
     cutoff = {('Ti', 'O'): [0.5, 2.5], ('O', 'O'):[0.5, 1.5]}
     i, j, S = neighbor_list('ijS', atoms, cutoff)
     print(i)

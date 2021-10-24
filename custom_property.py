@@ -1,3 +1,4 @@
+from numpy.core.numeric import indices
 import bpy
 from bpy.props import (StringProperty,
                        BoolProperty,
@@ -57,7 +58,6 @@ class BBond(bpy.types.PropertyGroup):
     species1: StringProperty(name="species1")
     species2: StringProperty(name="species2")
     species: StringProperty(name="species")
-    name:StringProperty(name = "name")
     min: FloatProperty(name="min", description = "min", default = 0.0)
     max: FloatProperty(name="max", description = "max", default = 2.0)
     search: IntProperty(name="search", default=0)
@@ -75,6 +75,9 @@ class BBond(bpy.types.PropertyGroup):
                ('2',"Dashed line", ""),
                ('3',"Dotted line", "")),
                default='1')
+    @property
+    def name(self) -> str:
+        return '%s-%s'%(self.species1, self.species2)
     def as_dict(self) -> dict:
         setdict = {
                  'flag': self.flag, 
@@ -112,6 +115,10 @@ class BPolyhedra(bpy.types.PropertyGroup):
     name:StringProperty(name = "name")
     color: FloatVectorProperty(name="color", size = 4)
     edgewidth: FloatProperty(name="edgewidth", default = 0.10)
+    @property
+    def name(self) -> str:
+        return self.species
+    
     def as_dict(self) -> dict:
         setdict = {
             'flag': self.flag, 
@@ -154,6 +161,44 @@ class BIsosurface(bpy.types.PropertyGroup):
         s = 'Name        level        color            \n'
         s += '{0:10s}   {1:1.6f}  [{2:1.2f}  {3:1.2f}  {4:1.2f}   {5:1.2f}] \n'.format(\
                 self.name, self.level, self.color[0], self.color[1], self.color[2], self.color[3])
+        s += '-'*60 + '\n'
+        return s
+
+class BPlane(bpy.types.PropertyGroup):
+    """
+    """
+    flag: BoolProperty(name="flag", default=False)
+    label: StringProperty(name="label", default = '')
+    indices: IntVectorProperty(name="Miller indices", size = 3, default = [0, 0, 1])
+    distance: FloatProperty(name="distance", 
+                            description="Distance from origin",
+                            default = 1)
+    color: FloatVectorProperty(name="color", size = 4, default = [1, 1, 0, 0.8])
+    crystal: BoolProperty(name="crystal", default=False)
+    @property
+    def name(self) -> str:
+        return '%s-%s-%s'%(self.indices[0], self.indices[1], self.indices[2])
+    def copy(self):
+        bplane = self.__class__()
+        for key, value in self.as_dict():
+            setattr(bplane, key, value)
+        return bplane
+
+    def as_dict(self) -> dict:
+        setdict = {
+            'flag': self.flag, 
+            'label': self.label, 
+            'name': self.name, 
+            'color': self.color,
+            'indices': self.indices,
+            'distance': self.distance,
+        }
+        return setdict
+    def __repr__(self) -> str:
+        s = '-'*60 + '\n'
+        s = 'Name        distance    color            \n'
+        s += '{0:10s}   {1:1.3f}  [{2:1.2f}  {3:1.2f}  {4:1.2f}   {5:1.2f}] \n'.format(\
+                self.name, self.distance, self.color[0], self.color[1], self.color[2], self.color[3])
         s += '-'*60 + '\n'
         return s
 

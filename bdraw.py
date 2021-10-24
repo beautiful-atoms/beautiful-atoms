@@ -136,7 +136,42 @@ def draw_bond_kind(kind,
     bpy.ops.object.shade_smooth()
     coll.objects.link(obj_bond)
     # print('bonds: {0}   {1:10.2f} s'.format(kind, time.time() - tstart))
-    
+def draw_lattice_plane(kind, 
+                   datas, 
+                   label = None,
+                   coll = None,
+                   bsdf_inputs = None, 
+                   material_style = 'plastic'):
+    if len(datas['vertices']) == 0:
+        return
+    if not bsdf_inputs:
+        bsdf_inputs = material_styles_dict[material_style]
+    material = bpy.data.materials.new('plane_kind_{0}'.format(kind))
+    material.diffuse_color = datas['color']
+    material.metallic = bsdf_inputs['Metallic']
+    material.roughness = bsdf_inputs['Roughness']
+    material.blend_method = 'BLEND'
+    material.use_nodes = True
+    principled_node = material.node_tree.nodes['Principled BSDF']
+    principled_node.inputs['Base Color'].default_value = datas['color']
+    principled_node.inputs['Alpha'].default_value = datas['color'][3]
+    for key, value in bsdf_inputs.items():
+        principled_node.inputs[key].default_value = value
+    datas['materials'] = material
+    #
+    mesh = bpy.data.meshes.new("mesh_kind_{0}".format(kind))
+    mesh.from_pydata(datas['vertices'], datas['edges'], datas['faces'])  
+    mesh.update()
+    mesh.polygons.foreach_set('use_smooth', [True]*len(mesh.polygons))
+    obj_plane = bpy.data.objects.new("plane_{0}_{1}".format(label, kind), mesh)
+    obj_plane.data = mesh
+    obj_plane.data.materials.append(material)
+    obj_plane.bplane.flag = True
+    obj_plane.bplane.label = label
+    obj_plane.bplane.indices = [int(x) for x in datas['indices']]
+    bpy.ops.object.shade_smooth()
+    coll.objects.link(obj_plane)
+    # print('bonds: {0}   {1:10.2f} s'.format(kind, time.time() - tstart))
 def draw_polyhedra_kind(kind, 
                         datas, 
                         label = None,

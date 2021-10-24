@@ -52,7 +52,7 @@ def search_boundary(atoms, boundary = [[0, 1], [0, 1], [0, 1]], skin = 3):
     offsets = np.zeros((M*n, 4), dtype=int)
     ind0 = np.arange(n).reshape(-1, 1)
     symbols0 = atoms.get_chemical_symbols()
-    species0 = atoms.info['species']
+    species0 = atoms.arrays['species']
     symbols = []
     species = []
     # repeat the positions so that
@@ -78,7 +78,7 @@ def search_boundary(atoms, boundary = [[0, 1], [0, 1], [0, 1]], skin = 3):
     symbols = np.array(symbols)[ind1]
     species = np.array(species)[ind1]
     atoms_boundary = Atoms(symbols, npositions1)
-    atoms_boundary.info['species'] = species
+    atoms_boundary.arrays['species'] = species
     # build atoms inside the skin region
     # could be the atoms from core, thus add core
     npositions = np.append(npositions, positions, axis = 0)

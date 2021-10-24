@@ -226,7 +226,7 @@ class Render():
             sizes = [ba.size.max() for ba in batoms.batoms.values()]
             margin = max(sizes) + 0.5
         if canvas is None:
-            canvas, canvas1 = get_canvas(atoms = atoms, 
+            canvas, canvas1 = get_canvas(atoms.positions, batoms.cell.verts,
                                     direction = direction, margin = margin)
         else:
             if isinstance(canvas, (int, float)):
@@ -259,7 +259,7 @@ class Render():
         if self.frame is not None:
             self.scene.frame_set(self.frame)
         if self.output is None:
-            self.output = self.batoms.label
+            self.output = self.label
         self.directory = os.path.split(self.output)[0]
         if self.directory and not os.path.exists(self.directory):
             os.makedirs(self.directory)

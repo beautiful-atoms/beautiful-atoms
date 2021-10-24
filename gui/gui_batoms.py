@@ -36,11 +36,7 @@ class Batoms_PT_prepare(Panel):
         col.label(text="Model type")
         col = box.column()
         col.prop(bapanel, "model_type", expand  = True)
-        box = layout.box()
-        col = box.column()
-        col.label(text="Polyhedra type")
-        row = box.row()
-        row.prop(bapanel, "polyhedra_type", expand  = True)
+        
         row = box.row()
         row.prop(bapanel, "hide", expand  = True)
         
@@ -61,18 +57,11 @@ class Batoms_PT_prepare(Panel):
 
         box = layout.box()
         col = box.column(align=True)
-        col.operator("batoms.measurement")
+        # col.operator("batoms.measurement")
+        col.label(text="Measurement")
         col.prop(bapanel, "measurement")
 
-        box = layout.box()
-        col = box.column(align=True)
-        col.label(text="Add structure")
-        col.prop(bapanel, "atoms_str")
-        col.prop(bapanel, "atoms_name")
-        # col = box.column()
-        col.operator("batoms.add_molecule")
-        col.operator("batoms.add_bulk")
-        col.operator("batoms.add_atoms")
+        
 
         box = layout.box()
         col = box.column(align=True)
@@ -93,10 +82,6 @@ class BatomsProperties(bpy.types.PropertyGroup):
         bapanel = bpy.context.scene.bapanel
         model_type = list(bapanel.model_type)[0]
         modify_batoms_attr(self.selected_batoms, 'model_type', model_type)
-    def Callback_polyhedra_type(self, context):
-        bapanel = bpy.context.scene.bapanel
-        polyhedra_type = list(bapanel.polyhedra_type)[0]
-        modify_batoms_attr(self.selected_batoms, 'polyhedra_type', polyhedra_type)
     def Callback_modify_hide(self, context):
         bapanel = bpy.context.scene.bapanel
         modify_batoms_attr(self.selected_batoms, 'hide', bapanel.hide)
@@ -118,17 +103,7 @@ class BatomsProperties(bpy.types.PropertyGroup):
         update=Callback_model_type,
         options={'ENUM_FLAG'},
         )
-    polyhedra_type: EnumProperty(
-        name="polyhedra_type",
-        description="Polhhedra models",
-        items=(('0',"0", "atoms, bonds and polyhedra"),
-               ('1',"1", "atoms, polyhedra"),
-               ('2',"2","central atoms, polyhedra"),
-               ('3',"3", "polyhedra")),
-        default={'0'}, 
-        update=Callback_polyhedra_type,
-        options={'ENUM_FLAG'},
-        )
+    
     hide: BoolProperty(name="hide",
                 default=False, 
                 description = "Hide all object for view and rendering",
@@ -140,7 +115,7 @@ class BatomsProperties(bpy.types.PropertyGroup):
         name="scale", default=1.0,
         description = "scale", update = Callback_modify_scale)
     measurement: StringProperty(
-        name="value", default='',
+        name="Value", default='',
         description = "measurement in Angstrom, degree")
     species: StringProperty(
         name="species", default='O_1',
@@ -255,8 +230,13 @@ class MeasureButton(Operator):
 
     def execute(self, context):
         bapanel = context.scene.bapanel
-        result = measurement()
+        # result = measurement()
+        self.layout.operator(
+        OBJECT_OT_record_selection.bl_idname,
+        text="Record Selection",
+        icon='RESTRICT_SELECT_OFF')
         bapanel.measurement = result
+
         return {'FINISHED'}
 
 
@@ -281,33 +261,4 @@ class FragmentateButton(Operator):
     def execute(self, context):
         bapanel = context.scene.bapanel
         fragmentate(bapanel.suffix)
-        return {'FINISHED'}
-
-class AddMolecule(Operator):
-    bl_idname = "batoms.add_molecule"
-    bl_label = "Add molecule"
-    bl_description = ("Add molecule")
-    def execute(self, context):
-        #print(molecule_str)
-        bapanel = context.scene.bapanel
-        atoms = molecule(bapanel.atoms_str)
-        Batoms(label = bapanel.atoms_name, atoms = atoms)
-        return {'FINISHED'}
-class AddBulk(Operator):
-    bl_idname = "batoms.add_bulk"
-    bl_label = "Add bulk"
-    bl_description = ("Add bulk")
-    def execute(self, context):
-        bapanel = context.scene.bapanel
-        atoms = bulk(bapanel.atoms_str)
-        Batoms(label = bapanel.atoms_name, atoms = atoms)
-        return {'FINISHED'}     
-class AddAtoms(Operator):
-    bl_idname = "batoms.add_atoms"
-    bl_label = "Add atoms"
-    bl_description = ("Add atoms")
-    def execute(self, context):
-        bapanel = context.scene.bapanel
-        atoms = Atoms(bapanel.atoms_str)
-        Batoms(label = bapanel.atoms_name, atoms = atoms)
         return {'FINISHED'}

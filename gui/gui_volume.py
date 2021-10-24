@@ -93,7 +93,7 @@ def add_level(name, level, color):
     selected_batoms = get_selected_batoms()
     for batoms_name in selected_batoms:
         batoms = Batoms(label = batoms_name)
-        batoms.isosurfacesetting[name] = [level, color]
+        batoms.isosurfacesetting[name] = {'level': level, 'color': color}
         batoms.draw_isosurface()
 
 class AddButton(Operator):
@@ -102,6 +102,6 @@ class AddButton(Operator):
     bl_description = "Add distance, angle and dihedra angle"
 
     def execute(self, context):
-        bvoanel = context.scene.vopanel
-        add_level(bvoanel.label, bvoanel.level, bvoanel.color)
+        vopanel = context.scene.vopanel
+        add_level(vopanel.label, vopanel.level, vopanel.color)
         return {'FINISHED'}

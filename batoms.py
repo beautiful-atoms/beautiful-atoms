@@ -4,16 +4,17 @@ Definition of the Batoms class in the batoms package.
 """
 
 import bpy
-from ase import Atoms
+from ase import Atoms, spacegroup
 from batoms.batom import Batom
-from batoms.bondsetting import Bondsetting, build_bondlists, calc_bond_data
-from batoms.polyhedrasetting import Polyhedrasetting, build_polyhedralists
-from batoms.isosurfacesetting import Isosurfacesetting
+from batoms.bondsetting import BondSetting, build_bondlists, calc_bond_data
+from batoms.polyhedrasetting import PolyhedraSetting, build_polyhedralists
+from batoms.isosurfacesetting import IsosurfaceSetting
+from batoms.planesetting import PlaneSetting
 from batoms.cell import Bcell
-from batoms.render import Render   
+from batoms.render import Render
 from batoms.boundary import search_boundary, search_bond
 from batoms.bdraw import draw_cell_cylinder, draw_bond_kind, draw_polyhedra_kind, \
-                        draw_isosurface
+                        draw_isosurface, draw_lattice_plane
 from batoms.butils import object_mode
 import numpy as np
 from time import time
@@ -27,7 +28,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 subcollections = ['atom', 'cell', 'bond', 'polyhedra', 'instancer', 
-'instancer_atom', 'volume', 'ghost', 'boundary', 'skin', 'render', 'text']
+'instancer_atom', 'volume', 'ghost', 'boundary', 'skin', 'render', 'text', 'plane']
 
 class Batoms():
     """
@@ -89,6 +90,7 @@ class Batoms():
                 bondsetting = None,
                 polyhedrasetting = None,
                 isosurfacesetting = None,
+                planesetting = None,
                 render = None,
                 model_type = 0, 
                 polyhedra_type = 0, 
@@ -145,26 +147,35 @@ class Batoms():
             raise Exception("Failed, species, atoms or coll  \
                   should be provided!"%self.label)
         if bondsetting is None:
-            self.bondsetting = Bondsetting(self.label)
+            self.bondsetting = BondSetting(self.label)
         elif isinstance(bondsetting, dict):
-            self.bondsetting = Bondsetting(self.label, 
+            self.bondsetting = BondSetting(self.label, 
                             bondsetting = bondsetting)
-        elif isinstance(bondsetting, Bondsetting):
+        elif isinstance(bondsetting, BondSetting):
             self.bondsetting = bondsetting
         if self.polyhedrasetting is None:
-            self.polyhedrasetting = Polyhedrasetting(self.label)
+            self.polyhedrasetting = PolyhedraSetting(self.label)
         elif isinstance(polyhedrasetting, dict):
-            self.polyhedrasetting = Polyhedrasetting(self.label,   
+            self.polyhedrasetting = PolyhedraSetting(self.label,   
                             polyhedrasetting = polyhedrasetting)
-        elif isinstance(polyhedrasetting, Polyhedrasetting):
+        elif isinstance(polyhedrasetting, PolyhedraSetting):
             self.polyhedrasetting = polyhedrasetting
         if isosurfacesetting is None:
-            self.isosurfacesetting = Isosurfacesetting(self.label, volume = volume)
+            self.isosurfacesetting = IsosurfaceSetting(self.label, volume = volume)
         elif isinstance(isosurfacesetting, dict):
-            self.isosurfacesetting = Isosurfacesetting(self.label, volume = volume, 
+            self.isosurfacesetting = IsosurfaceSetting(self.label, volume = volume, 
                             isosurfacesetting = isosurfacesetting)
-        elif isinstance(isosurfacesetting, Isosurfacesetting):
+        elif isinstance(isosurfacesetting, IsosurfaceSetting):
             self.isosurfacesetting = isosurfacesetting
+        
+        if planesetting is None:
+            self.planesetting = PlaneSetting(self.label)
+        elif isinstance(planesetting, dict):
+            self.planesetting = PlaneSetting(self.label, 
+                            planesetting = planesetting)
+        elif isinstance(planesetting, PlaneSetting):
+            self.planesetting = planesetting
+
         self.coll.batoms.show_unit_cell = show_unit_cell
         if not self.render:
             self.render = Render(self.label, batoms = self)
@@ -199,12 +210,11 @@ class Batoms():
         """
         Import structure from ASE atoms.
         """
-        if 'species' not in atoms.info:
-            atoms.info['species'] = atoms.get_chemical_symbols()
-        species_list = list(set(atoms.info['species']))
+        if 'species' not in atoms.arrays:
+            atoms.new_array('species', np.array(atoms.get_chemical_symbols()))
+        species_list = np.unique(atoms.arrays['species'])
         for species in species_list:
-            indices = [index for index, x in enumerate(atoms.info['species']) 
-                        if x == species]
+            indices = np.where(atoms.arrays['species'] == species)
             if species not in self.species_props: self.species_props[species] = {}
             ba = Batom(self.label, species, atoms.positions[indices], 
                         segments = self.segments, shape = self.shape, 
@@ -309,6 +319,7 @@ class Batoms():
         atoms = self.get_atoms_with_boundary()
         self.bondlist = build_bondlists(atoms, self.bondsetting.cutoff_dict)
         bond_kinds = calc_bond_data(self, self.bondlist, self.bondsetting)
+        if len(bond_kinds) == 0: return
         for species, bond_data in bond_kinds.items():
             draw_bond_kind(species, bond_data, label = self.label, 
                         coll = self.coll.children['%s_bond'%self.label])
@@ -364,7 +375,28 @@ class Batoms():
         # ba.color = [ba.color[0], ba.color[1], ba.color[2], 0.8]
         self.coll.children['%s_ghost'%self.label].objects.link(ba.batom)
         self.coll.children['%s_ghost'%self.label].objects.link(ba.instancer)
-    
+    def draw_lattice_plane(self):
+        """
+        Draw plane
+        """
+        planes = self.planesetting.build_plane(self.cell)
+        self.clean_atoms_objects('plane')
+        if planes is None:
+            return
+        for name, plane in planes.items():
+            draw_lattice_plane(name, plane, self.label,
+                    coll = self.coll.children['%s_plane'%self.label])
+    def draw_crystal_shape(self):
+        """
+        Draw crystal
+        """
+        planes = self.planesetting.build_crystal(self.get_spacegroup().no, self.cell)
+        self.clean_atoms_objects('plane')
+        if planes is None:
+            return
+        for name, plane in planes.items():
+            draw_lattice_plane(name, plane, self.label,
+                    coll = self.coll.children['%s_plane'%self.label])
     def clean_atoms_objects(self, coll, names = None):
         """
         remove all bond object in the bond collection
@@ -493,8 +525,8 @@ class Batoms():
             self.coll.children['%s_atom'%self.label].objects.link(ba.batom)
             self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
             for sp in self.species:
-                self.bondsetting.add_bonds([[species2, sp]])
-            self.polyhedrasetting.add_polyhedras([sp])
+                self.bondsetting.add([(species2, sp)])
+            self.polyhedrasetting.add([sp])
         self.batoms[species1].delete(index)
             
     def fragmentate(self, species, index = [], suffix = 'f'):
@@ -570,7 +602,11 @@ class Batoms():
         for coll in self.coll.children:
             for obj in coll.objects:
                 obj.select_set(True)
-        bpy.ops.transform.rotate(value=angle, orient_axis=axis.upper(), 
+        # this two lines is to overcome a bug
+        # https://stackoverflow.com/questions/67659621/how-to-use-the-rotate-operator-on-blender-python-if-you-execute-the-script-on-th
+        ov=bpy.context.copy()
+        ov['area']=[a for a in bpy.context.screen.areas if a.type=="VIEW_3D"][0]
+        bpy.ops.transform.rotate(ov, value=angle, orient_axis=axis.upper(), 
                                  orient_type = orient_type)
     
     def __getitem__(self, species):
@@ -654,6 +690,8 @@ class Batoms():
 
         for species, batom in self.batoms.items():
             batom.repeat(m, self.cell)
+        if self.isosurfacesetting.volume is not None:
+            self.isosurfacesetting.volume = np.tile(self.isosurfacesetting.volume, m)
         self.cell.repeat(m)
         self.draw()
     def repeat(self, rep):
@@ -694,14 +732,14 @@ class Batoms():
         batoms.bondsetting = self.bondsetting.copy(label)
         batoms.polyhedrasetting = self.polyhedrasetting.copy(label)
         return batoms
-    def write(self, filename):
+    def write(self, filename, local = True):
         """
         Save atoms to file.
 
         >>> h2o.write('h2o.cif')
         
         """
-        atoms = self.batoms2atoms(self.batoms)
+        atoms = self.batoms2atoms(self.batoms, local = True)
         atoms.write(filename)
     def update(self):
         """
@@ -754,6 +792,9 @@ class Batoms():
             for ba in self.batoms.values():
                 ba.positions = np.dot(ba.positions(), M)
     @property
+    def location(self):
+        return self._cell.origin
+    @property
     def pbc(self):
         return self.get_pbc()
     @pbc.setter
@@ -798,8 +839,10 @@ class Batoms():
         >>> tio2.boundary = 0.4
         """
         tstart = time()
+        self.clean_atoms_objects('boundary')
+        self.clean_atoms_objects('skin')
         boundary = self.boundary
-        atoms0 = self.batoms2atoms(self.batoms)
+        atoms0 = self.batoms2atoms(self.batoms, local=True)
         if atoms0.pbc.any():
             # find boudary atoms
             atoms_boundary, offsets_skin = search_boundary(atoms0, boundary, self.bondsetting.maxcutoff)
@@ -820,10 +863,10 @@ class Batoms():
     def draw_boundary_atoms(self, atoms_boundary):
         self.clean_atoms_objects('boundary')
         if len(atoms_boundary) == 0: return 0
-        species = set(atoms_boundary.info['species'])
+        species = np.unique(atoms_boundary.arrays['species'])
         for sp in species:
-            positions = atoms_boundary[atoms_boundary.info['species']==sp].positions
-            positions = positions + self.batoms[sp].location
+            positions = atoms_boundary[atoms_boundary.arrays['species']==sp].positions
+            positions = positions + self.location
             ba = Batom(self.label, '%s_boundary'%(sp), positions, scale = self.batoms[sp].scale, 
                         segments = self.segments, shape = self.shape, material=self.batoms[sp].material)
             self.coll.children['%s_boundary'%self.label].objects.link(ba.batom)
@@ -836,11 +879,10 @@ class Batoms():
         offsets_search = offsets_search.astype(int)
         atoms_search_bond = atoms0[offsets_search[:, 0]]
         atoms_search_bond.positions = atoms_search_bond.positions + np.dot(offsets_search[:, 1:], atoms0.cell)
-        atoms_search_bond.info['species'] = np.array(atoms0.info['species'])[offsets_search[:, 0]]
-        species = set(atoms_search_bond.info['species'])
+        species = np.unique(atoms_search_bond.arrays['species'])
         for sp in species:
-            positions = atoms_search_bond[atoms_search_bond.info['species']==sp].positions
-            positions = positions + self.batoms[sp].location
+            positions = atoms_search_bond[atoms_search_bond.arrays['species']==sp].positions
+            positions = positions + self.location
             ba = Batom(self.label, '%s_skin'%(sp), positions, scale = self.batoms[sp].scale, 
                         segments = self.segments, shape = self.shape, material=self.batoms[sp].material)
             self.coll.children['%s_skin'%self.label].objects.link(ba.batom)
@@ -897,9 +939,7 @@ class Batoms():
         atoms = self.batoms2atoms(self.batoms, X = X)
         atoms_boundary = self.batoms2atoms(self.batoms_boundary, X = X)
         atoms_skin = self.batoms2atoms(self.batoms_skin, X = X)
-        species = atoms.info['species'] + atoms_boundary.info['species'] + atoms_skin.info['species']
         atoms = atoms + atoms_boundary + atoms_skin
-        atoms.info['species'] = species
         atoms.pbc = False
         return atoms
     @property
@@ -909,8 +949,15 @@ class Batoms():
     def frames(self, frames):
         self.set_frames(frames)
     def get_frames(self):
+        """
+        https://blender.stackexchange.com/questions/27889/how-to-find-number-of-animated-frames-in-a-scene-via-python/27946#27946
+        Keyframe in blender are on action related to object. 
+        We have to look throw objects in the batoms and find the related frames.
+        """
+        from batoms.butils import get_keyframes_of_batoms
         frames = []
-        for f in range(bpy.context.scene.frame_start, bpy.context.scene.frame_end):
+        keyframes = get_keyframes_of_batoms(self.batoms)
+        for f in keyframes:
             bpy.context.scene.frame_set(f)
             frames.append(self.atoms)
         return frames
@@ -956,7 +1003,7 @@ class Batoms():
         for ba in self.coll_skin.objects:
             batoms_skin[ba.batom.species] = Batom(ba.name)
         return batoms_skin
-    def batoms2atoms(self, batoms, X = False):
+    def batoms2atoms(self, batoms, local = False, X = False):
         """
         save batoms objects to ASE atoms
 
@@ -974,7 +1021,6 @@ class Batoms():
         species_list = []
         symbols = []
         positions = []
-        origin = self.cell.verts[3]
         for species, batom in batoms.items():
             # ghost site will not save 
             if not X and batom.element == 'X': continue
@@ -983,13 +1029,16 @@ class Batoms():
             species_list.extend([species]*len(batom))
             symbol = [batom.element]*len(batom)
             symbols.extend(symbol)
-            positions.extend(batom.positions - origin)
+            positions.extend(batom.positions)
         """
         Because no file format will save the location of the cell
         We have to shfit it to origin.
         """
         atoms = Atoms(symbols, positions, cell = self.cell, pbc = self.pbc)
-        atoms.info['species'] = species_list
+        atoms.new_array('species', np.array(species_list))
+        if local:
+            atoms.positions = atoms.positions - self.cell.origin
+            atoms.info['origin'] = self.cell.origin
         return atoms
     def draw_constraints(self):
         """
@@ -1039,11 +1088,11 @@ class Batoms():
         if len(self.atoms) != len(frames[0]):
             raise Exception("Number of atoms %s is not equal to %s."%(len(self.atoms), len(frames[0])))
         atoms = frames[0]
-        if 'species' not in atoms.info:
-            atoms.info['species'] = atoms.get_chemical_symbols()
+        if 'species' not in atoms.arrays:
+            atoms.new_array('species', np.array(atoms.get_chemical_symbols()))
         positions = np.array([atoms.positions for atoms in frames])
         for species, ba in self.batoms.items():
-            index = [atom.index for atom in atoms if atoms.info['species'][atom.index] == species]
+            index = np.where(atoms.arrays['species'] == species)[0]
             ba.set_frames(positions[:, index])
     
     def calc_camera_data(self, canvas, canvas1, direction = (0, 0, 1)):
@@ -1139,3 +1188,12 @@ class Batoms():
             obj = bpy.data.objects.get(name)
             obj.select_set(state)
 
+    def get_spacegroup(self, symprec = 1e-5):
+        """
+        """
+        from ase.spacegroup import get_spacegroup
+        atoms = self.atoms
+        no = get_spacegroup(atoms)
+        return no
+    
+    

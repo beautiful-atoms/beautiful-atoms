@@ -7,11 +7,11 @@ from batoms.bondsetting import Setting
 
 default_colors = [(1, 1, 0, 0.8), (0.0, 0.0, 1.0, 0.8)]
 
-class Isosurfacesetting(Setting):
+class IsosurfaceSetting(Setting):
     """
-    Isosurfacesetting object
+    IsosurfaceSetting object
 
-    The Isosurfacesetting object store the isosurface information.
+    The IsosurfaceSetting object store the isosurface information.
 
     Parameters:
 
@@ -23,8 +23,9 @@ class Isosurfacesetting(Setting):
         Setting.__init__(self, label)
         self.label = label
         self.name = 'bisosurface'
-        self._volume = None
-        self['1'] = {'level': 0.002, 'color': [1, 1, 0, 0.8]}
+        # add a default level
+        if len(self) == 0:
+            self['1'] = {'level': 0.002, 'color': [1, 1, 0, 0.8]}
         if isosurfacesetting is not None:
             for key, data in isosurfacesetting.items():
                 self[key] = data
@@ -74,7 +75,10 @@ class Isosurfacesetting(Setting):
     def mesh(self):
         return self.get_mesh()
     def get_mesh(self):
-        mesh = bpy.data.objects["volume_%s"%self.label].data
+        name = "volume_%s"%self.label
+        if name not in bpy.data.objects:
+            return None
+        mesh = bpy.data.objects[name].data
         return mesh
     @property
     def shape(self):
@@ -86,9 +90,9 @@ class Isosurfacesetting(Setting):
     def volume(self):
         return self.get_volume()
     def get_volume(self):
-        if self._volume is not None:
-            return self._volume
         tstart = time()
+        if self.mesh is None:
+            return None
         n = len(self.mesh.vertices)
         volume = np.empty(n*3, dtype=np.float64)
         self.mesh.vertices.foreach_get('co', volume)  
@@ -100,13 +104,12 @@ class Isosurfacesetting(Setting):
     @volume.setter
     def volume(self, volume):
         self.draw_volume(volume)
-        self._volume = volume
     def set_default(self):
         """
         """
         for sp, data in self.species.items():
             self[sp] = [np.append(data['color'][:3], 0.3), 0.005]
-    def add_isosurfaces(self, isosurfacepair):
+    def add(self, isosurfacepair):
         for key in isosurfacepair:
             self.set_default(key)
     def remove_isosurfaces(self, isosurfacepair):

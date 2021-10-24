@@ -17,6 +17,10 @@ class Bcell():
         """
         self.label = label
         self.name = 'cell_%s_edge'%(self.label)
+        self.edges = [[3, 0], [3, 1], [4, 0], [4, 1],
+                    [2, 5], [2, 6], [7, 5], [7, 6], 
+                    [3, 2], [0, 6], [1, 5], [4, 7]
+            ]
         self.draw_cell_edge(array, location)
     def draw_cell_edge(self, array, location):
         """
@@ -31,12 +35,9 @@ class Bcell():
             verts = array - array[3]
             location = array[3]
         if self.name not in bpy.data.objects:
-            edges = [[3, 0], [3, 1], [4, 0], [4, 1],
-                    [2, 5], [2, 6], [7, 5], [7, 6], 
-                    [3, 2], [0, 6], [1, 5], [4, 7]
-            ]
+            
             mesh = bpy.data.meshes.new("cell_%s_edge"%self.label)
-            mesh.from_pydata(verts, edges, [])  
+            mesh.from_pydata(verts, self.edges, [])  
             mesh.update()
             for f in mesh.polygons:
                 f.use_smooth = True
@@ -105,6 +106,9 @@ class Bcell():
     def get_verts(self):
         return np.array([self.bcell.matrix_world @ \
                 self.bcell.data.vertices[i].co for i in range(8)])
+    @property
+    def origin(self):
+        return self.verts[3]
     def array2verts(self, array):
         """
         """

@@ -7,6 +7,13 @@ import numpy as np
 from time import time
 from pprint import pprint
 
+def tuple2string(index):
+    if isinstance(index, (str, int, float)):
+        return str(index)
+    name = str(index[0])
+    for key in index[1:]:
+        name += '-%s'%key
+    return name
 
 class Setting():
     """
@@ -51,18 +58,20 @@ class Setting():
     def data(self):
         return self.get_data()
     def __getitem__(self, index):
-        item = self.find(index)
+        name = tuple2string(index)
+        item = self.find(name)
         if item is None:
-            raise Exception('%s not in %s setting'%(index, self.name))
+            raise Exception('%s not in %s setting'%(name, self.name))
         return item
     def __setitem__(self, index, setdict):
         """
         Set properties
         """
-        subset = self.find(index)
+        name = tuple2string(index)
+        subset = self.find(name)
         if subset is None:
             subset = self.collection.add()
-        subset.name = str(index)
+        subset.name = name
         for key, value in setdict.items():
             setattr(subset, key, value)
         subset.label = self.label
@@ -72,6 +81,23 @@ class Setting():
         for key, b in self.data.items():
             bondsetting[key] = b.as_dict()
         return bondsetting
+    def delete(self, index):
+        """
+        index: list of tuple
+        """
+        if isinstance(index, (str, int, float)):
+            index = [(index)]
+        if isinstance(index[0], (str, int, float)):
+            index = [index]
+        for key in index:
+            name = tuple2string(key)
+            i = self.collection.find(name)
+            if i != -1:
+                self.collection.remove(i)
+            else:
+                raise Exception('%s is not in %s'%(name, self.name))
+    def __delitem__(self, index):
+        self.delete(index)
     def __add__(self, other):
         self += other
         return self
@@ -91,16 +117,17 @@ class Setting():
     def find(self, name):
         i = self.collection.find(str(name))
         if i == -1:
+            # print('%s is not in %s'%(name, self.name))
             return None
         else:
             return self.collection[i]
 
 
-class Bondsetting(Setting):
+class BondSetting(Setting):
     """
-    Bondsetting object
+    BondSetting object
 
-    The Bondsetting object store the bondpair information.
+    The BondSetting object store the bondpair information.
 
     Parameters:
 
@@ -137,18 +164,14 @@ class Bondsetting(Setting):
             for sp2 in nspecies2:
                 species = {sp1: self.species[sp1], sp2: other.species[sp2]}
                 self.set_default(species, self.cutoff)
-    def add_bonds(self, bondpair):
-        for key in bondpair:
-            species = {sp: self.species[sp] for sp in key}
+    def add(self, bondpairs):
+        if isinstance(bondpairs, tuple):
+            bondpairs = [bondpairs]
+        if isinstance(bondpairs[0], (str, int, float)):
+            bondpairs = [bondpairs]
+        for bondpair in bondpairs:
+            species = {sp: self.species[sp] for sp in bondpair}
             self.set_default(species)
-    def remove_bonds(self, bondpair):
-        if isinstance(bondpair[0], str):
-            bondpair = [bondpair]
-        for key in bondpair:
-            name = '%s-%s'%(key[0], key[1])
-            i = self.collection.find(name)
-            if i != -1:
-                self.collection.remove(i)
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
         s = 'Bondpair      min     max   Search_bond    Polyhedra style\n'
@@ -175,7 +198,7 @@ class Bondsetting(Setting):
         offsets_skin1 = []
         bondlist2 = []
         offsets_skin2 = []
-        speciesarray = np.array(atoms.info['species'])
+        speciesarray = np.array(atoms.arrays['species'])
         for b in self:
             if b.search == 1:
                 temp = bondlists0[(speciesarray[bondlists0[:, 0]] == b.species1) 
@@ -210,23 +233,22 @@ def get_bondtable(speciesdict, cutoff = 1.3):
         radius1 = cutoff * speciesdict[species1]['radius']
         for species2 in speciesdict:
             element2 = species2.split('_')[0]
-            pair = (element1, element2)
-            if pair not in default_bonds: continue
-            name12 = '%s-%s'%(species1, species2)
-            name21 = '%s-%s'%(species2, species1)
+            element_pair = (element1, element2)
+            if element_pair not in default_bonds: continue
+            pair12 = (species1, species2)
+            pair21 = (species2, species1)
             # only add bond once, except for hedrogen bond
-            if name21 in bondtable and ((element1 != 'H') and (element2 !='H')): continue
+            if pair21 in bondtable and ((element1 != 'H') and (element2 !='H')): continue
             color2 = speciesdict[species2]['color']
             radius2 = cutoff * speciesdict[species2]['radius']
             bondmax = radius1 + radius2
-            bondtable[name12] = {
+            bondtable[pair12] = {
                     'species1': species1, 
                     'species2': species2, 
-                    'name': name12, 
                     'min': 0.5, 
                     'max': bondmax,
-                    'search': default_bonds[pair][0], 
-                    'polyhedra': default_bonds[pair][1],
+                    'search': default_bonds[element_pair][0], 
+                    'polyhedra': default_bonds[element_pair][1],
                     'color1': color1,
                     'color2': color2,
                     'width': 0.10,
@@ -235,7 +257,7 @@ def get_bondtable(speciesdict, cutoff = 1.3):
                     'style': '1',
                     }
     # special for hydrogen bond
-    hbs = ['H-O', 'H-N']
+    hbs = [('H', 'O'), ('H', 'N')]
     for key in hbs:
         if key in bondtable:
             bondtable[key]['min'] = 1.2
@@ -268,9 +290,9 @@ def calc_bond_data(batoms, bondlists, bondsetting):
     atoms = batoms.get_atoms_with_boundary()
     positions = atoms.positions
     chemical_symbols = np.array(chemical_symbols)
-    if 'species' not in atoms.info:
-        atoms.info['species'] = atoms.get_chemical_symbols()
-    speciesarray = np.array(atoms.info['species'])
+    if 'species' not in atoms.arrays:
+        atoms.new_array('species', np.array(atoms.get_chemical_symbols()))
+    speciesarray = np.array(atoms.arrays['species'])
     bond_kinds = {}
     if len(bondlists) == 0:
         bond_kinds = {}
@@ -326,13 +348,19 @@ def calc_bond_data(batoms, bondlists, bondsetting):
         # bond order
         if b.order > 1:
             nbond = len(bondlists1)
-            bondlists2 = bondlists[indi | indj]
+            indi1 = (speciesarray[bondlists[:, 1]] == spi)
+            indj2 = (speciesarray[bondlists[:, 0]] == spj)
+            bondlists2 = bondlists[indi | indj | indi1 | indj2]
             high_order_offsets = []
             for i in range(nbond):
-                localbondlist = bondlists2[((bondlists2[:, 0] == bondlists1[i, 0]) 
-                        & (bondlists2[:, 1] != bondlists1[i, 1]))
-                        | ((bondlists2[:, 0] != bondlists1[i, 0]) 
-                        & (bondlists2[:, 1] == bondlists1[i, 1]))]
+                # find another bond
+                mask = np.logical_not(((bondlists2[:, 0] == bondlists1[i, 0]) 
+                        & (bondlists2[:, 1] == bondlists1[i, 1]))
+                        | ((bondlists2[:, 0] != bondlists1[i, 0])
+                        & (bondlists2[:, 0] != bondlists1[i, 1]) 
+                        & (bondlists2[:, 1] != bondlists1[i, 0])
+                        & (bondlists2[:, 1] != bondlists1[i, 1])))
+                localbondlist = bondlists2[mask]
                 # determine the plane of high order bond
                 if len(localbondlist) == 0:
                     second_bond = np.array([0.0, 0.0, 1])

@@ -98,3 +98,7 @@ def import_batoms(inputfile,
     read(inputfile)
     
     
+def menu_func_import_batoms(self, context):
+    lay = self.layout
+    lay.operator(IMPORT_OT_batoms.bl_idname, 
+                    text="Batoms file (xyz, cif, pdb, ...)")

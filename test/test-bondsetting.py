@@ -24,6 +24,10 @@ def test_polyhedra():
     removeAll()
     tio2 = read('datas/tio2.cif')
     tio2.boundary = 0.01
+    tio2.bondsetting.delete(('Ti', 'O'))
+    assert len(tio2.bondsetting) == 1
+    tio2.bondsetting.add(('Ti', 'O'))
+    assert len(tio2.bondsetting) == 2
 
 
 def test_search_bond():
@@ -68,7 +72,7 @@ def test_search_bond_3():
     removeAll()
     mof = read('datas/mof-5.cif')
     mof.boundary = 0.01
-    mof.bondsetting[('Zn-O')].polyhedra = True
+    mof.bondsetting[('Zn', 'O')].polyhedra = True
     mof.model_type = 1
     mof.render.run([0, 1, 0], engine = 'eevee', output = 'mof-5.png')
 
@@ -86,9 +90,9 @@ def test_high_order_bond():
     for i in range(6):
         c6h6.replace('C', 'C_%s'%i, [0])
 
-    c6h6.bondsetting['C_1-C_0'].order = 2
-    c6h6.bondsetting['C_3-C_2'].order = 2
-    c6h6.bondsetting['C_5-C_4'].order = 2
+    c6h6.bondsetting[('C_1', 'C_0')].order = 2
+    c6h6.bondsetting[('C_3', 'C_2')].order = 2
+    c6h6.bondsetting[('C_5', 'C_4')].order = 2
     c6h6.model_type = 1
     c6h6.render.run([0, 0, 1], engine = 'eevee', output = 'c6h6.png')
 
@@ -104,10 +108,10 @@ def test_hydrogen_bond():
     h2o2.translate([0, 0, 3])
     h2o = h2o + h2o2
     h2o = Batoms(label = 'h2o', atoms = h2o)
-    h2o.bondsetting['H-O'].min = 2.0
-    h2o.bondsetting['H-O'].max = 3.0
-    h2o.bondsetting['H-O'].width = 0.01
-    h2o.bondsetting['H-O'].style = '2'
+    h2o.bondsetting[('H', 'O')].min = 2.0
+    h2o.bondsetting[('H', 'O')].max = 3.0
+    h2o.bondsetting[('H', 'O')].width = 0.01
+    h2o.bondsetting[('H', 'O')].style = '2'
     h2o.model_type = 1
     h2o.render.run([1, 0 ,0], engine = 'eevee')
 

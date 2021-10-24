@@ -20,7 +20,7 @@ def get_selected_batoms():
     """
     batoms_list = []
     for obj in bpy.context.selected_objects:
-        for p in ['batom', 'bbond', 'bisosurface', 'bpolyhedra']:
+        for p in ['batom', 'bbond', 'bisosurface', 'bpolyhedra', 'bplane']:
             if getattr(obj, p).flag:
                 batoms_list.append(getattr(obj, p).label)
     batoms_list = list(set(batoms_list))
@@ -41,22 +41,27 @@ def get_selected_vertices():
     in order
     """
     import numpy as np
+    selected_vertices = []
     objs = []
     for obj in bpy.context.objects_in_mode:
         if obj.batom.flag:
             objs.append(obj)
+    if len(objs) == 0:
+        print('Warning: No atoms is selected, please switch to Edit mode.')
+        return selected_vertices
     dict_mode = {}
     for obj in objs:
         dict_mode[obj.name] = obj.mode
     bpy.ops.object.mode_set(mode='OBJECT')
-    selected_vertices = []
     for obj in objs:
         count = len(obj.data.vertices)
         sel = np.zeros(count, dtype=np.bool)
         obj.data.vertices.foreach_get('select', sel)
-        selected_vertices.append((obj.name, sel))
+        index = np.where(sel)[0]
+        if len(index) > 0:
+            selected_vertices.append((obj.name, index))
     # back to whatever mode we were in
-    # bpy.ops.object.mode_set(mode=mode)
+    bpy.ops.object.mode_set(mode='EDIT')
     return selected_vertices
 
 def remove_collection(name):
@@ -100,3 +105,18 @@ def lock_camera_to_view(switch):
             for space in area.spaces:
                 if space.type == 'VIEW_3D':
                     space.lock_camera = switch
+
+def get_keyframes_of_batoms(batoms):
+    """
+    get keyframes of a batoms
+    """
+    keyframes = []
+    for sp, ba in batoms.items():
+        anim = ba.batom.data.animation_data
+        if anim is not None and anim.action is not None:
+            for fcu in anim.action.fcurves:
+                for keyframe in fcu.keyframe_points:
+                    x, y = keyframe.co
+                    if x not in keyframes:
+                        keyframes.append((int(x)))
+    return keyframes

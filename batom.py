@@ -455,28 +455,21 @@ class Batom():
                 frames.append(positions + [0, 0, i])
         >>> h.load_frames(frames)
         
-        """
-        # render settings
-        """
-       
-        """
-        nframe = len(frames)
-        """
         Becareful!
         Only one frame, we will not register keyframe.
         If we registered keyframes here. Any change or the batoms has to be registered.
         Register new change before rendering, or delete existing keyframes.
         """
+        nframe = len(frames)
         if nframe <= 1: return
         batom = self.batom
         nverts = len(batom.data.vertices)
         for i in range(0, nframe):
             positions = frames[i]
             for j in range(nverts):
+                p = np.array(positions[j])
                 batom.data.vertices[j].co = np.array(positions[j]) - np.array(batom.location)
                 batom.data.vertices[j].keyframe_insert('co', frame=i + 1)
-        self.scene.frame_start = 1
-        self.scene.frame_end = nframe
     
     def __len__(self):
         return len(self.batom.data.vertices)

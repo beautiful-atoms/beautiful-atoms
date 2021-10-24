@@ -15,6 +15,7 @@ from bpy.props import (StringProperty,
 
 from batoms.butils import get_selected_objects, get_selected_batoms
 from batoms import Batoms
+from batoms.gui.gui_batoms import modify_batoms_attr
 
 class Polyhedra_PT_prepare(Panel):
     bl_label       = "Polyhedra"
@@ -27,16 +28,21 @@ class Polyhedra_PT_prepare(Panel):
   
     def draw(self, context):
         layout = self.layout
-        plpanel = context.scene.plpanel
+        popanel = context.scene.popanel
+    
+        box = layout.box()
+        col = box.column()
+        col.label(text="Polyhedra type")
+        row = box.row()
+        row.prop(popanel, "polyhedra_type", expand  = True)
 
-        
         box = layout.box()
         row = box.row()
-        row.prop(plpanel, "edgewidth")
+        row.prop(popanel, "edgewidth")
 
         col = box.column(align=True)
         row = box.row()
-        row.prop(plpanel, "polyhedracolor")
+        row.prop(popanel, "polyhedracolor")
 
 class PolyhedraProperties(bpy.types.PropertyGroup):
     @property
@@ -45,16 +51,30 @@ class PolyhedraProperties(bpy.types.PropertyGroup):
     @property
     def selected_polyhedra(self):
         return get_selected_objects('bpolyhedra')
+    def Callback_polyhedra_type(self, context):
+        popanel = bpy.context.scene.popanel
+        polyhedra_type = list(popanel.polyhedra_type)[0]
+        modify_batoms_attr(self.selected_batoms, 'polyhedra_type', polyhedra_type)
     def Callback_modify_edgewidth(self, context):
-        plpanel = bpy.context.scene.plpanel
-        edgewidth = plpanel.edgewidth
+        popanel = bpy.context.scene.popanel
+        edgewidth = popanel.edgewidth
         modify_polyhedra_attr(self.selected_batoms, self.selected_polyhedra, 'edgewidth', edgewidth)
     def Callback_modify_polyhedracolor(self, context):
-        plpanel = bpy.context.scene.plpanel
-        polyhedracolor = plpanel.polyhedracolor
+        popanel = bpy.context.scene.popanel
+        polyhedracolor = popanel.polyhedracolor
         modify_polyhedra_attr(self.selected_batoms, self.selected_polyhedra, 'color', polyhedracolor)
 
-    
+    polyhedra_type: EnumProperty(
+        name="polyhedra_type",
+        description="Polhhedra models",
+        items=(('0',"0", "atoms, bonds and polyhedra"),
+               ('1',"1", "atoms, polyhedra"),
+               ('2',"2","central atoms, polyhedra"),
+               ('3',"3", "polyhedra")),
+        default={'0'}, 
+        update=Callback_polyhedra_type,
+        options={'ENUM_FLAG'},
+        )
     edgewidth: FloatProperty(
         name="Edgewidth", default=0.2,
         description = "edgewidth", update = Callback_modify_edgewidth)

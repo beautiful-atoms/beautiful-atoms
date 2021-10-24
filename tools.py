@@ -1,6 +1,8 @@
 import numpy as np
 import time
 
+from numpy.core.numeric import indices
+
     
 def default_element_prop(element, radii_style = 'covalent', color_style = "JMOL"):
     """
@@ -80,14 +82,15 @@ def get_cell_vertices(cell):
                                                     cell)
     cell_vertices.shape = (8, 3)
     return cell_vertices
-def get_canvas(atoms, direction = [0, 0 ,1], margin = 1, 
+def get_canvas(positions, cell_vertices, direction = [0, 0 ,1], margin = 1, 
                 show_unit_cell = True):
     """
+    Calculate canvas for camera. 
+    Project positions and cell on the plane of view.
+    Find the boudanry of the object on the plane.
     """
     from scipy.spatial.transform import Rotation as R
     canvas = np.zeros([2, 3])
-    positions = atoms.positions
-    cell_vertices = get_cell_vertices(atoms.cell)
     for i in range(3):
         canvas[0, i] = positions[:, i].min()
         canvas[1, i] = positions[:, i].max()
@@ -151,7 +154,15 @@ def find_cage_sphere(cell, positions, radius, step = 1.0,
     flag = np.min(dists, axis = 1) >radius
     return positions_v[flag]
 
-
-
+def get_equivalent_indices(no, indices):
+    """
+    """
+    from ase.spacegroup import Spacegroup
+    sg = Spacegroup(no)
+    indices = sg.equivalent_reflections([indices])
+    return indices
+    
 if __name__ == "__main__":
-    pass
+    indices = (1, 1, 1)
+    indices = get_equivalent_indices(225, indices)
+    print(indices)

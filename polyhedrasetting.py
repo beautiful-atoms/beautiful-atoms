@@ -4,11 +4,11 @@ from batoms.bondsetting import Setting
 import numpy as np
 from time import time
 
-class Polyhedrasetting(Setting):
+class PolyhedraSetting(Setting):
     """
-    Polyhedrasetting object
+    PolyhedraSetting object
 
-    The Polyhedrasetting object store the polyhedra information.
+    The PolyhedraSetting object store the polyhedra information.
 
     Parameters:
 
@@ -28,17 +28,16 @@ class Polyhedrasetting(Setting):
         """
         """
         for sp, data in species.items():
-            self[sp] = {'color': np.append(data['color'][:3], 0.3),
-                        'edgewidth': 0.005,
+            self[sp] = {
+                'species': sp,
+                'color': np.append(data['color'][:3], 0.3),
+                'edgewidth': 0.005,
             }
-    def add_polyhedras(self, polyhedras):
+    def add(self, polyhedras):
+        if isinstance(polyhedras, str):
+            polyhedras = [polyhedras]
         species = {sp: self.species[sp] for sp in polyhedras}
         self.set_default(species)
-    def remove_polyhedras(self, polyhedras):
-        for name in polyhedras:
-            i = self.collection.find(name)
-            if i != -1:
-                self.collection.remove(i)
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
         s = 'Center                color         edgewidth \n'
@@ -55,9 +54,9 @@ def build_polyhedralists(atoms, bondlists, bondsetting, polyhedrasetting):
         from scipy.spatial import ConvexHull
         from batoms.tools import get_polyhedra_kind
         tstart = time()
-        if 'species' not in atoms.info:
-            atoms.info['species'] = atoms.get_chemical_speciess()
-        speciesarray = np.array(atoms.info['species'])
+        if 'species' not in atoms.arrays:
+            atoms.new_array('species', np.array(atoms.get_chemical_symbols()))
+        speciesarray = np.array(atoms.arrays['species'])
         positions = atoms.positions
         polyhedra_kinds = {}
         polyhedra_dict = {}
