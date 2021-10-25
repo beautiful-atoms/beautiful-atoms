@@ -386,7 +386,7 @@ def cylinder_mesh_from_instance_vec(centers, normals, lengths, scale, source):
     # print('cylinder_mesh_from_instance: {0:10.2f} s'.format( time.time() - tstart))
     return verts, faces
 
-def draw_plane(location = (0, 0, -0.01), color = (0.2, 0.2, 1.0, 1.0), size = 200, bsdf_inputs = None, material_style = 'default'):
+def draw_plane(location = (0, 0, -0.01), rotation=(0, 0, 0), color = (0.2, 0.2, 1.0, 1.0), size = 200, bsdf_inputs = None, material_style = 'default'):
     """
     Draw a plane.
     location: array
@@ -408,6 +408,6 @@ def draw_plane(location = (0, 0, -0.01), color = (0.2, 0.2, 1.0, 1.0), size = 20
     for key, value in bsdf_inputs.items():
             principled_node.inputs[key].default_value = value
     # Instantiate a floor plane
-    bpy.ops.mesh.primitive_plane_add(size=size, location=location)
+    bpy.ops.mesh.primitive_plane_add(size=size, location=location, rotation=rotation)
     current_object = bpy.context.object
     current_object.data.materials.append(material)
