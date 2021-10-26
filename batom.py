@@ -8,7 +8,7 @@ from time import time
 import bpy
 import bmesh
 from batoms.butils import object_mode
-from batoms.data import material_styles_dict
+from batoms.material import material_styles_dict
 from batoms.tools import get_atom_kind
 import numpy as np
 
@@ -70,7 +70,7 @@ class Batom():
                 color_style = 'JMOL',
                 material_style = 'default',
                 material = None,
-                bsdf_inputs = None,
+                node_inputs = None,
                  ):
         #
         if species:
@@ -87,33 +87,26 @@ class Batom():
                                 color_style = color_style)
             if color:
                 self.species_data['color'] = color
-            self.set_material(bsdf_inputs, material_style, material)
+            self.set_material(node_inputs, material_style, material)
             self.set_instancer(segments = segments, 
                             subdivisions = subdivisions, shape = shapes[shape])
             self.set_object(positions, location)
             self.batom.batom.radius = self.species_data['radius']
         else:
             self.from_batom(label)
-    def set_material(self, bsdf_inputs = None, material_style = 'default', material = None):
+    def set_material(self, node_inputs = None, material_style = 'default', material = None):
+        """
+        """
+        from batoms.material import create_material
         name = 'material_atom_{0}_{1}'.format(self.label, self.species)
         if material:
             material = material.copy()
             material.name = name
         elif name not in bpy.data.materials:
-            if not bsdf_inputs:
-                bsdf_inputs = material_styles_dict[material_style]
-            material = bpy.data.materials.new(name)
-            material.diffuse_color = self.species_data['color']
-            material.metallic = bsdf_inputs['Metallic']
-            material.roughness = bsdf_inputs['Roughness']
-            material.blend_method = 'BLEND'
-            material.show_transparent_back = False
-            material.use_nodes = True
-            principled_node = material.node_tree.nodes['Principled BSDF']
-            principled_node.inputs['Base Color'].default_value = self.species_data['color']
-            principled_node.inputs['Alpha'].default_value = self.species_data['color'][3]
-            for key, value in bsdf_inputs.items():
-                principled_node.inputs[key].default_value = value
+            material = create_material(name,
+                        self.species_data['color'],
+                        node_inputs = node_inputs,
+                        material_style = material_style)
     def object_mode(self):
         for object in bpy.data.objects:
             if object.mode == 'EDIT':
@@ -317,9 +310,9 @@ class Batom():
 
         """
         Viewpoint_color = self.material.diffuse_color
-        BSDF_color = self.bsdf['Base Color'].default_value[:]
-        Alpha = self.bsdf['Alpha'].default_value
-        color = [BSDF_color[0], BSDF_color[1], BSDF_color[2], Alpha]
+        node_color = self.node['Base Color'].default_value[:]
+        Alpha = self.node['Alpha'].default_value
+        color = [node_color[0], node_color[1], node_color[2], Alpha]
         return color
     def set_color(self, color):
         if len(color) == 3:
@@ -328,15 +321,15 @@ class Batom():
         self.material.node_tree.nodes['Principled BSDF'].inputs['Base Color'].default_value = color
         self.material.node_tree.nodes['Principled BSDF'].inputs['Alpha'].default_value = color[3]
     @property
-    def bsdf(self):
-        return self.get_bsdf()
-    @bsdf.setter
-    def bsdf(self, bsdf):
-        self.set_bsdf(bsdf)
-    def get_bsdf(self):
-        return self.material.node_tree.nodes['Principled BSDF'].inputs
-    def set_bsdf(self, bsdf):
-        for key, value in bsdf.items():
+    def node(self):
+        return self.get_node()
+    @node.setter
+    def node(self, node):
+        self.set_node(node)
+    def get_node(self):
+        return self.material.node_tree.nodes['Principled node'].inputs
+    def set_node(self, node):
+        for key, value in node.items():
             self.material.node_tree.nodes['Principled BSDF'].inputs[key].default_value = value
     @property
     def segments(self):

@@ -43,23 +43,22 @@ def get_atom_kind(element, positions = [], radii_style = 'covalent',
     atom_kind.update(props)
     return atom_kind
 
-def get_polyhedra_kind(color, edgewidth = 0.01, props = {}):
+def get_polyhedra_kind(color, width = 0.01, show_edge = True, props = {}):
     """
     Set initial data for polyhedra.
     """
     polyhedra_kind = {'color': color,
-                     'edgewidth': edgewidth}
-    vertices = []
-    edges = []
-    faces = []
-    polyhedra_kind.update({'vertices': vertices, 'edges': edges, 
-                    'faces': faces})
-    lengths = []
-    centers = []
-    normals = []
-    polyhedra_kind['edge_cylinder'] = {'lengths': lengths, 
-                        'centers': centers, 'normals': normals}
-    polyhedra_kind['edge_cylinder']['color'] = (1.0, 1.0, 1.0, 1.0)
+                    'vertices': [],
+                    'edges': [], 
+                    'faces': [],
+                    'show_edge': show_edge,
+                    }
+    polyhedra_kind['edge'] = {'lengths': [], 
+                        'centers': [], 
+                        'normals': [],
+                        'color': (1.0, 1.0, 1.0, 1.0),
+                        'width': width,
+                        }
     polyhedra_kind.update(props)
     return polyhedra_kind
 
@@ -160,6 +159,7 @@ def get_equivalent_indices(no, indices):
     from ase.spacegroup import Spacegroup
     sg = Spacegroup(no)
     indices = sg.equivalent_reflections([indices])
+    indices = indices.tolist()
     return indices
     
 if __name__ == "__main__":

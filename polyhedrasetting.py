@@ -1,6 +1,6 @@
 """
 """
-from batoms.bondsetting import Setting
+from batoms.bondsetting import Setting, tuple2string
 import numpy as np
 from time import time
 
@@ -24,14 +24,29 @@ class PolyhedraSetting(Setting):
         if polyhedrasetting is not None:
             for key, data in polyhedrasetting.items():
                 self[key] = data
+    def __setitem__(self, index, setdict):
+        """
+        Set properties
+        """
+        name = tuple2string(index)
+        subset = self.find(name)
+        if subset is None:
+            subset = self.collection.add()
+        subset.species = index
+        subset.name = name
+        for key, value in setdict.items():
+            setattr(subset, key, value)
+        subset.label = self.label
     def set_default(self, species):
         """
         """
         for sp, data in species.items():
             self[sp] = {
+                'flag': True,
+                'label': self.label,
                 'species': sp,
                 'color': np.append(data['color'][:3], 0.3),
-                'edgewidth': 0.005,
+                'width': 0.005,
             }
     def add(self, polyhedras):
         if isinstance(polyhedras, str):
@@ -40,10 +55,10 @@ class PolyhedraSetting(Setting):
         self.set_default(species)
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
-        s = 'Center                color         edgewidth \n'
+        s = 'Center                color         width \n'
         for p in self.collection:
             s += '{0:10s}   [{1:1.2f}  {2:1.2f}  {3:1.2f}  {4:1.2f}]   {5:1.3f} \n'.format(\
-                p.species, p.color[0], p.color[1], p.color[2], p.color[3], p.edgewidth)
+                p.species, p.color[0], p.color[1], p.color[2], p.color[3], p.width)
         s += '-'*60 + '\n'
         return s
 
@@ -69,8 +84,9 @@ def build_polyhedralists(atoms, bondlists, bondsetting, polyhedrasetting):
         # loop center atoms
         npositions = positions[bondlists[:, 1]] + np.dot(bondlists[:, 2:5], atoms.cell)
         for spi, spjs in polyhedra_dict.items():
-            polyhedra_kind = get_polyhedra_kind(color = polyhedrasetting[spi].color, 
-                                edgewidth = polyhedrasetting[spi].edgewidth)
+            poly = polyhedrasetting[spi]
+            polyhedra_kind = get_polyhedra_kind(color = poly.color, 
+                                width = poly.width, show_edge = poly.show_edge)
             indis = np.where(speciesarray == spi)[0]
             for indi in indis:
                 vertices = []
@@ -93,6 +109,7 @@ def build_polyhedralists(atoms, bondlists, bondsetting, polyhedrasetting):
                     polyhedra_kind['vertices'] = polyhedra_kind['vertices'] + list(vertices)
                     polyhedra_kind['edges'] = polyhedra_kind['edges'] + list(edge)
                     polyhedra_kind['faces'] = polyhedra_kind['faces'] + list(face)
+                    polyhedra_kind['battr_inputs'] = {'bpolyhedra': poly.as_dict()}
                     # print('edge: ', edge)
                     for e in edge:
                         # print(e)
@@ -101,9 +118,11 @@ def build_polyhedralists(atoms, bondlists, bondsetting, polyhedrasetting):
                         length = np.linalg.norm(vec)
                         nvec = vec/length
                         # print(center, nvec, length)
-                        polyhedra_kind['edge_cylinder']['lengths'].append(length)
-                        polyhedra_kind['edge_cylinder']['centers'].append(center)
-                        polyhedra_kind['edge_cylinder']['normals'].append(nvec)
+                        polyhedra_kind['edge']['lengths'].append(length)
+                        polyhedra_kind['edge']['centers'].append(center)
+                        polyhedra_kind['edge']['normals'].append(nvec)
+                    polyhedra_kind['edge']['vertices'] = 6
+                    polyhedra_kind['edge']['battr_inputs'] = {}
             if len(polyhedra_kind['vertices']) > 0:
                 polyhedra_kinds[spi] = polyhedra_kind
         # print('build_polyhedralists: {0:10.2f} s'.format(time() - tstart))

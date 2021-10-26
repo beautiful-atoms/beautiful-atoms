@@ -38,7 +38,9 @@ class Polyhedra_PT_prepare(Panel):
 
         box = layout.box()
         row = box.row()
-        row.prop(popanel, "edgewidth")
+        row.prop(popanel, "show_edge")
+        row = box.row()
+        row.prop(popanel, "width")
 
         col = box.column(align=True)
         row = box.row()
@@ -55,10 +57,14 @@ class PolyhedraProperties(bpy.types.PropertyGroup):
         popanel = bpy.context.scene.popanel
         polyhedra_type = list(popanel.polyhedra_type)[0]
         modify_batoms_attr(self.selected_batoms, 'polyhedra_type', polyhedra_type)
-    def Callback_modify_edgewidth(self, context):
+    def Callback_modify_width(self, context):
         popanel = bpy.context.scene.popanel
-        edgewidth = popanel.edgewidth
-        modify_polyhedra_attr(self.selected_batoms, self.selected_polyhedra, 'edgewidth', edgewidth)
+        width = popanel.width
+        modify_polyhedra_attr(self.selected_batoms, self.selected_polyhedra, 'width', width)
+    def Callback_modify_show_edge(self, context):
+        popanel = bpy.context.scene.popanel
+        show_edge = popanel.show_edge
+        modify_polyhedra_attr(self.selected_batoms, self.selected_polyhedra, 'show_edge', show_edge)
     def Callback_modify_polyhedracolor(self, context):
         popanel = bpy.context.scene.popanel
         polyhedracolor = popanel.polyhedracolor
@@ -75,9 +81,12 @@ class PolyhedraProperties(bpy.types.PropertyGroup):
         update=Callback_polyhedra_type,
         options={'ENUM_FLAG'},
         )
-    edgewidth: FloatProperty(
-        name="Edgewidth", default=0.2,
-        description = "edgewidth", update = Callback_modify_edgewidth)
+    width: FloatProperty(
+        name="edgewidth", default=0.01,
+        description = "width", update = Callback_modify_width)
+    show_edge: BoolProperty(
+        name = "show_edge", default=True,
+        description = "show_edge", update = Callback_modify_show_edge)
     polyhedracolor: FloatVectorProperty(
         name="polyhedracolor", 
         subtype='COLOR',

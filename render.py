@@ -221,12 +221,12 @@ class Render():
         """
         from batoms.tools import get_canvas
         batoms = self.batoms
-        atoms = batoms.get_atoms_with_boundary()
+        vertices = batoms.get_all_vertices()
         if not margin:
             sizes = [ba.size.max() for ba in batoms.batoms.values()]
             margin = max(sizes) + 0.5
         if canvas is None:
-            canvas, canvas1 = get_canvas(atoms.positions, batoms.cell.verts,
+            canvas, canvas1 = get_canvas(vertices, batoms.cell.verts,
                                     direction = direction, margin = margin)
         else:
             if isinstance(canvas, (int, float)):

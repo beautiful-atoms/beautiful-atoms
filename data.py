@@ -1038,31 +1038,3 @@ default_bonds = {
 ('Zr', 'As'):  [1,  1],
 ('Zr', 'H' ):  [1,  1],
 }
-
-material_styles_dict = {
-            'default'   : {'Metallic': 0.1, 'Specular': 0.2, 'Roughness': 0.2, },
-            'ceramic' : {'Subsurface': 0.1, 'Metallic': 0.02, 'Specular': 0.5, 'Roughness': 0.0},
-            'plastic' : {'Metallic': 0.0, 'Specular': 0.5, 'Roughness': 1.0, },
-            'glass'   : {'Metallic': 0.0, 'Specular': 0.5, 'Roughness': 0.0, 'Transmission': 0.98},
-            'mirror'  : {'Metallic': 0.99, 'Specular': 2.0, 'Roughness': 0.001},
-            }
-
-default_batoms = {
-        'show_unit_cell': 'default',
-        'celllinewidth': 0.025,  # radius of the cylinders representing the cell
-        'balltypes': None,
-        'radii': None, 
-        'colors': None,
-        'make_real': False,
-        'kind_props': None,
-        'bond_cutoff': None,  # 
-        'bond_list': {},  # [[atom1, atom2], ... ] pairs of bonding atoms
-        'polyhedra_dict': {},
-        'search_pbc': False, #{'bonds_dict': {}, 'molecule_list': {}},
-        'search_bond': False, #{'bonds_dict': {}, 'molecule_list': {}},
-        'search_molecule': False, #{'search_list': None},
-        'boundary_list': [],
-        'isosurface':None,
-        'cube': None,
-        'highlight': None, # highlight atoms
-}

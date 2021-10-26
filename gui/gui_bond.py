@@ -156,10 +156,10 @@ def modify_bond_attr(selected_batoms, selected_bond, key, value):
                     setattr(batoms.bondsetting['%s-%s'%(bond.bbond.species1, 
                             bond.bbond.species2)], 'color%s'%index, value)
                 if batoms.bondsetting['%s-%s'%(bond.bbond.species1, bond.bbond.species2)].style == '0':
-                    selected_bond_new.append('bond_%s_%s_%s'%(bond.bbond.label, 
+                    selected_bond_new.append('%s_bond_%s_%s'%(bond.bbond.label, 
                         bond.bbond.species1, bond.bbond.species2))
                 else:
-                    selected_bond_new.append('bond_%s_%s_%s_%s'%(bond.bbond.label, 
+                    selected_bond_new.append('%s_bond_%s_%s_%s'%(bond.bbond.label, 
                         bond.bbond.species1, bond.bbond.species2, bond.bbond.species))
         batoms.draw_bonds()
         if batoms.model_type == 2:

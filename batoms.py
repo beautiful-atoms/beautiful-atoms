@@ -13,8 +13,7 @@ from batoms.planesetting import PlaneSetting
 from batoms.cell import Bcell
 from batoms.render import Render
 from batoms.boundary import search_boundary, search_bond
-from batoms.bdraw import draw_cell_cylinder, draw_bond_kind, draw_polyhedra_kind, \
-                        draw_isosurface, draw_lattice_plane
+from batoms.bdraw import draw_cylinder, draw_surface_from_vertices
 from batoms.butils import object_mode
 import numpy as np
 from time import time
@@ -103,7 +102,7 @@ class Batoms():
                 radii_style = 'covalent',
                 color_style = 'JMOL',
                 material_style = 'default',
-                bsdf_inputs = None,
+                node_inputs = None,
                 movie = False,
                 draw = True, 
                  ):
@@ -119,7 +118,7 @@ class Batoms():
         self.radii_style = radii_style
         self.color_style = color_style
         self.material_style = material_style
-        self.bsdf_inputs = bsdf_inputs
+        self.node_inputs = node_inputs
         if species:
             if not self.label:
                 self.label = ''.join(['%s%s'%(species, len(positions)) 
@@ -169,9 +168,9 @@ class Batoms():
             self.isosurfacesetting = isosurfacesetting
         
         if planesetting is None:
-            self.planesetting = PlaneSetting(self.label)
+            self.planesetting = PlaneSetting(self.label, no = self.get_spacegroup_number())
         elif isinstance(planesetting, dict):
-            self.planesetting = PlaneSetting(self.label, 
+            self.planesetting = PlaneSetting(self.label, no = self.get_spacegroup_number(), 
                             planesetting = planesetting)
         elif isinstance(planesetting, PlaneSetting):
             self.planesetting = planesetting
@@ -194,7 +193,7 @@ class Batoms():
                 ba = Batom(self.label, sp, positions, segments = self.segments, 
                             shape = self.shape, props = self.species_props[sp], 
                             material_style=self.material_style, 
-                            bsdf_inputs=self.bsdf_inputs, radii_style = self.radii_style, color_style=self.color_style)
+                            node_inputs=self.node_inputs, radii_style = self.radii_style, color_style=self.color_style)
                 self.coll.children['%s_atom'%self.label].objects.link(ba.batom)
                 self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
         elif isinstance(species, list):
@@ -220,7 +219,7 @@ class Batoms():
                         segments = self.segments, shape = self.shape, 
                         props = self.species_props[species], 
                         material_style=self.material_style, 
-                        bsdf_inputs=self.bsdf_inputs, 
+                        node_inputs=self.node_inputs, 
                         radii_style = self.radii_style, 
                         color_style=self.color_style)
             self.coll.children['%s_atom'%self.label].objects.link(ba.batom)
@@ -245,7 +244,7 @@ class Batoms():
                            in enumerate(symbols) if x == species]
             ba = Batom(self.label, species, positions, segments = self.segments, 
                        shape = self.shape, material_style=self.material_style, 
-                       bsdf_inputs=self.bsdf_inputs, 
+                       node_inputs=self.node_inputs, 
                        radii_style = self.radii_style, 
                        color_style=self.color_style)
             self.coll.children['%s_atom'%self.label].objects.link(ba.batom)
@@ -290,20 +289,19 @@ class Batoms():
         self.coll.batoms.polyhedra_type = str(polyhedra_type)
         self.coll.batoms.boundary = boundary
     
-    def draw_cell(self, celllinewidth = 0.03):
+    def draw_cell(self):
         """
         Draw unit cell
         """
         object_mode()
-        cell_vertices = self.cell.verts
-        if np.max(abs(cell_vertices)) < 1e-6:
-            return 0
-        self.clean_atoms_objects('cell', ['cylinder', 'point'])
+        self.clean_atoms_objects('cell', ['cylinder'])
+        cell_cylinder = self.cell.build_cell_cylinder()
         if self.show_unit_cell:
-            draw_cell_cylinder(self.coll.children['%s_cell'%self.label], 
-                            cell_vertices, 
-                            label = self.label, 
-                            celllinewidth = celllinewidth)
+            name = '%s_%s_%s'%(self.label, 'cell', 'cylinder')
+            draw_cylinder(name = name, 
+                            datas = cell_cylinder, 
+                            coll = self.coll.children['%s_cell'%self.label]
+                        )
     def draw_bonds(self):
         """
         Draw bonds.
@@ -320,10 +318,14 @@ class Batoms():
         self.bondlist = build_bondlists(atoms, self.bondsetting.cutoff_dict)
         bond_kinds = calc_bond_data(self, self.bondlist, self.bondsetting)
         if len(bond_kinds) == 0: return
+        
         for species, bond_data in bond_kinds.items():
-            draw_bond_kind(species, bond_data, label = self.label, 
-                        coll = self.coll.children['%s_bond'%self.label])
-    def draw_polyhedras(self, bondlist = None, show_edge = True):
+            name = '%s_%s_%s'%(self.label, 'bond', species)
+            draw_cylinder(name = name, 
+                            datas = bond_data, 
+                            coll = self.coll.children['%s_bond'%self.label]
+                            )
+    def draw_polyhedras(self, bondlist = None):
         """
         Draw bonds.
         Parameters:
@@ -339,8 +341,18 @@ class Batoms():
         polyhedra_kinds = build_polyhedralists(atoms, bondlist, 
                           self.bondsetting, self.polyhedrasetting)
         for species, polyhedra_data in polyhedra_kinds.items():
-            draw_polyhedra_kind(species, polyhedra_data, label = self.label,
-                        coll = self.coll.children['%s_polyhedra'%self.label], show_edge = show_edge)
+            name = '%s_%s_%s'%(self.label, 'polyhedra', species)
+            draw_surface_from_vertices(name, 
+                                datas = polyhedra_data,
+                                use_smooth = False,
+                                coll = self.coll.children['%s_polyhedra'%self.label],
+                                )
+            if polyhedra_data['show_edge']:
+                name = '%s_%s_%s'%(self.label, 'polyhedra_edge', species)
+                draw_cylinder(name = name, 
+                            datas = polyhedra_data['edge'],
+                            coll = self.coll.children['%s_polyhedra'%self.label])
+    
     def draw_isosurface(self):
         """
         Draw bonds.
@@ -353,9 +365,12 @@ class Batoms():
         object_mode()
         self.clean_atoms_objects('volume', ['isosurface'])
         isosurface = self.isosurfacesetting.build_isosurface(self.cell)
-        for name, verts, faces, color in isosurface:
-            draw_isosurface(name, self.coll.children['%s_volume'%self.label],
-                            verts, faces, color = color, label = self.label)
+        for name, isosurface_data in isosurface.items():
+            name = '%s_%s_%s'%(self.label, 'isosurface', name)
+            draw_surface_from_vertices(name, 
+                                datas = isosurface_data,
+                                coll = self.coll.children['%s_volume'%self.label],
+                            )
     def draw_cavity_sphere(self, radius, boundary = [[0, 1], [0, 1], [0, 1]]):
         """
         cavity
@@ -368,35 +383,51 @@ class Batoms():
         self.clean_atoms_objects('ghost')
         positions = find_cage_sphere(self.cell, self.atoms.positions, radius, boundary = boundary)
         ba = Batom(self.label, 'X', positions, scale = radius*0.9, 
-                   material_style='default', bsdf_inputs=self.bsdf_inputs, 
+                   material_style='default', node_inputs=self.node_inputs, 
                    radii_style = self.radii_style, 
                    color_style=self.color_style)
         
         # ba.color = [ba.color[0], ba.color[1], ba.color[2], 0.8]
         self.coll.children['%s_ghost'%self.label].objects.link(ba.batom)
         self.coll.children['%s_ghost'%self.label].objects.link(ba.instancer)
-    def draw_lattice_plane(self):
+    def draw_lattice_plane(self, no = None):
         """
         Draw plane
         """
+        if no is None:
+            no = self.get_spacegroup_number()
+        self.planesetting.no = no
         planes = self.planesetting.build_plane(self.cell)
-        self.clean_atoms_objects('plane')
-        if planes is None:
-            return
-        for name, plane in planes.items():
-            draw_lattice_plane(name, plane, self.label,
+        self.clean_atoms_objects('plane', 'plane')
+        for species, plane in planes.items():
+            name = '%s_%s_%s'%(self.label, 'plane', species)
+            draw_surface_from_vertices(name, plane,
                     coll = self.coll.children['%s_plane'%self.label])
-    def draw_crystal_shape(self):
+            if plane['show_edge']:
+                name = '%s_%s_%s'%(self.label, 'plane_edge', species)
+                draw_cylinder(name = name, 
+                            datas = plane['edges'],
+                            coll = self.coll.children['%s_plane'%self.label])
+    
+    def draw_crystal_shape(self, no = None):
         """
         Draw crystal
         """
-        planes = self.planesetting.build_crystal(self.get_spacegroup().no, self.cell)
-        self.clean_atoms_objects('plane')
-        if planes is None:
-            return
-        for name, plane in planes.items():
-            draw_lattice_plane(name, plane, self.label,
+        if no is None:
+            no = self.get_spacegroup_number()
+        self.planesetting.no = no
+        planes = self.planesetting.build_crystal(self.cell)
+        self.clean_atoms_objects('plane', ['crystal'])
+        for species, plane in planes.items():
+            name = '%s_%s_%s'%(self.label, 'crystal', species)
+            draw_surface_from_vertices(name, plane,
                     coll = self.coll.children['%s_plane'%self.label])
+            if plane['show_edge']:
+                name = '%s_%s_%s'%(self.label, 'crystal_edge', species)
+                draw_cylinder(name = name, 
+                            datas = plane['edges'],
+                            coll = self.coll.children['%s_plane'%self.label])
+    
     def clean_atoms_objects(self, coll, names = None):
         """
         remove all bond object in the bond collection
@@ -519,7 +550,7 @@ class Batoms():
                     scale = self.batoms[species1].scale,
                     segments = self.segments, 
                     shape = self.shape, material_style=self.material_style, 
-                    bsdf_inputs=self.bsdf_inputs, 
+                    node_inputs=self.node_inputs, 
                     radii_style = self.radii_style, 
                     color_style=self.color_style)
             self.coll.children['%s_atom'%self.label].objects.link(ba.batom)
@@ -1188,12 +1219,27 @@ class Batoms():
             obj = bpy.data.objects.get(name)
             obj.select_set(state)
 
-    def get_spacegroup(self, symprec = 1e-5):
+    def get_spacegroup_number(self, symprec = 1e-5):
         """
         """
-        from ase.spacegroup import get_spacegroup
+        import spglib
         atoms = self.atoms
-        no = get_spacegroup(atoms)
+        sg = spglib.get_spacegroup((atoms.get_cell(), atoms.get_scaled_positions(),
+                                    atoms.get_atomic_numbers()),
+                                    symprec=symprec)
+        if sg is None:
+            return None
+        no = int(sg[sg.find('(') + 1:sg.find(')')])
         return no
-    
-    
+    def get_all_vertices(self):
+        positions = self.atoms.positions
+        # isosurface, plane
+        for coll in subcollections:
+            for obj in self.coll.children['%s_%s'%(self.label, coll)].all_objects:
+                if obj.type != 'MESH': continue
+                n = len(obj.data.vertices)
+                vertices = np.empty(n*3, dtype=np.float64)
+                obj.data.vertices.foreach_get('co', vertices)  
+                vertices = vertices.reshape((n, 3))
+                positions = np.concatenate((positions, vertices), axis = 0)
+        return positions

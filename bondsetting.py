@@ -146,10 +146,24 @@ class BondSetting(Setting):
         if bondsetting is not None:
             for key, data in bondsetting.items():
                 self[key] = data
+    def __setitem__(self, index, setdict):
+        """
+        Set properties
+        """
+        name = tuple2string(index)
+        subset = self.find(name)
+        if subset is None:
+            subset = self.collection.add()
+        subset.name = name
+        subset.species1 = index[0]
+        subset.species2 = index[1]
+        for key, value in setdict.items():
+            setattr(subset, key, value)
+        subset.label = self.label
     def set_default(self, species, cutoff = 1.3):
         """
         """
-        bondtable = get_bondtable(species, cutoff=cutoff)
+        bondtable = get_bondtable(self.label, species, cutoff=cutoff)
         for key, value in bondtable.items():
             self[key] = value
     def extend(self, other):
@@ -222,7 +236,7 @@ class BondSetting(Setting):
         return np.array(offsets_skin1), np.array(bondlist1), np.array(offsets_skin2), np.array(bondlist2)
 
 
-def get_bondtable(speciesdict, cutoff = 1.3):
+def get_bondtable(label, speciesdict, cutoff = 1.3):
     """
     """
     from batoms.data import default_bonds
@@ -243,6 +257,8 @@ def get_bondtable(speciesdict, cutoff = 1.3):
             radius2 = cutoff * speciesdict[species2]['radius']
             bondmax = radius1 + radius2
             bondtable[pair12] = {
+                    'flag': True,
+                    'label': label,
                     'species1': species1, 
                     'species2': species2, 
                     'min': 0.5, 
@@ -335,13 +351,16 @@ def calc_bond_data(batoms, bondlists, bondsetting):
                 ]
         for kind, species, color in kinds:
             if kind not in bond_kinds:
-                bond_kinds[kind] = {'bbond': b, 
+                battr = b.as_dict()
+                battr.update({'species': species})
+                bond_kinds[kind] = {'battr_inputs': {'bbond': battr}, 
                                     'species': species,
                                     'color': color, 'verts': [],
                                     'width': b.width,
                                     'centers': [],
                                     'lengths': [],
                                     'normals': [], 
+                                    'vertices': 16,
                                     # 'high_order_offsets': [],
                                     'style': b.style}
         #--------------------
@@ -402,6 +421,7 @@ def calc_bond_data(batoms, bondlists, bondsetting):
         elif b.style == '2':
             length = length/2.0
             for i in range(1, 3):
+                bond_kinds[kinds[i][0]]['vertices'] = 6
                 step = 0.1
                 maxlength = length.max()
                 center = center0 - (i - 1.5)*nvec*step
@@ -418,6 +438,7 @@ def calc_bond_data(batoms, bondlists, bondsetting):
         elif b.style == '3':
             length = length/2.0
             for i in range(1, 3):
+                bond_kinds[kinds[i][0]]['vertices'] = 6
                 step = 0.05
                 maxlength = length.max()
                 center = center0 - (i - 1.5)*nvec*step

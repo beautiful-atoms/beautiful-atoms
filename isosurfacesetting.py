@@ -128,13 +128,18 @@ class IsosurfaceSetting(Setting):
         return s
     def build_isosurface(self, cell):
         volume = self.volume
-        isosurface = []
+        isosurface = {}
         for iso in self.collection:
             name = iso.name
             level = iso.level
             color = iso.color
             verts, faces = calc_isosurface(volume, cell, level)
-            isosurface.append((name, verts, faces, color))
+            isosurface[name] = {'vertices': verts, 
+                                'edges': [], 
+                                'faces': faces, 
+                                'color': color,
+                                'battr_inputs': {'bisosurface': iso.as_dict()}
+                            }
         return isosurface
 
 

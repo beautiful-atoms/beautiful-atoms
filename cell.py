@@ -10,7 +10,13 @@ class Bcell():
     Unit cell of three dimensions.
 
     """
-    def __init__(self, label, array = np.zeros([3, 3]), location = np.array([0, 0, 0])) -> None:
+    def __init__(self, label, 
+                array = np.zeros([3, 3]), 
+                location = np.array([0, 0, 0]),
+                color = (0.0, 0.0, 0.0, 1.0),
+                material_style = 'default',
+                bsdf_inputs = None,
+                ) -> None:
         """
         ver: 3x3 verlike object
           The three cell vectors: cell[0], cell[1], and cell[2].
@@ -21,6 +27,8 @@ class Bcell():
                     [2, 5], [2, 6], [7, 5], [7, 6], 
                     [3, 2], [0, 6], [1, 5], [4, 7]
             ]
+        self.width = 0.05
+        self.color = color
         self.draw_cell_edge(array, location)
     def draw_cell_edge(self, array, location):
         """
@@ -53,6 +61,27 @@ class Bcell():
             raise Exception("Failed, the name %s already \
                 in use and is not Bcell object!"%self.name)
         bpy.context.view_layer.update()
+    def build_cell_cylinder(self):
+         #
+        cell_cylinder = {'lengths': [], 
+                      'centers': [],
+                      'normals': [],
+                      'vertices': 16,
+                      'width': self.width,
+                      'color': self.color,
+                      'battr_inputs': {},
+                      }
+        if np.max(abs(self.verts)) < 1e-6:
+            return cell_cylinder
+        for e in self.edges:
+            center = (self.verts[e[0]] + self.verts[e[1]])/2.0
+            vec = self.verts[e[0]] - self.verts[e[1]]
+            length = np.linalg.norm(vec)
+            nvec = vec/length
+            cell_cylinder['lengths'].append(length)
+            cell_cylinder['centers'].append(center)
+            cell_cylinder['normals'].append(nvec)
+        return cell_cylinder
     def __repr__(self) -> str:
         numbers = self.array.tolist()
         s = 'Cell({})'.format(numbers)

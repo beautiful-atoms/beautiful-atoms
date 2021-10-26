@@ -114,7 +114,8 @@ class BPolyhedra(bpy.types.PropertyGroup):
     species: StringProperty(name="species")
     name:StringProperty(name = "name")
     color: FloatVectorProperty(name="color", size = 4)
-    edgewidth: FloatProperty(name="edgewidth", default = 0.10)
+    width: FloatProperty(name="width", default = 0.01)
+    show_edge: BoolProperty(name="show_edge", default=True)
     @property
     def name(self) -> str:
         return self.species
@@ -126,14 +127,15 @@ class BPolyhedra(bpy.types.PropertyGroup):
             'species': self.species, 
             'name': self.name, 
             'color': self.color,
-            'edgewidth': self.edgewidth,
+            'width': self.width,
+            'show_edge': self.show_edge,
         }
         return setdict
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
-        s = 'Center                color           edgewidth \n'
-        s += '{0:10s}   [{1:1.2f}  {2:1.2f}  {3:1.2f}  {4:1.2f}]   {5:1.3f} \n'.format(\
-                self.species, self.color[0], self.color[1], self.color[2], self.color[3], self.edgewidth)
+        s = 'Center                show_edge           width \n'
+        s += '{0:10s}    {1:10s}   {2:1.3f} \n'.format(\
+                self.species, str(self.show_edge), self.width)
         s += '-'*60 + '\n'
         return s
 
@@ -173,8 +175,11 @@ class BPlane(bpy.types.PropertyGroup):
     distance: FloatProperty(name="distance", 
                             description="Distance from origin",
                             default = 1)
-    color: FloatVectorProperty(name="color", size = 4, default = [1, 1, 0, 0.8])
+    color: FloatVectorProperty(name="color", size = 4, default = [0, 0, 1, 0.5])
     crystal: BoolProperty(name="crystal", default=False)
+    symmetry: BoolProperty(name="symmetry", default=False)
+    show_edge: BoolProperty(name="show_edge", default=True)
+    width: FloatProperty(name="width", default = 0.01)
     @property
     def name(self) -> str:
         return '%s-%s-%s'%(self.indices[0], self.indices[1], self.indices[2])
@@ -192,13 +197,17 @@ class BPlane(bpy.types.PropertyGroup):
             'color': self.color,
             'indices': self.indices,
             'distance': self.distance,
+            'crystal': self.crystal,
+            'symmetry': self.symmetry,
+            'show_edge': self.show_edge,
+            'width': self.width,
         }
         return setdict
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
-        s = 'Name        distance    color            \n'
-        s += '{0:10s}   {1:1.3f}  [{2:1.2f}  {3:1.2f}  {4:1.2f}   {5:1.2f}] \n'.format(\
-                self.name, self.distance, self.color[0], self.color[1], self.color[2], self.color[3])
+        s = 'Name        distance    show_edge    edgewidth        \n'
+        s += '{0:10s}   {1:1.3f}  {2:10s}  {3:1.3f}\n'.format(\
+                self.name, self.distance, str(self.show_edge), self.width)
         s += '-'*60 + '\n'
         return s
 
