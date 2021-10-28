@@ -75,6 +75,7 @@ class Setting():
         for key, value in setdict.items():
             setattr(subset, key, value)
         subset.label = self.label
+        subset.flag = True
     def copy(self, label):
         object_mode()
         bondsetting = self.__class__(label)

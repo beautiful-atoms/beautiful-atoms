@@ -13,7 +13,7 @@ from batoms.planesetting import PlaneSetting
 from batoms.cell import Bcell
 from batoms.render import Render
 from batoms.boundary import search_boundary, search_bond
-from batoms.bdraw import draw_cylinder, draw_surface_from_vertices
+from batoms.bdraw import draw_cylinder, draw_surface_from_vertices, draw_2d_slicing
 from batoms.butils import object_mode
 import numpy as np
 from time import time
@@ -390,14 +390,14 @@ class Batoms():
         # ba.color = [ba.color[0], ba.color[1], ba.color[2], 0.8]
         self.coll.children['%s_ghost'%self.label].objects.link(ba.batom)
         self.coll.children['%s_ghost'%self.label].objects.link(ba.instancer)
-    def draw_lattice_plane(self, no = None):
+    def draw_lattice_plane(self, no = None, cuts = None, cmap = 'bwr', include_center = False):
         """
         Draw plane
         """
         if no is None:
             no = self.get_spacegroup_number()
         self.planesetting.no = no
-        planes = self.planesetting.build_plane(self.cell)
+        planes = self.planesetting.build_plane(self.cell, include_center = include_center)
         self.clean_atoms_objects('plane', 'plane')
         for species, plane in planes.items():
             name = '%s_%s_%s'%(self.label, 'plane', species)
@@ -406,8 +406,12 @@ class Batoms():
             if plane['show_edge']:
                 name = '%s_%s_%s'%(self.label, 'plane_edge', species)
                 draw_cylinder(name = name, 
-                            datas = plane['edges'],
+                            datas = plane['edges_cylinder'],
                             coll = self.coll.children['%s_plane'%self.label])
+            if plane['slicing']:
+                name = '%s_%s_%s'%(self.label, 'plane', species)
+                self.planesetting.build_slicing(name, self.isosurfacesetting.volume, 
+                                        self.cell, cuts = cuts, cmap = cmap)
     
     def draw_crystal_shape(self, no = None):
         """
@@ -425,9 +429,8 @@ class Batoms():
             if plane['show_edge']:
                 name = '%s_%s_%s'%(self.label, 'crystal_edge', species)
                 draw_cylinder(name = name, 
-                            datas = plane['edges'],
+                            datas = plane['edges_cylinder'],
                             coll = self.coll.children['%s_plane'%self.label])
-    
     def clean_atoms_objects(self, coll, names = None):
         """
         remove all bond object in the bond collection

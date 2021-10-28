@@ -108,7 +108,7 @@ class IsosurfaceSetting(Setting):
         """
         """
         for sp, data in self.species.items():
-            self[sp] = [np.append(data['color'][:3], 0.3), 0.005]
+            self[sp] = {'color': np.append(data['color'][:3], 0.3), 'level': 0.005}
     def add(self, isosurfacepair):
         for key in isosurfacepair:
             self.set_default(key)
@@ -162,9 +162,7 @@ def calc_isosurface(volume, cell, level,
     from batoms.tools import get_cell_vertices
     from skimage import measure
 
-    cell_vertices = get_cell_vertices(cell)
-    cell_vertices.shape = (2, 2, 2, 3)
-    cell_origin = cell_vertices[0,0,0]
+    cell_origin = cell.origin
     #
     spacing = tuple(1.0/np.array(volume.shape))
     mlevel = np.mean(volume)
@@ -178,3 +176,9 @@ def calc_isosurface(volume, cell, level,
     scaled_verts -= cell_origin
     faces = list(faces)
     return scaled_verts, faces
+
+
+
+
+
+

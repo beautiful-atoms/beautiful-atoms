@@ -62,10 +62,10 @@ class PlaneSetting(Setting):
         self[indices] = {'indices': indices}
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
-        s = 'Indices   distance  crystal   symmetry \n'
+        s = 'Indices   distance  crystal   symmetry  slicing\n'
         for p in self.collection:
-            s += '{0:10s}   {1:1.3f}   {2:10s}  {3:10s} \n'.format(\
-                p.name, p.distance, str(p.crystal), str(p.symmetry))
+            s += '{0:10s}   {1:1.3f}   {2:10s}  {3:10s}  {4:10s} \n'.format(\
+                p.name, p.distance, str(p.crystal), str(p.symmetry), str(p.slicing))
         s += '-'*60 + '\n'
         return s
     def get_symmetry_indices(self):
@@ -92,13 +92,11 @@ class PlaneSetting(Setting):
         no: Int
             spacegroup number
         """
-        from scipy.spatial import ConvexHull
         self.get_symmetry_indices()
-        cellArray = bcell.array
         planes = {}
         for p in self:
             if not p.crystal: continue
-            normal = np.dot(p.indices, cellArray)
+            normal = np.dot(p.indices, bcell.reciprocal)
             normal = normal/np.linalg.norm(normal)
             point = p.distance*normal
             planes[p.name] = {
@@ -131,23 +129,21 @@ class PlaneSetting(Setting):
                 new_planes[p.name] = self.get_plane_data(vertices, edges, faces, p)
         return new_planes
 
-    def build_plane(self, bcell):
+    def build_plane(self, bcell, include_center = False):
         """
         Build vertices, edges and faces of plane.
         
         """
         from scipy.spatial import ConvexHull
-        from batoms.tools import get_polyhedra_kind
         from scipy.spatial import ConvexHull
         self.get_symmetry_indices()
         cellEdges = bcell.edges
         cellVerts = bcell.verts
-        cellArray = bcell.array
         planes = {}
         for p in self:
             if p.crystal: continue
             intersect_points = []
-            normal = np.dot(p.indices, cellArray)
+            normal = np.dot(p.indices, bcell.reciprocal)
             normal = normal/np.linalg.norm(normal)
             # get intersection point
             for edge in cellEdges:
@@ -158,7 +154,7 @@ class PlaneSetting(Setting):
                     intersect_points.append(intersect_point)
                 # get verts, edges, faces by Hull
             if len(intersect_points) < 3: continue
-            vertices, edges, faces = faces_from_vertices(intersect_points, normal)
+            vertices, edges, faces = faces_from_vertices(intersect_points, normal, include_center = include_center)
             planes[p.name] = self.get_plane_data(vertices, edges, faces, p)
         self.planes = planes
         return planes
@@ -169,10 +165,11 @@ class PlaneSetting(Setting):
         plane = {}
         if len(faces) > 0:
             plane= {'vertices': vertices, 
+                    'edges': edges,
                     'faces': faces,
                     'color': p.color,
                     'indices': p.indices,
-                    'edges': {'lengths': [], 'centers': [], 
+                    'edges_cylinder': {'lengths': [], 'centers': [], 
                             'normals': [], 'vertices': 6,
                             'color': (0.0, 0.0, 0.0, 1.0),
                             'width': p.width,
@@ -180,17 +177,155 @@ class PlaneSetting(Setting):
                             }, 
                     'battr_inputs': {'bplane': p.as_dict()},
                     'show_edge': p.show_edge,
+                    'slicing': p.slicing,
                     }
             for edge in edges:
                 center = (vertices[edge[0]] + vertices[edge[1]])/2.0
                 vec = vertices[edge[0]] - vertices[edge[1]]
                 length = np.linalg.norm(vec)
                 nvec = vec/length
-                plane['edges']['lengths'].append(length)
-                plane['edges']['centers'].append(center)
-                plane['edges']['normals'].append(nvec)
+                plane['edges_cylinder']['lengths'].append(length)
+                plane['edges_cylinder']['centers'].append(center)
+                plane['edges_cylinder']['normals'].append(nvec)
         return plane
-def faces_from_vertices(vertices, normal):
+    def build_slicing(self, name, volume, bcell, cuts = None, cmap = 'Spectral'):
+        """
+        Change plane to a 2D slicing plane.
+        Use vertex color
+        """
+        from scipy import ndimage
+        import bmesh
+        from ase.cell import Cell
+        from batoms.butils import object_mode
+        import matplotlib
+        cell = Cell(bcell.array)
+        plane = bpy.data.objects.get(name)
+        object_mode()
+        me = plane.data
+        bm = bmesh.new()
+        bm.from_mesh(me)
+        # get maximum cuts based on the density
+        if cuts is None:
+            density = bcell.length/volume.shape
+            maxlength = 0
+            bm.verts.ensure_lookup_table()
+            bm.edges.ensure_lookup_table()
+            for edge in bm.edges:
+                v = bm.verts[edge.verts[0].index].co - bm.verts[edge.verts[1].index].co
+                l = np.linalg.norm(v)
+                if l > maxlength:
+                    maxlength = l
+            cuts = maxlength/np.min(density)
+            print('cuts: ', cuts)
+        # make mesh by subdivided
+        bmesh.ops.subdivide_edges(bm,
+                                edges = bm.edges,
+                                cuts = cuts,
+                                use_grid_fill = True,
+                                )
+        bm.to_mesh(me)
+        me.update()
+        # vertices to coordinates
+        n = len(me.vertices)
+        local_positions = np.empty(n*3, dtype=np.float64)
+        me.vertices.foreach_get('co', local_positions)  
+        local_positions = local_positions.reshape((n, 3))
+        n = len(local_positions)
+        # positions (natom, 3) to (natom, 4)
+        local_positions = np.append(local_positions, np.ones((n, 1)), axis = 1)
+        mat= np.array(plane.matrix_world)
+        positions = mat.dot(local_positions.T).T
+        # (natom, 4) back to (natom, 3)
+        positions = positions[:, :3] - bcell.origin
+        # get scaled positions
+        scaled_positions = cell.scaled_positions(positions)
+        index = scaled_positions*volume.shape
+        # map new value
+        new_volume = ndimage.map_coordinates(volume, index.T, order=1)
+        dv = np.max(new_volume) - np.min(new_volume)
+        new_volume = (new_volume - np.min(new_volume))/dv
+        # map value to color by colormap
+        cmap = matplotlib.cm.get_cmap(cmap)
+        object_mode()
+        bm = bmesh.new()
+        bm.from_mesh(plane.data)
+        volume_layer = bm.loops.layers.color.new('volume')
+
+        for v in bm.verts:
+            for loop in v.link_loops:
+                color = cmap(new_volume[v.index])
+                loop[volume_layer] = color
+        bm.to_mesh(plane.data)  
+        plane.data.update()
+        plane.data.materials[0].use_backface_culling = True
+        plane.data.materials[0].show_transparent_back = False
+        # add node
+        node_tree = plane.data.materials[0].node_tree
+        nodes = node_tree.nodes
+        mat_links = node_tree.links
+        bsdf = nodes.get("Principled BSDF")
+        assert(bsdf)
+        vcol = nodes.new(type="ShaderNodeVertexColor")
+        vcol.layer_name = "volume"
+        mat_links.new(vcol.outputs['Color'], bsdf.inputs['Base Color'])
+        # bpy.context.view_layer.objects.active = plane
+        # bpy.ops.object.mode_set(mode='VERTEX_PAINT')
+            
+    def build_slicing_image(self, volume, bcell):
+        """
+        2D slicings of volumetric data by an arbitrary plane.
+        Todo: calculate size
+        """
+        import pylab as plt
+        self.get_symmetry_indices()
+        shape = volume.shape
+        slicings = {}
+        for p in self:
+            if not p.slicing: continue
+            length = bcell.length
+            d = p.distance/length
+            index = [int(i) for i in d*shape]
+            data = []
+            if p.indices[0] == 1:
+                data = volume[index[0], :, :]
+                positions = d*bcell.array[0] + (bcell.array[1] + bcell.array[1])/2.0
+                rotation = (np.pi/2, 0, 0)
+                size = (length[1], length[2], 1)
+            if p.indices[1] == 1:
+                data = volume[:, index[1], :]
+                positions = d*bcell.array[1] + (bcell.array[0] + bcell.array[2])/2.0
+                rotation = (0, np.pi/2, 0)
+                size = (length[0], length[2], 1)
+            if p.indices[2] == 1:
+                data = volume[:, :, index[2]]
+                positions = d*bcell.array[2] + (bcell.array[0] + bcell.array[1])/2.0
+                rotation = (0, 0, 0)
+                size = (length[0], length[1], 1)
+            imagename = '%s_image_%s.png'%(self.label, p.name)
+            save_image(data, imagename, interpolation = 'bicubic')
+            slicings[p.name] = {'imagename': imagename,
+                              'location': positions,
+                              'rotation': rotation,
+                              'size': size}
+        return slicings
+
+
+def save_image(data, filename, interpolation = 'bicubic'):
+    """
+    """
+    import pylab as plt
+    import numpy as np
+    data = data.T
+    size = np.shape(data)     
+    print('size: ', size)
+    fig = plt.figure(figsize=(size[1]/size[0]*10, 10))
+    ax = plt.Axes(fig, [0., 0., 1., 1.])
+    ax.set_axis_off()
+    fig.add_axes(ax)
+    ax.imshow(data, interpolation=interpolation)
+    plt.savefig(filename, dpi = 300) 
+
+def faces_from_vertices(vertices, normal, include_center = False):
     """
     get faces from vertices
     """
@@ -211,11 +346,26 @@ def faces_from_vertices(vertices, normal):
         angles.append([i, angle])
     # search convex polyhedra
     angles = sorted(angles,key=lambda l:l[1])
-    faces = [[a[0] for a in angles]]
-    edges = [[angles[0][0], angles[-1][0]]]
-    for i in range(0, n - 1):
-        edges.append([angles[i][0], angles[i + 1][0]])
+    if not include_center:
+        faces = [[a[0] for a in angles]]
+        edges = [[angles[0][0], angles[-1][0]]]
+        for i in range(0, n - 1):
+            edges.append([angles[i][0], angles[i + 1][0]])
+    else:
+        # add center to vertices
+        vertices = np.append(vertices, center.reshape(1, 3), axis = 0)
+        icenter = len(vertices) - 1
+        faces = [[angles[0][0], angles[-1][0], icenter]]
+        edges = [[angles[0][0], icenter], 
+                [angles[0][0], angles[-1][0]], 
+                [angles[-1][0], icenter]]
+        for i in range(0, n - 1):
+            faces.append([angles[i][0], angles[i + 1][0], icenter])
+            edges.extend([[angles[i][0], angles[i + 1][0]],
+                        [angles[i][0], icenter],
+                        [angles[i + 1][0], icenter]])
     return vertices, edges, faces
+
 def linePlaneIntersection(line, normal, point):
     """
     3D Line Segment and Plane Intersection

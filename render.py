@@ -25,7 +25,7 @@ default_render_settings = {
         'light_energy': 5.0,
         'studiolight': 'Default',  # "basic", "outdoor", "paint", "rim", "studio"
         'world': False,
-        'engine': 'BLENDER_WORKBENCH', #'BLENDER_EEVEE' #'BLENDER_WORKBENCH'
+        'engine': 'BLENDER_EEVEE', #'BLENDER_EEVEE' #'BLENDER_WORKBENCH'
         'use_motion_blur': False,
         'motion_blur_position': 'START', 
         'motion_blur_steps': 10,

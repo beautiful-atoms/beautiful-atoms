@@ -178,6 +178,7 @@ class BPlane(bpy.types.PropertyGroup):
     color: FloatVectorProperty(name="color", size = 4, default = [0, 0, 1, 0.5])
     crystal: BoolProperty(name="crystal", default=False)
     symmetry: BoolProperty(name="symmetry", default=False)
+    slicing: BoolProperty(name="slicing", default=False)
     show_edge: BoolProperty(name="show_edge", default=True)
     width: FloatProperty(name="width", default = 0.01)
     @property
@@ -199,15 +200,17 @@ class BPlane(bpy.types.PropertyGroup):
             'distance': self.distance,
             'crystal': self.crystal,
             'symmetry': self.symmetry,
+            'slicing': self.slicing,
             'show_edge': self.show_edge,
             'width': self.width,
         }
         return setdict
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
-        s = 'Name        distance    show_edge    edgewidth        \n'
-        s += '{0:10s}   {1:1.3f}  {2:10s}  {3:1.3f}\n'.format(\
-                self.name, self.distance, str(self.show_edge), self.width)
+        s = 'Name        distance  crystal symmetry slicing  show_edge    edgewidth        \n'
+        s += '{0:10s}   {1:1.3f}  {2:10s}  {3:10s}  {4:10s} {5:10s} {6:1.3f}\n'.format(\
+                self.name, self.distance, str(self.crystal), str(self.symmetry), 
+                            str(self.slicing), str(self.show_edge), self.width)
         s += '-'*60 + '\n'
         return s
 

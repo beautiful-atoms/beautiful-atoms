@@ -1,4 +1,5 @@
 from ase import data
+from scipy.spatial.transform import rotation
 import bpy
 from batoms.material import create_material
 import numpy as np
@@ -69,7 +70,10 @@ def draw_surface_from_vertices(name,
                     material_style = material_style)
     #
     mesh = bpy.data.meshes.new(name)
-    mesh.from_pydata(datas['vertices'], [], datas['faces'])  
+    if len(datas['edges']) > 0:
+        mesh.from_pydata(datas['vertices'], [], datas['faces'])  
+    else:
+        mesh.from_pydata(datas['vertices'], [], datas['faces'])  
     mesh.update()
     mesh.polygons.foreach_set('use_smooth', [use_smooth]*len(mesh.polygons))
     obj = bpy.data.objects.new(name, mesh)
@@ -100,6 +104,52 @@ def draw_text(coll_text = None, atoms = None, type = None):
         coll_text.objects.link(ob)
     print('text: {0:10.2f} s'.format(time.time() - tstart))
 
+
+def draw_2d_slicing(name, 
+                datas, 
+                coll = None
+                ):
+    """
+    using texture image
+    """
+    from bpy_extras.image_utils import load_image
+    image = load_image(datas['imagename'], check_existing=True)
+    bpy.ops.mesh.primitive_plane_add(size = 1, location = datas['location'],
+                        rotation = datas['rotation'], 
+                        )
+    plane = bpy.context.active_object
+    bpy.ops.object.mode_set(mode='OBJECT')
+    plane.scale = datas['size']
+    plane.data.name = name
+    plane.name = name
+    material = bpy.data.materials.new(name=name)
+    material.use_nodes = True
+    material.blend_method = 'BLEND'
+    node_tree = material.node_tree
+    material_output = node_tree.nodes.get("Material Output")
+    core_shader = node_tree.nodes.get('Principled BSDF')
+    node_texture = node_tree.nodes.new('ShaderNodeTexImage')
+    node_texture.image = image
+    node_texture.show_texture = True
+    node_tree.links.new(core_shader.inputs[0], node_texture.outputs['Color'])
+    node_tree.links.new(core_shader.inputs['Alpha'], node_texture.outputs['Alpha'])
+    node_tree.links.new(material_output.inputs['Surface'], core_shader.outputs[0])
+    plane.data.materials.append(material)
+    coll.objects.link(plane)
+    
+
+
+def clean_node_tree(node_tree):
+    """Clear all nodes in a shader node tree except the output.
+
+    Returns the output node
+    """
+    nodes = node_tree.nodes
+    for node in list(nodes):  # copy to avoid altering the loop's data source
+        if not node.type == 'OUTPUT_MATERIAL':
+            nodes.remove(node)
+
+    return node_tree.nodes[0]
 
 
 # draw bonds

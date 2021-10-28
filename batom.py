@@ -106,7 +106,8 @@ class Batom():
             material = create_material(name,
                         self.species_data['color'],
                         node_inputs = node_inputs,
-                        material_style = material_style)
+                        material_style = material_style,
+                        backface_culling = True)
     def object_mode(self):
         for object in bpy.data.objects:
             if object.mode == 'EDIT':

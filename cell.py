@@ -163,4 +163,17 @@ class Bcell():
         return cell
     def repeat(self, m):
         self[:] = np.array([m[c] * self.array[c] for c in range(3)])
-    
+    @property
+    def length(self):
+        length = np.linalg.norm(self.array, axis = 0)
+        return length
+    @property
+    def reciprocal(self):
+        from math import pi
+        b1 = 2*pi/self.volume*np.cross(self[1], self[2])
+        b2 = 2*pi/self.volume*np.cross(self[2], self[0])
+        b3 = 2*pi/self.volume*np.cross(self[0], self[1])
+        return np.array([b1, b2, b3])
+    @property
+    def volume(self):
+        return np.dot(self[0], np.cross(self[1], self[2]))
