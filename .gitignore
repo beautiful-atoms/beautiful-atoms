@@ -127,7 +127,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-# others
-.batoms.inp
-.png
-.in
+# batoms 
+*.batoms.inp
+# Images
+*.png
+# atomic structures
+*.in
+
