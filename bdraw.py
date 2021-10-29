@@ -60,14 +60,16 @@ def draw_surface_from_vertices(name,
                 node_type = 'Principled BSDF', 
                 use_smooth = True,
                 node_inputs = None, 
-                material_style = 'plastic'):
+                material_style = 'plastic', 
+                backface_culling = True):
     if len(datas['vertices']) == 0:
         return
     material = create_material(name, 
                     datas['color'], 
                     node_type = node_type, 
                     node_inputs = node_inputs, 
-                    material_style = material_style)
+                    material_style = material_style, 
+                    backface_culling = backface_culling)
     #
     mesh = bpy.data.meshes.new(name)
     if len(datas['edges']) > 0:

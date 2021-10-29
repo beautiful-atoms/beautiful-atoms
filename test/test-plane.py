@@ -23,9 +23,22 @@ def test_crystal_shape():
     au.planesetting[(0, 0, 1)] = {'distance': 3, 'crystal': True, 'symmetry': True}
     au.draw_crystal_shape()
 
+def test_boundary():
+    from batoms.batoms import Batoms
+    from batoms.bio import read
+    from batoms.butils import removeAll
+    removeAll()
+    h2o = read('/home/xing/ase/batoms/h2o-homo.cube')
+    # h2o = read('/home/xing/ase/batoms/fe.cube')
+    h2o.planesetting[(0, 0, 1)] = {'distance': 4, 'boundary': True}
+    h2o.draw_lattice_plane()
+    h2o.render.run([0, 0, 1], engine = 'eevee')
+
+
 
 
 if __name__ == '__main__':
     test_lattice_plane()
     test_crystal_shape()
+    test_boundary()
     print('\n Bcell: All pass! \n')

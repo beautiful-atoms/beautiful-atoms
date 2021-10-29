@@ -10,6 +10,7 @@ from batoms.bondsetting import Setting, tuple2string
 import numpy as np
 from time import time
 from batoms.tools import get_equivalent_indices
+import bmesh
 
 class PlaneSetting(Setting):
     """
@@ -178,6 +179,7 @@ class PlaneSetting(Setting):
                     'battr_inputs': {'bplane': p.as_dict()},
                     'show_edge': p.show_edge,
                     'slicing': p.slicing,
+                    'boundary': p.boundary,
                     }
             for edge in edges:
                 center = (vertices[edge[0]] + vertices[edge[1]])/2.0
@@ -194,7 +196,6 @@ class PlaneSetting(Setting):
         Use vertex color
         """
         from scipy import ndimage
-        import bmesh
         from ase.cell import Cell
         from batoms.butils import object_mode
         import matplotlib
@@ -308,6 +309,38 @@ class PlaneSetting(Setting):
                               'rotation': rotation,
                               'size': size}
         return slicings
+    def build_boundary(self, indices, batoms = None):
+        """
+        Remove vertices above the plane
+        """
+        p = self[indices]
+        normal = np.dot(p.indices, batoms.cell.reciprocal)
+        normal = normal/np.linalg.norm(normal)
+        point = p.distance*normal
+        # isosurface, plane
+        subcollections = ['atom', 'bond', 'polyhedra', 'volume',
+'ghost', 'boundary', 'skin', 'plane']
+
+        for coll in subcollections:
+            for obj in batoms.coll.children['%s_%s'%(self.label, coll)].all_objects:
+                if obj.type != 'MESH': continue
+                n = len(obj.data.vertices)
+                vertices = np.empty(n*3, dtype=np.float64)
+                obj.data.vertices.foreach_get('co', vertices)  
+                vertices = vertices.reshape((n, 3))
+                x1 = np.dot(vertices, normal) - np.dot(point, normal)
+                x2 = np.dot(np.array([0, 0, 0]), normal) - np.dot(point, normal)
+                index = np.where(x1*x2 < -1e-6)[0]
+                if len(index) == 0: continue
+                if obj.batom.flag:
+                    batoms[obj.batom.species].scale = (0.001, 0.001, 0.001)
+                else:
+                    bm = bmesh.new()
+                    bm.from_mesh(obj.data)
+                    bm.verts.ensure_lookup_table()
+                    verts_select = [bm.verts[i] for i in index] 
+                    bmesh.ops.delete(bm, geom=verts_select, context='VERTS')
+                    bm.to_mesh(obj.data)
 
 
 def save_image(data, filename, interpolation = 'bicubic'):
@@ -408,13 +441,14 @@ def threePlaneIntersection(planes):
 def convexhull(planes, point):
     """
     find points at the same side of origin for all planes
+    Todo: '+' or '-'
     """
     Flag = True
     if point is None: return None
     for name, plane in planes.items():
-        x1 = np.dot(point, plane['normal']) + np.dot(plane['point'], plane['normal'])
-        x2 = np.dot(np.array([0, 0, 0]), plane['normal']) + np.dot(plane['point'], plane['normal'])
-        if x1*x2 < -1e-6:
+        x1 = np.dot(point, plane['normal']) - np.dot(plane['point'], plane['normal'])
+        x2 = np.dot(np.array([0, 0, 0]), plane['normal']) - np.dot(plane['point'], plane['normal'])
+        if abs(x1) > 1e-6 and x1*x2 < -1e-6:
             flag = False
             return None
     return point

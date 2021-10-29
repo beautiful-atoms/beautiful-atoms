@@ -9,7 +9,7 @@ import bpy
 import bmesh
 from batoms.butils import object_mode
 from batoms.material import material_styles_dict
-from batoms.tools import get_atom_kind
+from batoms.tools import get_default_species_data
 import numpy as np
 
 shapes = ["UV_SPHERE", "ICO_SPHERE", "CUBE"]
@@ -30,8 +30,8 @@ class Batom():
         positions
     locations: array
         The object’s origin location in global coordinates.
-    element: str
-        element of the atoms
+    element: str or list
+        element of the atoms, list for fractional Occupancy
     segments: list of 2 Int
         Number of segments used to draw the UV_Sphere
         Default: [32, 16]
@@ -78,11 +78,13 @@ class Batom():
             self.species = species
             if not element:
                 self.element = species.split('_')[0]
-            else:
+            elif isinstance(element, str):
+                self.element = element
+            elif isinstance(element, dict):
                 self.element = element
             self.name = 'atom_%s_%s'%(self.label, self.species)
             self.props = props
-            self.species_data = get_atom_kind(self.element, scale = scale, 
+            self.species_data = get_default_species_data(self.element, scale = scale, 
                                 props = self.props, radii_style = radii_style, 
                                 color_style = color_style)
             if color:
@@ -311,16 +313,22 @@ class Batom():
 
         """
         Viewpoint_color = self.material.diffuse_color
-        node_color = self.node['Base Color'].default_value[:]
-        Alpha = self.node['Alpha'].default_value
+        for node in self.material.node_tree.nodes:
+            if 'Base Color' in node.inputs:
+                node_color = node.inputs['Base Color'].default_value[:]
+            if 'Alpha' in node.inputs:
+                Alpha = node.inputs['Alpha'].default_value
         color = [node_color[0], node_color[1], node_color[2], Alpha]
         return color
     def set_color(self, color):
         if len(color) == 3:
             color = [color[0], color[1], color[2], 1]
         self.material.diffuse_color = color
-        self.material.node_tree.nodes['Principled BSDF'].inputs['Base Color'].default_value = color
-        self.material.node_tree.nodes['Principled BSDF'].inputs['Alpha'].default_value = color[3]
+        for node in self.material.node_tree.nodes:
+            if 'Base Color' in node.inputs:
+                node.inputs['Base Color'].default_value = color
+            if 'Alpha' in node.inputs:
+                node.inputs['Alpha'].default_value = color[3]
     @property
     def node(self):
         return self.get_node()
@@ -328,7 +336,7 @@ class Batom():
     def node(self, node):
         self.set_node(node)
     def get_node(self):
-        return self.material.node_tree.nodes['Principled node'].inputs
+        return self.material.node_tree.nodes
     def set_node(self, node):
         for key, value in node.items():
             self.material.node_tree.nodes['Principled BSDF'].inputs[key].default_value = value

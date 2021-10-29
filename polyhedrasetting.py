@@ -37,6 +37,7 @@ class PolyhedraSetting(Setting):
         for key, value in setdict.items():
             setattr(subset, key, value)
         subset.label = self.label
+        subset.flag = True
     def set_default(self, species):
         """
         """
@@ -110,6 +111,7 @@ def build_polyhedralists(atoms, bondlists, bondsetting, polyhedrasetting):
                     polyhedra_kind['edges'] = polyhedra_kind['edges'] + list(edge)
                     polyhedra_kind['faces'] = polyhedra_kind['faces'] + list(face)
                     polyhedra_kind['battr_inputs'] = {'bpolyhedra': poly.as_dict()}
+                    #------------------------------------------
                     # print('edge: ', edge)
                     for e in edge:
                         # print(e)

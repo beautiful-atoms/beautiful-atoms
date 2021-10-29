@@ -48,6 +48,7 @@ def create_material(name,
         node.inputs[key].default_value = value
     if backface_culling:
         material.use_backface_culling = True
+    material.show_transparent_back = False
 
     return material
 

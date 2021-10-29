@@ -161,6 +161,7 @@ class BondSetting(Setting):
         for key, value in setdict.items():
             setattr(subset, key, value)
         subset.label = self.label
+        subset.flag = True
     def set_default(self, species, cutoff = 1.3):
         """
         """
@@ -186,6 +187,7 @@ class BondSetting(Setting):
             bondpairs = [bondpairs]
         for bondpair in bondpairs:
             species = {sp: self.species[sp] for sp in bondpair}
+            self[bondpair] = {}
             self.set_default(species)
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
@@ -313,7 +315,7 @@ def calc_bond_data(batoms, bondlists, bondsetting):
     bond_kinds = {}
     if len(bondlists) == 0:
         bond_kinds = {}
-        return
+        return bond_kinds
     tstart = time()
     for b in bondsetting:
         spi = b.species1
@@ -332,9 +334,8 @@ def calc_bond_data(batoms, bondlists, bondsetting):
         pos = [positions[bondlists1[:, 0]] - nvec*batoms[spi].size*0.5,
                 positions[bondlists1[:, 1]] + R + nvec*batoms[spj].size*0.5]
         vec = pos[0] - pos[1]
-        length = np.linalg.norm(vec, axis = 1)
+        length = np.linalg.norm(vec, axis = 1) + 1e-8
         nvec = vec/length[:, None]
-        nvec = nvec + 1e-8
         center0 = (pos[0] + pos[1])/2.0
         # verts, faces, for instancing
         # v1 = nvec + np.array([1.2323, 0.493749, 0.5604937284])

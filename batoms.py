@@ -318,7 +318,6 @@ class Batoms():
         self.bondlist = build_bondlists(atoms, self.bondsetting.cutoff_dict)
         bond_kinds = calc_bond_data(self, self.bondlist, self.bondsetting)
         if len(bond_kinds) == 0: return
-        
         for species, bond_data in bond_kinds.items():
             name = '%s_%s_%s'%(self.label, 'bond', species)
             draw_cylinder(name = name, 
@@ -400,18 +399,23 @@ class Batoms():
         planes = self.planesetting.build_plane(self.cell, include_center = include_center)
         self.clean_atoms_objects('plane', 'plane')
         for species, plane in planes.items():
-            name = '%s_%s_%s'%(self.label, 'plane', species)
-            draw_surface_from_vertices(name, plane,
-                    coll = self.coll.children['%s_plane'%self.label])
-            if plane['show_edge']:
-                name = '%s_%s_%s'%(self.label, 'plane_edge', species)
-                draw_cylinder(name = name, 
-                            datas = plane['edges_cylinder'],
-                            coll = self.coll.children['%s_plane'%self.label])
-            if plane['slicing']:
+            if plane['boundary']:
                 name = '%s_%s_%s'%(self.label, 'plane', species)
-                self.planesetting.build_slicing(name, self.isosurfacesetting.volume, 
-                                        self.cell, cuts = cuts, cmap = cmap)
+                self.planesetting.build_boundary(plane['indices'], batoms = self)
+            else:
+                name = '%s_%s_%s'%(self.label, 'plane', species)
+                draw_surface_from_vertices(name, plane,
+                        coll = self.coll.children['%s_plane'%self.label])
+                if plane['show_edge']:
+                    name = '%s_%s_%s'%(self.label, 'plane_edge', species)
+                    draw_cylinder(name = name, 
+                                datas = plane['edges_cylinder'],
+                                coll = self.coll.children['%s_plane'%self.label])
+                if plane['slicing']:
+                    name = '%s_%s_%s'%(self.label, 'plane', species)
+                    self.planesetting.build_slicing(name, self.isosurfacesetting.volume, 
+                                            self.cell, cuts = cuts, cmap = cmap)
+            
     
     def draw_crystal_shape(self, no = None):
         """

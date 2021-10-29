@@ -30,18 +30,29 @@ def default_element_prop(element, radii_style = 'covalent', color_style = "JMOL"
     element_prop['color'] = [color[0], color[1], color[2], 1.0]
     return element_prop
 
-def get_atom_kind(element, positions = [], radii_style = 'covalent', 
+def get_default_species_data(element, positions = [], radii_style = 'covalent', 
                 color_style = "JMOL", scale = [1, 1, 1], props = {}):
     """
     Set default color, radii for element,
+    Todo fraction occupancy
     """
-    atom_kind = default_element_prop(element, radii_style = radii_style, 
-                color_style = color_style)
-    atom_kind['scale'] = scale
-    atom_kind['positions'] = positions
-    atom_kind['balltype'] = None
-    atom_kind.update(props)
-    return atom_kind
+    if isinstance(element, str):
+        species_data = default_element_prop(element, radii_style = radii_style, 
+                    color_style = color_style)
+        species_data['scale'] = scale
+        species_data['positions'] = positions
+        species_data['balltype'] = None
+        species_data.update(props)
+    elif isinstance(element, dict):
+        species_data = {}
+        for ele, fraction in element.items():
+            species_data[ele] = default_element_prop(ele, radii_style = radii_style, 
+                    color_style = color_style)
+            species_data[ele]['scale'] = scale
+            species_data[ele]['positions'] = positions
+            species_data[ele]['balltype'] = None
+            species_data[ele].update(props)
+    return species_data
 
 def get_polyhedra_kind(color, width = 0.01, show_edge = True, props = {}):
     """
