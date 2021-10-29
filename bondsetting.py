@@ -187,7 +187,12 @@ class BondSetting(Setting):
             bondpairs = [bondpairs]
         for bondpair in bondpairs:
             species = {sp: self.species[sp] for sp in bondpair}
-            self[bondpair] = {}
+            maxlength = species[bondpair[0]]['radius'] + \
+                        species[bondpair[1]]['radius']
+            self[bondpair] = {'max': maxlength*self.cutoff, 
+                            'color1':species[bondpair[0]]['color'],
+                            'color2':species[bondpair[1]]['color'],
+                            }
             self.set_default(species)
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
