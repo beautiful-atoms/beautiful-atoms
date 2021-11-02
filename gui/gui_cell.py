@@ -1,3 +1,4 @@
+from mathutils import Matrix
 import bpy
 from bpy.types import (Panel,
                        Operator,
@@ -35,19 +36,13 @@ class Cell_PT_prepare(Panel):
 
         box = layout.box()
         col = box.column(align=True)
-        col.label(text="Cell")
-        row = box.row()
-        row.prop(clpanel, "cell_a")
-        row.prop(clpanel, "cell_b")
-        row.prop(clpanel, "cell_c")
+        col = box.column()
+        col.prop(clpanel, "cell")
 
         box = layout.box()
         col = box.column(align=True)
-        col.label(text="SuperCell")
-        row = box.row()
-        row.prop(clpanel, "supercell_a")
-        row.prop(clpanel, "supercell_b")
-        row.prop(clpanel, "supercell_c")
+        col = box.column()
+        col.prop(clpanel, "transform", index = 0)
         #
         box = layout.box()
         col = box.column()
@@ -59,10 +54,10 @@ class CellProperties(bpy.types.PropertyGroup):
     @property
     def selected_batoms(self):
         return get_selected_batoms()
-    def Callback_modify_supercell(self, context):
+    def Callback_modify_transform(self, context):
         clpanel = bpy.context.scene.clpanel
-        supercell = [clpanel.supercell_a, clpanel.supercell_b, clpanel.supercell_c]
-        modify_supercell(self.selected_batoms, supercell)
+        transform = clpanel.transform
+        modify_transform(self.selected_batoms, transform)
     def Callback_modify_cell(self, context):
         clpanel = bpy.context.scene.clpanel
         cell = [clpanel.cell_a, clpanel.cell_b, clpanel.cell_c]
@@ -78,24 +73,17 @@ class CellProperties(bpy.types.PropertyGroup):
     pbc: BoolProperty(
         name = "pbc", default=True,
         description = "pbc", update = Callback_modify_pbc)
-    cell_a: FloatProperty(
-        name = "a",
-        description = "cell a")
-    cell_b: FloatProperty(
-        name = "b",
-        description = "cell b")
-    cell_c: FloatProperty(
-        name = "c",
-        description = "cell c", update = Callback_modify_cell)
-    supercell_a: IntProperty(
-        name = "a", default=1,
-        description = "cell a")
-    supercell_b: IntProperty(
-        name = "b", default=1,
-        description = "cell b")
-    supercell_c: IntProperty(
-        name = "c", default=1,
-        description = "cell c", update = Callback_modify_supercell)
+    cell: FloatVectorProperty(
+        name="Cell", default=(1, 1, 1),
+        subtype = "XYZ",
+        description = "Cell in a, b, c axis", update = Callback_modify_cell)
+    
+    transform: FloatVectorProperty(
+        name="Transform",
+        size=9,
+        subtype = "MATRIX",
+        # default=[b for a in Matrix.Identity(3) for b in a],
+        description = "Transform matrix", update = Callback_modify_transform)
     boundary: FloatVectorProperty(
         name="boundary", default=(0.00, 0.0, 0.0),
         subtype = "XYZ",
@@ -110,7 +98,7 @@ def modify_batoms_attr(batoms_name_list, key, value):
     for batoms in batoms_list:
         batoms.select = True
         
-def modify_supercell(batoms_name_list, supercell):
+def modify_transform(batoms_name_list, transform):
     for name in batoms_name_list:
         batoms = Batoms(label = name)
-        batoms.repeat(supercell)
+        batoms.repeat(transform)

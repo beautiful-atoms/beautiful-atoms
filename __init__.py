@@ -44,8 +44,13 @@ from .gui import (
         gui_build,
         gui_plane,
         ops_add_molecule,
-        tools,
         )
+
+from .modal import (
+    record_selection,
+    rigid_body,
+    force_field,
+)
 
 # Register
 
@@ -86,13 +91,19 @@ classes = [
         gui_bond.BondProperties,
         gui_polyhedra.Polyhedra_PT_prepare,
         gui_polyhedra.PolyhedraProperties,
-        tools.EDIT_MESH_OT_record_selection,
+        record_selection.EDIT_MESH_OT_record_selection,
+        rigid_body.Rigid_Body_Operator,
+        rigid_body.Rigid_Body_Modal_Panel,
+        rigid_body.RigidBodyProperties,
+        force_field.Force_Field_Operator,
+        force_field.Force_Field_Modal_Panel,
+        force_field.ForceFieldProperties
     ]
 #
 def register():
     bpy.types.TOPBAR_MT_file_import.append(gui_io.menu_func_import_batoms)
     bpy.types.VIEW3D_MT_mesh_add.append(ops_add_molecule.menu_func)
-    bpy.types.VIEW3D_MT_select_edit_mesh.append(tools.add_edit_mesh_button)
+    bpy.types.VIEW3D_MT_select_edit_mesh.append(record_selection.add_edit_mesh_button)
     
     for cls in classes:
         bpy.utils.register_class(cls)
@@ -105,6 +116,8 @@ def register():
     scene.popanel = PointerProperty(type=gui_polyhedra.PolyhedraProperties)
     scene.plpanel = PointerProperty(type=gui_plane.PlaneProperties)
     scene.vopanel = PointerProperty(type=gui_volume.VolumeProperties)
+    scene.rbpanel = PointerProperty(type=rigid_body.RigidBodyProperties)
+    scene.ffpanel = PointerProperty(type=force_field.ForceFieldProperties)
     Collection.batoms = PointerProperty(name = 'Batoms', 
                             type = custom_property.Batoms)
     Collection.bbond = CollectionProperty(name = 'BBond', 
@@ -135,7 +148,7 @@ def unregister():
 
     bpy.types.TOPBAR_MT_file_import.remove(gui_io.menu_func_import_batoms)
     bpy.types.VIEW3D_MT_mesh_add.remove(ops_add_molecule.menu_func)
-    bpy.types.VIEW3D_MT_select_edit_mesh.remove(tools.add_edit_mesh_button)
+    bpy.types.VIEW3D_MT_select_edit_mesh.remove(record_selection.add_edit_mesh_button)
 
     for cls in classes:
         bpy.utils.unregister_class(cls)

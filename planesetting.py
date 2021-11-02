@@ -63,10 +63,10 @@ class PlaneSetting(Setting):
         self[indices] = {'indices': indices}
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
-        s = 'Indices   distance  crystal   symmetry  slicing\n'
+        s = 'Indices   distance  crystal   symmetry  slicing   boundary\n'
         for p in self.collection:
-            s += '{0:10s}   {1:1.3f}   {2:10s}  {3:10s}  {4:10s} \n'.format(\
-                p.name, p.distance, str(p.crystal), str(p.symmetry), str(p.slicing))
+            s += '{0:10s}   {1:1.3f}   {2:10s}  {3:10s}  {4:10s}   {5:10s} \n'.format(\
+                p.name, p.distance, str(p.crystal), str(p.symmetry), str(p.slicing),  str(p.boundary))
         s += '-'*60 + '\n'
         return s
     def get_symmetry_indices(self):
@@ -86,7 +86,7 @@ class PlaneSetting(Setting):
                         p1.indices = index
                         p1.label = self.label
                         p1.flag = True
-    def build_crystal(self, bcell):
+    def build_crystal(self, bcell, origin = [0, 0, 0]):
         """
         Build crystal
 
@@ -126,8 +126,10 @@ class PlaneSetting(Setting):
         for name, plane in planes.items():
             p = self[plane['indices']]
             vertices, edges, faces = faces_from_vertices(plane['vertices'], plane['normal'])
-            if len(vertices) > 3:
+            vertices += np.array(origin)
+            if len(vertices) >= 3:
                 new_planes[p.name] = self.get_plane_data(vertices, edges, faces, p)
+        self.crystal_planes = new_planes
         return new_planes
 
     def build_plane(self, bcell, include_center = False):
@@ -154,8 +156,9 @@ class PlaneSetting(Setting):
                 if intersect_point is not None:
                     intersect_points.append(intersect_point)
                 # get verts, edges, faces by Hull
-            if len(intersect_points) < 3: continue
-            vertices, edges, faces = faces_from_vertices(intersect_points, normal, include_center = include_center)
+            if len(intersect_points) < 3:
+                continue
+            vertices, edges, faces = faces_from_vertices(intersect_points, normal, include_center = include_center, scale = p.scale)
             planes[p.name] = self.get_plane_data(vertices, edges, faces, p)
         self.planes = planes
         return planes
@@ -314,7 +317,7 @@ class PlaneSetting(Setting):
         Remove vertices above the plane
         """
         p = self[indices]
-        normal = np.dot(p.indices, batoms.cell.reciprocal)
+        normal = np.dot(np.array(p.indices), batoms.cell.reciprocal)
         normal = normal/np.linalg.norm(normal)
         point = p.distance*normal
         # isosurface, plane
@@ -329,11 +332,11 @@ class PlaneSetting(Setting):
                 obj.data.vertices.foreach_get('co', vertices)  
                 vertices = vertices.reshape((n, 3))
                 x1 = np.dot(vertices, normal) - np.dot(point, normal)
-                x2 = np.dot(np.array([0, 0, 0]), normal) - np.dot(point, normal)
-                index = np.where(x1*x2 < -1e-6)[0]
+                # x2 = np.dot(np.array([0, 0, 0]), normal) - np.dot(point, normal)
+                index = np.where(x1 > -1e-6)[0]
                 if len(index) == 0: continue
                 if obj.batom.flag:
-                    batoms[obj.batom.species].scale = (0.001, 0.001, 0.001)
+                    batoms.delete(obj.batom.species, index)
                 else:
                     bm = bmesh.new()
                     bm.from_mesh(obj.data)
@@ -358,7 +361,7 @@ def save_image(data, filename, interpolation = 'bicubic'):
     ax.imshow(data, interpolation=interpolation)
     plt.savefig(filename, dpi = 300) 
 
-def faces_from_vertices(vertices, normal, include_center = False):
+def faces_from_vertices(vertices, normal, include_center = False, scale = [1, 1, 1]):
     """
     get faces from vertices
     """
@@ -377,6 +380,11 @@ def faces_from_vertices(vertices, normal, include_center = False):
         c = np.sign(np.dot(x, normal))
         angle = np.arctan2(c, np.dot(v1, v2))
         angles.append([i, angle])
+    # scale
+    vec = vertices - center
+    # length = np.linalg.norm(vec, axis = 1)
+    # nvec = vec/length[:, None]
+    vertices = center + np.array([scale])*vec
     # search convex polyhedra
     angles = sorted(angles,key=lambda l:l[1])
     if not include_center:

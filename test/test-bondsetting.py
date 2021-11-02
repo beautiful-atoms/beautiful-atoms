@@ -17,7 +17,20 @@ def test_replace():
     co.repeat([2, 2, 2])
     co.replace('C', 'C_1', [5])
     co.model_type = 1
-    
+
+def test_add():
+    from batoms.build import bulk
+    from batoms.butils import removeAll
+    removeAll()
+    au = bulk('au', 'Au')
+    au = au*[2, 2, 2]
+    assert len(au.bondsetting) == 0
+    au.bondsetting.add(['Au', 'Au'])
+    assert len(au.bondsetting) == 1
+    print('Pass add!')
+
+
+
 def test_polyhedra():
     from batoms.bio import read
     from batoms.butils import removeAll
@@ -125,4 +138,5 @@ if __name__ == '__main__':
     test_search_bond_2()
     test_search_bond_3()
     test_high_order_bond()
+    test_add()
     print('\n Bondsetting: All pass! \n')

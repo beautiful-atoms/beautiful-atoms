@@ -290,8 +290,7 @@ class Batoms():
         self.coll.batoms.boundary = boundary
     
     def draw_cell(self):
-        """
-        Draw unit cell
+        """Draw unit cell
         """
         object_mode()
         self.clean_atoms_objects('cell', ['cylinder'])
@@ -303,13 +302,7 @@ class Batoms():
                             coll = self.coll.children['%s_cell'%self.label]
                         )
     def draw_bonds(self):
-        """
-        Draw bonds.
-
-        Parameters:
-
-        cutoff: float
-            cutoff used to build bond pairs.
+        """Draw bonds.
         """
         # if not self.bondlist:
         object_mode()
@@ -325,12 +318,11 @@ class Batoms():
                             coll = self.coll.children['%s_bond'%self.label]
                             )
     def draw_polyhedras(self, bondlist = None):
-        """
-        Draw bonds.
+        """Draw polyhedra.
+
         Parameters:
 
-        cutoff: float
-            cutoff used to build bond pairs.
+        bondlist: dict
         """
         object_mode()
         self.clean_atoms_objects('polyhedra')
@@ -353,13 +345,7 @@ class Batoms():
                             coll = self.coll.children['%s_polyhedra'%self.label])
     
     def draw_isosurface(self):
-        """
-        Draw bonds.
-
-        Parameters:
-
-        isosurface: list
-            isosurface data.
+        """Draw isosurface.
         """
         object_mode()
         self.clean_atoms_objects('volume', ['isosurface'])
@@ -371,11 +357,12 @@ class Batoms():
                                 coll = self.coll.children['%s_volume'%self.label],
                             )
     def draw_cavity_sphere(self, radius, boundary = [[0, 1], [0, 1], [0, 1]]):
-        """
-        cavity
-        for porous materials
-        >>> from ase.io import read
-        >>> atoms = read('docs/source/_static/datas/mof-5.cif')
+        """ Draw cavity as a sphere for porous materials
+
+        radius: float
+            the size of sphere
+        boundary: 3x2 array
+            The range in the unit cell for searcing cavity.
         """
         from batoms.tools import find_cage_sphere
         object_mode()
@@ -390,8 +377,17 @@ class Batoms():
         self.coll.children['%s_ghost'%self.label].objects.link(ba.batom)
         self.coll.children['%s_ghost'%self.label].objects.link(ba.instancer)
     def draw_lattice_plane(self, no = None, cuts = None, cmap = 'bwr', include_center = False):
-        """
-        Draw plane
+        """Draw plane
+
+        no: int
+            spacegroup of structure, if None, no will be determined by 
+            get_spacegroup_number()
+        cuts: int
+            The number of subdivide for selected plane for 2d slicing
+        camp: str, default 'bwr'
+            colormaps for 2d slicing.
+        include_center: bool
+            include center of plane in the mesh
         """
         if no is None:
             no = self.get_spacegroup_number()
@@ -417,14 +413,19 @@ class Batoms():
                                             self.cell, cuts = cuts, cmap = cmap)
             
     
-    def draw_crystal_shape(self, no = None):
-        """
-        Draw crystal
+    def draw_crystal_shape(self, no = None, origin = None):
+        """Draw crystal shape
+
+        no: int
+            spacegroup of structure, if None, no will be determined by 
+            get_spacegroup_number()
+        origin: xyz vector
+            The center of cyrstal shape
         """
         if no is None:
             no = self.get_spacegroup_number()
         self.planesetting.no = no
-        planes = self.planesetting.build_crystal(self.cell)
+        planes = self.planesetting.build_crystal(self.cell, origin = origin)
         self.clean_atoms_objects('plane', ['crystal'])
         for species, plane in planes.items():
             name = '%s_%s_%s'%(self.label, 'crystal', species)
@@ -474,17 +475,21 @@ class Batoms():
                 scale[batom.species] = batom.scale
         return scale
     def set_scale(self, scale):
+        """Set scale for all atoms
+
+        scale: float
+        """
         for coll in [self.batoms, self.batoms_boundary, self.batoms_skin]:
             for batom in coll.values():
                 batom.scale = scale
     def draw(self, model_type = None, draw_isosurface = True):
         """
-        Draw atoms, bonds, polyhedra.
+        Draw atoms, bonds, polyhedra, .
 
         Parameters:
 
         model_type: str
-
+        draw_isosurface: bool
         """
         if model_type is not None and model_type not in [0, 1, 2, 3]:
             raise Exception('model_type %s should be: 0, 1, 2, 3'%model_type)
@@ -526,18 +531,15 @@ class Batoms():
         if self.isosurfacesetting.npoint > 0 and draw_isosurface:
             self.draw_isosurface()
     def replace(self, species1, species2, index = []):
-        """
-        replace atoms.
+        """Replace species.
 
         Parameters:
         
-        index: list
-            index of atoms will be replaced.
-
         species1: str
-
         species2: str
             atoms will be changed to this element.
+        index: list
+            index of atoms will be replaced.
 
         >>> from ase.build import molecule, fcc111
         >>> from batoms.batoms import Batoms
@@ -568,11 +570,10 @@ class Batoms():
         self.batoms[species1].delete(index)
             
     def fragmentate(self, species, index = [], suffix = 'f'):
-        """
+        """Fragmentate the selected atoms
         species: str
             species to be fragmentated
         index: list of Int
-        
         suffix: str
             suffix of label of new species. The index will be used too.
         """
@@ -589,8 +590,7 @@ class Batoms():
         self.delete(species, index)
         self.extend(frag)
     def delete(self, species, index = []):
-        """
-        delete atoms.
+        """Delete atoms.
 
         species: str
 
@@ -713,7 +713,6 @@ class Batoms():
         remove_collection(other.label)
     def reset_batom_location(self):
         """
-        Important!
         """
         for species, ba in self.batoms.items():
             t = self.cell.location - ba.location
@@ -779,10 +778,6 @@ class Batoms():
         """
         atoms = self.batoms2atoms(self.batoms, local = True)
         atoms.write(filename)
-    def update(self):
-        """
-        """
-        pass
     @property
     def coll(self):
         return self.get_coll()
@@ -815,6 +810,8 @@ class Batoms():
         """Set unit cell vectors.
 
         Parameters:
+
+        cell: 
 
         Examples:
 

@@ -33,12 +33,14 @@ class Plane_PT_prepare(Panel):
         row.prop(plpanel, "indices")
         row = box.row()
         row.prop(plpanel, "distance")
+        row = box.row()
+        row.prop(plpanel, "scale")
         col = box.column(align=True)
         col.prop(plpanel, "symmetry", expand  = True)
         col.prop(plpanel, "crystal", expand  = True)
         col.prop(plpanel, "slicing", expand  = True)
-        row = box.row()
-        row.prop(plpanel, "show_edge")
+        col.prop(plpanel, "boundary", expand  = True)
+        col.prop(plpanel, "show_edge")
         row = box.row()
         row.prop(plpanel, "color")
         box = layout.box()
@@ -60,6 +62,9 @@ class PlaneProperties(bpy.types.PropertyGroup):
     def Callback_modify_distance(self, context):
         plpanel = bpy.context.scene.plpanel
         modify_plane_attr(self.selected_batoms, self.selected_plane, 'distance', plpanel.distance)
+    def Callback_modify_scale(self, context):
+        plpanel = bpy.context.scene.plpanel
+        modify_plane_attr(self.selected_batoms, self.selected_plane, 'scale', plpanel.scale)
     def Callback_modify_crystal(self, context):
         plpanel = bpy.context.scene.plpanel
         modify_plane_attr(self.selected_batoms, self.selected_plane, 'crystal', plpanel.crystal)
@@ -69,6 +74,9 @@ class PlaneProperties(bpy.types.PropertyGroup):
     def Callback_modify_slicing(self, context):
         plpanel = bpy.context.scene.plpanel
         modify_plane_attr(self.selected_batoms, self.selected_plane, 'slicing', plpanel.slicing)
+    def Callback_modify_boundary(self, context):
+        plpanel = bpy.context.scene.plpanel
+        modify_plane_attr(self.selected_batoms, self.selected_plane, 'boundary', plpanel.boundary)
     def Callback_modify_show_edge(self, context):
         plpanel = bpy.context.scene.plpanel
         show_edge = plpanel.show_edge
@@ -80,11 +88,14 @@ class PlaneProperties(bpy.types.PropertyGroup):
 
     
     indices: IntVectorProperty(
-        name="Miller indices", default=(0, 0, 1),
+        name="Miller indices", size = 3, default=(0, 0, 1),
         description = "Miller indices for the plane", update = Callback_modify_indices)
     distance: FloatProperty(
-        name="distance", default=0.5,
+        name="Distance", default=3,
         description = "distance from origin", update = Callback_modify_distance)
+    scale: FloatProperty(
+        name="Scale", default=1,
+        description = "scale of the plane", update = Callback_modify_scale)
     crystal: BoolProperty(name="crystal",
                 default=False, 
                 description = "plane to form crystal shape",
@@ -97,6 +108,10 @@ class PlaneProperties(bpy.types.PropertyGroup):
                 default=False, 
                 description = "Apply slicing to volumetric data",
                 update = Callback_modify_slicing)
+    boundary: BoolProperty(name="boundary",
+                default=False, 
+                description = "Apply boundary to model",
+                update = Callback_modify_boundary)
     show_edge: BoolProperty(
         name = "show_edge", default=False,
         description = "show_edge", update = Callback_modify_show_edge)
@@ -126,7 +141,7 @@ def modify_plane_attr(batoms_name_list, plpanel_name_list, key, value):
             obj.select_set(True)        
     
 
-def add_plane(indices, color, distance, crystal, symmetry, slicing):
+def add_plane(indices, color, distance, scale, crystal, symmetry, slicing, boundary):
     """
     """
     selected_batoms = get_selected_batoms()
@@ -134,9 +149,11 @@ def add_plane(indices, color, distance, crystal, symmetry, slicing):
         batoms = Batoms(label = batoms_name)
         batoms.planesetting[indices] = {'indices': indices, 
                                 'distance': distance,
+                                'scale': scale,
                                 'crystal': crystal,
                                 'symmetry': symmetry,
                                 'slicing': slicing,
+                                'boundary': boundary,
                                 'color': color, 
                                 }
         batoms.draw_lattice_plane()
@@ -149,7 +166,13 @@ class AddButton(Operator):
 
     def execute(self, context):
         plpanel = context.scene.plpanel
-        add_plane(plpanel.indices, plpanel.color, plpanel.distance, 
+        add_plane(plpanel.indices, 
+                    plpanel.color, 
+                    plpanel.distance, 
+                    plpanel.scale, 
                     plpanel.crystal,
-                    plpanel.symmetry, plpanel.slicing)
+                    plpanel.symmetry,
+                    plpanel.slicing,
+                    plpanel.boundary,
+                    )
         return {'FINISHED'}

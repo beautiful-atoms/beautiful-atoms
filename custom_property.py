@@ -181,6 +181,7 @@ class BPlane(bpy.types.PropertyGroup):
     symmetry: BoolProperty(name="symmetry", default=False)
     slicing: BoolProperty(name="slicing", default=False)
     boundary: BoolProperty(name="boundary", default=False)
+    scale: FloatProperty(name="scale", default = 1)
     show_edge: BoolProperty(name="show_edge", default=True)
     width: FloatProperty(name="width", default = 0.01)
     @property
@@ -211,7 +212,7 @@ class BPlane(bpy.types.PropertyGroup):
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
         s = 'Name        distance  crystal symmetry slicing  show_edge  boundary   edgewidth        \n'
-        s += '{0:10s}   {1:1.3f}  {2:10s}  {3:10s}  {4:10s} {5:10s} {6:10s} {10:1.3f}\n'.format(\
+        s += '{0:10s}   {1:1.3f}  {2:8s}  {3:8s}  {4:8s} {5:8s} {6:8s} {7:1.3f}\n'.format(\
                 self.name, self.distance, str(self.crystal), str(self.symmetry), 
                             str(self.slicing), str(self.show_edge), str(self.boundary), self.width)
         s += '-'*60 + '\n'

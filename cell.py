@@ -177,3 +177,8 @@ class Bcell():
     @property
     def volume(self):
         return np.dot(self[0], np.cross(self[1], self[2]))
+    @property
+    def center(self):
+        """Center of unit cell.
+        """
+        return (self.array[0] + self.array[1] + self.array[2])/2.0
