@@ -385,11 +385,13 @@ class Batom():
         """
         "UV_SPHERE", "ICO_SPHERE", "CUBE"
         """
+        scale = self.scale
         if shape not in [0, 1, 2]:
             raise Exception('Shape %s is not supported!'%shape)
         self.clean_batoms_objects('instancer_atom_%s_%s'%(self.label, self.species))
         self.set_instancer(shape = shapes[shape])
         self.instancer.parent = self.batom
+        self.scale = scale
     def clean_batoms_objects(self, obj):
         obj = bpy.data.objects[obj]
         bpy.data.objects.remove(obj, do_unlink = True)

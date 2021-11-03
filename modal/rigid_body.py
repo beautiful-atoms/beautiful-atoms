@@ -55,23 +55,6 @@ def rigid_body(selected_batoms, displacement):
     if flag:
         batoms.translate(displacement)
 
-def add_constraint(atoms, mol_index):
-    """
-    """
-    from ase.constraints import FixAtoms, FixBondLengths
-    # RATTLE-type constraints on Molecule.
-    atoms.constraints = FixBondLengths([(3 * i + j, 3 * i + (j + 1) % 3)
-                                    for i in range(3**3)
-                                    for j in [0, 1, 2]])
-    #
-    # Fix others
-    mask = set(range(len(atoms))) - mol_index
-    # print(mask)
-    fixlayers = FixAtoms(mask=mask)
-    return atoms
-
-
-
 def mouse2positions(delta, mat):
     """
     using rotation matrix
@@ -80,7 +63,8 @@ def mouse2positions(delta, mat):
     return displacement
 
 class Rigid_Body_Operator(bpy.types.Operator):
-    """Move an object with the mouse, example"""
+    """Rigid body
+    """
     bl_idname = "object.rigid_body_operator"
     bl_label = "Rigi body translate Operator"
 
@@ -115,9 +99,6 @@ class Rigid_Body_Operator(bpy.types.Operator):
                 if area.type == 'VIEW_3D':
                     self.viewports_3D = area
             self.mouse_position = np.array([event.mouse_x, event.mouse_y, 0, 0])
-            self.first_mouse_x = event.mouse_x
-            self.first_value = context.object.location.x
-            # bpy.ops.transform.translate('INVOKE_DEFAULT') 
             context.window_manager.modal_handler_add(self)
             return {'RUNNING_MODAL'}
         else:

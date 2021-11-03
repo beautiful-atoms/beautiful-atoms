@@ -46,8 +46,24 @@ def optimize(atoms):
     qn = QuasiNewton(atoms)
     qn.run(fmax=0.05, steps=5)
 
+def add_constraint(atoms, mol_index):
+    """
+    """
+    from ase.constraints import FixAtoms, FixBondLengths
+    # RATTLE-type constraints on Molecule.
+    atoms.constraints = FixBondLengths([(3 * i + j, 3 * i + (j + 1) % 3)
+                                    for i in range(3**3)
+                                    for j in [0, 1, 2]])
+    #
+    # Fix others
+    mask = set(range(len(atoms))) - mol_index
+    # print(mask)
+    fixlayers = FixAtoms(mask=mask)
+    return atoms
+
+
 class Force_Field_Operator(bpy.types.Operator):
-    """Move an object with the mouse, example"""
+    """Force field"""
     bl_idname = "object.force_field_operator"
     bl_label = "Force field translate Operator"
 
@@ -85,9 +101,6 @@ class Force_Field_Operator(bpy.types.Operator):
                 if area.type == 'VIEW_3D':
                     self.viewports_3D = area
             self.mouse_position = np.array([event.mouse_x, event.mouse_y, 0, 0])
-            self.first_mouse_x = event.mouse_x
-            self.first_value = context.object.location.x
-            # bpy.ops.transform.translate('INVOKE_DEFAULT') 
             context.window_manager.modal_handler_add(self)
             return {'RUNNING_MODAL'}
         else:

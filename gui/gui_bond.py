@@ -55,6 +55,10 @@ class Bond_PT_prepare(Panel):
         row.prop(bbpanel, "search")
         row = box.row()
         row.prop(bbpanel, "polyhedra")
+        col = box.column(align=True)
+        col.operator("bond.remove")
+        col = box.column(align=True)
+        col.operator("bond.add")
 
         box = layout.box()
         col = box.column(align=True)
@@ -166,4 +170,70 @@ def modify_bond_attr(selected_batoms, selected_bond, key, value):
             batoms.draw_polyhedras()
     for name in selected_bond_new:
         obj = bpy.data.objects.get(name)
-        obj.select_set(True)        
+        obj.select_set(True)     
+
+def remove(selected_batoms, selected_bond):
+    selected_bond_new = []
+    for batoms_name in selected_batoms:
+        batoms = Batoms(label = batoms_name)
+        for bond_name in selected_bond:
+            bond = bpy.data.objects[bond_name]
+            if bond.bbond.label == batoms_name:
+                batoms.bondsetting.delete([bond.bbond.species1, 
+                        bond.bbond.species2])
+        batoms.draw_bonds()
+        if batoms.model_type == 2:
+            batoms.draw_polyhedras()
+
+def add_bond(selected_batoms, selected_batom):
+    selected_bond_new = []
+    for batoms_name in selected_batoms:
+        batoms = Batoms(label = batoms_name)
+        species_list = []
+        for batom_name in selected_batom:
+            batom = bpy.data.objects[batom_name]
+            if batom.batom.label == batoms_name:
+                species_list.append(batom.batom.species)
+        if len(species_list) == 1:
+            batoms.bondsetting.add([species_list[0], species_list[0]])
+        elif len(species_list) == 2:
+            batoms.bondsetting.add([species_list[0], species_list[1]])
+        elif len(species_list) > 2:
+            raise Exception('Please select only two atoms')
+        batoms.draw_bonds()
+        if batoms.model_type == 2:
+            batoms.draw_polyhedras()
+
+class RemoveButton(Operator):
+    bl_idname = "bond.remove"
+    bl_label = "Remove"
+    bl_description = "Remove selected atoms"
+
+    @property
+    def selected_batoms(self):
+        return get_selected_batoms()
+    @property
+    def selected_bond(self):
+        return get_selected_objects('bbond')
+    
+
+    def execute(self, context):
+        remove(self.selected_batoms, self.selected_bond)
+        return {'FINISHED'}
+
+class AddButton(Operator):
+    bl_idname = "bond.add"
+    bl_label = "Add"
+    bl_description = "Add selected atoms"
+
+    @property
+    def selected_batoms(self):
+        return get_selected_batoms()
+    @property
+    def selected_batom(self):
+        return get_selected_objects('batom')
+    
+
+    def execute(self, context):
+        add_bond(self.selected_batoms, self.selected_batom)
+        return {'FINISHED'}

@@ -151,6 +151,9 @@ class BondSetting(Setting):
         """
         Set properties
         """
+        if isinstance(index, str):
+            raise Exception("Bond index should be a tuple or list, \
+    e.g. h2o.bondseeting[('O', 'H')]")
         name = tuple2string(index)
         subset = self.find(name)
         if subset is None:

@@ -413,7 +413,7 @@ class Batoms():
                                             self.cell, cuts = cuts, cmap = cmap)
             
     
-    def draw_crystal_shape(self, no = None, origin = None):
+    def draw_crystal_shape(self, no = None, origin = (0, 0, 0)):
         """Draw crystal shape
 
         no: int

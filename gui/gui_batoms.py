@@ -49,7 +49,6 @@ class Batoms_PT_prepare(Panel):
         row = box.row(align=True)
         row.prop(bapanel, "species")
 
-        row = box.row(align=True)
         col = box.column(align=True)
         col.operator("batoms.fragmentate")
         row = box.row(align=True)

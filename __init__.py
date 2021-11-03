@@ -89,6 +89,8 @@ classes = [
         gui_cell.CellProperties,
         gui_bond.Bond_PT_prepare,
         gui_bond.BondProperties,
+        gui_bond.RemoveButton,
+        gui_bond.AddButton,
         gui_polyhedra.Polyhedra_PT_prepare,
         gui_polyhedra.PolyhedraProperties,
         record_selection.EDIT_MESH_OT_record_selection,
