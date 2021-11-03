@@ -172,8 +172,8 @@ class BondSetting(Setting):
         for key, value in bondtable.items():
             self[key] = value
     def extend(self, other):
-        for key, value in other.data.items():
-            self[key] = value.as_dict()
+        for b in other:
+            self[(b.species1, b.species2)] = b.as_dict()
         # new
         species1 = set(self.species)
         species2 = set(other.species)
