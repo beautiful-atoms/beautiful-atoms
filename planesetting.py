@@ -24,13 +24,19 @@ class PlaneSetting(Setting):
         The label define the batoms object that a Setting belong to.
 
     """
-    def __init__(self, label, no = None, plane = None) -> None:
+    def __init__(self, label, batoms = None, plane = None) -> None:
         Setting.__init__(self, label)
         self.name = 'bplane'
-        self.no = no
+        self.batoms = batoms
         if plane is not None:
             for key, data in plane.items():
                 self[key] = data
+    @property
+    def no(self, ):
+        return self.batoms.get_spacegroup_number()
+    @no.setter
+    def no(self, no):
+        self.no = no
     def __setitem__(self, index, setdict):
         """
         Set properties
@@ -70,7 +76,7 @@ class PlaneSetting(Setting):
         s += '-'*60 + '\n'
         return s
     def get_symmetry_indices(self):
-        if self.no is None: return
+        if self.no == 1: return
         for p in self:
             if p.symmetry:
                 indices = get_equivalent_indices(self.no, p.indices)

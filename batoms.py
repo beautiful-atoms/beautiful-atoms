@@ -168,9 +168,9 @@ class Batoms():
             self.isosurfacesetting = isosurfacesetting
         
         if planesetting is None:
-            self.planesetting = PlaneSetting(self.label, no = self.get_spacegroup_number())
+            self.planesetting = PlaneSetting(self.label, batoms = self)
         elif isinstance(planesetting, dict):
-            self.planesetting = PlaneSetting(self.label, no = self.get_spacegroup_number(), 
+            self.planesetting = PlaneSetting(self.label, batoms = self,
                             planesetting = planesetting)
         elif isinstance(planesetting, PlaneSetting):
             self.planesetting = planesetting
@@ -389,9 +389,8 @@ class Batoms():
         include_center: bool
             include center of plane in the mesh
         """
-        if no is None:
-            no = self.get_spacegroup_number()
-        self.planesetting.no = no
+        if no is not None:
+            self.planesetting.no = no
         planes = self.planesetting.build_plane(self.cell, include_center = include_center)
         self.clean_atoms_objects('plane', 'plane')
         for species, plane in planes.items():
@@ -422,9 +421,8 @@ class Batoms():
         origin: xyz vector
             The center of cyrstal shape
         """
-        if no is None:
-            no = self.get_spacegroup_number()
-        self.planesetting.no = no
+        if no is not None:
+            self.planesetting.no = no
         planes = self.planesetting.build_crystal(self.cell, origin = origin)
         self.clean_atoms_objects('plane', ['crystal'])
         for species, plane in planes.items():
@@ -1226,7 +1224,10 @@ class Batoms():
     def get_spacegroup_number(self, symprec = 1e-5):
         """
         """
-        import spglib
+        try:
+            import spglib
+        except ImportError:
+            return 1
         atoms = self.atoms
         sg = spglib.get_spacegroup((atoms.get_cell(), atoms.get_scaled_positions(),
                                     atoms.get_atomic_numbers()),

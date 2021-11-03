@@ -78,10 +78,10 @@ class Setting():
         subset.flag = True
     def copy(self, label):
         object_mode()
-        bondsetting = self.__class__(label)
+        setting = self.__class__(label)
         for key, b in self.data.items():
-            bondsetting[key] = b.as_dict()
-        return bondsetting
+            setting[key] = b.as_dict()
+        return setting
     def delete(self, index):
         """
         index: list of tuple
@@ -197,6 +197,12 @@ class BondSetting(Setting):
                             'color2':species[bondpair[1]]['color'],
                             }
             self.set_default(species)
+    def copy(self, label):
+        object_mode()
+        bondsetting = self.__class__(label)
+        for b in self:
+            bondsetting[(b.species1, b.species2)] = b.as_dict()
+        return bondsetting
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
         s = 'Bondpair      min     max   Search_bond    Polyhedra style\n'

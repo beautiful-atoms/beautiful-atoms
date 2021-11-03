@@ -223,7 +223,8 @@ class Render():
         batoms = self.batoms
         vertices = batoms.get_all_vertices()
         if not margin:
-            sizes = [ba.size.max() for ba in batoms.batoms.values()]
+            sizes = [0]
+            sizes.extend([ba.size.max() for ba in batoms.batoms.values()])
             margin = max(sizes) + 0.5
         if canvas is None:
             canvas, canvas1 = get_canvas(vertices, batoms.cell.verts,
