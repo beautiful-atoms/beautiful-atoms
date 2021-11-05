@@ -130,13 +130,13 @@ class Batoms():
                 frames = atoms
                 atoms = frames[0]
             else:
-                frames = [atoms]
+                frames = []
             self.set_collection(model_type, polyhedra_type, boundary)
             if 'ase' in str(type(atoms)):
                 self.from_ase(atoms)
             elif 'pymatgen' in str(type(atoms)):
                 self.from_pymatgen(atoms)
-            self.frames = frames
+            self._frames = frames
         elif self.label:
             # print('Build from collection')
             self.from_collection(self.label)
@@ -183,7 +183,7 @@ class Batoms():
         if movie:
             self.set_frames()
         self.show_index()
-        self.select = True
+        # self.select = True
     def from_species(self, species, pbc = None, cell = None):
         """
         """
@@ -195,7 +195,9 @@ class Batoms():
                             material_style=self.material_style, 
                             node_inputs=self.node_inputs, radii_style = self.radii_style, color_style=self.color_style)
                 self.coll.children['%s_atom'%self.label].objects.link(ba.batom)
+                bpy.data.collections['Collection'].objects.unlink(ba.batom)
                 self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
+                bpy.data.collections['Collection'].objects.unlink(ba.instancer)
         elif isinstance(species, list):
             for batom in species:
                 if not isinstance(batom, Batom):
@@ -223,10 +225,13 @@ class Batoms():
                         radii_style = self.radii_style, 
                         color_style=self.color_style)
             self.coll.children['%s_atom'%self.label].objects.link(ba.batom)
+            bpy.data.collections['Collection'].objects.unlink(ba.batom)
             self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
+            bpy.data.collections['Collection'].objects.unlink(ba.instancer)
         self.coll.batoms.pbc = self.npbool2bool(atoms.pbc)
         self._cell = Bcell(self.label, atoms.cell)
         self.coll.children['%s_cell'%self.label].objects.link(self._cell.bcell)
+        bpy.data.collections['Collection'].objects.unlink(self._cell.bcell)
     def from_pymatgen(self, structure):
         """
         Import structure from Pymatgen structure.
@@ -248,10 +253,13 @@ class Batoms():
                        radii_style = self.radii_style, 
                        color_style=self.color_style)
             self.coll.children['%s_atom'%self.label].objects.link(ba.batom)
+            bpy.data.collections['Collection'].objects.unlink(ba.batom)
             self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
+            bpy.data.collections['Collection'].objects.unlink(ba.instancer)
         self.set_pbc(pbc)
         self._cell = Bcell(self.label, cell)
         self.coll.children['%s_cell'%self.label].objects.link(self._cell.bcell)
+        bpy.data.collections['Collection'].objects.unlink(self._cell.bcell)
     def from_collection(self, collection_name):
         """
         """
@@ -375,7 +383,9 @@ class Batoms():
         
         # ba.color = [ba.color[0], ba.color[1], ba.color[2], 0.8]
         self.coll.children['%s_ghost'%self.label].objects.link(ba.batom)
+        bpy.data.collections['Collection'].objects.unlink(ba.batom)
         self.coll.children['%s_ghost'%self.label].objects.link(ba.instancer)
+        bpy.data.collections['Collection'].objects.unlink(ba.instancer)
     def draw_lattice_plane(self, no = None, cuts = None, cmap = 'bwr', include_center = False):
         """Draw plane
 
@@ -561,7 +571,9 @@ class Batoms():
                     radii_style = self.radii_style, 
                     color_style=self.color_style)
             self.coll.children['%s_atom'%self.label].objects.link(ba.batom)
+            bpy.data.collections['Collection'].objects.unlink(ba.batom)
             self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
+            bpy.data.collections['Collection'].objects.unlink(ba.instancer)
             for sp in self.species:
                 self.bondsetting.add([(species2, sp)])
             self.polyhedrasetting.add([sp])
@@ -662,8 +674,7 @@ class Batoms():
     def __repr__(self) -> str:
         text = []
         text.append('label={0}, '.format(self.label))
-        text.append('species='.format(self.cell))
-        text.append('%s '%(list(self.batoms)))
+        text.append('species=%s, '%(list(self.batoms)))
         text.append('cell={0}, '.format(self.cell))
         text.append('pbc={0}'.format(self.pbc))
         text = "".join(text)
@@ -867,8 +878,6 @@ class Batoms():
         >>> from batoms.batoms import Batoms
         >>> from ase.io import read
         >>> atoms = read('docs/source/_static/datas/tio2.cif')
-        >>> tio2 = Batoms(label = 'tio2', atoms = atoms, model_type = '2', 
-            polyhedra_dict = {'Ti': ['O']}, color_style="VESTA")
         >>> tio2.boundary = 0.4
         """
         tstart = time()
@@ -894,6 +903,8 @@ class Batoms():
             self.draw_search_bond_atoms(atoms0, offset_skin_1, offset_skin_2, offset_skin_3)
             # print('search skin: {0:10.2f} s'.format(time() - tstart))
     def draw_boundary_atoms(self, atoms_boundary):
+        """
+        """
         self.clean_atoms_objects('boundary')
         if len(atoms_boundary) == 0: return 0
         species = np.unique(atoms_boundary.arrays['species'])
@@ -903,7 +914,14 @@ class Batoms():
             ba = Batom(self.label, '%s_boundary'%(sp), positions, scale = self.batoms[sp].scale, 
                         segments = self.segments, shape = self.shape, material=self.batoms[sp].material)
             self.coll.children['%s_boundary'%self.label].objects.link(ba.batom)
+            bpy.data.collections['Collection'].objects.unlink(ba.batom)
+            if ba.instancer.name not in self.coll.children['%s_instancer'%self.label].objects:
+                self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
+                bpy.data.collections['Collection'].objects.unlink(ba.instancer)
+
     def draw_search_bond_atoms(self, atoms0, offsets_search_1, offsets_search_2, offsets_search_3):
+        """
+        """
         # print(atoms)
         self.clean_atoms_objects('skin')
         offsets_search = np.append(offsets_search_1, offsets_search_2, axis = 0)
@@ -919,6 +937,10 @@ class Batoms():
             ba = Batom(self.label, '%s_skin'%(sp), positions, scale = self.batoms[sp].scale, 
                         segments = self.segments, shape = self.shape, material=self.batoms[sp].material)
             self.coll.children['%s_skin'%self.label].objects.link(ba.batom)
+            bpy.data.collections['Collection'].objects.unlink(ba.batom)
+            if ba.instancer.name not in self.coll.children['%s_instancer'%self.label].objects:
+                self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
+                bpy.data.collections['Collection'].objects.unlink(ba.instancer)
         # print('update skin: {0:10.2f} s'.format(time() - tstart))
 
     @property
@@ -1001,6 +1023,22 @@ class Batoms():
         return self.atoms.positions
     def get_scaled_positions(self):
         return self.atoms.get_scaled_positions()
+    @positions.setter
+    def positions(self, state):
+        self.set_positions(state)
+    def set_positions(self, species_dict):
+        """
+        """
+        if isinstance(species_dict, dict):
+            for species, positions in species_dict.items():
+                self[species].positions = positions
+        elif 'ase' in str(type(species_dict)):
+            atoms = species_dict
+            if 'species' not in atoms.arrays:
+                atoms.new_array('species', np.array(atoms.get_chemical_symbols()))
+            for species, batom in self.batoms.items():
+                ind = np.where(atoms.arrays['species'] == species)[0]
+                batom.positions = atoms.positions[ind]
     @property
     def species(self):
         return self.get_species()
@@ -1075,18 +1113,24 @@ class Batoms():
         return atoms
     def draw_constraints(self):
         """
+        To do
         """
         #
+        """
         constr = self.atoms.constraints
         self.constrainatoms = []
         for c in constr:
             if isinstance(c, FixAtoms):
                 for n, i in enumerate(c.index):
                     self.constrainatoms += [i]
+        """
     
     def highlight_atoms(self, indexs, shape = 'sphere', radius_scale=1.4,
                            color=(0.0, 1.0, 0.0, 0.6)):
         """
+        To do
+        """
+        return 
         """
         object_mode()
         for index in indexs:
@@ -1102,7 +1146,8 @@ class Batoms():
             ball.data.materials.append(material)
             ball.show_transparent = True
             self.coll_highlight.objects.link(ball)
-    def set_frames(self, frames = None):
+        """
+    def set_frames(self, frames = None, frame_start = 0):
         """
 
         frames: list
@@ -1116,8 +1161,8 @@ class Batoms():
         >>> h2o.render(animation = True)
         """
         if frames is None:
-            frames = self.frames
-        if len(frames) <= 1: return
+            frames = self._frames
+        if len(frames) == 0: return
         if len(self.atoms) != len(frames[0]):
             raise Exception("Number of atoms %s is not equal to %s."%(len(self.atoms), len(frames[0])))
         atoms = frames[0]
@@ -1126,25 +1171,8 @@ class Batoms():
         positions = np.array([atoms.positions for atoms in frames])
         for species, ba in self.batoms.items():
             index = np.where(atoms.arrays['species'] == species)[0]
-            ba.set_frames(positions[:, index])
+            ba.set_frames(positions[:, index], frame_start = frame_start)
     
-    def calc_camera_data(self, canvas, canvas1, direction = (0, 0, 1)):
-        """
-        """
-        from scipy.spatial.transform import Rotation as R
-        camera_target = np.mean(canvas, axis=0)
-        camera_data = {}
-        width = canvas1[1, 0] - canvas1[0, 0]
-        height = canvas1[1, 1] - canvas1[0, 1]
-        depth = canvas1[1, 1] - canvas1[0, 1]
-        ortho_scale = max(width, height)
-        #
-        direction = direction/np.linalg.norm(direction)
-        location = camera_target + direction*depth
-        camera_data = {'camera_loc': location, 'camera_target': camera_target,
-                        'ortho_scale': ortho_scale, 'ratio': height/width}
-        return camera_data  
-
     def get_distances(self, species1, i, species2, indices, mic=False):
         """
         Return distances of atom No.i with a list of atoms.
@@ -1237,6 +1265,10 @@ class Batoms():
         no = int(sg[sg.find('(') + 1:sg.find(')')])
         return no
     def get_all_vertices(self):
+        """
+        Get position of all vertices from all mesh in batoms.
+        Used for plane boundary and calc_camera_data
+        """
         positions = self.atoms.positions
         # isosurface, plane
         for coll in subcollections:

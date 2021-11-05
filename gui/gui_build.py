@@ -20,7 +20,7 @@ from batoms import Batoms, Batom
 
 # The panel.
 class Build_PT_prepare(Panel):
-    bl_label       = "Build Tools"
+    bl_label       = "Build"
     bl_space_type  = "VIEW_3D"
     bl_region_type = "UI"
     # bl_options     = {}

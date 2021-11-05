@@ -17,11 +17,11 @@ from batoms.batoms import Batoms
 
 # The panel.
 class Plane_PT_prepare(Panel):
-    bl_label       = "Plane Tools"
+    bl_label       = "Plane"
     bl_space_type  = "VIEW_3D"
     bl_region_type = "UI"
     # bl_options     = {}
-    bl_category = "Plane"
+    bl_category = "Batoms"
     bl_idname = "PLANE_PT_Tools"
 
     def draw(self, context):

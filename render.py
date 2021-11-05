@@ -116,6 +116,8 @@ class Render():
     def get_light(self):
         return bpy.data.objects[self.light_name]
     def set_world(self, color = [0.9, 0.9, 0.9, 1.0]):
+        """
+        """
         world = self.scene.world
         world.use_nodes = True
         node_tree = world.node_tree
@@ -208,6 +210,8 @@ class Render():
         obj.matrix_world = quat @ rollMatrix
         obj.location = loc
     def motion_blur(self):
+        """
+        """
         bpy.context.scene.eevee.use_motion_blur = self.use_motion_blur
         bpy.context.scene.eevee.motion_blur_position = self.motion_blur_position
         bpy.context.scene.eevee.motion_blur_steps = self.motion_blur_steps
@@ -215,9 +219,26 @@ class Render():
         bpy.context.scene.cycles.use_motion_blur = self.use_motion_blur
         bpy.context.scene.cycles.motion_blur_position = self.motion_blur_position
         bpy.context.scene.cycles.motion_blur_shutter = self.motion_blur_shutter
-
+    def calc_camera_data(self, canvas, canvas1, direction = (0, 0, 1)):
+        """
+        Calculate location, target, scale
+        """
+        from scipy.spatial.transform import Rotation as R
+        camera_target = np.mean(canvas, axis=0)
+        camera_data = {}
+        width = canvas1[1, 0] - canvas1[0, 0]
+        height = canvas1[1, 1] - canvas1[0, 1]
+        depth = canvas1[1, 1] - canvas1[0, 1]
+        ortho_scale = max(width, height)
+        #
+        direction = direction/np.linalg.norm(direction)
+        location = camera_target + direction*depth
+        camera_data = {'camera_loc': location, 'camera_target': camera_target,
+                        'ortho_scale': ortho_scale, 'ratio': height/width}
+        return camera_data 
     def set_direction(self, direction = (0, 0, 1), margin = None, canvas = None):
         """
+        Calculate canvas and direction
         """
         from batoms.tools import get_canvas
         batoms = self.batoms
@@ -233,10 +254,11 @@ class Render():
             if isinstance(canvas, (int, float)):
                 canvas = np.array([[0, 0, 0], [canvas, canvas, canvas]])
             canvas1 = canvas
-        camera_data = batoms.calc_camera_data(canvas, canvas1, direction = direction)
+        camera_data = self.calc_camera_data(canvas, canvas1, direction = direction)
         self.set_parameters(camera_data)
     def run(self, direction = None, canvas = None, **kwargs):
         """
+        render the model and export result
         """
         from batoms.butils import lock_camera_to_view
         if direction:
@@ -256,6 +278,9 @@ class Render():
         elif self.run_render:
             bpy.ops.render.render(write_still = 1, animation = self.animation)
     def prepare(self, ):
+        """
+        Set parameters for rendering
+        """
         # frame_set(1) is wrong when mesh is modified.
         if self.frame is not None:
             self.scene.frame_set(self.frame)

@@ -6,7 +6,6 @@ Molecule: Rigid molecules, to constrain all internal degrees of freedom using th
 
 Intermolecular: atomic radii.
 
-
 """
 from numpy.lib.function_base import select
 import bpy
@@ -23,11 +22,11 @@ from bpy.props import (StringProperty,
                        PointerProperty,
                        )
 
-def rigid_body(selected_batoms, displacement):
+def translate(selected_batoms, displacement):
     """
     """
     from ase.geometry import get_distances
-    displacement = displacement[:3]*0.03
+    displacement = displacement[:3]*0.1
     # for ba
     batoms = Batoms(selected_batoms)
     atoms = batoms.atoms
@@ -69,6 +68,7 @@ class Rigid_Body_Operator(bpy.types.Operator):
     bl_label = "Rigi body translate Operator"
 
     mouse_position: FloatVectorProperty(size = 4, default = (0, 0, 0, 0))
+    previous: StringProperty()
     @property
     def selected_batoms(self):
         return get_selected_batoms()
@@ -77,18 +77,26 @@ class Rigid_Body_Operator(bpy.types.Operator):
         """
         if event.type in {'ESC'}:
             return {'CANCELLED'}
-        
+        elif event.type == 'MIDDLEMOUSE':
+            self.previous = 'MIDDLEMOUSE'
+            return {'PASS_THROUGH'}
         elif event.type == 'MOUSEMOVE':
             mouse_position = np.array([event.mouse_x, event.mouse_y, 0, 0])
+            if self.previous == 'MIDDLEMOUSE':
+                self.mouse_position = mouse_position
+                self.previous = 'MOUSEMOVE'
+                return {'RUNNING_MODAL'}
             if len(self.selected_batoms) != 1:
                 self.mouse_position = mouse_position
                 return {'RUNNING_MODAL'}
             delta = mouse_position - self.mouse_position
             displacement = mouse2positions(delta, self.viewports_3D.spaces.active.region_3d.    view_matrix)
-            self.mouse_position = mouse_position
-            rigid_body(self.selected_batoms[0], displacement)
+            translate(self.selected_batoms[0], displacement)
+            self.previous = 'MOUSEMOVE'
             return {'RUNNING_MODAL'}
         else:
+            mouse_position = np.array([event.mouse_x, event.mouse_y, 0, 0])
+            self.mouse_position = mouse_position
             return {'PASS_THROUGH'}
 
     def invoke(self, context, event):

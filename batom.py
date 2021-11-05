@@ -110,10 +110,6 @@ class Batom():
                         node_inputs = node_inputs,
                         material_style = material_style,
                         backface_culling = True)
-    def object_mode(self):
-        for object in bpy.data.objects:
-            if object.mode == 'EDIT':
-                bpy.ops.object.mode_set(mode = 'OBJECT')
     def set_instancer(self, segments = [32, 16], subdivisions = 2, 
                         shape = 'UV_SPHERE', shade_smooth = True):
         object_mode()
@@ -444,7 +440,7 @@ class Batom():
                 for n, i in enumerate(c.index):
                     self.constrainatom += [i]
     
-    def set_frames(self, frames = []):
+    def set_frames(self, frames = [], frame_start = 0):
         """
 
         frames: list
@@ -465,7 +461,7 @@ class Batom():
         Register new change before rendering, or delete existing keyframes.
         """
         nframe = len(frames)
-        if nframe <= 1: return
+        if nframe == 0 : return
         batom = self.batom
         nverts = len(batom.data.vertices)
         for i in range(0, nframe):
@@ -473,7 +469,7 @@ class Batom():
             for j in range(nverts):
                 p = np.array(positions[j])
                 batom.data.vertices[j].co = np.array(positions[j]) - np.array(batom.location)
-                batom.data.vertices[j].keyframe_insert('co', frame=i + 1)
+                batom.data.vertices[j].keyframe_insert('co', frame=frame_start + i + 1)
     
     def __len__(self):
         return len(self.batom.data.vertices)

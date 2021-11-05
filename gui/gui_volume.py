@@ -17,11 +17,11 @@ from batoms.batoms import Batoms
 
 # The panel.
 class Volume_PT_prepare(Panel):
-    bl_label       = "Volume Tools"
+    bl_label       = "Volume"
     bl_space_type  = "VIEW_3D"
     bl_region_type = "UI"
     # bl_options     = {}
-    bl_category = "Volumetric"
+    bl_category = "Batoms"
     bl_idname = "VOLUME_PT_Tools"
 
     def draw(self, context):

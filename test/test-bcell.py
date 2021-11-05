@@ -15,6 +15,7 @@ def test_bcell():
     assert np.allclose(cell.array, np.array([[4, 0, 0], [0, 4, 0], [0, 0, 14]]))
     cell2 = cell.copy('pt-2')
     assert isinstance(cell2, Bcell)
+    reciprocal = cell.reciprocal
 
 if __name__ == '__main__':
     test_bcell()

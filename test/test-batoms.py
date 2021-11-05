@@ -43,6 +43,16 @@ def test_batoms():
     index = [0, 1]
     h2o['H'][index][:, 0] += 2
 
+def test_set_positions():
+    from batoms.butils import removeAll
+    from batoms import Batoms
+    from ase.build import molecule
+    removeAll()
+    h2o = Batoms('h2o', {'O': [[0, 0, 0.40]], 'H': [[0, -0.76, -0.2], [0, 0.76, -0.2]]})
+    mol = molecule('H2O')
+    mol.positions[:, 2] += 5
+    h2o.positions = mol
+
 def test_extend():
     from ase.build import molecule
     co = molecule('CO')
@@ -63,6 +73,13 @@ def test_canvas():
     pt111.cell[2, 2] += 5
     pt111.render([1, 1, 1])
 
+def test_boundary():
+    from batoms.bio import read
+    from batoms.butils import removeAll
+    removeAll()
+    mof = read('datas/mof-5.cif')
+    mof.boundary = 0.01
+    mof.boundary = 1
 
 def test_cavity():
     from batoms.bio import read
@@ -75,6 +92,7 @@ def test_cavity():
     mof.render.light_energy = 5
     mof.render.run([1, 0, 0])
 
+
 def test_get_angles():
     from ase.build import molecule
     atoms = molecule('H2O')
@@ -86,6 +104,7 @@ def test_get_angles():
 
 if __name__ == '__main__':
     test_batoms()
+    test_set_positions()
     test_cavity()
     test_get_angles()
     print('\n Batoms: All pass! \n')

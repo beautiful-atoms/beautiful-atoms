@@ -20,10 +20,10 @@ class EDIT_MESH_OT_record_selection(bpy.types.Operator):
         selected_vertices = get_selected_vertices()
         # Only add one more vertices
         nsel = []
-        for sel in selected_vertices:
-            for index in sel[1]:
-                if (sel[0], np.array([index])) not in self.selOrder:
-                    nsel.append((sel[0], np.array([index])))
+        for label, species, name, index in selected_vertices:
+            for i in index:
+                if (name, np.array([i])) not in self.selOrder:
+                    nsel.append((name, np.array([i])))
         if len(nsel) == 1:
             self.report({'INFO'}, 'New vertices was selected')
             self.selOrder.append(nsel[0])
@@ -64,7 +64,7 @@ class EDIT_MESH_OT_record_selection(bpy.types.Operator):
         self.selOrder = []
         selected_vertices = get_selected_vertices()
         if len(selected_vertices) == 1:
-            if selected_vertices[0][1] == 1:
+            if selected_vertices[0][3] == 1:
                 self.selOrder.append(selected_vertices[0])
         context.window_manager.modal_handler_add(self)
         return {'RUNNING_MODAL'}

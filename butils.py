@@ -7,6 +7,11 @@ def object_mode():
     for object in bpy.data.objects:
             if object.mode == 'EDIT':
                 bpy.ops.object.mode_set(mode = 'OBJECT')
+def eidt_mode():
+    try:
+        bpy.ops.object.mode_set(mode = 'EDIT')
+    except:
+        pass
 
 def read_batoms_list():
     """
@@ -41,6 +46,7 @@ def get_selected_vertices():
     in order
     """
     import numpy as np
+    eidt_mode()
     selected_vertices = []
     objs = []
     for obj in bpy.context.objects_in_mode:
@@ -59,7 +65,7 @@ def get_selected_vertices():
         obj.data.vertices.foreach_get('select', sel)
         index = np.where(sel)[0]
         if len(index) > 0:
-            selected_vertices.append((obj.name, index))
+            selected_vertices.append((obj.batom.label, obj.batom.species, obj.name, index))
     # back to whatever mode we were in
     bpy.ops.object.mode_set(mode='EDIT')
     return selected_vertices

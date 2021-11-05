@@ -20,7 +20,7 @@ from batoms import Batoms, Batom
 
 # The panel.
 class Batoms_PT_prepare(Panel):
-    bl_label       = "Batoms Tools"
+    bl_label       = "Batoms"
     bl_space_type  = "VIEW_3D"
     bl_region_type = "UI"
     # bl_options     = {}
@@ -156,10 +156,9 @@ def export_atoms(selected_batoms, filetype = 'xyz'):
 def replace_atoms(species):
     batom_list = []
     selected_vertices = get_selected_vertices()
-    for name, index in selected_vertices:
-        obj = bpy.data.objects[name]
-        batoms = Batoms(label = obj.batom.label)
-        batoms.replace(obj.batom.species, species, index)
+    for label, species, name, index in selected_vertices:
+        batoms = Batoms(label = label)
+        batoms.replace(species, species, index)
         batom_list.append(name)
     for name in batom_list:
         if name in bpy.data.objects:
@@ -192,8 +191,7 @@ def measurement():
     pbc = None
     batom_list = []
     positions = np.array([]).reshape(-1, 3)
-    for name, index in selected_vertices:
-        obj = bpy.data.objects[name]
+    for label, species, name, index in selected_vertices:
         batom = Batom(label = name)
         positions = np.append(positions, batom.positions[index], axis = 0)
         batom_list.append(name)
@@ -242,10 +240,9 @@ class MeasureButton(Operator):
 def fragmentate(suffix):
     batom_list = []
     selected_vertices = get_selected_vertices()
-    for name, index in selected_vertices:
-        obj = bpy.data.objects[name]
-        batoms = Batoms(label = obj.batom.label)
-        batoms.fragmentate(obj.batom.species, index, suffix)
+    for label, species, name, index in selected_vertices:
+        batoms = Batoms(label = label)
+        batoms.fragmentate(species, index, suffix)
         batom_list.append(name)
     for name in batom_list:
         if name in bpy.data.objects:
