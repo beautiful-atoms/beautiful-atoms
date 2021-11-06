@@ -23,7 +23,7 @@ class Build_PT_prepare(Panel):
     bl_label       = "Build"
     bl_space_type  = "VIEW_3D"
     bl_region_type = "UI"
-    # bl_options     = {}
+    bl_options = {'DEFAULT_CLOSED'}
     bl_category = "Batoms"
     bl_idname = "BUILD_PT_Tools"
 
@@ -36,7 +36,6 @@ class Build_PT_prepare(Panel):
         col.label(text="Add structure")
         col.prop(bupanel, "formula")
         col.prop(bupanel, "label")
-        # col = box.column()
         col.operator("batoms.add_molecule")
         col.operator("batoms.add_bulk")
         col.operator("batoms.add_atoms")

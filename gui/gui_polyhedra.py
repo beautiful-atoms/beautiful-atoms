@@ -21,7 +21,7 @@ class Polyhedra_PT_prepare(Panel):
     bl_label       = "Polyhedra"
     bl_space_type  = "VIEW_3D"
     bl_region_type = "UI"
-    # bl_options     = {'DEFAULT_CLOSED'}
+    bl_options = {'DEFAULT_CLOSED'}
     bl_category = "Batoms"
     bl_idname = "BATOMS_PT_Polyhedra"
 

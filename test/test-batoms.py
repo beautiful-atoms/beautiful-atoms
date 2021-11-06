@@ -43,6 +43,18 @@ def test_batoms():
     index = [0, 1]
     h2o['H'][index][:, 0] += 2
 
+def test_ase_species():
+    from batoms.butils import removeAll
+    from batoms import Batoms
+    removeAll()
+    from ase.build import molecule
+    h2o = molecule('H2O')
+    h2o.new_array('species', np.array(h2o.get_chemical_symbols(), dtype = 'U20'))
+    h2o.arrays['species'][1] = 'H_1'
+    h2o.arrays['species'][2] = 'H_test2'
+    h2o = Batoms('h2o', atoms = h2o)
+    assert h2o.species == ['H_1', 'H_test2', 'O']
+
 def test_set_positions():
     from batoms.butils import removeAll
     from batoms import Batoms
@@ -103,7 +115,9 @@ def test_get_angles():
 
 
 if __name__ == '__main__':
+    test_batom()
     test_batoms()
+    test_ase_species()
     test_set_positions()
     test_cavity()
     test_get_angles()

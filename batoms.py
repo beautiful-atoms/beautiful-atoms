@@ -212,7 +212,7 @@ class Batoms():
         Import structure from ASE atoms.
         """
         if 'species' not in atoms.arrays:
-            atoms.new_array('species', np.array(atoms.get_chemical_symbols()))
+            atoms.new_array('species', np.array(atoms.get_chemical_symbols(), dtype = 'U20'))
         species_list = np.unique(atoms.arrays['species'])
         for species in species_list:
             indices = np.where(atoms.arrays['species'] == species)
@@ -407,6 +407,7 @@ class Batoms():
             if plane['boundary']:
                 name = '%s_%s_%s'%(self.label, 'plane', species)
                 self.planesetting.build_boundary(plane['indices'], batoms = self)
+                bpy.context.view_layer.update()
             else:
                 name = '%s_%s_%s'%(self.label, 'plane', species)
                 draw_surface_from_vertices(name, plane,
@@ -652,6 +653,7 @@ class Batoms():
                 obj.select_set(True)
         # this two lines is to overcome a bug
         # https://stackoverflow.com/questions/67659621/how-to-use-the-rotate-operator-on-blender-python-if-you-execute-the-script-on-th
+        # bug This two line should not used when blender is open
         ov=bpy.context.copy()
         ov['area']=[a for a in bpy.context.screen.areas if a.type=="VIEW_3D"][0]
         bpy.ops.transform.rotate(ov, value=angle, orient_axis=axis.upper(), 
@@ -1035,7 +1037,7 @@ class Batoms():
         elif 'ase' in str(type(species_dict)):
             atoms = species_dict
             if 'species' not in atoms.arrays:
-                atoms.new_array('species', np.array(atoms.get_chemical_symbols()))
+                atoms.new_array('species', np.array(atoms.get_chemical_symbols(), dtype = 'U20'))
             for species, batom in self.batoms.items():
                 ind = np.where(atoms.arrays['species'] == species)[0]
                 batom.positions = atoms.positions[ind]
@@ -1106,7 +1108,7 @@ class Batoms():
         We have to shfit it to origin.
         """
         atoms = Atoms(symbols, positions, cell = self.cell, pbc = self.pbc)
-        atoms.new_array('species', np.array(species_list))
+        atoms.new_array('species', np.array(species_list, dtype = 'U20'))
         if local:
             atoms.positions = atoms.positions - self.cell.origin
             atoms.info['origin'] = self.cell.origin
@@ -1167,7 +1169,7 @@ class Batoms():
             raise Exception("Number of atoms %s is not equal to %s."%(len(self.atoms), len(frames[0])))
         atoms = frames[0]
         if 'species' not in atoms.arrays:
-            atoms.new_array('species', np.array(atoms.get_chemical_symbols()))
+            atoms.new_array('species', np.array(atoms.get_chemical_symbols(), dtype = 'U20'))
         positions = np.array([atoms.positions for atoms in frames])
         for species, ba in self.batoms.items():
             index = np.where(atoms.arrays['species'] == species)[0]
@@ -1264,7 +1266,7 @@ class Batoms():
             return None
         no = int(sg[sg.find('(') + 1:sg.find(')')])
         return no
-    def get_all_vertices(self):
+    def get_all_vertices(self, cell = True):
         """
         Get position of all vertices from all mesh in batoms.
         Used for plane boundary and calc_camera_data
@@ -1272,11 +1274,20 @@ class Batoms():
         positions = self.atoms.positions
         # isosurface, plane
         for coll in subcollections:
+            if not cell and coll == 'cell': continue
+            if 'instancer' in coll: continue
+            if 'render' in coll: continue
             for obj in self.coll.children['%s_%s'%(self.label, coll)].all_objects:
                 if obj.type != 'MESH': continue
+                if 'volume' in obj.name: continue
                 n = len(obj.data.vertices)
                 vertices = np.empty(n*3, dtype=np.float64)
                 obj.data.vertices.foreach_get('co', vertices)  
                 vertices = vertices.reshape((n, 3))
+                vertices = np.append(vertices, np.ones((n, 1)), axis = 1)
+                mat= np.array(obj.matrix_world)
+                vertices = mat.dot(vertices.T).T
+                # (natom, 4) back to (natom, 3)
+                vertices = vertices[:, :3]
                 positions = np.concatenate((positions, vertices), axis = 0)
         return positions

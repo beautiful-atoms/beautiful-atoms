@@ -24,13 +24,13 @@ class IsosurfaceSetting(Setting):
         self.label = label
         self.name = 'bisosurface'
         # add a default level
-        if len(self) == 0:
-            self['1'] = {'level': 0.002, 'color': [1, 1, 0, 0.8]}
         if isosurfacesetting is not None:
             for key, data in isosurfacesetting.items():
                 self[key] = data
         if volume is not None:
             self.volume = volume
+            if len(self) == 0:
+                self['1'] = {'level': volume.max()/8, 'color': [1, 1, 0, 0.8]}
     def draw_volume(self, volume):
         """
         Draw unit cell by edge, however, can not be rendered.

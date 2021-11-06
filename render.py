@@ -242,13 +242,13 @@ class Render():
         """
         from batoms.tools import get_canvas
         batoms = self.batoms
-        vertices = batoms.get_all_vertices()
+        vertices = batoms.get_all_vertices(cell = self.batoms.show_unit_cell)
         if not margin:
             sizes = [0]
             sizes.extend([ba.size.max() for ba in batoms.batoms.values()])
             margin = max(sizes) + 0.5
         if canvas is None:
-            canvas, canvas1 = get_canvas(vertices, batoms.cell.verts,
+            canvas, canvas1 = get_canvas(vertices, 
                                     direction = direction, margin = margin)
         else:
             if isinstance(canvas, (int, float)):
@@ -256,7 +256,7 @@ class Render():
             canvas1 = canvas
         camera_data = self.calc_camera_data(canvas, canvas1, direction = direction)
         self.set_parameters(camera_data)
-    def run(self, direction = None, canvas = None, **kwargs):
+    def run(self, direction = None, canvas = None,  **kwargs):
         """
         render the model and export result
         """

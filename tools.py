@@ -92,21 +92,16 @@ def get_cell_vertices(cell):
                                                     cell)
     cell_vertices.shape = (8, 3)
     return cell_vertices
-def get_canvas(positions, cell_vertices, direction = [0, 0 ,1], margin = 1, 
-                show_unit_cell = True):
+def get_canvas(positions, direction = [0, 0 ,1], margin = 1):
     """
     Calculate canvas for camera. 
     Project positions and cell on the plane of view.
     Find the boudanry of the object on the plane.
     """
-    from scipy.spatial.transform import Rotation as R
     canvas = np.zeros([2, 3])
     for i in range(3):
         canvas[0, i] = positions[:, i].min()
         canvas[1, i] = positions[:, i].max()
-        if show_unit_cell:
-            canvas[0, i] = min(canvas[0, i], cell_vertices[:, i].min())
-            canvas[1, i] = max(canvas[1, i], cell_vertices[:, i].max())
     #
     canvas1 = np.zeros([2, 3])
     direction = np.array(direction)
@@ -125,22 +120,10 @@ def get_canvas(positions, cell_vertices, direction = [0, 0 ,1], margin = 1,
         projx[i] = np.dot(projxy[i], nx)
         projy[i] = np.dot(projxy[i], ny)
     #
-    projcellxy = cell_vertices.copy()
-    projcellx = np.zeros((len(cell_vertices), 1))
-    projcelly = np.zeros((len(cell_vertices), 1))
-    for i in range(len(cell_vertices)):
-        projcellxy[i] = cell_vertices[i] - np.dot(cell_vertices[i], nz)*nz
-        projcellx[i] = np.dot(projcellxy[i], nx)
-        projcelly[i] = np.dot(projcellxy[i], ny)
     canvas1[0, 0] = projx.min()
     canvas1[1, 0] = projx.max()
     canvas1[0, 1] = projy.min()
     canvas1[1, 1] = projy.max()
-    if show_unit_cell:
-        canvas1[0, 0] = min(canvas1[0, 0], projcellx.min())
-        canvas1[1, 0] = max(canvas1[1, 0], projcellx.max())
-        canvas1[0, 1] = min(canvas1[0, 1], projcelly.min())
-        canvas1[1, 1] = max(canvas1[1, 1], projcelly.max())
     canvas1[0, :] -= margin
     canvas1[1, :] += margin
     canvas1[0, 2] = 0

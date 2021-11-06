@@ -324,7 +324,7 @@ def calc_bond_data(batoms, bondlists, bondsetting):
     positions = atoms.positions
     chemical_symbols = np.array(chemical_symbols)
     if 'species' not in atoms.arrays:
-        atoms.new_array('species', np.array(atoms.get_chemical_symbols()))
+        atoms.new_array('species', np.array(atoms.get_chemical_symbols(), dtype = 'U20'))
     speciesarray = np.array(atoms.arrays['species'])
     bond_kinds = {}
     if len(bondlists) == 0:

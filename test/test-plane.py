@@ -15,13 +15,13 @@ def test_lattice_plane():
 def test_crystal_shape():
     """
     """
-from batoms.build import bulk
-from batoms.butils import removeAll
-removeAll()
-au = bulk('au', 'Au', cubic = True)
-au.planesetting[(1, 1, 1)] = {'distance': 3, 'crystal': True, 'symmetry': True}
-# au.planesetting[(0, 0, 1)] = {'distance': 3, 'crystal': True, 'symmetry': True}
-au.draw_crystal_shape(origin = au.cell.center)
+    from batoms.build import bulk
+    from batoms.butils import removeAll
+    removeAll()
+    au = bulk('au', 'Au', cubic = True)
+    au.planesetting[(1, 1, 1)] = {'distance': 3, 'crystal': True, 'symmetry': True}
+    # au.planesetting[(0, 0, 1)] = {'distance': 3, 'crystal': True, 'symmetry': True}
+    au.draw_crystal_shape(origin = au.cell.center)
 
 def test_boundary():
     from batoms.batoms import Batoms

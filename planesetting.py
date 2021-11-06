@@ -333,6 +333,7 @@ class PlaneSetting(Setting):
         for coll in subcollections:
             for obj in batoms.coll.children['%s_%s'%(self.label, coll)].all_objects:
                 if obj.type != 'MESH': continue
+                if 'volume' in obj.name: continue
                 n = len(obj.data.vertices)
                 vertices = np.empty(n*3, dtype=np.float64)
                 obj.data.vertices.foreach_get('co', vertices)  
