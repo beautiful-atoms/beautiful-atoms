@@ -228,7 +228,7 @@ def cylinder_mesh_from_instance_vec(centers, normals, lengths, scale, source):
     scale = np.array([[scale, scale]]*len(centers))
     scale = np.append(scale, np.array(lengths).reshape(-1, 1), axis = 1)
     # print(np.cross([0.0000014159, 0.000001951, 1], normals[0]))
-    vec = np.cross([0.0, 0.0, 1], normals) + np.array([0.000000001, 0, 0])
+    vec = np.cross([0.0, 0.0, 1], normals) + np.array([1e-6, 0, 0])
     vec = vec/np.linalg.norm(vec, axis = 1)[:, None]
     # print(np.arccos(normals[0, 2]*0.999999))
     ang = np.arccos(normals[:, 2]*0.999999)
@@ -289,5 +289,6 @@ def draw_plane(name = 'plane',
                     material_style = material_style)
     # Instantiate a floor plane
     bpy.ops.mesh.primitive_plane_add(size=size, location=location, rotation=rotation)
-    current_object = bpy.context.object
-    current_object.data.materials.append(material)
+    obj = bpy.context.object
+    obj.data.materials.append(material)
+    return obj

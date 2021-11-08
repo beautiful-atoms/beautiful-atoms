@@ -1,13 +1,14 @@
 import pytest
-from batoms.render import Render
-from batoms.batoms import Batoms
-from batoms.butils import removeAll
 import numpy as np
+
 
 
 def test_render():
     """
     """
+    from batoms import Batoms
+    from batoms.butils import removeAll
+    from batoms.render import Render
     removeAll()
     r = Render('test')
     assert isinstance(r, Render)
@@ -22,4 +23,6 @@ def test_render():
     au111.render.run([1, 1, 1], engine = 'eevee', resolution_x = 200, output='au111-eevee')
     au111.render.run([1, 1, 1], engine = 'cycles', resolution_x = 200, output='au111-cycles')
 
-test_render()
+if __name__ == '__main__':
+    test_render()
+    print('\n render: All pass! \n')

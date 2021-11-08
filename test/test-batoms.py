@@ -102,7 +102,7 @@ def test_cavity():
     mof.model_type = 2
     mof.draw_cell()
     mof.render.light_energy = 5
-    mof.render.run([1, 0, 0])
+    mof.render.run([1, 0, 0], output = 'cavity.png')
 
 
 def test_get_angles():

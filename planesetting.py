@@ -132,8 +132,8 @@ class PlaneSetting(Setting):
         for name, plane in planes.items():
             p = self[plane['indices']]
             vertices, edges, faces = faces_from_vertices(plane['vertices'], plane['normal'])
-            vertices += np.array(origin)
             if len(vertices) >= 3:
+                vertices += np.array(origin)
                 new_planes[p.name] = self.get_plane_data(vertices, edges, faces, p)
         self.crystal_planes = new_planes
         return new_planes

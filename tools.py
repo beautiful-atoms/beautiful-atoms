@@ -92,43 +92,50 @@ def get_cell_vertices(cell):
                                                     cell)
     cell_vertices.shape = (8, 3)
     return cell_vertices
-def get_canvas(positions, direction = [0, 0 ,1], margin = 1):
+def get_canvas(vertices, direction = [0, 0 ,1], padding = 1):
     """
     Calculate canvas for camera. 
-    Project positions and cell on the plane of view.
+    Project vertices and cell on the plane of view.
     Find the boudanry of the object on the plane.
     """
     canvas = np.zeros([2, 3])
-    for i in range(3):
-        canvas[0, i] = positions[:, i].min()
-        canvas[1, i] = positions[:, i].max()
-    #
+    canvas[0] = np.min(vertices, axis = 0)
+    canvas[1] = np.max(vertices, axis = 0)
+    # plane
     canvas1 = np.zeros([2, 3])
-    direction = np.array(direction)
-    nz = direction/np.linalg.norm(direction)
-    nx = np.cross([0, 0, 1], nz) + np.array([0.000001, 0, 0])
-    nx = nx/np.linalg.norm(nx)
-    ny = np.cross(nz, nx) + np.array([0, 0.000001, 0])
-    ny = ny/np.linalg.norm(ny)
+    frame = rotate_frame(direction)
     #
-    projxy = positions.copy()
-    projx = np.zeros((len(positions), 1))
-    projy = np.zeros((len(positions), 1))
-    projz = np.dot(positions, nz)
-    for i in range(len(positions)):
-        projxy[i] = positions[i] - projz[i]*nz
-        projx[i] = np.dot(projxy[i], nx)
-        projy[i] = np.dot(projxy[i], ny)
+    projz = np.dot(vertices, frame[2])
+    projxy = vertices - projz[:, None]*frame[2]
+    projx = np.dot(projxy, frame[0])
+    projy = np.dot(projxy, frame[1])
     #
+    # find canvas box
+    canvas = np.zeros([2, 3])
+    canvas[0] = np.min(vertices, axis = 0)
+    canvas[1] = np.max(vertices, axis = 0)
+    canvas1 = np.zeros([2, 3])
     canvas1[0, 0] = projx.min()
     canvas1[1, 0] = projx.max()
     canvas1[0, 1] = projy.min()
     canvas1[1, 1] = projy.max()
-    canvas1[0, :] -= margin
-    canvas1[1, :] += margin
-    canvas1[0, 2] = 0
+    canvas1[0, 2] = projz.min()
     canvas1[1, 2] = projz.max()
+    canvas1[0] -= padding
+    canvas1[1] += padding
     return canvas, canvas1
+def rotate_frame(direction):
+    """
+    rotate frame by algin z to direction
+    """
+    direction = np.array(direction)
+    nz = direction/np.linalg.norm(direction)
+    nx = np.cross([0, 0, 1], nz) + np.array([1e-6, 0, 0])
+    nx = nx/np.linalg.norm(nx)
+    ny = np.cross(nz, nx) + np.array([0, 1e-6, 0])
+    ny = ny/np.linalg.norm(ny)
+    return np.array([nx, ny, nz])
+
 def find_cage_sphere(cell, positions, radius, step = 1.0, 
                     boundary = [[0, 1], [0, 1], [0, 1]]):
     from ase.cell import Cell

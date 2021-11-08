@@ -41,10 +41,18 @@ class Batom(bpy.types.PropertyGroup):
     """
     """
     flag: BoolProperty(name="flag", default=False)
-    label: StringProperty(name="species", default = 'X')
+    label: StringProperty(name="label", default = 'X')
     species: StringProperty(name="species", default = 'X')
     element: StringProperty(name="element", default = '')
     radius: FloatProperty(name="radius")
+class Blight(bpy.types.PropertyGroup):
+    """
+    """
+    flag: BoolProperty(name="flag", default=False)
+    label: StringProperty(name="label", default = 'X')
+    name: StringProperty(name="name", default = 'X')
+    lock_to_camera: BoolProperty(name="lock_to_camera", default=False)
+    direction: FloatVectorProperty(name="direction", default = [0, 0, 1], size = 3)
 class Bcell(bpy.types.PropertyGroup):
     """
     """

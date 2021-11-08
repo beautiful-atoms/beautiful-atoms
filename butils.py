@@ -105,13 +105,6 @@ def removeAll():
         if coll.name == 'Collection': continue
         bpy.data.collections.remove(coll)
 
-def lock_camera_to_view(switch):
-    for area in bpy.context.screen.areas:
-        if area.type == 'VIEW_3D':
-            for space in area.spaces:
-                if space.type == 'VIEW_3D':
-                    space.lock_camera = switch
-
 def get_keyframes_of_batoms(batoms):
     """
     get keyframes of a batoms

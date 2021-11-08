@@ -6,13 +6,14 @@ import bpy
 from mathutils import Vector, Matrix
 import os
 import numpy as np
+from batoms.light import Lights
+from batoms.camera import Camera
 
 default_render_settings = {
         'transparent': True,  # transparent background
         'resolution_x': 1000,
         'resolution_y': None,  # 
         'lock_camera_to_view': True,
-        'lock_light_to_camera': True,
         'camera_loc': [0, 0, 100],  
         'camera_target': [0, 0, 0], #
         'camera_type': 'ORTHO',  #  ['PERSP', 'ORTHO']
@@ -20,11 +21,8 @@ default_render_settings = {
         'camera_lens': 50,  #
         'fstop': 0.5,
         'ratio': 1,
-        'light_loc': [0, 0, 100],
-        'light_type': 'SUN', # 'POINT', 'SUN', 'SPOT', 'AREA'
-        'light_energy': 5.0,
         'studiolight': 'Default',  # "basic", "outdoor", "paint", "rim", "studio"
-        'world': False,
+        'world': True,
         'engine': 'BLENDER_EEVEE', #'BLENDER_EEVEE' #'BLENDER_WORKBENCH'
         'use_motion_blur': False,
         'motion_blur_position': 'START', 
@@ -41,24 +39,40 @@ default_render_settings = {
         'num_samples': 32,
         }
 
+subcollections = ['light']
+
 class Render():
     """
     Object to render atomic structure.
+
+    Has one camera, a list of light
 
     """
     #
     def __init__(self, label, batoms = None, **kwargs):
         self.label = label
+        self.name = '%s_render'%label
         self.batoms = batoms
         self.camera_name = 'camera_%s'%self.label
-        self.light_name = 'light_%s'%self.label
+        self.set_collection()
         default_render_settings.update(kwargs)
         self.set_parameters(default_render_settings)
         self.clean_default()
         self.set_coll()
-        
+        self.camera = Camera(label, coll = self.coll)
+        self.lights = Lights(label)
+        self.lights.add('Default', lock_to_camera = True)
         if self.world:
             self.set_world()
+    def set_collection(self):
+        """
+        build main collection and its child collections.
+        """
+        if self.name not in bpy.data.collections:
+            bpy.data.collections.new(self.name)
+        for sub_name in subcollections:
+            subcoll = bpy.data.collections.new('%s_%s'%(self.label, sub_name))
+            self.coll.children.link(subcoll)
     def set_parameters(self, parameters):
         for k, v in parameters.items():
             setattr(self, k, v)
@@ -99,102 +113,14 @@ class Render():
         elif engine.upper() == 'WORKBENCH':
             engine = 'BLENDER_WORKBENCH'
         self.scene.render.engine = engine.upper()
-    @property
-    def camera(self):
-        return self.get_camera()
-    @camera.setter
-    def camera(self, camera):
-        self.set_camera(camera)
-    def get_camera(self):
-        return bpy.data.objects[self.camera_name]
-    @property
-    def light(self):
-        return self.get_light()
-    @light.setter
-    def light(self, light):
-        self.set_light(light)
-    def get_light(self):
-        return bpy.data.objects[self.light_name]
-    def set_world(self, color = [0.9, 0.9, 0.9, 1.0]):
+    def set_world(self, color = [0.4, 0.4, 0.4, 1.0]):
         """
         """
         world = self.scene.world
         world.use_nodes = True
         node_tree = world.node_tree
-        rgb_node = node_tree.nodes.new(type="ShaderNodeRGB")
-        rgb_node.outputs["Color"].default_value = color
         node_tree.nodes["Background"].inputs["Strength"].default_value = 1.0
-        node_tree.links.new(rgb_node.outputs["Color"], 
-                    node_tree.nodes["Background"].inputs["Color"])
-    def set_camera(self, camera_type = None, camera_lens = None,):
-        '''
-
-        camera_type: str
-            * PERSP
-            * ORTHO
-        camera_lens: float
-            
-        # todo lock camera to view
-        
-        '''
-        if not camera_type:
-            camera_type = self.camera_type
-        if not camera_lens:
-            camera_lens = self.camera_lens
-        if self.camera_name in bpy.data.objects:
-            camera = bpy.data.objects[self.camera_name]
-        else:
-            if self.camera_name in bpy.data.cameras:
-                camera_data = bpy.data.cameras[self.camera_name]
-            else:
-                camera_data = bpy.data.cameras.new(self.camera_name)
-            camera = bpy.data.objects.new(self.camera_name, camera_data)
-            self.coll.objects.link(camera)
-        camera.data.lens = camera_lens
-        camera.data.dof.aperture_fstop = self.fstop
-        camera.data.type = camera_type
-        target = self.camera_target
-        if self.ortho_scale and camera_type == 'ORTHO':
-            camera.data.ortho_scale = self.ortho_scale
-        camera.location = Vector(self.camera_loc)
-        self.look_at(camera, target, roll = 0.0)
-        bpy.context.scene.camera = camera
-    def set_light(self):
-        '''
-
-        light_type: str
-            * POINT, Omnidirectional point light source.
-            * SUN, Constant direction parallel ray light source.
-            * SPOT, Directional cone light source.
-            * AREA, Directional area light source.
-        light_energy: float
-
-        # track to camera
-
-        '''
-        # check light exist or not
-        if self.light_name in bpy.data.objects:
-            light = bpy.data.objects[self.light_name]
-        else:
-            if self.light_name in bpy.data.lights:
-                light_data = bpy.data.lights[self.light_name]
-            else:
-                light_data = bpy.data.lights.new(self.light_name, type = self.light_type)
-            light = bpy.data.objects.new(self.light_name, light_data)
-            self.coll.objects.link(light)
-        light.data.type = self.light_type
-        light.data.energy = self.light_energy
-        light.location = Vector(self.camera_loc)
-        light.data.use_nodes = True
-        light.data.node_tree.nodes['Emission'].inputs['Strength'].default_value = 0.1
-        if self.lock_light_to_camera:
-            light.constraints.new(type = 'COPY_LOCATION')
-            light.constraints["Copy Location"].target = self.camera
-            light.constraints.new(type = 'COPY_ROTATION')
-            light.constraints["Copy Rotation"].target = self.camera
-        else:
-            light.location = Vector(self.light_loc)
-            self.look_at(light, self.camera_target)
+        node_tree.nodes["Background"].inputs["Color"].default_value = color
     def look_at(self, obj, target, roll=0):
         """
         Rotate obj to look at target
@@ -219,55 +145,62 @@ class Render():
         bpy.context.scene.cycles.use_motion_blur = self.use_motion_blur
         bpy.context.scene.cycles.motion_blur_position = self.motion_blur_position
         bpy.context.scene.cycles.motion_blur_shutter = self.motion_blur_shutter
-    def calc_camera_data(self, canvas, canvas1, direction = (0, 0, 1)):
-        """
-        Calculate location, target, scale
-        """
-        from scipy.spatial.transform import Rotation as R
-        camera_target = np.mean(canvas, axis=0)
-        camera_data = {}
-        width = canvas1[1, 0] - canvas1[0, 0]
-        height = canvas1[1, 1] - canvas1[0, 1]
-        depth = canvas1[1, 1] - canvas1[0, 1]
-        ortho_scale = max(width, height)
-        #
-        direction = direction/np.linalg.norm(direction)
-        location = camera_target + direction*depth
-        camera_data = {'camera_loc': location, 'camera_target': camera_target,
-                        'ortho_scale': ortho_scale, 'ratio': height/width}
-        return camera_data 
-    def set_direction(self, direction = (0, 0, 1), margin = None, canvas = None):
+    def set_direction(self, direction = (0, 0, 1), 
+                    distance = None, 
+                    padding = None, canvas = None):
         """
         Calculate canvas and direction
         """
-        from batoms.tools import get_canvas
+        from batoms.tools import rotate_frame
         batoms = self.batoms
-        vertices = batoms.get_all_vertices(cell = self.batoms.show_unit_cell)
-        if not margin:
+        if padding is None:
             sizes = [0]
             sizes.extend([ba.size.max() for ba in batoms.batoms.values()])
-            margin = max(sizes) + 0.5
+            padding = max(sizes) + 0.5
         if canvas is None:
-            canvas, canvas1 = get_canvas(vertices, 
-                                    direction = direction, margin = margin)
+            canvas, canvas1 = batoms.get_canvas_box(direction = direction, 
+                                        padding = padding)
         else:
             if isinstance(canvas, (int, float)):
                 canvas = np.array([[0, 0, 0], [canvas, canvas, canvas]])
             canvas1 = canvas
-        camera_data = self.calc_camera_data(canvas, canvas1, direction = direction)
-        self.set_parameters(camera_data)
-    def run(self, direction = None, canvas = None,  **kwargs):
+        center = np.mean(canvas, axis=0)
+        width = canvas1[1, 0] - canvas1[0, 0]
+        height = canvas1[1, 1] - canvas1[0, 1]
+        depth = canvas1[1, 2] - canvas1[0, 2]
+        if distance is None:
+            distance = max(10, depth*2)
+        # camera
+        direction = direction/np.linalg.norm(direction)
+        self.camera.location = center + direction*distance
+        self.camera.ortho_scale = max(width, height)
+        self.look_at(self.camera.camera, center)
+        self.ratio = height/width
+        # plane
+        frame = rotate_frame(direction)
+        # light
+        for name, light in self.lights.lights.items():
+            if light.lock_to_camera:
+                self.lights['Default'].lock_to(self.camera.camera)
+            else:
+                light.lock_to(None)
+                # calculate direction in origial axis
+                dirction = np.dot(light.direction, frame)
+                dirction = dirction/np.linalg.norm(dirction)
+                location = center + dirction*distance
+                light.location = location
+                self.look_at(light.light, center)
+    def run(self, direction = None, distance = None, canvas = None, padding = None, **kwargs):
         """
         render the model and export result
         """
-        from batoms.butils import lock_camera_to_view
+        from batoms.camera import lock_camera_to_view
         if direction:
-            self.set_direction(direction, canvas = canvas)
+            self.set_direction(direction, distance = distance, 
+                        canvas = canvas, padding = padding)
         if self.lock_camera_to_view:
             lock_camera_to_view(True)
         self.set_parameters(kwargs)
-        self.set_camera()
-        self.set_light()
         if self.use_motion_blur:
             self.motion_blur()
         self.prepare()
@@ -282,6 +215,7 @@ class Render():
         Set parameters for rendering
         """
         # frame_set(1) is wrong when mesh is modified.
+        bpy.context.scene.camera = self.camera.camera
         if self.frame is not None:
             self.scene.frame_set(self.frame)
         if self.output is None:
@@ -330,6 +264,9 @@ class Render():
         s = '-'*60 + '\n'
         s += 'Engine: %s \n'%(self.engine)
         s += 'Camera: %s %s %s \n'%(self.camera_type, self.camera_loc, self.ortho_scale)
-        s += 'Light: %s %s \n'%(self.light_type, self.light_energy)
+        s += 'Light: \n'
+        s += self.lights.__repr__()
         s += '-'*60 + '\n'
         return s
+    
+    

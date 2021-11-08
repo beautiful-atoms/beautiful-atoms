@@ -65,6 +65,7 @@ classes = [
         custom_property.BIsosurface,
         custom_property.BVolume,
         custom_property.BPlane,
+        custom_property.Blight,
         gui_io.IMPORT_OT_batoms,
         gui_batoms.Batoms_PT_prepare,
         gui_batoms.BatomsProperties,
@@ -144,6 +145,8 @@ def register():
                             type = custom_property.BVolume)
     Object.bplane = PointerProperty(name = 'BPlane', 
                             type = custom_property.BPlane)
+    Object.blight = PointerProperty(name = 'Blight', 
+                            type = custom_property.Blight)
     
 
 def unregister():

@@ -114,48 +114,50 @@ class Batom():
                         shape = 'UV_SPHERE', shade_smooth = True):
         object_mode()
         name = 'instancer_atom_{0}_{1}'.format(self.label, self.species)
-        if name not in bpy.data.objects:
-            if shape.upper() == 'UV_SPHERE':
-                bpy.ops.mesh.primitive_uv_sphere_add(segments = segments[0], 
-                                    ring_count = segments[1], 
-                                    radius = self.species_data['radius'])
-            if shape.upper() == 'ICO_SPHERE':
-                shade_smooth = False
-                bpy.ops.mesh.primitive_ico_sphere_add(subdivisions = subdivisions, 
-                            radius = self.species_data['radius'])
-            if shape.upper() == 'CUBE':
-                bpy.ops.mesh.primitive_cube_add(size = self.species_data['radius'])
-                shade_smooth = False
-            obj = bpy.context.view_layer.objects.active
-            if isinstance(self.species_data['scale'], float):
-                self.species_data['scale'] = [self.species_data['scale']]*3
-            obj.scale = self.species_data['scale']
-            obj.name = 'instancer_atom_{0}_{1}'.format(self.label, self.species)
-            obj.data.materials.append(self.material)
-            obj.data.name = 'instancer_atom_{0}_{1}'.format(self.label, self.species)
-            if shade_smooth:
-                bpy.ops.object.shade_smooth()
-            obj.hide_set(True)
+        if name in bpy.data.objects:
+            obj = bpy.data.objects.get(name)
+            bpy.data.objects.remove(obj, do_unlink = True)
+        if shape.upper() == 'UV_SPHERE':
+            bpy.ops.mesh.primitive_uv_sphere_add(segments = segments[0], 
+                                ring_count = segments[1], 
+                                radius = self.species_data['radius'])
+        if shape.upper() == 'ICO_SPHERE':
+            shade_smooth = False
+            bpy.ops.mesh.primitive_ico_sphere_add(subdivisions = subdivisions, 
+                        radius = self.species_data['radius'])
+        if shape.upper() == 'CUBE':
+            bpy.ops.mesh.primitive_cube_add(size = self.species_data['radius'])
+            shade_smooth = False
+        obj = bpy.context.view_layer.objects.active
+        if isinstance(self.species_data['scale'], float):
+            self.species_data['scale'] = [self.species_data['scale']]*3
+        obj.scale = self.species_data['scale']
+        obj.name = 'instancer_atom_{0}_{1}'.format(self.label, self.species)
+        obj.data.materials.append(self.material)
+        obj.data.name = 'instancer_atom_{0}_{1}'.format(self.label, self.species)
+        if shade_smooth:
+            bpy.ops.object.shade_smooth()
+        obj.hide_set(True)
     def set_object(self, positions, location):
         """
         build child object and add it to main objects.
         """
         if self.name not in bpy.data.objects:
             mesh = bpy.data.meshes.new(self.name)
-            obj_atom = bpy.data.objects.new(self.name, mesh)
-            obj_atom.data.from_pydata(positions, [], [])
-            obj_atom.location = location
-            obj_atom.batom.flag = True
-            obj_atom.batom.species = self.species
-            obj_atom.batom.element = self.element
-            obj_atom.batom.label = self.label
-            bpy.data.collections['Collection'].objects.link(obj_atom)
+            obj = bpy.data.objects.new(self.name, mesh)
+            obj.data.from_pydata(positions, [], [])
+            obj.location = location
+            obj.batom.flag = True
+            obj.batom.species = self.species
+            obj.batom.element = self.element
+            obj.batom.label = self.label
+            bpy.data.collections['Collection'].objects.link(obj)
         elif bpy.data.objects[self.name].batom.flag:
-            obj_atom = bpy.data.objects[self.name]
+            obj = bpy.data.objects[self.name]
         else:
             raise Exception("Failed, the name %s already in use and is not Batom object!"%self.name)
-        self.instancer.parent = obj_atom
-        obj_atom.instance_type = 'VERTS'
+        self.instancer.parent = obj
+        obj.instance_type = 'VERTS'
         bpy.context.view_layer.update()
     def from_batom(self, label):
         if label not in bpy.data.objects:

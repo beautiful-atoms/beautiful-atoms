@@ -120,7 +120,7 @@ def search_bond(positions0, offsets_skin, bondlists, boundary, recursive = False
     
     """
     neighbors = np.array([]).reshape(-1, 4)
-    if len(offsets_skin) == 0: return neighbors
+    if len(bondlists) ==0 or len(offsets_skin) == 0: return neighbors
     # build bonded atoms using offset_skin and bondlists
     sites = set(offsets_skin[:, 0])
     for i in sites:

@@ -82,7 +82,7 @@ class Setting():
         for key, b in self.data.items():
             setting[key] = b.as_dict()
         return setting
-    def delete(self, index):
+    def remove(self, index):
         """
         index: list of tuple
         """
@@ -98,7 +98,7 @@ class Setting():
             else:
                 raise Exception('%s is not in %s'%(name, self.name))
     def __delitem__(self, index):
-        self.delete(index)
+        self.remove(index)
     def __add__(self, other):
         self += other
         return self
@@ -165,10 +165,11 @@ class BondSetting(Setting):
             setattr(subset, key, value)
         subset.label = self.label
         subset.flag = True
-    def set_default(self, species, cutoff = 1.3):
+    def set_default(self, species, cutoff = 1.3, self_interaction = True):
         """
         """
-        bondtable = get_bondtable(self.label, species, cutoff=cutoff)
+        bondtable = get_bondtable(self.label, species, cutoff=cutoff, 
+                    self_interaction = self_interaction)
         for key, value in bondtable.items():
             self[key] = value
     def extend(self, other):
@@ -182,7 +183,7 @@ class BondSetting(Setting):
         for sp1 in nspecies1:
             for sp2 in nspecies2:
                 species = {sp1: self.species[sp1], sp2: other.species[sp2]}
-                self.set_default(species, self.cutoff)
+                self.set_default(species, self.cutoff, self_interaction = False)
     def add(self, bondpairs):
         if isinstance(bondpairs, tuple):
             bondpairs = [bondpairs]
@@ -253,7 +254,7 @@ class BondSetting(Setting):
         return np.array(offsets_skin1), np.array(bondlist1), np.array(offsets_skin2), np.array(bondlist2)
 
 
-def get_bondtable(label, speciesdict, cutoff = 1.3):
+def get_bondtable(label, speciesdict, cutoff = 1.3, self_interaction = True):
     """
     """
     from batoms.data import default_bonds
@@ -263,6 +264,7 @@ def get_bondtable(label, speciesdict, cutoff = 1.3):
         color1 = speciesdict[species1]['color']
         radius1 = cutoff * speciesdict[species1]['radius']
         for species2 in speciesdict:
+            if not self_interaction and species1 == species2: continue
             element2 = species2.split('_')[0]
             element_pair = (element1, element2)
             if element_pair not in default_bonds: continue

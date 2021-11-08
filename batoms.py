@@ -197,7 +197,7 @@ class Batoms():
                 self.coll.children['%s_atom'%self.label].objects.link(ba.batom)
                 bpy.data.collections['Collection'].objects.unlink(ba.batom)
                 self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
-                bpy.data.collections['Collection'].objects.unlink(ba.instancer)
+                # bpy.data.collections['Collection'].objects.unlink(ba.instancer)
         elif isinstance(species, list):
             for batom in species:
                 if not isinstance(batom, Batom):
@@ -227,7 +227,7 @@ class Batoms():
             self.coll.children['%s_atom'%self.label].objects.link(ba.batom)
             bpy.data.collections['Collection'].objects.unlink(ba.batom)
             self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
-            bpy.data.collections['Collection'].objects.unlink(ba.instancer)
+            # bpy.data.collections['Collection'].objects.unlink(ba.instancer)
         self.coll.batoms.pbc = self.npbool2bool(atoms.pbc)
         self._cell = Bcell(self.label, atoms.cell)
         self.coll.children['%s_cell'%self.label].objects.link(self._cell.bcell)
@@ -255,7 +255,7 @@ class Batoms():
             self.coll.children['%s_atom'%self.label].objects.link(ba.batom)
             bpy.data.collections['Collection'].objects.unlink(ba.batom)
             self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
-            bpy.data.collections['Collection'].objects.unlink(ba.instancer)
+            # bpy.data.collections['Collection'].objects.unlink(ba.instancer)
         self.set_pbc(pbc)
         self._cell = Bcell(self.label, cell)
         self.coll.children['%s_cell'%self.label].objects.link(self._cell.bcell)
@@ -385,7 +385,7 @@ class Batoms():
         self.coll.children['%s_ghost'%self.label].objects.link(ba.batom)
         bpy.data.collections['Collection'].objects.unlink(ba.batom)
         self.coll.children['%s_ghost'%self.label].objects.link(ba.instancer)
-        bpy.data.collections['Collection'].objects.unlink(ba.instancer)
+        # bpy.data.collections['Collection'].objects.unlink(ba.instancer)
     def draw_lattice_plane(self, no = None, cuts = None, cmap = 'bwr', include_center = False):
         """Draw plane
 
@@ -564,7 +564,12 @@ class Batoms():
         if species2 in self.batoms:
             self.batoms[species2].add_vertices(positions)
         else:
-            ba = Batom(self.label, species2, positions, 
+            if species2.split('_')[0] == species1.split('_')[0]:
+                ba = Batom(self.label, species2, positions, 
+                        scale = self.batoms[species1].scale,
+                        segments = self.segments, shape = self.shape, material=self.batoms[species1].material)
+            else:
+                ba = Batom(self.label, species2, positions, 
                     scale = self.batoms[species1].scale,
                     segments = self.segments, 
                     shape = self.shape, material_style=self.material_style, 
@@ -574,7 +579,7 @@ class Batoms():
             self.coll.children['%s_atom'%self.label].objects.link(ba.batom)
             bpy.data.collections['Collection'].objects.unlink(ba.batom)
             self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
-            bpy.data.collections['Collection'].objects.unlink(ba.instancer)
+            # bpy.data.collections['Collection'].objects.unlink(ba.instancer)
             for sp in self.species:
                 self.bondsetting.add([(species2, sp)])
             self.polyhedrasetting.add([sp])
@@ -664,7 +669,6 @@ class Batoms():
 
         species -- str, describing which batom to return.
         """
-
         if isinstance(species, str):
             if species not in self.batoms:
                 raise SystemExit('%s is not in this structure'%species)
@@ -871,7 +875,11 @@ class Batoms():
                 raise Exception('Wrong boundary setting!')
             self.coll.batoms.boundary = boundary[:].flatten()
         self.update_boundary()
-        self.draw()
+        if self.model_type == 1:
+            self.draw_bonds()
+        if self.model_type == 2:
+            self.draw_bonds()
+            self.draw_polyhedras()
     def get_boundary(self):
         boundary = np.array(self.coll.batoms.boundary)
         return boundary.reshape(3, -1)
@@ -919,7 +927,7 @@ class Batoms():
             bpy.data.collections['Collection'].objects.unlink(ba.batom)
             if ba.instancer.name not in self.coll.children['%s_instancer'%self.label].objects:
                 self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
-                bpy.data.collections['Collection'].objects.unlink(ba.instancer)
+                # bpy.data.collections['Collection'].objects.unlink(ba.instancer)
 
     def draw_search_bond_atoms(self, atoms0, offsets_search_1, offsets_search_2, offsets_search_3):
         """
@@ -942,7 +950,7 @@ class Batoms():
             bpy.data.collections['Collection'].objects.unlink(ba.batom)
             if ba.instancer.name not in self.coll.children['%s_instancer'%self.label].objects:
                 self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
-                bpy.data.collections['Collection'].objects.unlink(ba.instancer)
+                # bpy.data.collections['Collection'].objects.unlink(ba.instancer)
         # print('update skin: {0:10.2f} s'.format(time() - tstart))
 
     @property
@@ -1266,20 +1274,24 @@ class Batoms():
             return None
         no = int(sg[sg.find('(') + 1:sg.find(')')])
         return no
-    def get_all_vertices(self, cell = True):
+    def get_all_vertices(self, colls = None, cell = True):
         """
         Get position of all vertices from all mesh in batoms.
         Used for plane boundary and calc_camera_data
         """
         positions = self.atoms.positions
         # isosurface, plane
-        for coll in subcollections:
+        if colls is None:
+            colls = subcollections
+        for coll in colls:
             if not cell and coll == 'cell': continue
+            if 'atom' == coll: continue
             if 'instancer' in coll: continue
             if 'render' in coll: continue
             for obj in self.coll.children['%s_%s'%(self.label, coll)].all_objects:
                 if obj.type != 'MESH': continue
                 if 'volume' in obj.name: continue
+                if 'instancer' in obj.name: continue
                 n = len(obj.data.vertices)
                 vertices = np.empty(n*3, dtype=np.float64)
                 obj.data.vertices.foreach_get('co', vertices)  
@@ -1291,3 +1303,13 @@ class Batoms():
                 vertices = vertices[:, :3]
                 positions = np.concatenate((positions, vertices), axis = 0)
         return positions
+    def get_canvas_box(self, direction = [0, 0, 1], padding = None, colls = None):
+        """
+        Calculate the canvas box from [0, 0, 1] and other direction.
+
+        """
+        from batoms.tools import get_canvas
+        vertices = self.get_all_vertices(colls = colls, cell = self.show_unit_cell)
+        canvas, canvas1 = get_canvas(vertices, direction = direction, padding = padding)
+        return canvas, canvas1
+
