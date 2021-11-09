@@ -41,9 +41,11 @@ from .gui import (
         gui_cell,
         gui_bond,
         gui_polyhedra,
-        gui_build,
+        gui_ase,
         gui_plane,
         ops_add_molecule,
+        gui_pymatgen,
+        gui_pubchem,
         )
 
 from .modal import (
@@ -72,35 +74,42 @@ classes = [
         gui_batoms.ReplaceButton,
         gui_batoms.MeasureButton,
         gui_batoms.FragmentateButton,
-        ops_add_molecule.AddMolecule,
-        gui_build.Build_PT_prepare,
-        gui_build.BuildProperties,
-        gui_build.AddMolecule,
-        gui_build.AddBulk,
-        gui_build.AddAtoms,
         gui_batom.Batom_PT_prepare,
         gui_batom.BatomProperties,
-        gui_volume.Volume_PT_prepare,
-        gui_volume.VolumeProperties,
-        gui_volume.AddButton,
-        gui_plane.Plane_PT_prepare,
-        gui_plane.PlaneProperties,
-        gui_plane.AddButton,
-        gui_cell.Cell_PT_prepare,
-        gui_cell.CellProperties,
         gui_bond.Bond_PT_prepare,
         gui_bond.BondProperties,
         gui_bond.RemoveButton,
         gui_bond.AddButton,
         gui_polyhedra.Polyhedra_PT_prepare,
         gui_polyhedra.PolyhedraProperties,
+        gui_cell.Cell_PT_prepare,
+        gui_cell.CellProperties,
+        gui_volume.Volume_PT_prepare,
+        gui_volume.VolumeProperties,
+        gui_volume.AddButton,
+        gui_plane.Plane_PT_prepare,
+        gui_plane.PlaneProperties,
+        gui_plane.AddButton,
+        gui_ase.ASE_PT_prepare,
+        gui_ase.ASEProperties,
+        gui_ase.AddMolecule,
+        gui_ase.AddBulk,
+        gui_ase.AddAtoms,
+        gui_ase.AddSurface,
+        gui_pymatgen.Pymatgen_PT_prepare,
+        gui_pymatgen.PymatgenProperties,
+        gui_pymatgen.Search,
+        gui_pubchem.Pubchem_PT_prepare,
+        gui_pubchem.PubchemProperties,
+        gui_pubchem.Search,
         record_selection.EDIT_MESH_OT_record_selection,
         rigid_body.Rigid_Body_Operator,
         rigid_body.Rigid_Body_Modal_Panel,
         rigid_body.RigidBodyProperties,
         force_field.Force_Field_Operator,
         force_field.Force_Field_Modal_Panel,
-        force_field.ForceFieldProperties
+        force_field.ForceFieldProperties,
+        ops_add_molecule.AddMolecule,
     ]
 #
 def register():
@@ -112,7 +121,6 @@ def register():
         bpy.utils.register_class(cls)
     scene = bpy.types.Scene
     scene.bapanel = PointerProperty(type=gui_batoms.BatomsProperties)
-    scene.bupanel = PointerProperty(type=gui_build.BuildProperties)
     scene.btpanel = PointerProperty(type=gui_batom.BatomProperties)
     scene.clpanel = PointerProperty(type=gui_cell.CellProperties)
     scene.bbpanel = PointerProperty(type=gui_bond.BondProperties)
@@ -121,6 +129,9 @@ def register():
     scene.vopanel = PointerProperty(type=gui_volume.VolumeProperties)
     scene.rbpanel = PointerProperty(type=rigid_body.RigidBodyProperties)
     scene.ffpanel = PointerProperty(type=force_field.ForceFieldProperties)
+    scene.asepanel = PointerProperty(type=gui_ase.ASEProperties)
+    scene.pmgpanel = PointerProperty(type=gui_pymatgen.PymatgenProperties)
+    scene.pubcpanel = PointerProperty(type=gui_pubchem.PubchemProperties)
     Collection.batoms = PointerProperty(name = 'Batoms', 
                             type = custom_property.Batoms)
     Collection.bbond = CollectionProperty(name = 'BBond', 

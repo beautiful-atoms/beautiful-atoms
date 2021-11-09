@@ -585,7 +585,7 @@ class Batoms():
             self.polyhedrasetting.add([sp])
         self.batoms[species1].delete(index)
             
-    def fragmentate(self, species, index = [], suffix = 'f'):
+    def fragmentate(self, species, index = ':', suffix = 'f'):
         """Fragmentate the selected atoms
         species: str
             species to be fragmentated
@@ -593,6 +593,8 @@ class Batoms():
         suffix: str
             suffix of label of new species. The index will be used too.
         """
+        if index == ':':
+            index = range(len(self.batoms[species]))
         positions = self.batoms[species].positions[index]
         n = len(positions)
         species_dict = {'%s_%s%s'%(species, suffix, i): [positions[i]] 
