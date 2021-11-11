@@ -12,6 +12,8 @@ def read(filename, **kwargs):
     base = os.path.splitext(base)
     label = base[0]
     label = label.replace('-', '_')
+    if label[:-1].isdigit():
+        label = 'b_' + label
     ext = base[1]
     if ext == '.cube':
         # tstart = time()

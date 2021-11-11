@@ -111,7 +111,7 @@ def get_keyframes_of_batoms(batoms):
     """
     keyframes = []
     for sp, ba in batoms.items():
-        anim = ba.batom.data.animation_data
+        anim = ba.obj.data.animation_data
         if anim is not None and anim.action is not None:
             for fcu in anim.action.fcurves:
                 for keyframe in fcu.keyframe_points:
@@ -119,3 +119,39 @@ def get_keyframes_of_batoms(batoms):
                     if x not in keyframes:
                         keyframes.append((int(x)))
     return keyframes
+def get_shape_key_of_batoms(batoms):
+    """
+    get shape keys of a batoms
+    """
+    keyframes = []
+    for sp, ba in batoms.items():
+        anim = ba.obj.data.animation_data
+        if anim is not None and anim.action is not None:
+            for fcu in anim.action.fcurves:
+                for keyframe in fcu.keyframe_points:
+                    x, y = keyframe.co
+                    if x not in keyframes:
+                        keyframes.append((int(x)))
+    return keyframes
+def add_keyframe_to_shape_key(obj, attr, values, frames):
+    """
+    """
+    for value, frame in zip(values, frames):
+        setattr(obj, attr, value)
+        obj.keyframe_insert(data_path = attr, frame = frame)
+
+def add_keyframe_visibility(obj, nframe, frame):
+    # key as visible on the current frame
+    obj.animation_data_create()
+    ac = bpy.data.actions.new('Visibility Action')
+    obj.animation_data.action = ac
+    fc = ac.fcurves.new(data_path='hide_viewport')
+    fc.keyframe_points.add(nframe)
+    value = [0]*2*nframe
+    for i in range(nframe):
+        value[2*i] = i
+        if i == frame:
+            value[2*i + 1] = 0
+        else:
+            value[2*i + 1] = 1
+    fc.keyframe_points.foreach_set('co', value)

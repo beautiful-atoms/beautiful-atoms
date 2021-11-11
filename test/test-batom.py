@@ -48,7 +48,7 @@ def test_batom_animation():
     images = []
     for i in range(10):
         images.append(positions + np.array([i, 0, 0]))
-        
+    
     o.frames = images
 
 

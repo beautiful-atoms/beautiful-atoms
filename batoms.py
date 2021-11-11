@@ -113,7 +113,6 @@ class Batoms():
         self.render = render
         self.segments = segments
         self.shape = shape
-        self.species_props = species_props
         self.label = label
         self.radii_style = radii_style
         self.color_style = color_style
@@ -124,18 +123,18 @@ class Batoms():
                 self.label = ''.join(['%s%s'%(species, len(positions)) 
                              for sp, positions in species.items()])
             self.set_collection(model_type, polyhedra_type, boundary)
-            self.from_species(species, pbc, cell)
+            self.from_species(species, species_props, pbc, cell)
         elif atoms:
             if isinstance(atoms, list):
                 frames = atoms
                 atoms = frames[0]
             else:
-                frames = []
+                frames = [atoms]
             self.set_collection(model_type, polyhedra_type, boundary)
             if 'ase' in str(type(atoms)):
-                self.from_ase(atoms)
+                self.from_ase(atoms, species_props)
             elif 'pymatgen' in str(type(atoms)):
-                self.from_pymatgen(atoms)
+                self.from_pymatgen(atoms, species_props)
             self._frames = frames
         elif self.label:
             # print('Build from collection')
@@ -184,30 +183,30 @@ class Batoms():
             self.set_frames()
         self.show_index()
         # self.select = True
-    def from_species(self, species, pbc = None, cell = None):
+    def from_species(self, species, species_props = {}, pbc = None, cell = None):
         """
         """
         if isinstance(species, dict):
             for sp, positions in species.items():
-                if sp not in self.species_props: self.species_props[sp] = {}
+                if sp not in species_props: species_props[sp] = {}
                 ba = Batom(self.label, sp, positions, segments = self.segments, 
-                            shape = self.shape, props = self.species_props[sp], 
+                            shape = self.shape, props = species_props[sp], 
                             material_style=self.material_style, 
                             node_inputs=self.node_inputs, radii_style = self.radii_style, color_style=self.color_style)
-                self.coll.children['%s_atom'%self.label].objects.link(ba.batom)
-                bpy.data.collections['Collection'].objects.unlink(ba.batom)
+                self.coll.children['%s_atom'%self.label].objects.link(ba.obj)
+                bpy.data.collections['Collection'].objects.unlink(ba.obj)
                 self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
                 # bpy.data.collections['Collection'].objects.unlink(ba.instancer)
         elif isinstance(species, list):
             for batom in species:
                 if not isinstance(batom, Batom):
                     raise Exception('%s is not a Batom object.'%batom)
-                self.coll.children['%s_atom'%self.label].objects.link(batom.batom)
+                self.coll.children['%s_atom'%self.label].objects.link(batom.obj)
                 self.coll.children['%s_instancer'%self.label].objects.link(batom.instancer)
         self._cell = Bcell(self.label, cell)
-        self.coll.children['%s_cell'%self.label].objects.link(self._cell.bcell)
+        self.coll.children['%s_cell'%self.label].objects.link(self._cell.obj)
         self.set_pbc(pbc)
-    def from_ase(self, atoms):
+    def from_ase(self, atoms, species_props = {}):
         """
         Import structure from ASE atoms.
         """
@@ -216,23 +215,23 @@ class Batoms():
         species_list = np.unique(atoms.arrays['species'])
         for species in species_list:
             indices = np.where(atoms.arrays['species'] == species)
-            if species not in self.species_props: self.species_props[species] = {}
+            if species not in species_props: species_props[species] = {}
             ba = Batom(self.label, species, atoms.positions[indices], 
                         segments = self.segments, shape = self.shape, 
-                        props = self.species_props[species], 
+                        props = species_props[species], 
                         material_style=self.material_style, 
                         node_inputs=self.node_inputs, 
                         radii_style = self.radii_style, 
                         color_style=self.color_style)
-            self.coll.children['%s_atom'%self.label].objects.link(ba.batom)
-            bpy.data.collections['Collection'].objects.unlink(ba.batom)
+            self.coll.children['%s_atom'%self.label].objects.link(ba.obj)
+            bpy.data.collections['Collection'].objects.unlink(ba.obj)
             self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
             # bpy.data.collections['Collection'].objects.unlink(ba.instancer)
         self.coll.batoms.pbc = self.npbool2bool(atoms.pbc)
         self._cell = Bcell(self.label, atoms.cell)
-        self.coll.children['%s_cell'%self.label].objects.link(self._cell.bcell)
-        bpy.data.collections['Collection'].objects.unlink(self._cell.bcell)
-    def from_pymatgen(self, structure):
+        self.coll.children['%s_cell'%self.label].objects.link(self._cell.obj)
+        bpy.data.collections['Collection'].objects.unlink(self._cell.obj)
+    def from_pymatgen(self, structure, species_props = {}):
         """
         Import structure from Pymatgen structure.
         """
@@ -247,19 +246,22 @@ class Batoms():
         for species in species_list:
             positions = [structure[index].coords for index, x 
                            in enumerate(symbols) if x == species]
+            if species not in species_props: species_props[species] = {}
             ba = Batom(self.label, species, positions, segments = self.segments, 
-                       shape = self.shape, material_style=self.material_style, 
+                       shape = self.shape, 
+                       props = species_props[species], 
+                       material_style=self.material_style, 
                        node_inputs=self.node_inputs, 
                        radii_style = self.radii_style, 
                        color_style=self.color_style)
-            self.coll.children['%s_atom'%self.label].objects.link(ba.batom)
-            bpy.data.collections['Collection'].objects.unlink(ba.batom)
+            self.coll.children['%s_atom'%self.label].objects.link(ba.obj)
+            bpy.data.collections['Collection'].objects.unlink(ba.obj)
             self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
             # bpy.data.collections['Collection'].objects.unlink(ba.instancer)
         self.set_pbc(pbc)
         self._cell = Bcell(self.label, cell)
-        self.coll.children['%s_cell'%self.label].objects.link(self._cell.bcell)
-        bpy.data.collections['Collection'].objects.unlink(self._cell.bcell)
+        self.coll.children['%s_cell'%self.label].objects.link(self._cell.obj)
+        bpy.data.collections['Collection'].objects.unlink(self._cell.obj)
     def from_collection(self, collection_name):
         """
         """
@@ -312,19 +314,36 @@ class Batoms():
     def draw_bonds(self):
         """Draw bonds.
         """
+        from batoms.butils import add_keyframe_visibility
         # if not self.bondlist:
         object_mode()
         self.clean_atoms_objects('bond')
-        atoms = self.get_atoms_with_boundary()
-        self.bondlist = build_bondlists(atoms, self.bondsetting.cutoff_dict)
-        bond_kinds = calc_bond_data(self, self.bondlist, self.bondsetting)
-        if len(bond_kinds) == 0: return
-        for species, bond_data in bond_kinds.items():
-            name = '%s_%s_%s'%(self.label, 'bond', species)
-            draw_cylinder(name = name, 
-                            datas = bond_data, 
-                            coll = self.coll.children['%s_bond'%self.label]
-                            )
+        frames = self.get_frames(local = True)
+        nframe = len(frames)
+        for f in range(nframe):
+            print('update bond: ', f)
+            tstart = time()
+            atoms = frames[f]
+            batoms_boundary = self.get_batoms_boundary(f)
+            atoms_boundary = self.batoms2atoms(batoms_boundary)
+            batoms_skin = self.get_batoms_skin(f)
+            atoms_skin = self.batoms2atoms(batoms_skin)
+            atoms = atoms + atoms_boundary + atoms_skin
+            atoms.pbc = False
+            self.bondlist = build_bondlists(atoms, self.bondsetting.cutoff_dict)
+            bond_kinds = calc_bond_data(atoms, self.species_props, self.bondlist, self.bondsetting)
+            if len(bond_kinds) == 0: return
+            for species, bond_data in bond_kinds.items():
+                name = '%s_%s_%s_%s'%(self.label, 'bond', species, f)
+                obj = draw_cylinder(name = name, 
+                                datas = bond_data, 
+                                coll = self.coll.children['%s_bond'%self.label]
+                                )
+                obj = bpy.data.objects.get(name)
+                if obj is not None:
+                    add_keyframe_visibility(obj, nframe, f)
+            # print('draw bond: {0:10.2f} s'.format(time() - tstart))
+                
     def draw_polyhedras(self, bondlist = None):
         """Draw polyhedra.
 
@@ -382,8 +401,8 @@ class Batoms():
                    color_style=self.color_style)
         
         # ba.color = [ba.color[0], ba.color[1], ba.color[2], 0.8]
-        self.coll.children['%s_ghost'%self.label].objects.link(ba.batom)
-        bpy.data.collections['Collection'].objects.unlink(ba.batom)
+        self.coll.children['%s_ghost'%self.label].objects.link(ba.obj)
+        bpy.data.collections['Collection'].objects.unlink(ba.obj)
         self.coll.children['%s_ghost'%self.label].objects.link(ba.instancer)
         # bpy.data.collections['Collection'].objects.unlink(ba.instancer)
     def draw_lattice_plane(self, no = None, cuts = None, cmap = 'bwr', include_center = False):
@@ -576,8 +595,8 @@ class Batoms():
                     node_inputs=self.node_inputs, 
                     radii_style = self.radii_style, 
                     color_style=self.color_style)
-            self.coll.children['%s_atom'%self.label].objects.link(ba.batom)
-            bpy.data.collections['Collection'].objects.unlink(ba.batom)
+            self.coll.children['%s_atom'%self.label].objects.link(ba.obj)
+            bpy.data.collections['Collection'].objects.unlink(ba.obj)
             self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
             # bpy.data.collections['Collection'].objects.unlink(ba.instancer)
             for sp in self.species:
@@ -593,8 +612,9 @@ class Batoms():
         suffix: str
             suffix of label of new species. The index will be used too.
         """
-        if index == ':':
-            index = range(len(self.batoms[species]))
+        if isinstance(index, str):
+            if index == ':':
+                index = range(len(self.batoms[species]))
         positions = self.batoms[species].positions[index]
         n = len(positions)
         species_dict = {'%s_%s%s'%(species, suffix, i): [positions[i]] 
@@ -725,7 +745,7 @@ class Batoms():
             else:
                 ba = batom.copy(self.label, species)
                 # reset the location of batom, same as the unit cell
-                self.coll.children['%s_atom'%self.label].objects.link(ba.batom)
+                self.coll.children['%s_atom'%self.label].objects.link(ba.obj)
         self.reset_batom_location()
         remove_collection(other.label)
     def reset_batom_location(self):
@@ -733,7 +753,7 @@ class Batoms():
         """
         for species, ba in self.batoms.items():
             t = self.cell.location - ba.location
-            ba.batom.location = self.cell.location
+            ba.obj.location = self.cell.location
             bpy.context.view_layer.update()
             ba.positions = ba.positions - t
             bpy.context.view_layer.update()
@@ -748,6 +768,7 @@ class Batoms():
             self.isosurfacesetting.volume = np.tile(self.isosurfacesetting.volume, m)
         self.cell.repeat(m)
         self.draw()
+        return self
     def repeat(self, rep):
         """
         Create new repeated atoms object.
@@ -892,50 +913,57 @@ class Batoms():
         >>> atoms = read('docs/source/_static/datas/tio2.cif')
         >>> tio2.boundary = 0.4
         """
-        tstart = time()
         self.clean_atoms_objects('boundary')
         self.clean_atoms_objects('skin')
-        boundary = self.boundary
-        atoms0 = self.batoms2atoms(self.batoms, local=True)
-        if atoms0.pbc.any():
-            # find boudary atoms
-            atoms_boundary, offsets_skin = search_boundary(atoms0, boundary, self.bondsetting.maxcutoff)
-            self.draw_boundary_atoms(atoms_boundary)
-            # search bond
-            # include the boundary atoms
-            bondlists = build_bondlists(atoms0, self.bondsetting.cutoff_dict)
-            offsets_skin1, bondlist1, offsets_skin2, bondlist2 = \
-                    self.bondsetting.search_bond_list(atoms0, bondlists, offsets_skin)
-            # search type 1
-            offset_skin_1 = search_bond(atoms0.get_scaled_positions(), offsets_skin1, bondlist1, boundary)
-            # search type 2
-            offset_skin_2 = search_bond(atoms0.get_scaled_positions(), offsets_skin2, bondlist2, boundary, recursive=True)
-            # search type 1 final
-            offset_skin_3 = search_bond(atoms0.get_scaled_positions(), offset_skin_2, bondlist1, boundary)
-            self.draw_search_bond_atoms(atoms0, offset_skin_1, offset_skin_2, offset_skin_3)
-            # print('search skin: {0:10.2f} s'.format(time() - tstart))
-    def draw_boundary_atoms(self, atoms_boundary):
+        tstart = time()
+        frames = self.get_frames(local = True)
+        nframe = len(frames)
+        for f in range(nframe):
+            print('update boundary: ', f)
+            boundary = self.boundary
+            # atoms0 = self.batoms2atoms(self.batoms, local=True)
+            atoms0 = frames[f]
+            if atoms0.pbc.any():
+                # find boudary atoms
+                atoms_boundary, offsets_skin = search_boundary(atoms0, boundary, self.bondsetting.maxcutoff)
+                self.draw_boundary_atoms(atoms_boundary, f)
+                # search bond
+                bondlists = build_bondlists(atoms0, self.bondsetting.cutoff_dict)
+                offsets_skin1, bondlist1, offsets_skin2, bondlist2 = \
+                        self.bondsetting.search_bond_list(atoms0, bondlists, offsets_skin)
+                # search type 1
+                offset_skin_1 = search_bond(atoms0.get_scaled_positions(), offsets_skin1, bondlist1, boundary)
+                # search type 2
+                offset_skin_2 = search_bond(atoms0.get_scaled_positions(), offsets_skin2, bondlist2, boundary, recursive=True)
+                # search type 1 final
+                offset_skin_3 = search_bond(atoms0.get_scaled_positions(), offset_skin_2, bondlist1, boundary)
+                self.draw_search_bond_atoms(atoms0, offset_skin_1, offset_skin_2, offset_skin_3, f)
+                # print('search skin: {0:10.2f} s'.format(time() - tstart))
+    def draw_boundary_atoms(self, atoms_boundary, f = 0):
         """
         """
-        self.clean_atoms_objects('boundary')
+        from batoms.butils import add_keyframe_visibility
         if len(atoms_boundary) == 0: return 0
         species = np.unique(atoms_boundary.arrays['species'])
         for sp in species:
             positions = atoms_boundary[atoms_boundary.arrays['species']==sp].positions
             positions = positions + self.location
-            ba = Batom(self.label, '%s_boundary'%(sp), positions, scale = self.batoms[sp].scale, 
-                        segments = self.segments, shape = self.shape, material=self.batoms[sp].material)
-            self.coll.children['%s_boundary'%self.label].objects.link(ba.batom)
-            bpy.data.collections['Collection'].objects.unlink(ba.batom)
+            ba = Batom(self.label, '%s_boundary%s'%(sp, f), positions, 
+                        element = self.batoms[sp].element, 
+                        scale = self.batoms[sp].scale, 
+                        segments = self.segments, shape = self.shape, 
+                        material=self.batoms[sp].material)
+            self.coll.children['%s_boundary'%self.label].objects.link(ba.obj)
+            bpy.data.collections['Collection'].objects.unlink(ba.obj)
             if ba.instancer.name not in self.coll.children['%s_instancer'%self.label].objects:
                 self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
                 # bpy.data.collections['Collection'].objects.unlink(ba.instancer)
-
-    def draw_search_bond_atoms(self, atoms0, offsets_search_1, offsets_search_2, offsets_search_3):
+            add_keyframe_visibility(ba.obj, self.nframe, f)
+    def draw_search_bond_atoms(self, atoms0, offsets_search_1, offsets_search_2, offsets_search_3, f = 0):
         """
         """
         # print(atoms)
-        self.clean_atoms_objects('skin')
+        from batoms.butils import add_keyframe_visibility
         offsets_search = np.append(offsets_search_1, offsets_search_2, axis = 0)
         offsets_search = np.append(offsets_search, offsets_search_3, axis = 0)
         if len(offsets_search) == 0: return 0
@@ -946,15 +974,19 @@ class Batoms():
         for sp in species:
             positions = atoms_search_bond[atoms_search_bond.arrays['species']==sp].positions
             positions = positions + self.location
-            ba = Batom(self.label, '%s_skin'%(sp), positions, scale = self.batoms[sp].scale, 
-                        segments = self.segments, shape = self.shape, material=self.batoms[sp].material)
-            self.coll.children['%s_skin'%self.label].objects.link(ba.batom)
-            bpy.data.collections['Collection'].objects.unlink(ba.batom)
+            ba = Batom(self.label, '%s_skin%s'%(sp, f), positions, 
+                        element = self.batoms[sp].element, 
+                        scale = self.batoms[sp].scale, 
+                        segments = self.segments, shape = self.shape, 
+                        material=self.batoms[sp].material)
+            self.coll.children['%s_skin'%self.label].objects.link(ba.obj)
+            bpy.data.collections['Collection'].objects.unlink(ba.obj)
             if ba.instancer.name not in self.coll.children['%s_instancer'%self.label].objects:
                 self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
                 # bpy.data.collections['Collection'].objects.unlink(ba.instancer)
+            # key as visible on the current frame
+            add_keyframe_visibility(ba.obj, self.nframe, f)
         # print('update skin: {0:10.2f} s'.format(time() - tstart))
-
     @property
     def model_type(self):
         return self.get_model_type()
@@ -1010,23 +1042,49 @@ class Batoms():
         atoms.pbc = False
         return atoms
     @property
+    def nframe(self):
+        return self.get_nframe()
+    def get_nframe(self):
+        batoms = self.batoms
+        nframe = 0
+        for species, batom in batoms.items():
+            nframe = batom.nframe
+        return nframe
+    @property
     def frames(self):
         return self.get_frames()
     @frames.setter
     def frames(self, frames):
         self.set_frames(frames)
-    def get_frames(self):
+    def get_frames(self, local = False, X = False):
         """
-        https://blender.stackexchange.com/questions/27889/how-to-find-number-of-animated-frames-in-a-scene-via-python/27946#27946
-        Keyframe in blender are on action related to object. 
-        We have to look throw objects in the batoms and find the related frames.
+        use shape key
         """
-        from batoms.butils import get_keyframes_of_batoms
         frames = []
-        keyframes = get_keyframes_of_batoms(self.batoms)
-        for f in keyframes:
-            bpy.context.scene.frame_set(f)
-            frames.append(self.atoms)
+        frames_species = {}
+        batoms = self.batoms
+        nframe = 0
+        for species, batom in batoms.items():
+            frames_species[species] = batom.frames
+            nframe = len(frames_species[species])
+        for i in range(nframe):
+            atoms = Atoms()
+            species_list = []
+            symbols = []
+            positions = []
+            for species, batom in batoms.items():
+                # ghost site will not save 
+                if not X and batom.element == 'X': continue
+                species_list.extend([species]*len(batom))
+                symbol = [batom.element]*len(batom)
+                symbols.extend(symbol)
+                positions.extend(frames_species[species][i])
+            atoms = Atoms(symbols, positions, cell = self.cell, pbc = self.pbc)
+            atoms.new_array('species', np.array(species_list, dtype = 'U20'))
+            if local:
+                atoms.positions = atoms.positions - self.cell.origin
+                atoms.info['origin'] = self.cell.origin
+            frames.append(atoms)
         return frames
     @property
     def positions(self):
@@ -1059,32 +1117,49 @@ class Batoms():
         build species from collection.
         """
         species = []
-        for ba in self.coll_atom.objects:
-            species.append(ba.batom.species)
+        for obj in self.coll_atom.objects:
+            species.append(obj.batom.species)
         return species
+    @property
+    def species_props(self):
+        return self.get_species_props()
+    def get_species_props(self):
+        """
+        build species_props from collection.
+        """
+        species_props = {}
+        for sp, ba in self.batoms.items():
+            species_props[sp] = {'size': ba.size, 
+                    'scale': ba.scale, 
+                    'element': ba.element}
+        return species_props
     @property
     def batoms(self):
         return self.get_batoms()
     def get_batoms(self):
         batoms = {}
-        for ba in self.coll_atom.objects:
-            batoms[ba.batom.species] = Batom(ba.name)
+        for obj in self.coll_atom.objects:
+            batoms[obj.batom.species] = Batom(obj.name)
         return batoms
     @property
     def batoms_boundary(self):
         return self.get_batoms_boundary()
-    def get_batoms_boundary(self):
+    def get_batoms_boundary(self, frame = None):
         batoms_boundary = {}
-        for ba in self.coll_boundary.objects:
-            batoms_boundary[ba.batom.species] = Batom(ba.name)
+        for obj in self.coll_boundary.objects:
+            if frame is not None and not obj.name.endswith(str(frame)):
+                continue
+            batoms_boundary[obj.batom.species] = Batom(obj.name)
         return batoms_boundary
     @property
     def batoms_skin(self):
         return self.get_batoms_skin()
-    def get_batoms_skin(self):
+    def get_batoms_skin(self, frame = None):
         batoms_skin = {}
-        for ba in self.coll_skin.objects:
-            batoms_skin[ba.batom.species] = Batom(ba.name)
+        for obj in self.coll_skin.objects:
+            if frame is not None and not obj.name.endswith(str(frame)):
+                continue
+            batoms_skin[obj.batom.species] = Batom(obj.name)
         return batoms_skin
     def batoms2atoms(self, batoms, local = False, X = False):
         """
@@ -1107,8 +1182,8 @@ class Batoms():
         for species, batom in batoms.items():
             # ghost site will not save 
             if not X and batom.element == 'X': continue
-            if species[-9:] == '_boundary': species = species[0:-9]
-            if species[-5:] == '_skin': species = species[0:-5]
+            if '_boundary' in species: species = species.split('_boundary')[0]
+            if '_skin' in species: species = species.split('_skin')[0]
             species_list.extend([species]*len(batom))
             symbol = [batom.element]*len(batom)
             symbols.extend(symbol)
@@ -1184,6 +1259,8 @@ class Batoms():
         for species, ba in self.batoms.items():
             index = np.where(atoms.arrays['species'] == species)[0]
             ba.set_frames(positions[:, index], frame_start = frame_start)
+        bpy.context.scene.frame_set(self.nframe)
+        
     
     def get_distances(self, species1, i, species2, indices, mic=False):
         """

@@ -56,11 +56,9 @@ class Batoms_PT_prepare(Panel):
 
         box = layout.box()
         col = box.column(align=True)
-        # col.operator("batoms.measurement")
         col.label(text="Measurement")
+        col.operator("batoms.record_selection")
         col.prop(bapanel, "measurement")
-
-        
 
         box = layout.box()
         col = box.column(align=True)
@@ -114,7 +112,7 @@ class BatomsProperties(bpy.types.PropertyGroup):
         name="scale", default=1.0,
         description = "scale", update = Callback_modify_scale)
     measurement: StringProperty(
-        name="Value", default='',
+        name="", default='',
         description = "measurement in Angstrom, degree")
     species: StringProperty(
         name="species", default='O_1',
@@ -153,88 +151,42 @@ def export_atoms(selected_batoms, filetype = 'xyz'):
     for batoms in batoms_list:
         batoms.select = True
 
-def replace_atoms(species):
+def replace_atoms(species1):
     batom_list = []
     selected_vertices = get_selected_vertices()
     for label, species, name, index in selected_vertices:
         batoms = Batoms(label = label)
-        batoms.replace(species, species, index)
+        batoms.replace(species, species1, index)
         batom_list.append(name)
     for name in batom_list:
         if name in bpy.data.objects:
             obj = bpy.data.objects.get(name)
             bpy.context.view_layer.objects.active = obj
             bpy.ops.object.mode_set(mode='EDIT')
+
 class ReplaceButton(Operator):
     bl_idname = "batoms.replace"
     bl_label = "Replace by"
     bl_description = "Replace selected atoms by new species"
+    
+    @classmethod
+    def poll(cls, context):
+        return context.mode in  {'EDIT_MESH'}
+
+    def execute(self, context):
+        bapanel = context.scene.bapanel
+        replace_atoms(bapanel.species)
+        return {'FINISHED'}
+class MeasureButton(Operator):
+    bl_idname = "batoms.measure"
+    bl_label = "Measure by"
+    bl_description = "Measure selected atoms by new species"
 
     def execute(self, context):
         bapanel = context.scene.bapanel
         replace_atoms(bapanel.species)
         return {'FINISHED'}
 
-def measurement():
-    """
-    Todo: only distance works.
-
-    We need histroy of selections.
-
-    
-    bmesh.select_history only works for one objects.
-    """
-    import numpy as np
-    from ase.geometry.geometry import get_distances, get_angles, get_dihedrals
-    selected_vertices = get_selected_vertices()
-    cell = None
-    pbc = None
-    batom_list = []
-    positions = np.array([]).reshape(-1, 3)
-    for label, species, name, index in selected_vertices:
-        batom = Batom(label = name)
-        positions = np.append(positions, batom.positions[index], axis = 0)
-        batom_list.append(name)
-    if len(positions) == 2:
-        results = get_distances([positions[0]], 
-                    [positions[1]], 
-                    cell=cell, pbc=pbc)[1]
-    elif len(positions) == 3:
-        v12 = positions[0] - positions[1]
-        v32 = positions[2] - positions[1]
-        results =  get_angles([v12], [v32], cell=cell, pbc=pbc)
-    elif len(positions) == 4:
-        v0 = positions[1] - positions[0]
-        v1 = positions[2] - positions[1]
-        v2 = positions[3] - positions[2]
-        results =  get_dihedrals([v0], [v1], [v2], cell=cell, pbc=pbc)
-    else:
-        return 'Not supported'
-    for name in batom_list:
-        if name in bpy.data.objects:
-            obj = bpy.data.objects.get(name)
-            bpy.context.view_layer.objects.active = obj
-            bpy.ops.object.mode_set(mode='EDIT')
-    results.shape = (-1,)
-    results = [str(round(float(i), 2)) for i in results]
-    results = ' '.join(results)
-    return results
-
-class MeasureButton(Operator):
-    bl_idname = "batoms.measurement"
-    bl_label = "Measure"
-    bl_description = "Measure distance, angle and dihedra angle"
-
-    def execute(self, context):
-        bapanel = context.scene.bapanel
-        # result = measurement()
-        self.layout.operator(
-        OBJECT_OT_record_selection.bl_idname,
-        text="Record Selection",
-        icon='RESTRICT_SELECT_OFF')
-        bapanel.measurement = result
-
-        return {'FINISHED'}
 
 
 def fragmentate(suffix):
@@ -253,6 +205,10 @@ class FragmentateButton(Operator):
     bl_idname = "batoms.fragmentate"
     bl_label = "Fragmentate"
     bl_description = "Fragmentate selected atoms"
+
+    @classmethod
+    def poll(cls, context):
+        return context.mode in  {'EDIT_MESH'}
 
     def execute(self, context):
         bapanel = context.scene.bapanel

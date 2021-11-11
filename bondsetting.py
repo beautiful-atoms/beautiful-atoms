@@ -318,11 +318,10 @@ def build_bondlists(atoms, cutoff):
     bondlists = np.append(np.array([nli, nlj], dtype=int).T, np.array(nlS, dtype=int), axis = 1)
     return bondlists
 
-def calc_bond_data(batoms, bondlists, bondsetting):
+def calc_bond_data(atoms, species_props, bondlists, bondsetting):
     """
     """
     from ase.data import chemical_symbols
-    atoms = batoms.get_atoms_with_boundary()
     positions = atoms.positions
     chemical_symbols = np.array(chemical_symbols)
     if 'species' not in atoms.arrays:
@@ -347,8 +346,8 @@ def calc_bond_data(batoms, bondlists, bondsetting):
         vec = positions[bondlists1[:, 0]] - (positions[bondlists1[:, 1]] + R)
         length = np.linalg.norm(vec, axis = 1)
         nvec = vec/length[:, None]
-        pos = [positions[bondlists1[:, 0]] - nvec*batoms[spi].size*0.5,
-                positions[bondlists1[:, 1]] + R + nvec*batoms[spj].size*0.5]
+        pos = [positions[bondlists1[:, 0]] - nvec*species_props[spi]['size']*0.5,
+                positions[bondlists1[:, 1]] + R + nvec*species_props[spj]['size']*0.5]
         vec = pos[0] - pos[1]
         length = np.linalg.norm(vec, axis = 1) + 1e-8
         nvec = vec/length[:, None]

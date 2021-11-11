@@ -4,8 +4,9 @@ import bpy
 import numpy as np
 from ase.cell import Cell
 from batoms.butils import object_mode
+from batoms.base import BaseObject
 
-class Bcell():
+class Bcell(BaseObject):
     """
     Unit cell of three dimensions.
 
@@ -14,15 +15,15 @@ class Bcell():
                 array = np.zeros([3, 3]), 
                 location = np.array([0, 0, 0]),
                 color = (0.0, 0.0, 0.0, 1.0),
-                material_style = 'default',
-                bsdf_inputs = None,
                 ) -> None:
         """
         ver: 3x3 verlike object
           The three cell vectors: cell[0], cell[1], and cell[2].
         """
         self.label = label
-        self.name = 'cell_%s_edge'%(self.label)
+        self.name = 'edge'
+        obj_name = 'cell_%s_edge'%(self.label)
+        BaseObject.__init__(self, obj_name = obj_name)
         self.edges = [[3, 0], [3, 1], [4, 0], [4, 1],
                     [2, 5], [2, 6], [7, 5], [7, 6], 
                     [3, 2], [0, 6], [1, 5], [4, 7]
@@ -99,22 +100,17 @@ class Bcell():
         Examples:
 
         """
-        bcell = self.bcell
+        obj = self.obj
         array = self.array
         array[index] = value
         verts = self.array2verts(array)
         for i in range(8):
-            bcell.data.vertices[i].co = np.array(verts[i])
+            obj.data.vertices[i].co = np.array(verts[i])
     def __array__(self, dtype=float):
         if dtype != float:
             raise ValueError('Cannot convert cell to array of type {}'
                              .format(dtype))
         return self.array
-    @property
-    def bcell(self):
-        return self.get_bcell()
-    def get_bcell(self):
-        return bpy.data.objects['cell_%s_edge'%(self.label)]
     @property
     def array(self):
         return self.get_array()
@@ -127,14 +123,14 @@ class Bcell():
     def local_verts(self):
         return self.get_local_verts()
     def get_local_verts(self):
-        bcell = self.bcell
-        return np.array([bcell.data.vertices[i].co for i in range(8)])
+        obj = self.obj
+        return np.array([obj.data.vertices[i].co for i in range(8)])
     @property
     def verts(self):
         return self.get_verts()
     def get_verts(self):
-        return np.array([self.bcell.matrix_world @ \
-                self.bcell.data.vertices[i].co for i in range(8)])
+        return np.array([self.obj.matrix_world @ \
+                self.obj.data.vertices[i].co for i in range(8)])
     @property
     def origin(self):
         return self.verts[3]
@@ -152,14 +148,9 @@ class Bcell():
             ])
         verts = np.dot(verts, array)
         return verts
-    @property
-    def location(self):
-        return self.get_location()
-    def get_location(self):
-        return np.array(self.bcell.location)
     def copy(self, label):
         object_mode()
-        cell = Bcell(label, array = self.array, location = self.bcell.location)
+        cell = Bcell(label, array = self.array, location = self.obj.location)
         return cell
     def repeat(self, m):
         self[:] = np.array([m[c] * self.array[c] for c in range(3)])

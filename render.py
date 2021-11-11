@@ -174,14 +174,14 @@ class Render():
         direction = direction/np.linalg.norm(direction)
         self.camera.location = center + direction*distance
         self.camera.ortho_scale = max(width, height)
-        self.look_at(self.camera.camera, center)
+        self.look_at(self.camera.obj, center)
         self.ratio = height/width
         # plane
         frame = rotate_frame(direction)
         # light
         for name, light in self.lights.lights.items():
             if light.lock_to_camera:
-                self.lights['Default'].lock_to(self.camera.camera)
+                self.lights['Default'].lock_to(self.camera.obj)
             else:
                 light.lock_to(None)
                 # calculate direction in origial axis
@@ -189,7 +189,7 @@ class Render():
                 dirction = dirction/np.linalg.norm(dirction)
                 location = center + dirction*distance
                 light.location = location
-                self.look_at(light.light, center)
+                self.look_at(light.obj, center)
     def run(self, direction = None, distance = None, canvas = None, padding = None, **kwargs):
         """
         render the model and export result
@@ -215,7 +215,7 @@ class Render():
         Set parameters for rendering
         """
         # frame_set(1) is wrong when mesh is modified.
-        bpy.context.scene.camera = self.camera.camera
+        bpy.context.scene.camera = self.camera.obj
         if self.frame is not None:
             self.scene.frame_set(self.frame)
         if self.output is None:

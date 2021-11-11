@@ -56,8 +56,6 @@ from .modal import (
 
 # Register
 
-
-
 classes = [
         custom_property.Batoms,
         custom_property.Batom,
@@ -115,7 +113,6 @@ classes = [
 def register():
     bpy.types.TOPBAR_MT_file_import.append(gui_io.menu_func_import_batoms)
     bpy.types.VIEW3D_MT_mesh_add.append(ops_add_molecule.menu_func)
-    bpy.types.VIEW3D_MT_select_edit_mesh.append(record_selection.add_edit_mesh_button)
     
     for cls in classes:
         bpy.utils.register_class(cls)
@@ -164,7 +161,6 @@ def unregister():
 
     bpy.types.TOPBAR_MT_file_import.remove(gui_io.menu_func_import_batoms)
     bpy.types.VIEW3D_MT_mesh_add.remove(ops_add_molecule.menu_func)
-    bpy.types.VIEW3D_MT_select_edit_mesh.remove(record_selection.add_edit_mesh_button)
 
     for cls in classes:
         bpy.utils.unregister_class(cls)

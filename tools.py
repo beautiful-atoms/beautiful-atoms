@@ -162,6 +162,19 @@ def get_equivalent_indices(no, indices):
     indices = sg.equivalent_reflections([indices])
     indices = indices.tolist()
     return indices
+
+def local2global(positions, matrix, reversed = False):
+    if reversed:
+        matrix = np.linalg.inv(matrix)
+    n = len(positions)
+    # positions (natom, 3) to (natom, 4)
+    positions = np.append(positions, np.ones((n, 1)), axis = 1)
+    # inverse of transformation matrix
+    positions = matrix.dot(positions.T).T
+    # (natom, 4) back to (natom, 3)
+    positions = positions[:, :3]
+    return positions
+
     
 if __name__ == "__main__":
     indices = (1, 1, 1)

@@ -179,7 +179,7 @@ def remove(selected_batoms, selected_bond):
         for bond_name in selected_bond:
             bond = bpy.data.objects[bond_name]
             if bond.bbond.label == batoms_name:
-                batoms.bondsetting.delete([bond.bbond.species1, 
+                batoms.bondsetting.remove([bond.bbond.species1, 
                         bond.bbond.species2])
         batoms.draw_bonds()
         if batoms.model_type == 2:

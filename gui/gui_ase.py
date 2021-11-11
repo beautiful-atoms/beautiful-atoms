@@ -31,7 +31,7 @@ class ASE_PT_prepare(Panel):
 
         box = layout.box()
         col = box.column(align=True)
-        col.label(text="Add structure")
+        col.label(text="Formula")
         col.prop(asepanel, "formula")
         col.prop(asepanel, "label")
         col.operator("batoms.add_molecule")
@@ -47,13 +47,14 @@ class ASE_PT_prepare(Panel):
         col = box.column(align=True)
         col.prop(asepanel, "nlayer")
         col.prop(asepanel, "vacuum")
+        col.prop(asepanel, "termination")
         col.operator("batoms.add_surface")
 
 
 
 class ASEProperties(bpy.types.PropertyGroup):
     formula: StringProperty(
-        name = "Formula", default='H2O',
+        name = "", default='H2O',
         description = "formula")
     label: StringProperty(
         name = "Label", default='h2o',
@@ -65,6 +66,9 @@ class ASEProperties(bpy.types.PropertyGroup):
         name="vacuum", default=5.0,
         description = "vacuum")
     nlayer: IntProperty(name="layers", default=4)
+    termination: StringProperty(
+        name = "termination", default='',
+        description = "termination")
     
 
 class AddMolecule(Operator):
@@ -103,11 +107,20 @@ class AddSurface(Operator):
     bl_description = ("Add surface")
     def execute(self, context):
         from ase.build import surface
+        from ase.build.surfaces_with_termination import surfaces_with_termination
         asepanel = context.scene.asepanel
         selected_batoms = self.selected_batoms
         if len(selected_batoms) != 1:
             raise Exception('Please select one structure')
-        bulk = Batoms(selected_batoms[0]).atoms
-        atoms = surface(bulk, asepanel.indices, asepanel.nlayer, asepanel.vacuum)
-        Batoms(label = asepanel.label, atoms = atoms)
+        batoms = Batoms(selected_batoms[0])
+        bulk = batoms.atoms
+        if len(asepanel.termination) == 0:
+            atoms = surface(bulk, asepanel.indices, asepanel.nlayer, asepanel.vacuum)
+        else:
+            atoms = surfaces_with_termination(bulk, asepanel.indices, 
+                                    asepanel.nlayer, asepanel.vacuum,
+                                    termination=asepanel.termination)
+        batoms.hide = True
+        label = batoms.label + ''.join(str(i) for i in asepanel.indices)
+        Batoms(label = label, atoms = atoms, movie = True)
         return {'FINISHED'}

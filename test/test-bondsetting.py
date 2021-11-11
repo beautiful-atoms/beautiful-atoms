@@ -37,7 +37,7 @@ def test_polyhedra():
     removeAll()
     tio2 = read('datas/tio2.cif')
     tio2.boundary = 0.01
-    tio2.bondsetting.delete(('Ti', 'O'))
+    tio2.bondsetting.remove(('Ti', 'O'))
     assert len(tio2.bondsetting) == 1
     tio2.bondsetting.add(('Ti', 'O'))
     assert len(tio2.bondsetting) == 2

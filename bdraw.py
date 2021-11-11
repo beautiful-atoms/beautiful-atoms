@@ -3,7 +3,7 @@ from scipy.spatial.transform import rotation
 import bpy
 from batoms.material import create_material
 import numpy as np
-import time
+from time import time
 #========================================================
 def draw_cell_curve(coll, verts, label = None):
     """
@@ -29,14 +29,17 @@ def draw_cylinder(
     """
     Draw cylinder.
     """
+    from batoms.source_data import bond_source
+    if len(datas['centers']) == 0:
+        return 0
     material = create_material(name, 
                     datas['color'], 
                     node_type = node_type, 
                     node_inputs = node_inputs, 
                     material_style = material_style)
-    source = bond_source(vertices = datas['vertices'])
-    if len(datas['centers']) == 0:
-        return 0
+    tstart = time()
+    source = bond_source[datas['vertices']]
+    tstart = time()
     verts, faces = cylinder_mesh_from_instance_vec(datas['centers'], datas['normals'], datas['lengths'], datas['width'], source)
     mesh = bpy.data.meshes.new(name)
     mesh.from_pydata(verts, [], faces)
@@ -50,9 +53,9 @@ def draw_cylinder(
         battr = getattr(obj, name)
         for key, value in inputs.items():
             setattr(battr, key, value)
-    bpy.ops.object.shade_smooth()
+    # bpy.ops.object.shade_smooth()
     coll.objects.link(obj)
-
+    return obj
 
 def draw_surface_from_vertices(name, 
                 datas, 
@@ -88,10 +91,11 @@ def draw_surface_from_vertices(name,
             setattr(battr, key, value)
     bpy.ops.object.shade_smooth()
     coll.objects.link(obj)
-    # print('bonds: {0}   {1:10.2f} s'.format(name, time.time() - tstart))
+    return obj
+    # print('bonds: {0}   {1:10.2f} s'.format(name, time() - tstart))
 
 def draw_text(coll_text = None, atoms = None, type = None):
-    tstart = time.time()
+    tstart = time()
     positions = atoms.positions
     n = len(positions)
     for i in range(n):
@@ -104,7 +108,7 @@ def draw_text(coll_text = None, atoms = None, type = None):
             ob.data.body = "%s"%atoms[i].symbol
         ob.location = location
         coll_text.objects.link(ob)
-    print('text: {0:10.2f} s'.format(time.time() - tstart))
+    print('text: {0:10.2f} s'.format(time() - tstart))
 
 
 def draw_2d_slicing(name, 
@@ -159,10 +163,11 @@ def bond_source(vertices = 12, depth = 1.0):
     bpy.ops.mesh.primitive_cylinder_add(vertices = vertices, depth = depth)
     cyli = bpy.context.view_layer.objects.active
     me = cyli.data
-    verts = []
     faces = []
-    for vertices in me.vertices:
-        verts.append(np.array(vertices.co))
+    n = len(me.vertices)
+    vertices = np.empty(n*3, dtype=np.float64)
+    me.vertices.foreach_get('co', vertices)  
+    vertices = vertices.reshape((n, 3))
     for poly in me.polygons:
         face = []
         for loop_index in range(poly.loop_start, poly.loop_start + poly.loop_total):
@@ -174,7 +179,7 @@ def bond_source(vertices = 12, depth = 1.0):
     n = len(faces[0])
     faces1 = [faces[i] for i in range(len(faces)) if len(faces[i]) == n]
     faces2 = [faces[i] for i in range(len(faces)) if len(faces[i]) != n]
-    return verts, faces1, faces2
+    return vertices, faces1, faces2
 # draw atoms
 def atom_source():
     bpy.ops.mesh.primitive_uv_sphere_add() #, segments=32, ring_count=16)
@@ -216,7 +221,7 @@ def sphere_mesh_from_instance(centers, radius, source):
 
 def cylinder_mesh_from_instance_vec(centers, normals, lengths, scale, source):
     from scipy.spatial.transform import Rotation as R
-    tstart = time.time()
+    tstart = time()
     vert0, face1, face2 = source
     nb = len(centers)
     nvert = len(vert0)
@@ -262,7 +267,7 @@ def cylinder_mesh_from_instance_vec(centers, normals, lengths, scale, source):
     faces2 = faces2 + offset
     faces2 = faces2.reshape(-1, nf2)
     faces = list(faces1) + list(faces2)
-    # print('cylinder_mesh_from_instance: {0:10.2f} s'.format( time.time() - tstart))
+    # print('cylinder_mesh_from_instance: {0:10.2f} s'.format( time() - tstart))
     return verts, faces
 
 def draw_plane(name = 'plane',

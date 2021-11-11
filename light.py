@@ -6,9 +6,9 @@ import bpy
 from mathutils import Vector
 import os
 import numpy as np
+from batoms.base import BaseObject
 
-
-class Light():
+class Light(BaseObject):
     """Light Class
     
     A Light object is linked to a Light object in Blender. 
@@ -38,25 +38,11 @@ class Light():
                 lock_to_camera = False) -> None:
         self.label = label
         self.name = name
-        self.obj_name = "%s_light_%s"%(label, name)
+        obj_name = "%s_light_%s"%(label, name)
+        BaseObject.__init__(self, obj_name = obj_name)
         self.create_light(light_type, location, energy)
         self.direction = direction
         self.lock_to_camera = lock_to_camera
-    @property
-    def light(self):
-        return self.get_light()
-    def get_light(self):
-        return bpy.data.objects[self.obj_name]
-    @property
-    def type(self):
-        return self.get_type()
-    @type.setter
-    def type(self, type):
-        self.set_type(type)
-    def get_type(self):
-        return self.light.data.type
-    def set_type(self, type):
-        self.light.data.type = type.upper()
     @property
     def energy(self):
         return self.get_energy()
@@ -64,19 +50,9 @@ class Light():
     def energy(self, energy):
         self.set_energy(energy)
     def get_energy(self):
-        return self.light.data.energy
+        return self.obj.data.energy
     def set_energy(self, energy):
-        self.light.data.energy = energy
-    @property
-    def location(self):
-        return self.get_location()
-    @location.setter
-    def location(self, location):
-        self.set_location(location)
-    def get_location(self):
-        return self.light.location
-    def set_location(self, location):
-        self.light.location = location
+        self.obj.data.energy = energy
     @property
     def direction(self):
         return self.get_direction()
@@ -84,10 +60,10 @@ class Light():
     def direction(self, direction):
         self.set_direction(direction)
     def get_direction(self):
-        return self.light.blight.direction[:]
+        return self.obj.blight.direction[:]
     def set_direction(self, direction):
         self.lock_to_camera = False
-        self.light.blight.direction = direction
+        self.obj.blight.direction = direction
     @property
     def lock_to_camera(self):
         return self.get_lock_to_camera()
@@ -95,9 +71,9 @@ class Light():
     def lock_to_camera(self, lock_to_camera):
         self.set_lock_to_camera(lock_to_camera)
     def get_lock_to_camera(self):
-        return self.light.blight.lock_to_camera
+        return self.obj.blight.lock_to_camera
     def set_lock_to_camera(self, lock_to_camera):
-        self.light.blight.lock_to_camera = lock_to_camera
+        self.obj.blight.lock_to_camera = lock_to_camera
     def create_light(self, light_type, location, energy):
         '''
         light_type: str
@@ -121,19 +97,6 @@ class Light():
             light.blight.flag = True
             light.blight.label = self.label
             light.blight.name = self.name
-
-    def lock_to(self, obj = None):
-        """
-        track to obj
-        """
-        if obj is not None:
-            self.light.constraints.new(type = 'COPY_LOCATION')
-            self.light.constraints["Copy Location"].target = obj
-            self.light.constraints.new(type = 'COPY_ROTATION')
-            self.light.constraints["Copy Rotation"].target = obj
-        else:
-            for c in self.light.constraints:
-                self.light.constraints.remove(c)
     def __repr__(self) -> str:
         s = "Light('%s', energy = %s, direction = %s, lock_to_camera = %s)" \
                     % (self.type, self.energy, list(self.direction), self.lock_to_camera)
@@ -199,9 +162,9 @@ class Lights():
         return len(self.lights)
     def add(self, name, **parameters):
         light = Light(self.label, name, **parameters)
-        if light.light.name not in self.coll.objects:
-            self.coll.objects.link(light.light)
+        if light.obj.name not in self.coll.objects:
+            self.coll.objects.link(light.obj)
     def remove(self, name):
         light = self.lights[name]
-        bpy.data.objects.remove(light.light, do_unlink = True)
+        bpy.data.objects.remove(light.obj, do_unlink = True)
 

@@ -29,7 +29,7 @@ class Pubchem_PT_prepare(Panel):
 class PubchemProperties(bpy.types.PropertyGroup):
     
     cid: StringProperty(
-        name = "cid", default='16028',
+        name = "cid", default='31423',
         description = "cid")
 
 
