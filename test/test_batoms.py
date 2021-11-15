@@ -67,6 +67,8 @@ def test_set_positions():
 
 def test_extend():
     from ase.build import molecule
+    from batoms.butils import removeAll
+    removeAll()
     co = molecule('CO')
     co = Batoms(label = 'co', atoms = co)
     co.translate([0, 0, 2])
@@ -74,6 +76,33 @@ def test_extend():
     h2o = Batoms(label = 'h2o', atoms = h2o)
     h2o.extend(co)
 
+def test_transform():
+    from batoms.butils import removeAll
+    from batoms.bio import read
+    removeAll()
+    tio2 = read('test/datas/tio2.cif')
+    tio2_t = tio2.transform([[1, 1, 0, 0], [-1, 1, 0, 0], [0, 0, 1, 0]])
+    assert len(tio2_t) == 12
+
+def test_repeat():
+    from ase.build import molecule
+    from batoms.butils import removeAll
+    removeAll()
+    h2o = molecule('H2O')
+    h2o = Batoms(label = 'h2o', atoms = h2o)
+    h2o.cell = [3, 3, 3]
+    h2o.pbc = True
+    h2o.repeat([2, 2, 2])
+    h2o.model_type = 1
+
+def test_repeat_animation():
+    from batoms.butils import removeAll
+    from batoms.bio import read
+    removeAll()
+    tio2 = read('datas/tio2_10.xyz', index = ':')
+    tio2.set_frames()   
+    tio2.repeat([2, 2, 2])
+    tio2.model_type = 1
 
 def test_canvas():
     from ase.build import fcc111
@@ -107,6 +136,8 @@ def test_cavity():
 
 def test_get_angles():
     from ase.build import molecule
+    from batoms.butils import removeAll
+    removeAll()
     atoms = molecule('H2O')
     h2o = Batoms(atoms = atoms, label = 'h2o')
     angle = h2o.get_angle('H', 0, 'O', 0, 'H', 1)
@@ -121,4 +152,6 @@ if __name__ == '__main__':
     test_set_positions()
     test_cavity()
     test_get_angles()
+    test_repeat()
+    test_repeat_animation()
     print('\n Batoms: All pass! \n')

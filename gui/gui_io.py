@@ -1,13 +1,10 @@
 import json
 import bpy
-from bpy.types import Operator, AddonPreferences
+from bpy.types import Operator
 from bpy_extras.io_utils import ImportHelper, ExportHelper
 from bpy.props import (
-        StringProperty,
         BoolProperty,
         EnumProperty,
-        IntProperty,
-        FloatProperty,
         )
 from batoms.batoms import Batoms
 

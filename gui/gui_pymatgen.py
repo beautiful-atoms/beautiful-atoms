@@ -20,12 +20,10 @@ class Pymatgen_PT_prepare(Panel):
         layout = self.layout
         pmgpanel = context.scene.pmgpanel
 
-        box = layout.box()
-        col = box.column(align=True)
-        col.label(text="Search structure")
-        col.prop(pmgpanel, "key")
-        col.prop(pmgpanel, "id")
-        col.operator("batoms.pymatgen_search")
+        layout.label(text="Search structure")
+        layout.prop(pmgpanel, "key")
+        layout.prop(pmgpanel, "id")
+        layout.operator("batoms.pymatgen_search")
 
 
 class PymatgenProperties(bpy.types.PropertyGroup):

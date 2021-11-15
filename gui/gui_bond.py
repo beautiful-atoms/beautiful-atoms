@@ -1,16 +1,12 @@
 import bpy
 from bpy.types import (Panel,
                        Operator,
-                       AddonPreferences,
-                       PropertyGroup,
                        )
-from bpy.props import (StringProperty,
-                       BoolProperty,
+from bpy.props import (BoolProperty,
                        IntProperty,
                        FloatProperty,
                        FloatVectorProperty,
                        EnumProperty,
-                       PointerProperty,
                        )
 
 from batoms.butils import get_selected_objects, get_selected_batoms
@@ -30,40 +26,22 @@ class Bond_PT_prepare(Panel):
         layout = self.layout
         bbpanel = context.scene.bbpanel
 
-        box = layout.box()
-        col = box.column()
-        col.label(text="Bond style")
-        col = box.column()
+        layout.label(text="Bond style")
+        col = layout.column()
         col.prop(bbpanel, "bond_style", expand  = True)
-        box = layout.box()
-        col = box.column(align=True)
-        row = box.row()
-        row.prop(bbpanel, "min")
-        row = box.row()
-        row.prop(bbpanel, "max")
-        row = box.row()
-        row.prop(bbpanel, "bondwidth")
+        layout.prop(bbpanel, "min")
+        layout.prop(bbpanel, "max")
+        layout.prop(bbpanel, "bondwidth")
 
-        box = layout.box()
-        row = box.row()
-        row.prop(bbpanel, "order")
-        row = box.row()
-        row.prop(bbpanel, "order_offset")
+        layout.prop(bbpanel, "order")
+        layout.prop(bbpanel, "order_offset")
 
-        box = layout.box()
-        row = box.row()
-        row.prop(bbpanel, "search")
-        row = box.row()
-        row.prop(bbpanel, "polyhedra")
-        col = box.column(align=True)
-        col.operator("bond.remove")
-        col = box.column(align=True)
-        col.operator("bond.add")
+        layout.prop(bbpanel, "search")
+        layout.prop(bbpanel, "polyhedra")
+        layout.operator("bond.remove")
+        layout.operator("bond.add")
 
-        box = layout.box()
-        col = box.column(align=True)
-        row = box.row()
-        row.prop(bbpanel, "bondcolor")
+        layout.prop(bbpanel, "bondcolor")
 
 class BondProperties(bpy.types.PropertyGroup):
     @property

@@ -14,16 +14,11 @@ default_render_settings = {
         'resolution_x': 1000,
         'resolution_y': None,  # 
         'lock_camera_to_view': True,
-        'camera_loc': [0, 0, 100],  
         'camera_target': [0, 0, 0], #
-        'camera_type': 'ORTHO',  #  ['PERSP', 'ORTHO']
-        'ortho_scale': None, #
-        'camera_lens': 50,  #
-        'fstop': 0.5,
         'ratio': 1,
         'studiolight': 'Default',  # "basic", "outdoor", "paint", "rim", "studio"
         'world': True,
-        'engine': 'BLENDER_EEVEE', #'BLENDER_EEVEE' #'BLENDER_WORKBENCH'
+        # 'engine': 'BLENDER_EEVEE', #'BLENDER_EEVEE' #'BLENDER_WORKBENCH'
         'use_motion_blur': False,
         'motion_blur_position': 'START', 
         'motion_blur_steps': 10,
@@ -49,27 +44,30 @@ class Render():
 
     """
     #
-    def __init__(self, label, batoms = None, **kwargs):
+    def __init__(self, label, batoms = None, from_coll = False, **kwargs):
         self.label = label
         self.name = '%s_render'%label
         self.batoms = batoms
         self.camera_name = 'camera_%s'%self.label
-        self.set_collection()
-        default_render_settings.update(kwargs)
-        self.set_parameters(default_render_settings)
-        self.clean_default()
-        self.set_coll()
-        self.camera = Camera(label, coll = self.coll)
-        self.lights = Lights(label)
-        self.lights.add('Default', lock_to_camera = True)
-        if self.world:
-            self.set_world()
+        if from_coll:
+            self.lights = Lights(label, from_coll = True)
+        else:
+            self.set_collection()
+            default_render_settings.update(kwargs)
+            self.set_parameters(default_render_settings)
+            self.clean_default()
+            self.camera = Camera(label, coll = self.coll)
+            self.lights = Lights(label)
+            self.lights.add('Default', lock_to_camera = True)
+            if self.world:
+                self.set_world()
     def set_collection(self):
         """
         build main collection and its child collections.
         """
         if self.name not in bpy.data.collections:
-            bpy.data.collections.new(self.name)
+            coll = bpy.data.collections.new(self.name)
+            bpy.data.collections[self.label].children.link(coll)
         for sub_name in subcollections:
             subcoll = bpy.data.collections.new('%s_%s'%(self.label, sub_name))
             self.coll.children.link(subcoll)
@@ -83,11 +81,6 @@ class Render():
             bpy.data.cameras.remove(bpy.data.cameras['Camera'])
         if light and 'Light' in bpy.data.lights:
             bpy.data.lights.remove(bpy.data.lights['Light'])
-    def set_coll(self):
-        name = "%s_render"%self.label
-        if name not in bpy.data.collections:
-            coll = bpy.data.collections.new(name)
-            self.scene.collection.children.link(coll)
     @property
     def scene(self):
         return self.get_scene()
@@ -113,7 +106,7 @@ class Render():
         elif engine.upper() == 'WORKBENCH':
             engine = 'BLENDER_WORKBENCH'
         self.scene.render.engine = engine.upper()
-    def set_world(self, color = [0.4, 0.4, 0.4, 1.0]):
+    def set_world(self, color = [0.2, 0.2, 0.2, 1.0]):
         """
         """
         world = self.scene.world
@@ -209,6 +202,7 @@ class Render():
             bpy.ops.wm.save_as_mainfile('EXEC_SCREEN', 
                                 filepath = '{0}.blend'.format(self.output))
         elif self.run_render:
+            bpy.data.scenes[0].frame_end = self.batoms.nframe
             bpy.ops.render.render(write_still = 1, animation = self.animation)
     def prepare(self, ):
         """

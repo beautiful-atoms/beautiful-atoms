@@ -353,13 +353,6 @@ def calc_bond_data(atoms, species_props, bondlists, bondsetting):
         nvec = vec/length[:, None]
         center0 = (pos[0] + pos[1])/2.0
         # verts, faces, for instancing
-        # v1 = nvec + np.array([1.2323, 0.493749, 0.5604937284])
-        # tempv = np.einsum("ij, ij->i", v1, nvec)
-        # v11 = v1 - (nvec.T*tempv).T
-        # templengh = np.linalg.norm(v11, axis = 1)
-        # v11 = v11/templengh[:, None]/2.828427
-        # tempv = np.cross(nvec, v11)
-        # v22 = (tempv.T*(length*length)).T
         #---------------------------------------------
         # name of bond objects
         kinds = [('%s_%s'%(spi, spj), spi, b.color1[:]), 
@@ -372,14 +365,16 @@ def calc_bond_data(atoms, species_props, bondlists, bondsetting):
                 battr.update({'species': species})
                 bond_kinds[kind] = {'battr_inputs': {'bbond': battr}, 
                                     'species': species,
-                                    'color': color, 'verts': [],
+                                    'color': color,
                                     'width': b.width,
+                                    'segments': b.segments,
+                                    'style': b.style,
+                                    'positions': [],
+                                    'nposition': 0,
                                     'centers': [],
                                     'lengths': [],
-                                    'normals': [], 
-                                    'vertices': 16,
-                                    # 'high_order_offsets': [],
-                                    'style': b.style}
+                                    'normals': [],
+                                    }
         #--------------------
         # bond order
         if b.order > 1:
@@ -419,21 +414,15 @@ def calc_bond_data(atoms, species_props, bondlists, bondsetting):
                 length = np.tile(length, 3)
         # Unicolor cylinder
         if b.style == '0':
-                bond_kinds[kinds[0][0]]['centers'] = center0
-                bond_kinds[kinds[0][0]]['lengths'] = length
-                bond_kinds[kinds[0][0]]['normals'] = nvec
+                bond_kinds[kinds[0][0]]['positions'] = [np.hstack((center0, nvec, length.reshape(-1, 1)))]
+                bond_kinds[kinds[0][0]]['nposition'] = len(center0)
         # Bicolor cylinder
         elif b.style == '1':
             length = length/2.0
             for i in range(1, 3):
                 center = center0 - (i - 1.5)*nvec*length[:, None]
-                bond_kinds[kinds[i][0]]['centers'] = center
-                bond_kinds[kinds[i][0]]['lengths'] = length
-                bond_kinds[kinds[i][0]]['normals'] = nvec
-                # bond_kinds[kinds[i][0]]['verts'] = center + v11
-                # bond_kinds[kinds[i][0]]['verts'] = np.append(bond_kinds[kinds[i][0]]['verts'], center - v11, axis = 0)
-                # bond_kinds[kinds[i][0]]['verts'] = np.append(bond_kinds[kinds[i][0]]['verts'], center + v22, axis = 0)
-                # bond_kinds[kinds[i][0]]['verts'] = np.append(bond_kinds[kinds[i][0]]['verts'], center - v22, axis = 0)
+                bond_kinds[kinds[i][0]]['positions'] = [np.hstack((center, nvec, length.reshape(-1, 1)))]
+                bond_kinds[kinds[i][0]]['nposition'] = len(center)
         # Dashed line
         elif b.style == '2':
             length = length/2.0
@@ -443,14 +432,16 @@ def calc_bond_data(atoms, species_props, bondlists, bondsetting):
                 maxlength = length.max()
                 center = center0 - (i - 1.5)*nvec*step
                 for d in np.arange(0, maxlength, step):
-                    # offset0 = np.linspace(-2, 2, nc)
-                    # np.where(offset0>-length/2.0 & offset<length/2.0)
                     offset = 2*(i - 1.5)*nvec*d
                     center1 = center + offset
                     ind = np.where(d<length)[0]
                     bond_kinds[kinds[i][0]]['centers'].extend(center1[ind])
                     bond_kinds[kinds[i][0]]['lengths'].extend([step/2]*len(ind))
                     bond_kinds[kinds[i][0]]['normals'].extend(nvec[ind])
+                bond_kinds[kinds[i][0]]['positions'] = [np.hstack((bond_kinds[kinds[i][0]]['centers'], 
+                                bond_kinds[kinds[i][0]]['normals'], 
+                                np.array(bond_kinds[kinds[i][0]]['lengths']).reshape(-1, 1)))]
+                bond_kinds[kinds[i][0]]['nposition'] = len(bond_kinds[kinds[i][0]]['centers'])
         # Dotted line
         elif b.style == '3':
             length = length/2.0
@@ -460,14 +451,16 @@ def calc_bond_data(atoms, species_props, bondlists, bondsetting):
                 maxlength = length.max()
                 center = center0 - (i - 1.5)*nvec*step
                 for d in np.arange(0, maxlength, step):
-                    # offset0 = np.linspace(-2, 2, nc)
-                    # np.where(offset0>-length/2.0 & offset<length/2.0)
                     offset = 2*(i - 1.5)*nvec*d
                     center1 = center + offset
                     ind = np.where(d<length)[0]
                     bond_kinds[kinds[i][0]]['centers'].extend(center1[ind])
                     bond_kinds[kinds[i][0]]['lengths'].extend([step/4]*len(ind))
                     bond_kinds[kinds[i][0]]['normals'].extend(nvec[ind])
+                bond_kinds[kinds[i][0]]['positions'] = [np.hstack((bond_kinds[kinds[i][0]]['centers'], 
+                                bond_kinds[kinds[i][0]]['normals'], 
+                                np.array(bond_kinds[kinds[i][0]]['lengths']).reshape(-1, 1)))]
+                bond_kinds[kinds[i][0]]['nposition'] = len(bond_kinds[kinds[i][0]]['centers'])
     # print('calc_bond_data: {0:10.2f} s'.format(time() - tstart))
     return bond_kinds
 

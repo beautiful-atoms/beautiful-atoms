@@ -3,14 +3,8 @@ from bpy.types import (Panel,
                        Operator,
                        )
 from bpy.props import (StringProperty,
-                       BoolProperty,
-                       BoolVectorProperty,
-                       IntProperty,
-                       IntVectorProperty,
                        FloatProperty,
                        FloatVectorProperty,
-                       EnumProperty,
-                       PointerProperty,
                        )
 from batoms.butils import get_selected_batoms, get_selected_objects
 from batoms.batoms import Batoms
@@ -28,17 +22,11 @@ class Volume_PT_prepare(Panel):
         layout = self.layout
         vopanel = context.scene.vopanel
 
-        box = layout.box()
-        row = box.row()
-        row.prop(vopanel, "level")
-        col = box.column(align=True)
-        row = box.row()
-        row.prop(vopanel, "color")
+        layout.prop(vopanel, "level")
+        layout.prop(vopanel, "color")
 
-        box = layout.box()
-        col = box.column(align=True)
-        col.operator("batoms.add_level")
-        col.prop(vopanel, "label")
+        layout.operator("batoms.add_level")
+        layout.prop(vopanel, "label")
 
 
 

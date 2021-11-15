@@ -65,7 +65,8 @@ classes = [
         custom_property.BIsosurface,
         custom_property.BVolume,
         custom_property.BPlane,
-        custom_property.Blight,
+        custom_property.BLight,
+        custom_property.BRender,
         gui_io.IMPORT_OT_batoms,
         gui_batoms.Batoms_PT_prepare,
         gui_batoms.BatomsProperties,
@@ -82,6 +83,9 @@ classes = [
         gui_polyhedra.PolyhedraProperties,
         gui_cell.Cell_PT_prepare,
         gui_cell.CellProperties,
+        gui_cell.ApplyCell,
+        gui_cell.ApplyTransform,
+        gui_cell.ApplyBoundary,
         gui_volume.Volume_PT_prepare,
         gui_volume.VolumeProperties,
         gui_volume.AddButton,
@@ -139,6 +143,8 @@ def register():
                             type = custom_property.BIsosurface)
     Collection.bplane = CollectionProperty(name = 'BPlane', 
                             type = custom_property.BPlane)
+    Collection.brender = PointerProperty(name = 'BRender', 
+                            type = custom_property.BRender)
     Object.batom = PointerProperty(name = 'Batom', 
                             type = custom_property.Batom)
     Object.bcell = PointerProperty(name = 'Bcell', 
@@ -153,8 +159,8 @@ def register():
                             type = custom_property.BVolume)
     Object.bplane = PointerProperty(name = 'BPlane', 
                             type = custom_property.BPlane)
-    Object.blight = PointerProperty(name = 'Blight', 
-                            type = custom_property.Blight)
+    Object.blight = PointerProperty(name = 'BLight', 
+                            type = custom_property.BLight)
     
 
 def unregister():

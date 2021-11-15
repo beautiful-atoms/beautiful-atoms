@@ -27,7 +27,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 subcollections = ['atom', 'cell', 'bond', 'polyhedra', 'instancer', 
-'instancer_atom', 'volume', 'ghost', 'boundary', 'skin', 'render', 'text', 'plane']
+'instancer_atom', 'volume', 'ghost', 'boundary', 'search', 'render', 'text', 'plane']
 
 class Batoms():
     """
@@ -90,7 +90,6 @@ class Batoms():
                 polyhedrasetting = None,
                 isosurfacesetting = None,
                 planesetting = None,
-                render = None,
                 model_type = 0, 
                 polyhedra_type = 0, 
                 boundary = [0.0, 1.0, 0.0, 1.0, 0.0, 1.0],
@@ -110,7 +109,6 @@ class Batoms():
         self.parent = None
         self.bondsetting = bondsetting
         self.polyhedrasetting = polyhedrasetting
-        self.render = render
         self.segments = segments
         self.shape = shape
         self.label = label
@@ -124,6 +122,8 @@ class Batoms():
                              for sp, positions in species.items()])
             self.set_collection(model_type, polyhedra_type, boundary)
             self.from_species(species, species_props, pbc, cell)
+            self.coll.batoms.show_unit_cell = show_unit_cell
+            self.render = Render(self.label, batoms = self)
         elif atoms:
             if isinstance(atoms, list):
                 frames = atoms
@@ -136,6 +136,8 @@ class Batoms():
             elif 'pymatgen' in str(type(atoms)):
                 self.from_pymatgen(atoms, species_props)
             self._frames = frames
+            self.coll.batoms.show_unit_cell = show_unit_cell
+            self.render = Render(self.label, batoms = self)
         elif self.label:
             # print('Build from collection')
             self.from_collection(self.label)
@@ -165,7 +167,6 @@ class Batoms():
                             isosurfacesetting = isosurfacesetting)
         elif isinstance(isosurfacesetting, IsosurfaceSetting):
             self.isosurfacesetting = isosurfacesetting
-        
         if planesetting is None:
             self.planesetting = PlaneSetting(self.label, batoms = self)
         elif isinstance(planesetting, dict):
@@ -173,10 +174,6 @@ class Batoms():
                             planesetting = planesetting)
         elif isinstance(planesetting, PlaneSetting):
             self.planesetting = planesetting
-
-        self.coll.batoms.show_unit_cell = show_unit_cell
-        if not self.render:
-            self.render = Render(self.label, batoms = self)
         if draw:
             self.draw()
         if movie:
@@ -271,6 +268,7 @@ class Batoms():
             raise Exception("%s is not Batoms collection!"%collection_name)
         self.label = collection_name
         self._cell = Bcell(label = collection_name)
+        self.render = Render(self.label, batoms = self, from_coll = True)
 
     def npbool2bool(self, pbc):
         """
@@ -313,36 +311,68 @@ class Batoms():
                         )
     def draw_bonds(self):
         """Draw bonds.
+        calculate bond in all farmes, and save
+        get the max number of bonds for each pair
+        draw the bonds
+        add shape key
+        the extra bonds use the find bond data.
         """
         from batoms.butils import add_keyframe_visibility
+        from batoms.bbond import Bbond
         # if not self.bondlist:
         object_mode()
         self.clean_atoms_objects('bond')
-        frames = self.get_frames(local = True)
+        frames = self.get_frames(self.batoms)
+        frames_boundary = self.get_frames(self.batoms_boundary, remove = '_boundary')
+        frames_search = self.get_frames(self.batoms_search, remove = '_search')
         nframe = len(frames)
+        bond_datas = {}
+        tstart = time()
         for f in range(nframe):
             print('update bond: ', f)
-            tstart = time()
             atoms = frames[f]
-            batoms_boundary = self.get_batoms_boundary(f)
-            atoms_boundary = self.batoms2atoms(batoms_boundary)
-            batoms_skin = self.get_batoms_skin(f)
-            atoms_skin = self.batoms2atoms(batoms_skin)
-            atoms = atoms + atoms_boundary + atoms_skin
+            if len(frames_boundary) > 0:
+                atoms_boundary = frames_boundary[f]
+                atoms = atoms + atoms_boundary
+            if len(frames_search) > 0:
+                atoms_search = frames_search[f]
+                atoms = atoms + atoms_search
             atoms.pbc = False
             self.bondlist = build_bondlists(atoms, self.bondsetting.cutoff_dict)
             bond_kinds = calc_bond_data(atoms, self.species_props, self.bondlist, self.bondsetting)
-            if len(bond_kinds) == 0: return
-            for species, bond_data in bond_kinds.items():
-                name = '%s_%s_%s_%s'%(self.label, 'bond', species, f)
-                obj = draw_cylinder(name = name, 
-                                datas = bond_data, 
-                                coll = self.coll.children['%s_bond'%self.label]
-                                )
-                obj = bpy.data.objects.get(name)
-                if obj is not None:
-                    add_keyframe_visibility(obj, nframe, f)
-            # print('draw bond: {0:10.2f} s'.format(time() - tstart))
+            if f == 0:
+                bond_datas = bond_kinds
+            else:
+                for kind, bond_data in bond_kinds.items():
+                    if kind not in bond_datas:
+                        bond_datas[kind] = bond_kinds[kind]
+                    else:
+                        bond_datas[kind]['positions'].extend(bond_data['positions'])
+                        if len(bond_data['positions']) > 0:
+                            if bond_datas[kind]['nposition'] < len(bond_data['positions'][0]):
+                                bond_datas[kind]['nposition'] = len(bond_data['positions'][0])
+        # print('calc bond: {0:10.2f} s'.format(time() - tstart))
+        for species, bond_data in bond_datas.items():
+            nframe = len(bond_data['positions'])
+            if nframe == 0: continue
+            # change to same length
+            # find max
+            nbs = [bond_data['positions'][i].shape[0] for i in range(nframe)]
+            nb_max = max(nbs)
+            frames_bond = np.zeros((nframe, nb_max, 7))
+            for i in range(nframe):
+                frames_bond[i, 0:nbs[i], :] = bond_data['positions'][i]
+                frames_bond[i, nbs[i]:, 0:3] = frames[i].positions[0]
+            bb = Bbond(self.label, species, frames_bond, 
+                        color = bond_data['color'],
+                        width = bond_data['width'],
+                        segments = bond_data['segments'],
+                        battr_inputs=bond_data['battr_inputs'])
+            self.coll.children['%s_bond'%self.label].objects.link(bb.obj)
+            bpy.data.collections['Collection'].objects.unlink(bb.obj)
+            bb.set_frames()
+        bpy.context.scene.frame_set(self.nframe)
+        print('draw bond: {0:10.2f} s'.format(time() - tstart))
                 
     def draw_polyhedras(self, bondlist = None):
         """Draw polyhedra.
@@ -442,7 +472,7 @@ class Batoms():
                                             self.cell, cuts = cuts, cmap = cmap)
             
     
-    def draw_crystal_shape(self, no = None, origin = (0, 0, 0)):
+    def draw_crystal_shape(self, no = None, origin = None):
         """Draw crystal shape
 
         no: int
@@ -453,6 +483,8 @@ class Batoms():
         """
         if no is not None:
             self.planesetting.no = no
+        if origin is None:
+            origin = self.cell.origin
         planes = self.planesetting.build_crystal(self.cell, origin = origin)
         self.clean_atoms_objects('plane', ['crystal'])
         for species, plane in planes.items():
@@ -464,6 +496,10 @@ class Batoms():
                 draw_cylinder(name = name, 
                             datas = plane['edges_cylinder'],
                             coll = self.coll.children['%s_plane'%self.label])
+            if plane['boundary']:
+                name = '%s_%s_%s'%(self.label, 'plane', species)
+                self.planesetting.build_boundary(plane['indices'], batoms = self)
+                bpy.context.view_layer.update()
     def clean_atoms_objects(self, coll, names = None):
         """
         remove all bond object in the bond collection
@@ -498,7 +534,7 @@ class Batoms():
         self.set_scale(scale)
     def get_scale(self):
         scale = {}
-        for coll in [self.batoms, self.batoms_boundary, self.batoms_skin]:
+        for coll in [self.batoms, self.batoms_boundary, self.batoms_search]:
             for batom in coll.values():
                 scale[batom.species] = batom.scale
         return scale
@@ -507,7 +543,7 @@ class Batoms():
 
         scale: float
         """
-        for coll in [self.batoms, self.batoms_boundary, self.batoms_skin]:
+        for coll in [self.batoms, self.batoms_boundary, self.batoms_search]:
             for batom in coll.values():
                 batom.scale = scale
     def draw(self, model_type = None, draw_isosurface = True):
@@ -579,7 +615,7 @@ class Batoms():
         """
         # if kind exists, merger, otherwise build a new kind and add.
         object_mode()
-        positions = self.batoms[species1].positions[index]
+        positions = self.batoms[species1].frames[:, index, :]
         if species2 in self.batoms:
             self.batoms[species2].add_vertices(positions)
         else:
@@ -587,6 +623,7 @@ class Batoms():
                 ba = Batom(self.label, species2, positions, 
                         scale = self.batoms[species1].scale,
                         segments = self.segments, shape = self.shape, material=self.batoms[species1].material)
+                ba.set_frames()
             else:
                 ba = Batom(self.label, species2, positions, 
                     scale = self.batoms[species1].scale,
@@ -595,6 +632,7 @@ class Batoms():
                     node_inputs=self.node_inputs, 
                     radii_style = self.radii_style, 
                     color_style=self.color_style)
+                ba.set_frames()
             self.coll.children['%s_atom'%self.label].objects.link(ba.obj)
             bpy.data.collections['Collection'].objects.unlink(ba.obj)
             self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
@@ -782,6 +820,24 @@ class Batoms():
         
         """
         self.__imul__(rep)
+    def transform(self, matrix = None):
+        """
+        Transformation matrix
+        """
+        from ase.build.supercells import make_supercell
+        if matrix is not None:
+            rotation = np.array([matrix[0][:3], matrix[1][:3], matrix[2][:3]])
+            translation = np.array([matrix[0][3], matrix[1][3], matrix[2][3]])
+            atoms = self.atoms
+            atoms = make_supercell(atoms, rotation)
+            atoms.translate(translation)
+            batoms = self.__class__(label = '%s_transform'%self.label, atoms = atoms,
+                                    model_type = self.model_type)
+        else:
+            return
+        self.hide = True
+        return batoms
+        
     def __mul__(self, rep):
         self.repeat(rep)
         return self
@@ -802,7 +858,7 @@ class Batoms():
         species_dict = {x:self.batoms[x].copy(label, x) for x in self.species}
         batoms = self.__class__(species = species_dict, label = label, 
                                 cell = self.cell.verts, pbc = self.pbc, 
-                                model_type = self.coll.batoms.model_type)
+                                model_type = self.model_type)
         batoms.translate([2, 2, 2])
         batoms.bondsetting = self.bondsetting.copy(label)
         batoms.polyhedrasetting = self.polyhedrasetting.copy(label)
@@ -832,10 +888,10 @@ class Batoms():
     def get_coll_boundary(self):
         return self.coll.children['%s_boundary'%self.label]
     @property
-    def coll_skin(self):
-        return self.get_coll_skin()
-    def get_coll_skin(self):
-        return self.coll.children['%s_skin'%self.label]
+    def coll_search(self):
+        return self.get_coll_search()
+    def get_coll_search(self):
+        return self.coll.children['%s_search'%self.label]
     @property
     def cell(self):
         return self._cell
@@ -914,10 +970,14 @@ class Batoms():
         >>> tio2.boundary = 0.4
         """
         self.clean_atoms_objects('boundary')
-        self.clean_atoms_objects('skin')
-        tstart = time()
-        frames = self.get_frames(local = True)
+        self.clean_atoms_objects('search')
+        frames = self.get_frames(self.batoms, local = True)
         nframe = len(frames)
+        frames_boundary = []
+        frames_search_bond = []
+        species_max_n_boundary = {sp: 0 for sp in self.species}
+        species_max_n_search = {sp: 0 for sp in self.species}
+        tstart = time()
         for f in range(nframe):
             print('update boundary: ', f)
             boundary = self.boundary
@@ -925,68 +985,67 @@ class Batoms():
             atoms0 = frames[f]
             if atoms0.pbc.any():
                 # find boudary atoms
-                atoms_boundary, offsets_skin = search_boundary(atoms0, boundary, self.bondsetting.maxcutoff)
-                self.draw_boundary_atoms(atoms_boundary, f)
+                atoms_boundary, offsets_search = search_boundary(atoms0, boundary, self.bondsetting.maxcutoff)
+                species_max_n_boundary = {sp:max(sum(atoms_boundary.arrays['species'] == sp), 
+                            species_max_n_boundary[sp]) for sp in self.species}
+                frames_boundary.append(atoms_boundary)
                 # search bond
                 bondlists = build_bondlists(atoms0, self.bondsetting.cutoff_dict)
-                offsets_skin1, bondlist1, offsets_skin2, bondlist2 = \
-                        self.bondsetting.search_bond_list(atoms0, bondlists, offsets_skin)
+                offsets_search1, bondlist1, offsets_search2, bondlist2 = \
+                        self.bondsetting.search_bond_list(atoms0, bondlists, offsets_search)
                 # search type 1
-                offset_skin_1 = search_bond(atoms0.get_scaled_positions(), offsets_skin1, bondlist1, boundary)
+                offset_search_1 = search_bond(atoms0.get_scaled_positions(), offsets_search1, bondlist1, boundary)
                 # search type 2
-                offset_skin_2 = search_bond(atoms0.get_scaled_positions(), offsets_skin2, bondlist2, boundary, recursive=True)
+                offset_search_2 = search_bond(atoms0.get_scaled_positions(), offsets_search2, bondlist2, boundary, recursive=True)
                 # search type 1 final
-                offset_skin_3 = search_bond(atoms0.get_scaled_positions(), offset_skin_2, bondlist1, boundary)
-                self.draw_search_bond_atoms(atoms0, offset_skin_1, offset_skin_2, offset_skin_3, f)
-                # print('search skin: {0:10.2f} s'.format(time() - tstart))
-    def draw_boundary_atoms(self, atoms_boundary, f = 0):
+                offset_search_3 = search_bond(atoms0.get_scaled_positions(), offset_search_2, bondlist1, boundary)
+                offsets_search = np.append(offset_search_1, offset_search_2, axis = 0)
+                offsets_search = np.append(offsets_search, offset_search_3, axis = 0)
+                offsets_search = offsets_search.astype(int)
+                atoms_search_bond = atoms0[offsets_search[:, 0]]
+                atoms_search_bond.positions = atoms_search_bond.positions + np.dot(offsets_search[:, 1:], atoms0.cell)
+                species_max_n_search = {sp:max(sum(atoms_search_bond.arrays['species'] == sp), 
+                            species_max_n_search[sp]) for sp in self.species}
+                frames_search_bond.append(atoms_search_bond)
+
+        self.draw_boundary_atoms(frames_boundary, species_max_n_boundary, suffix = "boundary")
+        self.draw_boundary_atoms(frames_search_bond, species_max_n_search, suffix = "search")
+        print('update boundary: {0:10.2f} s'.format(time() - tstart))
+        # print('search search: {0:10.2f} s'.format(time() - tstart))
+    def draw_boundary_atoms(self, frames, nsps, suffix = 'boundary'):
         """
         """
         from batoms.butils import add_keyframe_visibility
-        if len(atoms_boundary) == 0: return 0
-        species = np.unique(atoms_boundary.arrays['species'])
+        nframe = len(frames)
+        if nframe == 0: return
+        frames0 = self.frames
+        species = self.species
+        # change to same length for each species
+        positions_dict = {sp: np.zeros((nframe, nsps[sp], 3)) 
+                    + self.cell.origin for sp in species}
+        for i in range(nframe):
+            for sp in species:
+                positions = frames[i].positions[frames[i].arrays['species']==sp]
+                m = len(positions)
+                if m == 0:
+                    temp = frames0[i].positions[frames0[i].arrays['species']==sp]
+                    positions_dict[sp][i, m:, :] += np.tile(temp[0], (nsps[sp] - m, 1))
+                else:
+                    positions_dict[sp][i, 0:m, :] += positions
+                    positions_dict[sp][i, m:, :] += np.tile(positions[0], (nsps[sp] - m, 1))
         for sp in species:
-            positions = atoms_boundary[atoms_boundary.arrays['species']==sp].positions
-            positions = positions + self.location
-            ba = Batom(self.label, '%s_boundary%s'%(sp, f), positions, 
+            ba = Batom(self.label, '%s_%s'%(sp, suffix), positions_dict[sp], 
                         element = self.batoms[sp].element, 
                         scale = self.batoms[sp].scale, 
                         segments = self.segments, shape = self.shape, 
                         material=self.batoms[sp].material)
-            self.coll.children['%s_boundary'%self.label].objects.link(ba.obj)
+            self.coll.children['%s_%s'%(self.label, suffix)].objects.link(ba.obj)
             bpy.data.collections['Collection'].objects.unlink(ba.obj)
             if ba.instancer.name not in self.coll.children['%s_instancer'%self.label].objects:
                 self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
                 # bpy.data.collections['Collection'].objects.unlink(ba.instancer)
-            add_keyframe_visibility(ba.obj, self.nframe, f)
-    def draw_search_bond_atoms(self, atoms0, offsets_search_1, offsets_search_2, offsets_search_3, f = 0):
-        """
-        """
-        # print(atoms)
-        from batoms.butils import add_keyframe_visibility
-        offsets_search = np.append(offsets_search_1, offsets_search_2, axis = 0)
-        offsets_search = np.append(offsets_search, offsets_search_3, axis = 0)
-        if len(offsets_search) == 0: return 0
-        offsets_search = offsets_search.astype(int)
-        atoms_search_bond = atoms0[offsets_search[:, 0]]
-        atoms_search_bond.positions = atoms_search_bond.positions + np.dot(offsets_search[:, 1:], atoms0.cell)
-        species = np.unique(atoms_search_bond.arrays['species'])
-        for sp in species:
-            positions = atoms_search_bond[atoms_search_bond.arrays['species']==sp].positions
-            positions = positions + self.location
-            ba = Batom(self.label, '%s_skin%s'%(sp, f), positions, 
-                        element = self.batoms[sp].element, 
-                        scale = self.batoms[sp].scale, 
-                        segments = self.segments, shape = self.shape, 
-                        material=self.batoms[sp].material)
-            self.coll.children['%s_skin'%self.label].objects.link(ba.obj)
-            bpy.data.collections['Collection'].objects.unlink(ba.obj)
-            if ba.instancer.name not in self.coll.children['%s_instancer'%self.label].objects:
-                self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
-                # bpy.data.collections['Collection'].objects.unlink(ba.instancer)
-            # key as visible on the current frame
-            add_keyframe_visibility(ba.obj, self.nframe, f)
-        # print('update skin: {0:10.2f} s'.format(time() - tstart))
+            ba.set_frames()
+    
     @property
     def model_type(self):
         return self.get_model_type()
@@ -1029,16 +1088,16 @@ class Batoms():
     def atoms_boundary(self):
         return self.batoms2atoms(self.batoms_boundary)
     @property
-    def atoms_skin(self):
-        return self.batoms2atoms(self.batoms_skin)
+    def atoms_search(self):
+        return self.batoms2atoms(self.batoms_search)
     def get_atoms_with_boundary(self, X = False):
         """
         build ASE atoms from batoms dict.
         """
         atoms = self.batoms2atoms(self.batoms, X = X)
         atoms_boundary = self.batoms2atoms(self.batoms_boundary, X = X)
-        atoms_skin = self.batoms2atoms(self.batoms_skin, X = X)
-        atoms = atoms + atoms_boundary + atoms_skin
+        atoms_search = self.batoms2atoms(self.batoms_search, X = X)
+        atoms = atoms + atoms_boundary + atoms_search
         atoms.pbc = False
         return atoms
     @property
@@ -1052,17 +1111,16 @@ class Batoms():
         return nframe
     @property
     def frames(self):
-        return self.get_frames()
+        return self.get_frames(self.batoms)
     @frames.setter
     def frames(self, frames):
         self.set_frames(frames)
-    def get_frames(self, local = False, X = False):
+    def get_frames(self, batoms, local = False, X = False, remove = None):
         """
         use shape key
         """
         frames = []
         frames_species = {}
-        batoms = self.batoms
         nframe = 0
         for species, batom in batoms.items():
             frames_species[species] = batom.frames
@@ -1075,7 +1133,11 @@ class Batoms():
             for species, batom in batoms.items():
                 # ghost site will not save 
                 if not X and batom.element == 'X': continue
-                species_list.extend([species]*len(batom))
+                if remove is not None:
+                    species1 = species.replace(remove, '')
+                else:
+                    species1 = species
+                species_list.extend([species1]*len(batom))
                 symbol = [batom.element]*len(batom)
                 symbols.extend(symbol)
                 positions.extend(frames_species[species][i])
@@ -1152,15 +1214,15 @@ class Batoms():
             batoms_boundary[obj.batom.species] = Batom(obj.name)
         return batoms_boundary
     @property
-    def batoms_skin(self):
-        return self.get_batoms_skin()
-    def get_batoms_skin(self, frame = None):
-        batoms_skin = {}
-        for obj in self.coll_skin.objects:
+    def batoms_search(self):
+        return self.get_batoms_search()
+    def get_batoms_search(self, frame = None):
+        batoms_search = {}
+        for obj in self.coll_search.objects:
             if frame is not None and not obj.name.endswith(str(frame)):
                 continue
-            batoms_skin[obj.batom.species] = Batom(obj.name)
-        return batoms_skin
+            batoms_search[obj.batom.species] = Batom(obj.name)
+        return batoms_search
     def batoms2atoms(self, batoms, local = False, X = False):
         """
         save batoms objects to ASE atoms
@@ -1183,7 +1245,7 @@ class Batoms():
             # ghost site will not save 
             if not X and batom.element == 'X': continue
             if '_boundary' in species: species = species.split('_boundary')[0]
-            if '_skin' in species: species = species.split('_skin')[0]
+            if '_search' in species: species = species.split('_search')[0]
             species_list.extend([species]*len(batom))
             symbol = [batom.element]*len(batom)
             symbols.extend(symbol)
@@ -1308,7 +1370,8 @@ class Batoms():
         """Get the center of mass.
 
         If scaled=True the center of mass in scaled coordinates
-        is returned."""
+        is returned.
+        """
         return self.atoms.get_center_of_mass(scaled = scaled)
     @property
     def hide(self):
@@ -1353,6 +1416,18 @@ class Batoms():
             return None
         no = int(sg[sg.find('(') + 1:sg.find(')')])
         return no
+    def find_primitive(self, ):
+        """
+        """
+        import spglib
+        atoms = self.atoms
+        lattice = atoms.cell
+        points = atoms.get_scaled_positions()
+        numbers = atoms.get_atomic_numbers()
+        cell = (lattice, points, numbers)
+        lattice, points,  numbers= spglib.find_primitive(cell)
+        atoms = Atoms(numbers=numbers, scaled_positions=points, cell = lattice)
+        return atoms
     def get_all_vertices(self, colls = None, cell = True):
         """
         Get position of all vertices from all mesh in batoms.

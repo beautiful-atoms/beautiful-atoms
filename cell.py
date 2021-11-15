@@ -22,7 +22,7 @@ class Bcell(BaseObject):
         """
         self.label = label
         self.name = 'edge'
-        obj_name = 'cell_%s_edge'%(self.label)
+        obj_name = '%s_cell_edge'%(self.label)
         BaseObject.__init__(self, obj_name = obj_name)
         self.edges = [[3, 0], [3, 1], [4, 0], [4, 1],
                     [2, 5], [2, 6], [7, 5], [7, 6], 
@@ -43,24 +43,23 @@ class Bcell(BaseObject):
         else:
             verts = array - array[3]
             location = array[3]
-        if self.name not in bpy.data.objects:
-            
-            mesh = bpy.data.meshes.new("cell_%s_edge"%self.label)
+        if self.obj_name not in bpy.data.objects:
+            mesh = bpy.data.meshes.new(self.obj_name)
             mesh.from_pydata(verts, self.edges, [])  
             mesh.update()
             for f in mesh.polygons:
                 f.use_smooth = True
-            obj_edge = bpy.data.objects.new("cell_%s_edge"%self.label, mesh)
+            obj_edge = bpy.data.objects.new(self.obj_name, mesh)
             obj_edge.data = mesh
             obj_edge.location = location
             obj_edge.bcell.flag = True
             bpy.data.collections['Collection'].objects.link(obj_edge)
-        elif bpy.data.objects[self.name].bcell.flag:
-            # print('%s exist and is bcell, use it.'%self.name)
+        elif bpy.data.objects[self.obj_name].bcell.flag:
+            # print('%s exist and is bcell, use it.'%self.obj_name)
             pass
         else:
             raise Exception("Failed, the name %s already \
-                in use and is not Bcell object!"%self.name)
+                in use and is not Bcell object!"%self.obj_name)
         bpy.context.view_layer.update()
     def build_cell_cylinder(self):
          #

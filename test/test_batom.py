@@ -24,7 +24,7 @@ def test_batom():
     h2 = h.copy('h2o', 'H_2')
     #
     assert isinstance(h2, Batom)
-    h3=Batom('atom_h2o_H_2')
+    h3=Batom('h2o_atom_H_2')
     assert isinstance(h3, Batom)
 
 def test_positions():

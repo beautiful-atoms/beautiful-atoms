@@ -1,12 +1,10 @@
 import bpy
-import bmesh
 from bpy_extras.object_utils import AddObjectHelper
 
 from bpy.props import (
-    FloatProperty,
     StringProperty,
 )
-from ase.build import molecule, bulk, surface
+from ase.build import molecule
 from batoms import Batoms
 
 def add_molecule(label, formula):

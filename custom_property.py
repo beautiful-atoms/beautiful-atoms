@@ -45,14 +45,7 @@ class Batom(bpy.types.PropertyGroup):
     species: StringProperty(name="species", default = 'X')
     element: StringProperty(name="element", default = '')
     radius: FloatProperty(name="radius")
-class Blight(bpy.types.PropertyGroup):
-    """
-    """
-    flag: BoolProperty(name="flag", default=False)
-    label: StringProperty(name="label", default = 'X')
-    name: StringProperty(name="name", default = 'X')
-    lock_to_camera: BoolProperty(name="lock_to_camera", default=False)
-    direction: FloatVectorProperty(name="direction", default = [0, 0, 1], size = 3)
+
 class Bcell(bpy.types.PropertyGroup):
     """
     """
@@ -75,6 +68,7 @@ class BBond(bpy.types.PropertyGroup):
     color2: FloatVectorProperty(name="color1", size = 4, default = (0.6, 0.2, 0, 1))
     width: FloatProperty(name="width", default = 0.10)
     order: IntProperty(name="order", default = 1)
+    segments: IntProperty(name="segments", default = 16)
     order_offset: FloatProperty(name="order_offset", default = 0.1)
     style: EnumProperty(
         name="style",
@@ -233,3 +227,20 @@ class BVolume(bpy.types.PropertyGroup):
     label: StringProperty(name="label", default = '')
     npoint: IntProperty(name="npoint")
     shape: IntVectorProperty(name="shape", size = 3)
+
+class BLight(bpy.types.PropertyGroup):
+    """
+    """
+    flag: BoolProperty(name="flag", default=False)
+    label: StringProperty(name="label", default = 'X')
+    name: StringProperty(name="name", default = 'X')
+    lock_to_camera: BoolProperty(name="lock_to_camera", default=False)
+    direction: FloatVectorProperty(name="direction", default = [0, 0, 1], size = 3)
+
+class BRender(bpy.types.PropertyGroup):
+    """
+    """
+    flag: BoolProperty(name="flag", default=False)
+    label: StringProperty(name="label", default = 'X')
+    engine: StringProperty(name="engine", default = 'BLENDER_EEVEE')
+    direction: FloatVectorProperty(name="direction", default = [0, 0, 1], size = 3)

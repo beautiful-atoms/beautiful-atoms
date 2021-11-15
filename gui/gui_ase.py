@@ -1,19 +1,15 @@
 from ase.build import molecule, bulk
-from ase import Atom, Atoms
-from ase.build.general_surface import surface
+from ase import Atoms
 import bpy
 from bpy.types import (Panel,
                        Operator,
                        )
 from bpy.props import (StringProperty,
-                        BoolProperty,
-                       BoolVectorProperty,
                        IntProperty,
                        IntVectorProperty,
                        FloatProperty,
-                       FloatVectorProperty,
                        )
-from batoms.butils import get_selected_batoms, get_selected_objects
+from batoms.butils import get_selected_batoms
 from batoms import Batoms
 
 # The panel.
@@ -29,32 +25,25 @@ class ASE_PT_prepare(Panel):
         layout = self.layout
         asepanel = context.scene.asepanel
 
-        box = layout.box()
-        col = box.column(align=True)
-        col.label(text="Formula")
-        col.prop(asepanel, "formula")
-        col.prop(asepanel, "label")
-        col.operator("batoms.add_molecule")
-        col.operator("batoms.add_bulk")
-        col.operator("batoms.add_atoms")
+        layout.prop(asepanel, "formula")
+        layout.prop(asepanel, "label")
+        layout.operator("batoms.add_molecule")
+        layout.operator("batoms.add_bulk")
+        layout.operator("batoms.add_atoms")
 
         #
-        box = layout.box()
-        col = box.column(align=True)
-        col.label(text="Surface")
-        row = box.row()
-        row.prop(asepanel, "indices")
-        col = box.column(align=True)
-        col.prop(asepanel, "nlayer")
-        col.prop(asepanel, "vacuum")
-        col.prop(asepanel, "termination")
-        col.operator("batoms.add_surface")
+        layout.label(text="Surface:")
+        layout.prop(asepanel, "indices")
+        layout.prop(asepanel, "nlayer")
+        layout.prop(asepanel, "vacuum")
+        layout.prop(asepanel, "termination")
+        layout.operator("batoms.add_surface")
 
 
 
 class ASEProperties(bpy.types.PropertyGroup):
     formula: StringProperty(
-        name = "", default='H2O',
+        name = "Formula", default='H2O',
         description = "formula")
     label: StringProperty(
         name = "Label", default='h2o',

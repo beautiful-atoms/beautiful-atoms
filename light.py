@@ -106,10 +106,11 @@ class Lights():
     """
     A collection of Light
     """
-    def __init__(self, label) -> None:
+    def __init__(self, label, from_coll = False) -> None:
         self.label = label
         self.name = "%s_light"%label
-        self.set_collection()
+        if not from_coll:
+            self.set_collection()
     def set_collection(self):
         """
         build main collection and its child collections.

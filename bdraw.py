@@ -40,7 +40,7 @@ def draw_cylinder(
     tstart = time()
     source = bond_source[datas['vertices']]
     tstart = time()
-    verts, faces = cylinder_mesh_from_instance_vec(datas['centers'], datas['normals'], datas['lengths'], datas['width'], source)
+    verts, faces = cylinder_mesh_from_vec(datas['centers'], datas['normals'], datas['lengths'], datas['width'], source)
     mesh = bpy.data.meshes.new(name)
     mesh.from_pydata(verts, [], faces)
     mesh.update()
@@ -219,7 +219,7 @@ def sphere_mesh_from_instance(centers, radius, source):
             faces.append(face)
     return verts, faces
 
-def cylinder_mesh_from_instance_vec(centers, normals, lengths, scale, source):
+def cylinder_mesh_from_vec(centers, normals, lengths, scale, source):
     from scipy.spatial.transform import Rotation as R
     tstart = time()
     vert0, face1, face2 = source

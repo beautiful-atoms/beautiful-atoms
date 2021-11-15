@@ -1,16 +1,9 @@
 import bpy
 from bpy.types import (Panel,
-                       Operator,
-                       AddonPreferences,
-                       PropertyGroup,
                        )
-from bpy.props import (StringProperty,
-                       BoolProperty,
-                       IntProperty,
-                       FloatProperty,
+from bpy.props import (FloatProperty,
                        FloatVectorProperty,
                        EnumProperty,
-                       PointerProperty,
                        )
 
 from batoms.butils import get_selected_objects
@@ -29,19 +22,12 @@ class Batom_PT_prepare(Panel):
         layout = self.layout
         btpanel = context.scene.btpanel
 
-        box = layout.box()
-        col = box.column()
-        col.label(text="Batom shape")
-        col = box.column()
+        layout.label(text="Shape")
+        col = layout.column()
         col.prop(btpanel, "batom_shape", expand  = True)
-        box = layout.box()
-        col = box.column(align=True)
-        row = box.row()
-        row.prop(btpanel, "scale")
+        layout.prop(btpanel, "scale")
 
-        col = box.column(align=True)
-        row = box.row()
-        row.prop(btpanel, "batomcolor")
+        layout.prop(btpanel, "batomcolor")
 
 class BatomProperties(bpy.types.PropertyGroup):
     @property

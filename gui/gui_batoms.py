@@ -31,39 +31,26 @@ class Batoms_PT_prepare(Panel):
         layout = self.layout
         bapanel = context.scene.bapanel
 
+        layout.label(text="Model type")
         box = layout.box()
-        col = box.column()
-        col.label(text="Model type")
         col = box.column()
         col.prop(bapanel, "model_type", expand  = True)
         
-        row = box.row()
-        row.prop(bapanel, "hide", expand  = True)
-        
-        row = box.row()
-        row.prop(bapanel, "scale")
+        layout.prop(bapanel, "hide", expand  = True)
+        layout.prop(bapanel, "scale")
 
-        box = layout.box()
-        col = box.column(align=True)
-        col.operator("batoms.replace")
-        row = box.row(align=True)
-        row.prop(bapanel, "species")
+        layout.operator("batoms.replace")
+        layout.prop(bapanel, "species")
 
-        col = box.column(align=True)
-        col.operator("batoms.fragmentate")
-        row = box.row(align=True)
-        row.prop(bapanel, "suffix", expand  = True)
+        layout.operator("batoms.fragmentate")
+        layout.prop(bapanel, "suffix", expand  = True)
 
-        box = layout.box()
-        col = box.column(align=True)
-        col.label(text="Measurement")
-        col.operator("batoms.record_selection")
-        col.prop(bapanel, "measurement")
+        layout.label(text="Measurement")
+        layout.operator("batoms.record_selection")
+        layout.prop(bapanel, "measurement")
 
-        box = layout.box()
-        col = box.column(align=True)
-        col.label(text="Export atoms")
-        col.prop(bapanel, "filetype")
+        layout.label(text="Export atoms")
+        layout.prop(bapanel, "filetype")
 
 class BatomsProperties(bpy.types.PropertyGroup):
     @property

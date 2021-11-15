@@ -19,11 +19,9 @@ class Pubchem_PT_prepare(Panel):
         layout = self.layout
         pubcpanel = context.scene.pubcpanel
 
-        box = layout.box()
-        col = box.column(align=True)
-        col.label(text="Search structure")
-        col.prop(pubcpanel, "cid")
-        col.operator("batoms.pubchem_search")
+        layout.label(text="Search structure")
+        layout.prop(pubcpanel, "cid")
+        layout.operator("batoms.pubchem_search")
 
 
 class PubchemProperties(bpy.types.PropertyGroup):

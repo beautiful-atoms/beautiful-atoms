@@ -1,16 +1,10 @@
 import bpy
 from bpy.types import (Panel,
-                       Operator,
-                       AddonPreferences,
-                       PropertyGroup,
                        )
-from bpy.props import (StringProperty,
-                       BoolProperty,
-                       IntProperty,
+from bpy.props import (BoolProperty,
                        FloatProperty,
                        FloatVectorProperty,
                        EnumProperty,
-                       PointerProperty,
                        )
 
 from batoms.butils import get_selected_objects, get_selected_batoms
@@ -30,21 +24,13 @@ class Polyhedra_PT_prepare(Panel):
         layout = self.layout
         popanel = context.scene.popanel
     
-        box = layout.box()
-        col = box.column()
-        col.label(text="Polyhedra type")
-        row = box.row()
-        row.prop(popanel, "polyhedra_type", expand  = True)
+        layout.label(text="Polyhedra type")
+        layout.prop(popanel, "polyhedra_type", expand  = True)
 
-        box = layout.box()
-        row = box.row()
-        row.prop(popanel, "show_edge")
-        row = box.row()
-        row.prop(popanel, "width")
+        layout.prop(popanel, "show_edge")
+        layout.prop(popanel, "width")
 
-        col = box.column(align=True)
-        row = box.row()
-        row.prop(popanel, "polyhedracolor")
+        layout.prop(popanel, "polyhedracolor")
 
 class PolyhedraProperties(bpy.types.PropertyGroup):
     @property

@@ -145,13 +145,14 @@ def add_keyframe_visibility(obj, nframe, frame):
     obj.animation_data_create()
     ac = bpy.data.actions.new('Visibility Action')
     obj.animation_data.action = ac
-    fc = ac.fcurves.new(data_path='hide_viewport')
-    fc.keyframe_points.add(nframe)
-    value = [0]*2*nframe
-    for i in range(nframe):
-        value[2*i] = i
-        if i == frame:
-            value[2*i + 1] = 0
-        else:
-            value[2*i + 1] = 1
-    fc.keyframe_points.foreach_set('co', value)
+    for data_path in ['hide_viewport', 'hide_render']:
+        fc = ac.fcurves.new(data_path=data_path)
+        fc.keyframe_points.add(nframe)
+        value = [0]*2*nframe
+        for i in range(nframe):
+            value[2*i] = i
+            if i == frame:
+                value[2*i + 1] = 0
+            else:
+                value[2*i + 1] = 1
+        fc.keyframe_points.foreach_set('co', value)
