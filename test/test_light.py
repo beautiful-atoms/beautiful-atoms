@@ -39,7 +39,8 @@ def test_render():
     assert len(h2o.render.lights) == 2
     h2o.render.lights['right'].type = 'POINT'
     assert h2o.render.lights['right'].type == 'POINT'
-    h2o.render.run([1, 0, 0], light_direction = [1, 0, 0], resolution_x = 200, output='h2o')    
+    h2o.render.lights['Default'].direction = [1, 0, 0]
+    h2o.render.run([0, 0, 1], resolution_x = 200, output='light-direction.png')    
 
 
 

@@ -11,12 +11,13 @@ def test_replace():
     from batoms.batoms import Batoms
     from batoms.butils import removeAll
     removeAll()
-    co = Batoms('co', atoms = molecule('CO'))
-    co.cell = [2, 2, 3]
-    co.pbc = True
-    co.repeat([2, 2, 2])
-    co.replace('C', 'C_1', [5])
-    co.model_type = 1
+    h2o = Batoms('h2o', atoms = molecule('H2O'))
+    h2o.replace('H', 'H_1', [0])
+    h2o.bondsetting.remove(['O', 'H_1'])
+    h2o['H_1'].color = [0.1, 0.8, 0, 1.0]
+    h2o.bondsetting.add(['O', 'H_1'])
+    h2o.model_type = 1
+    h2o.render.run([1, 0, 0], engine = 'eevee', output = 'bonds-replace.png')
 
 def test_add():
     from batoms.build import bulk
@@ -126,7 +127,7 @@ def test_hydrogen_bond():
     h2o.bondsetting[('H', 'O')].width = 0.01
     h2o.bondsetting[('H', 'O')].style = '2'
     h2o.model_type = 1
-    h2o.render.run([1, 0 ,0], engine = 'eevee')
+    h2o.render.run([1, 0 ,0], engine = 'eevee', output = 'bonds-hb.png')
 
 
 

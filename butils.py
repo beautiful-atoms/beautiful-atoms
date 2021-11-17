@@ -1,6 +1,6 @@
 import bpy
 from ase import Atom, Atoms
-
+from mathutils import Vector, Matrix
 
 
 def object_mode():
@@ -156,3 +156,18 @@ def add_keyframe_visibility(obj, nframe, frame):
             else:
                 value[2*i + 1] = 1
         fc.keyframe_points.foreach_set('co', value)
+
+def look_at(obj, target, roll=0):
+        """
+        Rotate obj to look at target
+        """
+        if not isinstance(target, Vector):
+            target = Vector(target)
+        loc = obj.location
+        direction = target - loc
+        quat = direction.to_track_quat('-Z', 'Y')
+        quat = quat.to_matrix().to_4x4()
+        rollMatrix = Matrix.Rotation(roll, 4, 'Z')
+        loc = loc.to_tuple()
+        obj.matrix_world = quat @ rollMatrix
+        obj.location = loc

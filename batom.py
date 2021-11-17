@@ -25,14 +25,18 @@ class Batom(BaseObject):
 
     label: str
         Name of the Batoms.
-    species: str
+    species: str or dict
         species of the atoms.
+        str: 'O', 'O_1', 'Fe_up', 'Fe_3+',
+        dict: {'Al': 0.9, 'Si': 0.1}
     positions: array
         positions
     locations: array
         The object’s origin location in global coordinates.
-    element: str or list
-        element of the atoms, list for fractional Occupancy
+    element: str or dict
+        element of the atoms, dict for fractional Occupancy
+        str: 'O'
+        dict: {'Al': 'Al', 'Si': 'Si'}
     segments: list of 2 Int
         Number of segments used to draw the UV_Sphere
         Default: [32, 16]
@@ -50,6 +54,7 @@ class Batom(BaseObject):
 
     >>> from batoms.batom import Batom
     >>> c = Batom('C', [[0, 0, 0], [1.2, 0, 0]])
+    >>> al = Batom({'Al': 0.7, 'Si': 0.3}, [[0, 0, 0], [1.2, 0, 0]])
 
     """
     
@@ -488,7 +493,9 @@ class Batom(BaseObject):
             return
         nvert = len(obj.data.vertices)
         for i in range(1, nframe):
-            sk = obj.shape_key_add(name = str(i))
+            sk = obj.data.shape_keys.key_blocks.get(str(i))
+            if sk is None:
+                sk = obj.shape_key_add(name = str(i))
             # Use the local position here
             positions = frames[i].reshape((nvert*3, 1))
             sk.data.foreach_set('co', positions)
@@ -572,7 +579,9 @@ class Batom(BaseObject):
                                  'vector')
         M = np.product(m)
         n = len(self)
-        positions = np.tile(self.positions, (M,) + (1,) * (len(self.positions.shape) - 1))
+        frames = self.frames
+        positions = self.positions
+        positions = np.tile(positions, (M,) + (1,) * (len(positions.shape) - 1))
         i0 = 0
         for m0 in range(m[0]):
             for m1 in range(m[1]):
@@ -581,6 +590,21 @@ class Batom(BaseObject):
                     positions[i0:i1] += np.dot((m0, m1, m2), cell)
                     i0 = i1
         self.add_vertices(positions[n:])
+        # repeat frames
+        frames_new = []
+        if self.nframe > 1:
+            for i in range(0, self.nframe):
+                positions = np.tile(frames[i], (M,) + (1,) * (len(frames[i].shape) - 1))
+                i0 = 0
+                for m0 in range(m[0]):
+                    for m1 in range(m[1]):
+                        for m2 in range(m[2]):
+                            i1 = i0 + n
+                            positions[i0:i1] += np.dot((m0, m1, m2), cell)
+                            i0 = i1
+                frames_new.append(positions)
+        self.set_frames(frames_new)
+
     def copy(self, label, species):
         """
         Return a copy.

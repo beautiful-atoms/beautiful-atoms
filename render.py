@@ -11,20 +11,10 @@ from batoms.camera import Camera
 
 default_render_settings = {
         'transparent': True,  # transparent background
-        'resolution_x': 1000,
-        'resolution_y': None,  # 
-        'lock_camera_to_view': True,
-        'camera_target': [0, 0, 0], #
         'ratio': 1,
-        'studiolight': 'Default',  # "basic", "outdoor", "paint", "rim", "studio"
         'world': True,
         # 'engine': 'BLENDER_EEVEE', #'BLENDER_EEVEE' #'BLENDER_WORKBENCH'
-        'use_motion_blur': False,
-        'motion_blur_position': 'START', 
-        'motion_blur_steps': 10,
-        'motion_blur_shutter': 30.0,
         'frame': None,
-        'functions': [],
         'run_render': True,
         'output': None,
         'animation': False,
@@ -49,12 +39,13 @@ class Render():
         self.name = '%s_render'%label
         self.batoms = batoms
         self.camera_name = 'camera_%s'%self.label
+        self.set_parameters(default_render_settings)
         if from_coll:
             self.lights = Lights(label, from_coll = True)
+            self.camera = Camera(label, from_coll = True)
         else:
             self.set_collection()
             default_render_settings.update(kwargs)
-            self.set_parameters(default_render_settings)
             self.clean_default()
             self.camera = Camera(label, coll = self.coll)
             self.lights = Lights(label)
@@ -114,30 +105,20 @@ class Render():
         node_tree = world.node_tree
         node_tree.nodes["Background"].inputs["Strength"].default_value = 1.0
         node_tree.nodes["Background"].inputs["Color"].default_value = color
-    def look_at(self, obj, target, roll=0):
+    def motion_blur(self, use_motion_blur):
         """
-        Rotate obj to look at target
+        'use_motion_blur': False,
+        'motion_blur_position': 'START', 
+        'motion_blur_steps': 10,
+        'motion_blur_shutter': 30.0,
         """
-        if not isinstance(target, Vector):
-            target = Vector(target)
-        loc = obj.location
-        direction = target - loc
-        quat = direction.to_track_quat('-Z', 'Y')
-        quat = quat.to_matrix().to_4x4()
-        rollMatrix = Matrix.Rotation(roll, 4, 'Z')
-        loc = loc.to_tuple()
-        obj.matrix_world = quat @ rollMatrix
-        obj.location = loc
-    def motion_blur(self):
-        """
-        """
-        bpy.context.scene.eevee.use_motion_blur = self.use_motion_blur
-        bpy.context.scene.eevee.motion_blur_position = self.motion_blur_position
-        bpy.context.scene.eevee.motion_blur_steps = self.motion_blur_steps
-        bpy.context.scene.eevee.motion_blur_shutter = self.motion_blur_shutter
-        bpy.context.scene.cycles.use_motion_blur = self.use_motion_blur
-        bpy.context.scene.cycles.motion_blur_position = self.motion_blur_position
-        bpy.context.scene.cycles.motion_blur_shutter = self.motion_blur_shutter
+        bpy.context.scene.eevee.use_motion_blur = use_motion_blur
+        bpy.context.scene.eevee.motion_blur_position = 'START'
+        bpy.context.scene.eevee.motion_blur_steps = 10
+        bpy.context.scene.eevee.motion_blur_shutter = 30.0
+        bpy.context.scene.cycles.use_motion_blur = use_motion_blur
+        bpy.context.scene.cycles.motion_blur_position = 'START'
+        bpy.context.scene.cycles.motion_blur_shutter = 30.0
     def set_direction(self, direction = (0, 0, 1), 
                     distance = None, 
                     padding = None, canvas = None):
@@ -167,7 +148,7 @@ class Render():
         direction = direction/np.linalg.norm(direction)
         self.camera.location = center + direction*distance
         self.camera.ortho_scale = max(width, height)
-        self.look_at(self.camera.obj, center)
+        self.camera.target = center
         self.ratio = height/width
         # plane
         frame = rotate_frame(direction)
@@ -182,20 +163,18 @@ class Render():
                 dirction = dirction/np.linalg.norm(dirction)
                 location = center + dirction*distance
                 light.location = location
-                self.look_at(light.obj, center)
-    def run(self, direction = None, distance = None, canvas = None, padding = None, **kwargs):
+                light.target = center
+    def run(self, direction = None, distance = None, canvas = None, 
+                padding = None, **kwargs):
         """
         render the model and export result
         """
-        from batoms.camera import lock_camera_to_view
         if direction:
             self.set_direction(direction, distance = distance, 
                         canvas = canvas, padding = padding)
-        if self.lock_camera_to_view:
-            lock_camera_to_view(True)
         self.set_parameters(kwargs)
-        if self.use_motion_blur:
-            self.motion_blur()
+        if kwargs.get('use_motion_blur'):
+            self.motion_blur(kwargs.get('use_motion_blur'))
         self.prepare()
         if self.save_to_blend:
             print('saving to {0}.blend'.format(self.output))
@@ -204,7 +183,9 @@ class Render():
         elif self.run_render:
             bpy.data.scenes[0].frame_end = self.batoms.nframe
             bpy.ops.render.render(write_still = 1, animation = self.animation)
-    def prepare(self, ):
+    def prepare(self, num_samples = 32, studiolight = 'Default',
+                resolution_x = 1000, 
+                ):
         """
         Set parameters for rendering
         """
@@ -222,10 +203,10 @@ class Render():
         if self.engine.upper() == 'BLENDER_WORKBENCH':
             bpy.data.scenes['Scene'].display.shading.studio_light = '%s'%self.studiolight
         if self.engine.upper() == 'BLENDER_EEVEE':
-            self.scene.eevee.taa_render_samples = self.num_samples
+            self.scene.eevee.taa_render_samples = num_samples
             self.scene.cycles.use_denoising = True
         if self.engine.upper() == 'CYCLES':
-            self.scene.cycles.samples = self.num_samples
+            self.scene.cycles.samples = num_samples
             self.scene.cycles.use_denoising = True
             if self.gpu:
                 self.scene.cycles.device = 'GPU'
@@ -235,8 +216,8 @@ class Render():
                 self.scene.render.tile_x = 256
                 self.scene.render.tile_y = 256
         self.scene.render.film_transparent = self.transparent
-        self.scene.render.resolution_x = self.resolution_x
-        self.scene.render.resolution_y = int(self.resolution_x*self.ratio)
+        self.scene.render.resolution_x = resolution_x
+        self.scene.render.resolution_y = int(resolution_x*self.ratio)
         self.scene.render.filepath = '{0}'.format(self.output)
     def export(self, filename = 'blender-ase.obj'):
         if filename.split('.')[-1] == 'obj':

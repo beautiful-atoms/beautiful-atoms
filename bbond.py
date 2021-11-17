@@ -98,12 +98,15 @@ class Bbond(BaseObject):
         if material:
             material = material.copy()
             material.name = name
-        elif name not in bpy.data.materials:
-            material = create_material(name,
-                        color,
-                        node_inputs = node_inputs,
-                        material_style = material_style,
-                        backface_culling = True)
+            return
+        mat = bpy.data.objects.get(name)
+        if mat is not None:
+            bpy.data.materials.remove(mat, do_unlink = True)
+        material = create_material(name,
+                    color,
+                    node_inputs = node_inputs,
+                    material_style = material_style,
+                    backface_culling = True)
     def set_object(self, positions, width = 0.1, segments = 16,
                         location = (0, 0, 0), battr_inputs = {}):
         object_mode()

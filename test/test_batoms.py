@@ -43,6 +43,17 @@ def test_batoms():
     index = [0, 1]
     h2o['H'][index][:, 0] += 2
 
+def test_from_coll():
+    from batoms.butils import removeAll
+    from batoms import Batoms
+    removeAll()
+    batoms = Batoms('h2o', {'O': [[0, 0, 0.40]], 'H': [[0, -0.76, -0.2], [0, 0.76, -0.2]]})
+    h2o = Batoms('h2o')
+    assert isinstance(h2o, Batoms)
+    h2o.render.run([0, 0, 1], output = 'batoms_from_coll.png')
+    # properties
+
+
 def test_ase_species():
     from batoms.butils import removeAll
     from batoms import Batoms
@@ -148,6 +159,7 @@ def test_get_angles():
 if __name__ == '__main__':
     test_batom()
     test_batoms()
+    test_from_coll()
     test_ase_species()
     test_set_positions()
     test_cavity()

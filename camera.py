@@ -8,7 +8,7 @@ import os
 import numpy as np
 from batoms.base import BaseObject
 
-def lock_camera_to_view(switch):
+def set_lock_camera_to_view(switch):
     for area in bpy.context.screen.areas:
         if area.type == 'VIEW_3D':
             for space in area.spaces:
@@ -21,12 +21,17 @@ class Camera(BaseObject):
                         camera_type = 'ORTHO', 
                         lens = 50, 
                         location = (0, 0, 100), 
+                        camera_target = [0, 0, 0],
+                        from_coll = False,
+                        lock_camera_to_view = True,
                         ) -> None:
         self.label = label
         self.name = name
         obj_name = "%s_camera_%s"%(label, name)
         BaseObject.__init__(self, obj_name = obj_name)
-        self.create_camera(camera_type, location, lens, coll = coll)
+        if not from_coll:
+            self.create_camera(camera_type, location, lens, coll = coll)
+        set_lock_camera_to_view(lock_camera_to_view)
     @property
     def lens(self):
         return self.get_lens()

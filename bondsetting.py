@@ -293,14 +293,15 @@ def get_bondtable(label, speciesdict, cutoff = 1.3, self_interaction = True):
                     }
     # special for hydrogen bond
     hbs = [('H', 'O'), ('H', 'N')]
-    for key in hbs:
-        if key in bondtable:
-            bondtable[key]['min'] = 1.2
-            bondtable[key]['max'] = 2.1
-            bondtable[key]['search'] = 0
-            bondtable[key]['color1'] = [0.1, 0.1, 0.1, 1.0]
-            bondtable[key]['width'] = 0.03
-            bondtable[key]['style'] = '2'
+    for pair in bondtable:
+        key = (pair[0].split('_')[0], pair[1].split('_')[0])
+        if key in hbs:
+            bondtable[pair]['min'] = 1.2
+            bondtable[pair]['max'] = 2.1
+            bondtable[pair]['search'] = 0
+            bondtable[pair]['color1'] = [0.1, 0.1, 0.1, 1.0]
+            bondtable[pair]['width'] = 0.03
+            bondtable[pair]['style'] = '2'
     return bondtable
 
 def build_bondlists(atoms, cutoff):

@@ -1,7 +1,6 @@
 import bpy
 import numpy as np
-from batoms.butils import object_mode
-
+from batoms.butils import object_mode, look_at
 
 class BaseObject():
     def __init__(self, obj_name):
@@ -58,6 +57,16 @@ class BaseObject():
         return self.get_scene()
     def get_scene(self):
         return bpy.data.scenes['Scene']
+    @property
+    def target(self):
+        return self.get_target()
+    @target.setter
+    def target(self, target):
+        self.set_target(target)
+    def get_target(self):
+        return None
+    def set_target(self, target):
+        look_at(self.obj, target, roll = 0.0)
     def translate(self, displacement):
         """Translate atomic positions.
 
@@ -103,6 +112,7 @@ class BaseObject():
         else:
             for c in self.obj.constraints:
                 self.obj.constraints.remove(c)
+    
 
 class BaseCollection():
     def __init__(self, name):

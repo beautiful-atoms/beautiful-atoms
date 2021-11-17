@@ -47,9 +47,25 @@ def test_batom_animation():
     o = Batom('co2', 'O', positions)
     images = []
     for i in range(10):
-        images.append(positions + np.array([i, 0, 0]))
+        images.append(positions + np.array([i, 0, 0]))     
     
     o.frames = images
+    # repeat
+    cell = np.array([[5, 0, 0], [0, 5, 0], [0, 0, 5]])
+    o.repeat([2, 1, 1], cell)
+    # join
+    positions = np.array([[0.76, 0 ,0]])
+    o_1 = Batom('co2', 'O_1', positions)
+    images = []
+    for i in range(10):
+        images.append(positions + np.array([i, 0, 0]))
+    
+    o_1.frames = images
+    o.extend(o_1)
+    # delete
+    o.delete([4])
+
+
 
 
 if __name__ == '__main__':
