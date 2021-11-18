@@ -134,3 +134,4 @@ dmypy.json
 # atomic structures
 *.in
 
+.vscode/*

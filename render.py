@@ -19,8 +19,8 @@ default_render_settings = {
         'output': None,
         'animation': False,
         'save_to_blend': False,
-        'queue': None,
         'gpu': True,
+        'compute_device_type': 'CUDA',
         'num_samples': 32,
         }
 
@@ -209,12 +209,12 @@ class Render():
             self.scene.cycles.samples = num_samples
             self.scene.cycles.use_denoising = True
             if self.gpu:
+                bpy.context.preferences.addons["cycles"].preferences.compute_device_type  \
+                                = self.compute_device_type
                 self.scene.cycles.device = 'GPU'
-                prefs = bpy.context.preferences.addons['cycles'].preferences
-                for device in prefs.devices:
-                    device.use = True
-                self.scene.render.tile_x = 256
-                self.scene.render.tile_y = 256
+                bpy.context.preferences.addons["cycles"].preferences.get_devices()
+                for device in bpy.context.preferences.addons["cycles"].preferences.devices:
+                    device["use"] = 1 # Using all devices, include GPU and CPU
         self.scene.render.film_transparent = self.transparent
         self.scene.render.resolution_x = resolution_x
         self.scene.render.resolution_y = int(resolution_x*self.ratio)

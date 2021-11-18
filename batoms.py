@@ -785,7 +785,7 @@ class Batoms():
                 # reset the location of batom, same as the unit cell
                 self.coll.children['%s_atom'%self.label].objects.link(ba.obj)
         self.reset_batom_location()
-        remove_collection(other.label)
+        # remove_collection(other.label)
     def reset_batom_location(self):
         """
         """
