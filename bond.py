@@ -47,12 +47,13 @@ class Bbond(BaseObject):
 
     Examples:
 
-    >>> from batoms.bbond import Bbond
+    >>> from batoms.bond import Bbond
     >>> c = Bbond('C', [[0, 0, 0], [1.2, 0, 0]])
 
     """
     
 
+    
     def __init__(self, 
                 label = None,
                 species = None,
@@ -74,7 +75,8 @@ class Bbond(BaseObject):
             obj_name = '%s_bond_%s'%(self.label, self.species)
         else:
             obj_name = label
-        BaseObject.__init__(self, obj_name = obj_name)
+        bobj_name = 'bbond'
+        BaseObject.__init__(self, obj_name = obj_name, bobj_name = bobj_name)
         if positions is not None:
             positions = np.array(positions)
             if len(positions.shape) == 2:
@@ -90,6 +92,7 @@ class Bbond(BaseObject):
             self.set_frames(self._frames, only_basis = True)
         else:
             self.from_bbond(label)
+    
     def set_material(self, color, node_inputs = None, material_style = 'default', material = None):
         """
         """
@@ -107,6 +110,7 @@ class Bbond(BaseObject):
                     node_inputs = node_inputs,
                     material_style = material_style,
                     backface_culling = True)
+    
     def set_object(self, positions, width = 0.1, segments = 16,
                         location = (0, 0, 0), battr_inputs = {}):
         object_mode()
@@ -137,6 +141,7 @@ class Bbond(BaseObject):
         bpy.data.collections['Collection'].objects.link(obj)
         bpy.context.view_layer.update()
         # print('draw bond: {0:10.2f} s'.format(time() - tstart))
+    
     def from_bbond(self, label):
         if label not in bpy.data.objects:
             raise Exception("%s is not a object!"%label)
@@ -150,50 +155,66 @@ class Bbond(BaseObject):
             'radius':obj.bbond.radius,
             'scale':obj.scale,
         } 
-    @property
+    
+    @property    
     def mesh(self):
         return self.get_mesh()
+    
     def get_mesh(self):
         return self.obj.children[0]
-    @property
+    
+    @property    
     def material(self):
         return self.get_material()
+    
     def get_material(self):
         return bpy.data.materials['material_bond_%s_%s'%(self.label, self.species)]
-    @property
+    
+    @property    
     def scale(self):
         return self.get_scale()
-    @scale.setter
+    
+    @scale.setter    
     def scale(self, scale):
         self.set_scale(scale)
+    
     def get_scale(self):
         return np.array(self.mesh.scale)
+    
     def set_scale(self, scale):
         if isinstance(scale, float) or isinstance(scale, int):
             scale = [scale]*3
         self.mesh.scale = scale
-    @property
+    
+    @property    
     def width(self):
         return self.get_width()
+    
     def get_width(self):
         return np.array(self.obj.bbond.width)
-    @property
+    
+    @property    
     def segments(self):
         return self.get_segments()
+    
     def get_segments(self):
         return self.obj.bbond.segments
-    @segments.setter
+    
+    @segments.setter    
     def segments(self, segments):
         self.set_segments(segments)
+    
     def set_segments(self, segments):
         if not isinstance(segments, int):
             raise Exception('Segments should be int!')
         self.clean_bbonds_objects('mesh_bond_%s_%s'%(self.label, self.species))
         mesh = self.set_mesh(segments = segments)
         mesh.parent = self.obj
-    @property
+    
+    @property    
     def local_positions(self):
         return self.get_local_positions()
+    
     def get_local_positions(self):
         """
         using foreach_get and foreach_set to improve performance.
@@ -204,12 +225,15 @@ class Bbond(BaseObject):
         self.obj.data.vertices.foreach_get('co', local_positions)  
         local_positions = local_positions.reshape((nvert, 3))
         return local_positions
-    @property
+    
+    @property    
     def positions(self):
         return self.get_positions()
-    @positions.setter
+    
+    @positions.setter    
     def positions(self, positions):
         self.set_positions(positions)
+    
     def get_positions(self):
         """
         Get global positions.
@@ -218,6 +242,7 @@ class Bbond(BaseObject):
         positions = local2global(self.local_positions, 
                 np.array(self.obj.matrix_world))
         return positions
+    
     def set_positions(self, positions):
         """
         Set global positions to local vertices
@@ -233,6 +258,7 @@ class Bbond(BaseObject):
         positions = positions.reshape((natom*3, 1))
         self.obj.data.vertices.foreach_set('co', positions)
         self.obj.data.update()
+    
     def get_scaled_positions(self, cell):
         """
         Get array of scaled_positions.
@@ -241,20 +267,25 @@ class Bbond(BaseObject):
         cell = Cell.new(cell)
         scaled_positions = cell.scaled_positions(self.local_positions)
         return scaled_positions
-    @property
+    
+    @property    
     def nframe(self):
         return self.get_nframe()
+    
     def get_nframe(self):
         if self.obj.data.shape_keys is None:
             return 0
         nframe = len(self.obj.data.shape_keys.key_blocks)
         return nframe
-    @property
+    
+    @property    
     def frames(self):
         return self.get_frames()
-    @frames.setter
+    
+    @frames.setter    
     def frames(self, frames):
         self.set_frames(frames)
+    
     def get_frames(self):
         """
         read shape key
@@ -273,15 +304,18 @@ class Bbond(BaseObject):
                             np.array(self.obj.matrix_world))
             frames[i] = local_positions
         return frames
-    @property
+    
+    @property    
     def color(self):
         return self.get_color()
-    @color.setter
+    
+    @color.setter    
     def color(self, color):
         """
         >>> h.color = [0.8, 0.1, 0.3, 1.0]
         """
         self.set_color(color)
+    
     def get_color(self):
         """
 
@@ -294,6 +328,7 @@ class Bbond(BaseObject):
                 Alpha = node.inputs['Alpha'].default_value
         color = [node_color[0], node_color[1], node_color[2], Alpha]
         return color
+    
     def set_color(self, color):
         if len(color) == 3:
             color = [color[0], color[1], color[2], 1]
@@ -303,26 +338,34 @@ class Bbond(BaseObject):
                 node.inputs['Base Color'].default_value = color
             if 'Alpha' in node.inputs:
                 node.inputs['Alpha'].default_value = color[3]
-    @property
+    
+    @property    
     def node(self):
         return self.get_node()
-    @node.setter
+    
+    @node.setter    
     def node(self, node):
         self.set_node(node)
+    
     def get_node(self):
         return self.material.node_tree.nodes
+    
     def set_node(self, node):
         for key, value in node.items():
             self.material.node_tree.nodes['Principled BSDF'].inputs[key].default_value = value
-    @property
+    
+    @property    
     def subdivisions(self):
         return self.get_subdivisions()
-    @subdivisions.setter
+    
+    @subdivisions.setter    
     def subdivisions(self, subdivisions):
         self.set_subdivisions(subdivisions)
+    
     def get_subdivisions(self):
         nverts = len(self.mesh.data.vertices)
         return nverts
+    
     def set_subdivisions(self, subdivisions):
         if not isinstance(subdivisions, int):
             raise Exception('subdivisions should be int!')
@@ -330,9 +373,11 @@ class Bbond(BaseObject):
         mesh = self.set_mesh(subdivisions = subdivisions, shape='ICO_SPHERE')
         mesh.parent = self.obj
     
+    
     def clean_bbonds_objects(self, obj):
         obj = bpy.data.objects[obj]
         bpy.data.objects.remove(obj, do_unlink = True)
+    
     
     def set_frames(self, frames = None, frame_start = 0, only_basis = False):
         """
@@ -386,9 +431,11 @@ class Bbond(BaseObject):
                 add_keyframe_to_shape_key(sk, 'value', 
                     [0, 1], [frame_start + i - 1, frame_start + i])
 
+    
     def __len__(self):
         n = int(len(self.obj.data.vertices)/self.segments/2)
         return n
+    
     
     def __getitem__(self, index):
         """Return a subset of the Bbond.
@@ -400,6 +447,7 @@ class Bbond(BaseObject):
         """
         return self.positions[index]
         
+    
     def __setitem__(self, index, value):
         """Return a subset of the Bbond.
 
@@ -412,11 +460,12 @@ class Bbond(BaseObject):
         positions[index] = value
         self.set_positions(positions)
 
+    
     def repeat(self, m, cell):
         """
         In-place repeat of atoms.
 
-        >>> from batoms.bbond import Bbond
+        >>> from batoms.bond import Bbond
         >>> c = Bbond('co', 'C', [[0, 0, 0], [1.2, 0, 0]])
         >>> c.repeat([3, 3, 3], np.array([[5, 0, 0], [0, 5, 0], [0, 0, 5]]))
         """
@@ -437,6 +486,7 @@ class Bbond(BaseObject):
                     positions[i0:i1] += np.dot((m0, m1, m2), cell)
                     i0 = i1
         self.add_vertices(positions[n:])
+    
     def copy(self, label, species):
         """
         Return a copy.
@@ -454,11 +504,12 @@ class Bbond(BaseObject):
                     location = self.obj.location, 
                     scale = self.scale, material=self.material)
         return bbond
+    
     def extend(self, other):
         """
         Extend bbond object by appending bbond from *other*.
         
-        >>> from batoms.bbonds import Bbond
+        >>> from batoms.bonds import Bbond
         >>> h1 = Bbond('h2o', 'H_1', [[0, 0, 0], [2, 0, 0]])
         >>> h2 = Bbond('h2o', 'H_2', [[0, 0, 2], [2, 0, 2]])
         >>> h = h1 + h2
@@ -470,25 +521,30 @@ class Bbond(BaseObject):
         other.obj.select_set(True)
         bpy.context.view_layer.objects.active = self.obj
         bpy.ops.object.join()
+    
     def __iadd__(self, other):
         """
         >>> h1 += h2
         """
         self.extend(other)
         return self
+    
     def __add__(self, other):
         """
         >>> h1 = h1 + h2
         """
         self += other
         return self
+    
     def __iter__(self):
         bbond = self.obj
         for i in range(len(self)):
             yield bbond.matrix_world @ bbond.data.vertices[i].co
+    
     def __repr__(self):
         s = "Bbond('%s', positions = %s" % (self.species, list(self.positions))
         return s
+    
     def add_vertices(self, positions):
         """
         Todo: find a fast way.

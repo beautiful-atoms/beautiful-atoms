@@ -19,6 +19,7 @@ class IsosurfaceSetting(Setting):
         The label define the batoms object that a Setting belong to.
 
     """
+    
     def __init__(self, label, volume = None, isosurfacesetting = None) -> None:
         Setting.__init__(self, label)
         self.label = label
@@ -31,6 +32,7 @@ class IsosurfaceSetting(Setting):
             self.volume = volume
             if len(self) == 0:
                 self['1'] = {'level': volume.max()/8, 'color': [1, 1, 0, 0.8]}
+    
     def draw_volume(self, volume):
         """
         Draw unit cell by edge, however, can not be rendered.
@@ -59,36 +61,46 @@ class IsosurfaceSetting(Setting):
         obj.hide_set(True)
         obj.hide_render = True
         print('Draw volume: {0:1.2f}'.format(time() - tstart))
-    @property
+    
+    @property    
     def npoint(self):
         return self.get_npoint()
+    
     def get_npoint(self):
         if "volume_%s"%self.label not in bpy.data.objects:
             return 0
         return bpy.data.objects["volume_%s"%self.label].bvolume.npoint
-    @npoint.setter
+    
+    @npoint.setter    
     def npoint(self, npoint):
         self.set_npoint(npoint)
+    
     def set_npoint(self, npoint):
         bpy.data.objects["volume_%s"%self.label].bvolume.npoint = npoint
-    @property
+    
+    @property    
     def mesh(self):
         return self.get_mesh()
+    
     def get_mesh(self):
         name = "volume_%s"%self.label
         if name not in bpy.data.objects:
             return None
         mesh = bpy.data.objects[name].data
         return mesh
-    @property
+    
+    @property    
     def shape(self):
         return self.get_shape()
+    
     def get_shape(self):
         shape = bpy.data.objects["volume_%s"%self.label].bvolume.shape
         return shape
-    @property
+    
+    @property    
     def volume(self):
         return self.get_volume()
+    
     def get_volume(self):
         tstart = time()
         if self.mesh is None:
@@ -101,23 +113,28 @@ class IsosurfaceSetting(Setting):
         volume = volume.reshape(self.shape)
         # print('Read volume: {0:1.2f}'.format(time() - tstart))
         return volume
-    @volume.setter
+    
+    @volume.setter    
     def volume(self, volume):
         self.draw_volume(volume)
+    
     def set_default(self):
         """
         """
         for sp, data in self.species.items():
             self[sp] = {'color': np.append(data['color'][:3], 0.3), 'level': 0.005}
+    
     def add(self, isosurfacepair):
         for key in isosurfacepair:
             self.set_default(key)
+    
     def remove_isosurfaces(self, isosurfacepair):
         for key in isosurfacepair:
             name = '%s-%s'%(key[0], key[1])
             i = self.collection.find(name)
             if i != -1:
                 self.collection.remove(i)
+    
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
         s = 'Center     level                color  \n'
@@ -126,6 +143,7 @@ class IsosurfaceSetting(Setting):
                 iso.name, iso.level, iso.color[0], iso.color[1], iso.color[2], iso.color[3])
         s += '-'*60 + '\n'
         return s
+    
     def build_isosurface(self, cell):
         volume = self.volume
         isosurface = {}

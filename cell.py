@@ -11,6 +11,7 @@ class Bcell(BaseObject):
     Unit cell of three dimensions.
 
     """
+    
     def __init__(self, label, 
                 array = np.zeros([3, 3]), 
                 location = np.array([0, 0, 0]),
@@ -23,7 +24,8 @@ class Bcell(BaseObject):
         self.label = label
         self.name = 'edge'
         obj_name = '%s_cell_edge'%(self.label)
-        BaseObject.__init__(self, obj_name = obj_name)
+        bobj_name = 'bcell'
+        BaseObject.__init__(self, obj_name = obj_name, bobj_name = bobj_name)
         self.edges = [[3, 0], [3, 1], [4, 0], [4, 1],
                     [2, 5], [2, 6], [7, 5], [7, 6], 
                     [3, 2], [0, 6], [1, 5], [4, 7]
@@ -31,6 +33,7 @@ class Bcell(BaseObject):
         self.width = 0.05
         self.color = color
         self.draw_cell_edge(array, location)
+    
     def draw_cell_edge(self, array, location):
         """
         Draw unit cell by edge, however, can not be rendered.
@@ -61,6 +64,7 @@ class Bcell(BaseObject):
             raise Exception("Failed, the name %s already \
                 in use and is not Bcell object!"%self.obj_name)
         bpy.context.view_layer.update()
+    
     def build_cell_cylinder(self):
          #
         cell_cylinder = {'lengths': [], 
@@ -82,12 +86,15 @@ class Bcell(BaseObject):
             cell_cylinder['centers'].append(center)
             cell_cylinder['normals'].append(nvec)
         return cell_cylinder
+    
     def __repr__(self) -> str:
         numbers = self.array.tolist()
         s = 'Cell({})'.format(numbers)
         return s
+    
     def __getitem__(self, index):
         return self.array[index]
+    
     def __setitem__(self, index, value):
         """
         Add bondpair one by one
@@ -105,34 +112,43 @@ class Bcell(BaseObject):
         verts = self.array2verts(array)
         for i in range(8):
             obj.data.vertices[i].co = np.array(verts[i])
+    
     def __array__(self, dtype=float):
         if dtype != float:
             raise ValueError('Cannot convert cell to array of type {}'
                              .format(dtype))
         return self.array
-    @property
+    
+    @property    
     def array(self):
         return self.get_array()
+    
     def get_array(self):
         cell = np.array([self.verts[0] - self.verts[3],
                          self.verts[1] - self.verts[3],
                          self.verts[2] - self.verts[3]])
         return cell
-    @property
+    
+    @property    
     def local_verts(self):
         return self.get_local_verts()
+    
     def get_local_verts(self):
         obj = self.obj
         return np.array([obj.data.vertices[i].co for i in range(8)])
-    @property
+    
+    @property    
     def verts(self):
         return self.get_verts()
+    
     def get_verts(self):
         return np.array([self.obj.matrix_world @ \
                 self.obj.data.vertices[i].co for i in range(8)])
-    @property
+    
+    @property    
     def origin(self):
         return self.verts[3]
+    
     def array2verts(self, array):
         """
         """
@@ -147,27 +163,33 @@ class Bcell(BaseObject):
             ])
         verts = np.dot(verts, array)
         return verts
+    
     def copy(self, label):
         object_mode()
         cell = Bcell(label, array = self.array, location = self.obj.location)
         return cell
+    
     def repeat(self, m):
         self[:] = np.array([m[c] * self.array[c] for c in range(3)])
-    @property
+    
+    @property    
     def length(self):
         length = np.linalg.norm(self.array, axis = 0)
         return length
-    @property
+    
+    @property    
     def reciprocal(self):
         from math import pi
         b1 = 2*pi/self.volume*np.cross(self[1], self[2])
         b2 = 2*pi/self.volume*np.cross(self[2], self[0])
         b3 = 2*pi/self.volume*np.cross(self[0], self[1])
         return np.array([b1, b2, b3])
-    @property
+    
+    @property    
     def volume(self):
         return np.dot(self[0], np.cross(self[1], self[2]))
-    @property
+    
+    @property    
     def center(self):
         """Center of unit cell.
         """

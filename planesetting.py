@@ -24,6 +24,7 @@ class PlaneSetting(Setting):
         The label define the batoms object that a Setting belong to.
 
     """
+    
     def __init__(self, label, batoms = None, plane = None) -> None:
         Setting.__init__(self, label)
         self.name = 'bplane'
@@ -31,12 +32,15 @@ class PlaneSetting(Setting):
         if plane is not None:
             for key, data in plane.items():
                 self[key] = data
-    @property
+    
+    @property    
     def no(self, ):
         return self.batoms.get_spacegroup_number()
-    @no.setter
+    
+    @no.setter    
     def no(self, no):
         self.no = no
+    
     def __setitem__(self, index, setdict):
         """
         Set properties
@@ -65,8 +69,10 @@ class PlaneSetting(Setting):
                 p1.indices = index
                 p1.label = self.label
 
+    
     def add(self, indices):
         self[indices] = {'indices': indices}
+    
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
         s = 'Indices   distance  crystal   symmetry  slicing   boundary\n'
@@ -75,6 +81,7 @@ class PlaneSetting(Setting):
                 p.name, p.distance, str(p.crystal), str(p.symmetry), str(p.slicing),  str(p.boundary))
         s += '-'*60 + '\n'
         return s
+    
     def get_symmetry_indices(self):
         if self.no == 1: return
         for p in self:
@@ -92,6 +99,7 @@ class PlaneSetting(Setting):
                         p1.indices = index
                         p1.label = self.label
                         p1.flag = True
+    
     def build_crystal(self, bcell, origin = [0, 0, 0]):
         """
         Build crystal
@@ -138,6 +146,7 @@ class PlaneSetting(Setting):
         self.crystal_planes = new_planes
         return new_planes
 
+    
     def build_plane(self, bcell, include_center = False):
         """
         Build vertices, edges and faces of plane.
@@ -168,6 +177,7 @@ class PlaneSetting(Setting):
             planes[p.name] = self.get_plane_data(vertices, edges, faces, p)
         self.planes = planes
         return planes
+    
     def get_plane_data(self, vertices, edges, faces, p):
         """
         build edge
@@ -199,6 +209,7 @@ class PlaneSetting(Setting):
                 plane['edges_cylinder']['centers'].append(center)
                 plane['edges_cylinder']['normals'].append(nvec)
         return plane
+    
     def build_slicing(self, name, volume, bcell, cuts = None, cmap = 'Spectral'):
         """
         Change plane to a 2D slicing plane.
@@ -281,6 +292,7 @@ class PlaneSetting(Setting):
         # bpy.context.view_layer.objects.active = plane
         # bpy.ops.object.mode_set(mode='VERTEX_PAINT')
             
+    
     def build_slicing_image(self, volume, bcell):
         """
         2D slicings of volumetric data by an arbitrary plane.
@@ -318,6 +330,7 @@ class PlaneSetting(Setting):
                               'rotation': rotation,
                               'size': size}
         return slicings
+    
     def build_boundary(self, indices, batoms = None):
         """
         Remove vertices above the plane
@@ -327,11 +340,12 @@ class PlaneSetting(Setting):
         normal = normal/np.linalg.norm(normal)
         point = p.distance*normal
         # isosurface, plane
-        subcollections = ['atom', 'bond', 'polyhedra', 'volume',
-'ghost', 'boundary', 'skin', 'plane']
-
-        for coll in subcollections:
-            for obj in batoms.coll.children['%s_%s'%(self.label, coll)].all_objects:
+        colls = batoms.coll.children.keys()
+        for coll_name in colls:
+            objs = bpy.data.collections.get(coll_name).all_objects.keys()
+            if 'cell' in coll_name: continue
+            for obj_name in objs:
+                obj = bpy.data.objects.get(obj_name)
                 if obj.type != 'MESH': continue
                 if 'volume' in obj.name: continue
                 n = len(obj.data.vertices)

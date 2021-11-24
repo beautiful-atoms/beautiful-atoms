@@ -26,23 +26,29 @@ class Setting():
     label: str
         The label define the batoms object that a Setting belong to.
     """
+    
     def __init__(self, label) -> None:
         self.label = label
         self.name = 'base'
+    
     def get_data(self):
         data = {}
         for b in self.collection:
             data[b.name] = b
         return data
-    @property
+    
+    @property    
     def collection(self):
         return self.get_collection()
+    
     def get_collection(self):
         collection = getattr(bpy.data.collections[self.label], self.name)
         return collection
-    @property
+    
+    @property    
     def species(self):
         return self.get_species()
+    
     def get_species(self) -> dict:
         """
         read species from collection.
@@ -54,15 +60,18 @@ class Setting():
                 'color': ba.children[0].data.materials[0].diffuse_color,
                 'radius': ba.batom.radius}
         return species
-    @property
+    
+    @property    
     def data(self):
         return self.get_data()
+    
     def __getitem__(self, index):
         name = tuple2string(index)
         item = self.find(name)
         if item is None:
             raise Exception('%s not in %s setting'%(name, self.name))
         return item
+    
     def __setitem__(self, index, setdict):
         """
         Set properties
@@ -76,12 +85,14 @@ class Setting():
             setattr(subset, key, value)
         subset.label = self.label
         subset.flag = True
+    
     def copy(self, label):
         object_mode()
         setting = self.__class__(label)
         for key, b in self.data.items():
             setting[key] = b.as_dict()
         return setting
+    
     def remove(self, index):
         """
         index: list of tuple
@@ -97,24 +108,31 @@ class Setting():
                 self.collection.remove(i)
             else:
                 raise Exception('%s is not in %s'%(name, self.name))
+    
     def __delitem__(self, index):
         self.remove(index)
+    
     def __add__(self, other):
         self += other
         return self
+    
     def __iadd__(self, other):
         self.extend(other)
         return self
+    
     def extend(self, other):
         for key, value in other.data.items():
             self[key] = value.as_dict()
         return self
+    
     def __iter__(self):
         item = self.collection
         for i in range(len(item)):
             yield item[i]
+    
     def __len__(self):
         return len(self.collection)
+    
     def find(self, name):
         i = self.collection.find(str(name))
         if i == -1:
@@ -137,6 +155,7 @@ class BondSetting(Setting):
     cutoff: float
         Cutoff used to calculate the maxmium bondlength for bond pairs.
     """
+    
     def __init__(self, label, bondsetting = None, cutoff = 1.3) -> None:
         Setting.__init__(self, label)
         self.label = label
@@ -147,6 +166,7 @@ class BondSetting(Setting):
         if bondsetting is not None:
             for key, data in bondsetting.items():
                 self[key] = data
+    
     def __setitem__(self, index, setdict):
         """
         Set properties
@@ -165,6 +185,7 @@ class BondSetting(Setting):
             setattr(subset, key, value)
         subset.label = self.label
         subset.flag = True
+    
     def set_default(self, species, cutoff = 1.3, self_interaction = True):
         """
         """
@@ -172,6 +193,7 @@ class BondSetting(Setting):
                     self_interaction = self_interaction)
         for key, value in bondtable.items():
             self[key] = value
+    
     def extend(self, other):
         for b in other:
             self[(b.species1, b.species2)] = b.as_dict()
@@ -184,6 +206,7 @@ class BondSetting(Setting):
             for sp2 in nspecies2:
                 species = {sp1: self.species[sp1], sp2: other.species[sp2]}
                 self.set_default(species, self.cutoff, self_interaction = False)
+    
     def add(self, bondpairs):
         if isinstance(bondpairs, tuple):
             bondpairs = [bondpairs]
@@ -198,12 +221,14 @@ class BondSetting(Setting):
                             'color2':species[bondpair[1]]['color'],
                             }
             self.set_default(species)
+    
     def copy(self, label):
         object_mode()
         bondsetting = self.__class__(label)
         for b in self:
             bondsetting[(b.species1, b.species2)] = b.as_dict()
         return bondsetting
+    
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
         s = 'Bondpair      min     max   Search_bond    Polyhedra style\n'
@@ -212,19 +237,22 @@ class BondSetting(Setting):
                 b.name, b.min, b.max, str(b.search), str(b.polyhedra), b.style)
         s += '-'*60 + '\n'
         return s
-    @property
+    
+    @property    
     def cutoff_dict(self):
         cutoff_dict = {}
         for b in self.collection:
             cutoff_dict[(b.species1, b.species2)] = [b.min, b.max]
         return cutoff_dict
-    @property
+    
+    @property    
     def maxcutoff(self):
         maxcutoff = 2
         for bl in self.cutoff_dict.values():
             if bl[1] > maxcutoff:
                 maxcutoff = bl[1]
         return maxcutoff
+    
     def search_bond_list(self, atoms, bondlists0, offsets_skin0):
         bondlist1 = []
         offsets_skin1 = []

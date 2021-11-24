@@ -16,7 +16,7 @@ def test_slice():
     h2o.draw_isosurface()
     h2o.planesetting[(1, 0, 0)] = {'distance': 6, 'slicing': True}
     h2o.draw_lattice_plane()
-    h2o.render.run([0, 0, 1], engine = 'eevee')
+    h2o.get_image([0, 0, 1], engine = 'eevee')
 
 
 def test_diff():
@@ -36,8 +36,9 @@ def test_diff():
     ag_pto_fe.isosurfacesetting[2] = {'level': -0.008, 'color': [0, 0, 1, 0.8]}
     ag_pto_fe.model_type = 1
     ag_pto_fe.draw_isosurface()
-    ag_pto_fe.render.run([0, 0, 1], resolution_x = 3000, engine = 'eevee', output = 'top.png')
-    ag_pto_fe.render.run([1, 0, 0], resolution_x = 3000, engine = 'eevee', output = 'side.png')
+    ag_pto_fe.render.resolution = [3000, 3000]
+    ag_pto_fe.get_image([0, 0, 1], engine = 'eevee', output = 'top.png')
+    ag_pto_fe.get_image([1, 0, 0], engine = 'eevee', output = 'side.png')
 
 
 if __name__ == '__main__':

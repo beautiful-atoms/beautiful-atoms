@@ -6,7 +6,7 @@ from batoms.butils import removeAll
 def test_bbond():
     """
     """
-    from batoms.bbond import Bbond
+    from batoms.bond import Bbond
     import numpy as np
     from batoms.butils import removeAll
 
@@ -22,7 +22,7 @@ def test_bbond():
 def test_bbond_animation():
     """
     """
-    from batoms.bbond import Bbond
+    from batoms.bond import Bbond
     import numpy as np
     from batoms.butils import removeAll
     removeAll()

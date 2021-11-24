@@ -16,6 +16,8 @@ def test_boundary():
     pt.boundary = 0.01
     atoms = pt.get_atoms_with_boundary()
     assert len(atoms) == 14
+    pt.draw_cell()
+    pt.get_image(output='boundary_pt.png')
 
 
 def test_bond_search():
@@ -28,6 +30,8 @@ def test_bond_search():
     tio2.model_type = 2
     atoms = tio2.get_atoms_with_boundary()
     assert len(atoms) == 55
+    tio2.draw_cell()
+    tio2.get_image(output='boundary_search.png')
 
 
 

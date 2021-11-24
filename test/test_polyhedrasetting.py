@@ -18,7 +18,6 @@ def test_polyhedra():
     assert len(ch4.polyhedrasetting) == 1
     ch4.polyhedrasetting.add('C')
     assert len(ch4.polyhedrasetting) == 2
-    
     ch4.model_type = 2
 
 

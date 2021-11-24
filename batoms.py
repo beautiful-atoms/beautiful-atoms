@@ -5,16 +5,17 @@ Definition of the Batoms class in the batoms package.
 
 import bpy
 from ase import Atoms, spacegroup
+from batoms.base import BaseCollection
 from batoms.batom import Batom
 from batoms.bondsetting import BondSetting, build_bondlists, calc_bond_data
 from batoms.polyhedrasetting import PolyhedraSetting, build_polyhedralists
 from batoms.isosurfacesetting import IsosurfaceSetting
 from batoms.planesetting import PlaneSetting
 from batoms.cell import Bcell
-from batoms.render import Render
+from batoms.render.render import Render
 from batoms.boundary import search_boundary, search_bond
 from batoms.bdraw import draw_cylinder, draw_surface_from_vertices, draw_2d_slicing
-from batoms.butils import object_mode
+from batoms.butils import object_mode, show_index
 import numpy as np
 from time import time
 
@@ -27,9 +28,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 subcollections = ['atom', 'cell', 'bond', 'polyhedra', 'instancer', 
-'instancer_atom', 'volume', 'ghost', 'boundary', 'search', 'render', 'text', 'plane']
+'instancer_atom', 'volume', 'ghost', 'boundary', 'search', 'text', 'plane']
 
-class Batoms():
+class Batoms(BaseCollection):
     """
     Batoms object
 
@@ -82,7 +83,7 @@ class Batoms():
     """
     
 
-    def __init__(self, label = None,
+    def __init__(self, label,
                 species = None,
                 atoms = None, 
                 pbc = False, cell = None,
@@ -112,18 +113,19 @@ class Batoms():
         self.segments = segments
         self.shape = shape
         self.label = label
+        BaseCollection.__init__(self, coll_name = self.label)
         self.radii_style = radii_style
         self.color_style = color_style
         self.material_style = material_style
         self.node_inputs = node_inputs
+        self._render = None
         if species:
-            if not self.label:
-                self.label = ''.join(['%s%s'%(species, len(positions)) 
-                             for sp, positions in species.items()])
+            # if not self.label:
+                # self.label = ''.join(['%s%s'%(species, len(positions)) 
+                            #  for sp, positions in species.items()])
             self.set_collection(model_type, polyhedra_type, boundary)
             self.from_species(species, species_props, pbc, cell)
             self.coll.batoms.show_unit_cell = show_unit_cell
-            self.render = Render(self.label, batoms = self)
         elif atoms:
             if isinstance(atoms, list):
                 frames = atoms
@@ -137,7 +139,6 @@ class Batoms():
                 self.from_pymatgen(atoms, species_props)
             self._frames = frames
             self.coll.batoms.show_unit_cell = show_unit_cell
-            self.render = Render(self.label, batoms = self)
         elif self.label:
             # print('Build from collection')
             self.from_collection(self.label)
@@ -178,8 +179,9 @@ class Batoms():
             self.draw()
         if movie:
             self.set_frames()
-        self.show_index()
+        show_index()
         # self.select = True
+    
     def from_species(self, species, species_props = {}, pbc = None, cell = None):
         """
         """
@@ -203,6 +205,7 @@ class Batoms():
         self._cell = Bcell(self.label, cell)
         self.coll.children['%s_cell'%self.label].objects.link(self._cell.obj)
         self.set_pbc(pbc)
+    
     def from_ase(self, atoms, species_props = {}):
         """
         Import structure from ASE atoms.
@@ -228,6 +231,7 @@ class Batoms():
         self._cell = Bcell(self.label, atoms.cell)
         self.coll.children['%s_cell'%self.label].objects.link(self._cell.obj)
         bpy.data.collections['Collection'].objects.unlink(self._cell.obj)
+    
     def from_pymatgen(self, structure, species_props = {}):
         """
         Import structure from Pymatgen structure.
@@ -259,6 +263,7 @@ class Batoms():
         self._cell = Bcell(self.label, cell)
         self.coll.children['%s_cell'%self.label].objects.link(self._cell.obj)
         bpy.data.collections['Collection'].objects.unlink(self._cell.obj)
+    
     def from_collection(self, collection_name):
         """
         """
@@ -268,8 +273,8 @@ class Batoms():
             raise Exception("%s is not Batoms collection!"%collection_name)
         self.label = collection_name
         self._cell = Bcell(label = collection_name)
-        self.render = Render(self.label, batoms = self, from_coll = True)
 
+    
     def npbool2bool(self, pbc):
         """
         """
@@ -280,22 +285,23 @@ class Batoms():
             else:
                 newpbc.append(False)
         return newpbc
+    
     def set_collection(self, model_type = 0, polyhedra_type = 0, boundary = [0, 0, 0]):
         """
         build main collection and its child collections.
         """
-        for coll in bpy.data.collections:
-            if self.label == coll.name:
+        if bpy.data.collections.get(self.label):
                 raise Exception("Failed, the name %s already in use!"%self.label)
         coll = bpy.data.collections.new(self.label)
-        self.coll.batoms.flag = True
-        self.scene.collection.children.link(self.coll)
+        coll.batoms.flag = True
+        self.scene.collection.children.link(coll)
         for sub_name in subcollections:
             subcoll = bpy.data.collections.new('%s_%s'%(self.label, sub_name))
-            self.coll.children.link(subcoll)
-        self.coll.batoms.model_type = str(model_type)
-        self.coll.batoms.polyhedra_type = str(polyhedra_type)
-        self.coll.batoms.boundary = boundary
+            coll.children.link(subcoll)
+        coll.batoms.model_type = str(model_type)
+        coll.batoms.polyhedra_type = str(polyhedra_type)
+        coll.batoms.boundary = boundary
+    
     
     def draw_cell(self):
         """Draw unit cell
@@ -309,6 +315,7 @@ class Batoms():
                             datas = cell_cylinder, 
                             coll = self.coll.children['%s_cell'%self.label]
                         )
+    
     def draw_bonds(self):
         """Draw bonds.
         calculate bond in all farmes, and save
@@ -318,7 +325,7 @@ class Batoms():
         the extra bonds use the find bond data.
         """
         from batoms.butils import add_keyframe_visibility
-        from batoms.bbond import Bbond
+        from batoms.bond import Bbond
         # if not self.bondlist:
         object_mode()
         self.clean_atoms_objects('bond')
@@ -374,6 +381,7 @@ class Batoms():
         bpy.context.scene.frame_set(self.nframe)
         print('draw bond: {0:10.2f} s'.format(time() - tstart))
                 
+    
     def draw_polyhedras(self, bondlist = None):
         """Draw polyhedra.
 
@@ -401,6 +409,7 @@ class Batoms():
                             datas = polyhedra_data['edge'],
                             coll = self.coll.children['%s_polyhedra'%self.label])
     
+    
     def draw_isosurface(self):
         """Draw isosurface.
         """
@@ -413,6 +422,7 @@ class Batoms():
                                 datas = isosurface_data,
                                 coll = self.coll.children['%s_volume'%self.label],
                             )
+    
     def draw_cavity_sphere(self, radius, boundary = [[0, 1], [0, 1], [0, 1]]):
         """ Draw cavity as a sphere for porous materials
 
@@ -435,6 +445,7 @@ class Batoms():
         bpy.data.collections['Collection'].objects.unlink(ba.obj)
         self.coll.children['%s_ghost'%self.label].objects.link(ba.instancer)
         # bpy.data.collections['Collection'].objects.unlink(ba.instancer)
+    
     def draw_lattice_plane(self, no = None, cuts = None, cmap = 'bwr', include_center = False):
         """Draw plane
 
@@ -443,7 +454,8 @@ class Batoms():
             get_spacegroup_number()
         cuts: int
             The number of subdivide for selected plane for 2d slicing
-        camp: str, default 'bwr'
+        camp: str, 
+        default 'bwr'
             colormaps for 2d slicing.
         include_center: bool
             include center of plane in the mesh
@@ -471,6 +483,7 @@ class Batoms():
                     self.planesetting.build_slicing(name, self.isosurfacesetting.volume, 
                                             self.cell, cuts = cuts, cmap = cmap)
             
+    
     
     def draw_crystal_shape(self, no = None, origin = None):
         """Draw crystal shape
@@ -500,6 +513,7 @@ class Batoms():
                 name = '%s_%s_%s'%(self.label, 'plane', species)
                 self.planesetting.build_boundary(plane['indices'], batoms = self)
                 bpy.context.view_layer.update()
+    
     def clean_atoms_objects(self, coll, names = None):
         """
         remove all bond object in the bond collection
@@ -512,32 +526,22 @@ class Batoms():
                 for obj in self.coll.children['%s_%s'%(self.label, coll)].all_objects:
                     if name in obj.name:
                         bpy.data.objects.remove(obj, do_unlink = True)
-                
-    def show_index(self, index_type = 0):
-        """
-        """
-        bpy.context.preferences.view.show_developer_ui = True
-        for a in bpy.context.screen.areas:
-            if a.type == 'VIEW_3D':
-                overlay = a.spaces.active.overlay
-                overlay.show_extra_indices = True
-    @property
-    def scene(self):
-        return self.get_scene()
-    def get_scene(self):
-        return bpy.data.scenes['Scene']
-    @property
+    
+    @property    
     def scale(self):
         return self.get_scale()
-    @scale.setter
+    
+    @scale.setter    
     def scale(self, scale):
         self.set_scale(scale)
+    
     def get_scale(self):
         scale = {}
         for coll in [self.batoms, self.batoms_boundary, self.batoms_search]:
             for batom in coll.values():
                 scale[batom.species] = batom.scale
         return scale
+    
     def set_scale(self, scale):
         """Set scale for all atoms
 
@@ -546,6 +550,7 @@ class Batoms():
         for coll in [self.batoms, self.batoms_boundary, self.batoms_search]:
             for batom in coll.values():
                 batom.scale = scale
+    
     def draw(self, model_type = None, draw_isosurface = True):
         """
         Draw atoms, bonds, polyhedra, .
@@ -594,6 +599,7 @@ class Batoms():
             self.draw_bonds()
         if self.isosurfacesetting.npoint > 0 and draw_isosurface:
             self.draw_isosurface()
+    
     def replace(self, species1, species2, index = []):
         """Replace species.
 
@@ -665,6 +671,7 @@ class Batoms():
             batom.color = self.batoms[species].color
         self.delete(species, index)
         self.extend(frag)
+    
     def delete(self, species, index = []):
         """Delete atoms.
 
@@ -680,6 +687,7 @@ class Batoms():
 
         """
         self.batoms[species].delete(index)
+    
     def translate(self, displacement):
         """Translate atomic positions.
 
@@ -696,6 +704,7 @@ class Batoms():
             if 'instancer' not in obj.name and 'boundary' not in obj.name:
                 obj.select_set(True)
         bpy.ops.transform.translate(value=displacement)
+    
     def rotate(self, angle, axis = 'Z', orient_type = 'GLOBAL'):
         """Rotate atomic based on a axis and an angle.
 
@@ -724,6 +733,7 @@ class Batoms():
         bpy.ops.transform.rotate(ov, value=angle, orient_axis=axis.upper(), 
                                  orient_type = orient_type)
     
+    
     def __getitem__(self, species):
         """Return a subset of the Batom.
 
@@ -735,8 +745,10 @@ class Batoms():
             return self.batoms[species]
         elif isinstance(species, list):
             raise SystemExit('dict not supported yet!')
+    
     def __len__(self):
         return len(self.positions)
+    
     def __repr__(self) -> str:
         text = []
         text.append('label={0}, '.format(self.label))
@@ -746,12 +758,15 @@ class Batoms():
         text = "".join(text)
         text = "Batoms(%s)"%text
         return text
+    
     def __add__(self, other):
         self += other
         return self
+    
     def __iadd__(self, other):
         self.extend(other)
         return self
+    
     def extend(self, other):
         """
         Extend batoms object by appending batoms from *other*.
@@ -786,6 +801,7 @@ class Batoms():
                 self.coll.children['%s_atom'%self.label].objects.link(ba.obj)
         self.reset_batom_location()
         # remove_collection(other.label)
+    
     def reset_batom_location(self):
         """
         """
@@ -795,6 +811,7 @@ class Batoms():
             bpy.context.view_layer.update()
             ba.positions = ba.positions - t
             bpy.context.view_layer.update()
+    
     def __imul__(self, m):
         """
         Todo: better use for loop for all species to speedup
@@ -807,6 +824,7 @@ class Batoms():
         self.cell.repeat(m)
         self.draw()
         return self
+    
     def repeat(self, rep):
         """
         Create new repeated atoms object.
@@ -820,6 +838,7 @@ class Batoms():
         
         """
         self.__imul__(rep)
+    
     def transform(self, matrix = None):
         """
         Transformation matrix
@@ -838,9 +857,11 @@ class Batoms():
         self.hide = True
         return batoms
         
+    
     def __mul__(self, rep):
         self.repeat(rep)
         return self
+    
     def copy(self, label = None):
         """
         Return a copy.
@@ -863,6 +884,7 @@ class Batoms():
         batoms.bondsetting = self.bondsetting.copy(label)
         batoms.polyhedrasetting = self.polyhedrasetting.copy(label)
         return batoms
+    
     def write(self, filename, local = True):
         """
         Save atoms to file.
@@ -872,34 +894,39 @@ class Batoms():
         """
         atoms = self.batoms2atoms(self.batoms, local = True)
         atoms.write(filename)
-    @property
-    def coll(self):
-        return self.get_coll()
-    def get_coll(self):
-        return bpy.data.collections[self.label]
-    @property
+    
+    
+    @property    
     def coll_atom(self):
         return self.get_coll_atom()
+    
     def get_coll_atom(self):
         return self.coll.children['%s_atom'%self.label]
-    @property
+    
+    @property    
     def coll_boundary(self):
         return self.get_coll_boundary()
+    
     def get_coll_boundary(self):
         return self.coll.children['%s_boundary'%self.label]
-    @property
+    
+    @property    
     def coll_search(self):
         return self.get_coll_search()
+    
     def get_coll_search(self):
         return self.coll.children['%s_search'%self.label]
-    @property
+    
+    @property    
     def cell(self):
         return self._cell
-    @cell.setter
+    
+    @cell.setter    
     def cell(self, cell):
         from ase.cell import Cell
         cell = Cell.ascell(cell)
         self._cell[:] = cell
+    
     def set_cell(self, cell, scale_atoms=False):
         """Set unit cell vectors.
 
@@ -920,25 +947,32 @@ class Batoms():
             M = np.linalg.solve(oldcell.complete(), cell.complete())
             for ba in self.batoms.values():
                 ba.positions = np.dot(ba.positions(), M)
-    @property
+    
+    @property    
     def location(self):
         return self._cell.origin
-    @property
+    
+    @property    
     def pbc(self):
         return self.get_pbc()
-    @pbc.setter
+    
+    @pbc.setter    
     def pbc(self, pbc):
         self.set_pbc(pbc)
+    
     def get_pbc(self):
         return list(self.coll.batoms.pbc)
+    
     def set_pbc(self, pbc):
         if isinstance(pbc, bool):
             pbc = [pbc]*3
         self.coll.batoms.pbc = pbc
-    @property
+    
+    @property    
     def boundary(self):
         return self.get_boundary()
-    @boundary.setter
+    
+    @boundary.setter    
     def boundary(self, boundary):
         if boundary is not None:
             if isinstance(boundary, (int, float)):
@@ -959,9 +993,11 @@ class Batoms():
         if self.model_type == 2:
             self.draw_bonds()
             self.draw_polyhedras()
+    
     def get_boundary(self):
         boundary = np.array(self.coll.batoms.boundary)
         return boundary.reshape(3, -1)
+    
     def update_boundary(self):
         """
         >>> from batoms.batoms import Batoms
@@ -1012,6 +1048,7 @@ class Batoms():
         self.draw_boundary_atoms(frames_search_bond, species_max_n_search, suffix = "search")
         print('update boundary: {0:10.2f} s'.format(time() - tstart))
         # print('search search: {0:10.2f} s'.format(time() - tstart))
+    
     def draw_boundary_atoms(self, frames, nsps, suffix = 'boundary'):
         """
         """
@@ -1046,50 +1083,67 @@ class Batoms():
                 # bpy.data.collections['Collection'].objects.unlink(ba.instancer)
             ba.set_frames()
     
-    @property
+    
+    @property    
     def model_type(self):
         return self.get_model_type()
-    @model_type.setter
+    
+    @model_type.setter    
     def model_type(self, model_type):
         self.set_model_type(model_type)
+    
     def get_model_type(self):
         return int(self.coll.batoms.model_type)
+    
     def set_model_type(self, model_type):
         self.coll.batoms.model_type = str(model_type)
         self.draw(draw_isosurface = False)
-    @property
+    
+    @property    
     def polyhedra_type(self):
         return self.get_polyhedra_type()
-    @polyhedra_type.setter
+    
+    @polyhedra_type.setter    
     def polyhedra_type(self, polyhedra_type):
         self.set_polyhedra_type(polyhedra_type)
+    
     def get_polyhedra_type(self):
         return int(self.coll.batoms.polyhedra_type)
+    
     def set_polyhedra_type(self, polyhedra_type):
         self.coll.batoms.polyhedra_type = str(polyhedra_type)
         self.draw()
-    @property
+    
+    @property    
     def show_unit_cell(self):
         return self.get_show_unit_cell()
-    @show_unit_cell.setter
+    
+    @show_unit_cell.setter    
     def show_unit_cell(self, show_unit_cell):
         self.set_show_unit_cell(show_unit_cell)
+    
     def get_show_unit_cell(self):
         return self.coll.batoms.show_unit_cell
+    
     def set_show_unit_cell(self, show_unit_cell):
         self.coll.batoms.show_unit_cell = show_unit_cell
         self.draw_cell()
+    
     def get_atoms(self, batoms):
         return self.batoms2atoms(batoms)
-    @property
+    
+    @property    
     def atoms(self):
         return self.batoms2atoms(self.batoms)
-    @property
+    
+    @property    
     def atoms_boundary(self):
         return self.batoms2atoms(self.batoms_boundary)
-    @property
+    
+    @property    
     def atoms_search(self):
         return self.batoms2atoms(self.batoms_search)
+    
     def get_atoms_with_boundary(self, X = False):
         """
         build ASE atoms from batoms dict.
@@ -1100,21 +1154,26 @@ class Batoms():
         atoms = atoms + atoms_boundary + atoms_search
         atoms.pbc = False
         return atoms
-    @property
+    
+    @property    
     def nframe(self):
         return self.get_nframe()
+    
     def get_nframe(self):
         batoms = self.batoms
         nframe = 0
         for species, batom in batoms.items():
             nframe = batom.nframe
         return nframe
-    @property
+    
+    @property    
     def frames(self):
         return self.get_frames(self.batoms)
-    @frames.setter
+    
+    @frames.setter    
     def frames(self, frames):
         self.set_frames(frames)
+    
     def get_frames(self, batoms, local = False, X = False, remove = None):
         """
         use shape key
@@ -1148,16 +1207,21 @@ class Batoms():
                 atoms.info['origin'] = self.cell.origin
             frames.append(atoms)
         return frames
-    @property
+    
+    @property    
     def positions(self):
         return self.get_positions()
+    
     def get_positions(self):
         return self.atoms.positions
+    
     def get_scaled_positions(self):
         return self.atoms.get_scaled_positions()
-    @positions.setter
+    
+    @positions.setter    
     def positions(self, state):
         self.set_positions(state)
+    
     def set_positions(self, species_dict):
         """
         """
@@ -1171,9 +1235,11 @@ class Batoms():
             for species, batom in self.batoms.items():
                 ind = np.where(atoms.arrays['species'] == species)[0]
                 batom.positions = atoms.positions[ind]
-    @property
+    
+    @property    
     def species(self):
         return self.get_species()
+    
     def get_species(self):
         """
         build species from collection.
@@ -1182,9 +1248,11 @@ class Batoms():
         for obj in self.coll_atom.objects:
             species.append(obj.batom.species)
         return species
-    @property
+    
+    @property    
     def species_props(self):
         return self.get_species_props()
+    
     def get_species_props(self):
         """
         build species_props from collection.
@@ -1195,17 +1263,21 @@ class Batoms():
                     'scale': ba.scale, 
                     'element': ba.element}
         return species_props
-    @property
+    
+    @property    
     def batoms(self):
         return self.get_batoms()
+    
     def get_batoms(self):
         batoms = {}
         for obj in self.coll_atom.objects:
             batoms[obj.batom.species] = Batom(obj.name)
         return batoms
-    @property
+    
+    @property    
     def batoms_boundary(self):
         return self.get_batoms_boundary()
+    
     def get_batoms_boundary(self, frame = None):
         batoms_boundary = {}
         for obj in self.coll_boundary.objects:
@@ -1213,9 +1285,11 @@ class Batoms():
                 continue
             batoms_boundary[obj.batom.species] = Batom(obj.name)
         return batoms_boundary
-    @property
+    
+    @property    
     def batoms_search(self):
         return self.get_batoms_search()
+    
     def get_batoms_search(self, frame = None):
         batoms_search = {}
         for obj in self.coll_search.objects:
@@ -1223,6 +1297,7 @@ class Batoms():
                 continue
             batoms_search[obj.batom.species] = Batom(obj.name)
         return batoms_search
+    
     def batoms2atoms(self, batoms, local = False, X = False):
         """
         save batoms objects to ASE atoms
@@ -1260,6 +1335,7 @@ class Batoms():
             atoms.positions = atoms.positions - self.cell.origin
             atoms.info['origin'] = self.cell.origin
         return atoms
+    
     def draw_constraints(self):
         """
         To do
@@ -1273,6 +1349,7 @@ class Batoms():
                 for n, i in enumerate(c.index):
                     self.constrainatoms += [i]
         """
+    
     
     def highlight_atoms(self, indexs, shape = 'sphere', radius_scale=1.4,
                            color=(0.0, 1.0, 0.0, 0.6)):
@@ -1296,6 +1373,7 @@ class Batoms():
             ball.show_transparent = True
             self.coll_highlight.objects.link(ball)
         """
+    
     def set_frames(self, frames = None, frame_start = 0):
         """
 
@@ -1324,6 +1402,7 @@ class Batoms():
         bpy.context.scene.frame_set(self.nframe)
         
     
+    
     def get_distances(self, species1, i, species2, indices, mic=False):
         """
         Return distances of atom No.i with a list of atoms.
@@ -1344,6 +1423,7 @@ class Batoms():
         D, D_len = get_distances(p1, p2, cell=cell, pbc=pbc)
         D_len.shape = (-1,)
         return D_len
+    
     def get_angle(self, species1, i1, species2, i2, species3, i3, mic=False):
         """
         Get angle in degrees between the vectors i2->i1 and
@@ -1366,6 +1446,7 @@ class Batoms():
             cell = self.cell
             pbc = self.pbc
         return get_angles([v12], [v32], cell=cell, pbc=pbc)
+    
     def get_center_of_mass(self, scaled=False):
         """Get the center of mass.
 
@@ -1373,34 +1454,51 @@ class Batoms():
         is returned.
         """
         return self.atoms.get_center_of_mass(scaled = scaled)
-    @property
+    def get_center_of_geometry(self, colls = None):
+        """
+        """
+        vertices = self.get_all_vertices(colls = colls, cell = self.show_unit_cell)
+        canvas = np.zeros([2, 3])
+        canvas[0] = np.min(vertices, axis = 0)
+        canvas[1] = np.max(vertices, axis = 0)
+        center = np.mean(canvas, axis=0)
+        return center
+    
+    @property    
     def hide(self):
         return self.get_hide()
-    @hide.setter
+    
+    @hide.setter    
     def hide(self, state):
         self.set_hide(state)
+    
     def get_hide(self):
         return 'Unknown'
+    
     def set_hide(self, state):
         names = self.coll.all_objects.keys()
         for name in names:
             obj = bpy.data.objects.get(name)
             obj.hide_render = state
             obj.hide_set(state)
-    @property
+    
+    @property    
     def select(self):
         return self.get_select()
-    @select.setter
+    
+    @select.setter    
     def select(self, state):
         self.set_select(state)
+    
     def get_select(self):
         return 'Unknown'
+    
     def set_select(self, state):
         names = self.coll.all_objects.keys()
         for name in names:
             obj = bpy.data.objects.get(name)
             obj.select_set(state)
-
+    
     def get_spacegroup_number(self, symprec = 1e-5):
         """
         """
@@ -1416,6 +1514,7 @@ class Batoms():
             return None
         no = int(sg[sg.find('(') + 1:sg.find(')')])
         return no
+    
     def find_primitive(self, ):
         """
         """
@@ -1428,6 +1527,7 @@ class Batoms():
         lattice, points,  numbers= spglib.find_primitive(cell)
         atoms = Atoms(numbers=numbers, scaled_positions=points, cell = lattice)
         return atoms
+    
     def get_all_vertices(self, colls = None, cell = True):
         """
         Get position of all vertices from all mesh in batoms.
@@ -1457,6 +1557,7 @@ class Batoms():
                 vertices = vertices[:, :3]
                 positions = np.concatenate((positions, vertices), axis = 0)
         return positions
+    
     def get_canvas_box(self, direction = [0, 0, 1], padding = None, colls = None):
         """
         Calculate the canvas box from [0, 0, 1] and other direction.
@@ -1464,6 +1565,65 @@ class Batoms():
         """
         from batoms.tools import get_canvas
         vertices = self.get_all_vertices(colls = colls, cell = self.show_unit_cell)
-        canvas, canvas1 = get_canvas(vertices, direction = direction, padding = padding)
-        return canvas, canvas1
+        canvas = get_canvas(vertices, direction = direction, padding = padding)
+        width = canvas[1][0] - canvas[0][0]
+        height = canvas[1][1] - canvas[0][1]
+        depth = canvas[1][2] - canvas[0][2]
+        return width, height, depth
+    
+    @property
+    def render(self):
+        """Render object."""
+        if self._render is not None:
+            return self._render
+        render = Render()
+        render.batoms = self
+        return render
 
+    @render.setter
+    def render(self, render):
+        render.batoms = self
+        self._render = render
+
+    def get_image(self, viewport = None, engine = None, 
+                    frame = 1, 
+                    animation = False, 
+                    output = None,
+                    center = None,
+                    padding = None, 
+                    canvas = None, ):
+        """Rendering the model.
+
+        Ask the attached render to rendering the model.
+
+        frame: int
+        animation: bool
+        output: str
+        center: array
+        padding: float
+        canvas: array of 3
+
+        """
+        if output is None:
+            output = '%s.png'%self.label
+        if self.render is None:
+            raise RuntimeError('Batoms object has no render.')
+        self.render.run_render = True
+        if viewport is not None:
+            self.render.viewport = viewport
+        if engine is not None:
+            self.render.engine = engine
+        image = self.render.run(self, frame = frame, 
+                                    animation = animation, 
+                                    output = output,
+                                    center = center,
+                                    padding = padding,
+                                    canvas = canvas, 
+                                    )
+        return image
+    
+    def make_real(self):
+        """
+        """
+        self.select = True
+        bpy.ops.object.duplicates_make_real()

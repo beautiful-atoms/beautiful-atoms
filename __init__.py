@@ -43,6 +43,7 @@ from .gui import (
         gui_polyhedra,
         gui_ase,
         gui_plane,
+        gui_render,
         ops_add_molecule,
         gui_pymatgen,
         gui_pubchem,
@@ -66,6 +67,7 @@ classes = [
         custom_property.BVolume,
         custom_property.BPlane,
         custom_property.BLight,
+        custom_property.BCamera,
         custom_property.BRender,
         gui_io.IMPORT_OT_batoms,
         gui_batoms.Batoms_PT_prepare,
@@ -92,6 +94,9 @@ classes = [
         gui_plane.Plane_PT_prepare,
         gui_plane.PlaneProperties,
         gui_plane.AddButton,
+        gui_render.Render_PT_prepare,
+        gui_render.RenderProperties,
+        gui_render.AddButton,
         gui_ase.ASE_PT_prepare,
         gui_ase.ASEProperties,
         gui_ase.AddMolecule,
@@ -127,6 +132,7 @@ def register():
     scene.bbpanel = PointerProperty(type=gui_bond.BondProperties)
     scene.popanel = PointerProperty(type=gui_polyhedra.PolyhedraProperties)
     scene.plpanel = PointerProperty(type=gui_plane.PlaneProperties)
+    scene.repanel = PointerProperty(type=gui_render.RenderProperties)
     scene.vopanel = PointerProperty(type=gui_volume.VolumeProperties)
     scene.rbpanel = PointerProperty(type=rigid_body.RigidBodyProperties)
     scene.ffpanel = PointerProperty(type=force_field.ForceFieldProperties)
@@ -161,6 +167,8 @@ def register():
                             type = custom_property.BPlane)
     Object.blight = PointerProperty(name = 'BLight', 
                             type = custom_property.BLight)
+    Object.bcamera = PointerProperty(name = 'BCamera', 
+                            type = custom_property.BCamera)
     
 
 def unregister():

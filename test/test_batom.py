@@ -36,7 +36,7 @@ def test_positions():
     h = Batom('h2o', 'H', positions = positions)
     npositions = positions - np.array([0, 0, 5])
     h.positions = npositions
-
+    assert np.allclose(h.positions, np.array([[0, 0, -5], [1.52, 0, -5]]))
 
 def test_batom_animation():
     from batoms import Batom
@@ -64,8 +64,6 @@ def test_batom_animation():
     o.extend(o_1)
     # delete
     o.delete([4])
-
-
 
 
 if __name__ == '__main__':

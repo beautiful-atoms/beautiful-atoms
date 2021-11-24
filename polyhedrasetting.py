@@ -16,6 +16,7 @@ class PolyhedraSetting(Setting):
         The label define the batoms object that a Setting belong to.
 
     """
+    
     def __init__(self, label, polyhedrasetting = None) -> None:
         Setting.__init__(self, label)
         self.name = 'bpolyhedra'
@@ -24,6 +25,7 @@ class PolyhedraSetting(Setting):
         if polyhedrasetting is not None:
             for key, data in polyhedrasetting.items():
                 self[key] = data
+    
     def __setitem__(self, index, setdict):
         """
         Set properties
@@ -38,6 +40,7 @@ class PolyhedraSetting(Setting):
             setattr(subset, key, value)
         subset.label = self.label
         subset.flag = True
+    
     def set_default(self, species):
         """
         """
@@ -49,11 +52,13 @@ class PolyhedraSetting(Setting):
                 'color': np.append(data['color'][:3], 0.3),
                 'width': 0.005,
             }
+    
     def add(self, polyhedras):
         if isinstance(polyhedras, str):
             polyhedras = [polyhedras]
         species = {sp: self.species[sp] for sp in polyhedras}
         self.set_default(species)
+    
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
         s = 'Center                color         width \n'

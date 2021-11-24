@@ -171,6 +171,7 @@ class Boundary:
       cl.build()
     """
 
+    
     def __init__(self, atoms, boundary_list, rotate_atoms = False):
         self.atoms = atoms
         self.natoms = len(atoms)
@@ -180,11 +181,13 @@ class Boundary:
         # self.index = index
         self.rotate_atoms = rotate_atoms
         #
+    
     def build(self, ):
         for boundary in self.boundary_list:
             print(boundary)
             self.cut(**boundary)
         return self.atoms
+    
     def cut(self, atoms = None, d = None, index = None, direction = 1):
         """
         """
@@ -206,6 +209,7 @@ class Boundary:
         self.atoms = atoms
         if self.rotate_atoms:
             atoms = self.rotate()
+    
     def rotate(self, atoms = None, index = None):
         """
         rotate normal of plane to z axis
@@ -231,6 +235,7 @@ class Boundary:
         # atoms.cell = atoms.cell.dot(mat)
         self.atoms = atoms
         return atoms
+    
     def get_plane(self, d, index = None, cell = None):
         '''
         plane equation: three point and distance from origin

@@ -19,7 +19,7 @@ shapes = ["UV_SPHERE", "ICO_SPHERE", "CUBE"]
 class Batom(BaseObject):
     """Batom Class
     
-    A Batom object is linked to this main collection in Blender. 
+    A Batom object is linked to this Object in Blender. 
 
     Parameters:
 
@@ -59,6 +59,7 @@ class Batom(BaseObject):
     """
     
 
+    
     def __init__(self, 
                 label = None,
                 species = None,
@@ -86,7 +87,8 @@ class Batom(BaseObject):
             obj_name = '%s_atom_%s'%(self.label, self.species)
         else:
             obj_name = label
-        BaseObject.__init__(self, obj_name = obj_name)
+        bobj_name = 'batom'
+        BaseObject.__init__(self, obj_name = obj_name, bobj_name = bobj_name)
         if species:
             positions = np.array(positions)
             if len(positions.shape) == 2:
@@ -117,6 +119,7 @@ class Batom(BaseObject):
             self.set_frames(self._frames, only_basis = True)
         else:
             self.from_batom(label)
+    
     def set_material(self, node_inputs = None, material_style = 'default', material = None):
         """
         """
@@ -131,6 +134,7 @@ class Batom(BaseObject):
                         node_inputs = node_inputs,
                         material_style = material_style,
                         backface_culling = True)
+    
     def set_instancer(self, segments = [32, 16], subdivisions = 2, 
                         shape = 'UV_SPHERE', shade_smooth = True, instancer_data = None):
         object_mode()
@@ -163,6 +167,7 @@ class Batom(BaseObject):
             bpy.ops.object.shade_smooth()
         obj.hide_set(True)
         return obj
+    
     def set_object(self, positions, location, instancer):
         """
         build child object and add it to main objects.
@@ -184,6 +189,7 @@ class Batom(BaseObject):
         instancer.parent = obj
         obj.instance_type = 'VERTS'
         bpy.context.view_layer.update()
+    
     def from_batom(self, label):
         if label not in bpy.data.objects:
             raise Exception("%s is not a object!"%label)
@@ -197,47 +203,63 @@ class Batom(BaseObject):
             'radius':obj.batom.radius,
             'scale':obj.scale,
         } 
-    @property
+    
+    @property    
     def instancer(self):
         return self.get_instancer()
+    
     def get_instancer(self):
         return self.obj.children[0]
-    @property
+    
+    @property    
     def material(self):
         return self.get_material()
+    
     def get_material(self):
         return bpy.data.materials['%s_material_atom_%s'%(self.label, self.species)]
-    @property
+    
+    @property    
     def scale(self):
         return self.get_scale()
-    @scale.setter
+    
+    @scale.setter    
     def scale(self, scale):
         self.set_scale(scale)
+    
     def get_scale(self):
         return np.array(self.instancer.scale)
+    
     def set_scale(self, scale):
         if isinstance(scale, float) or isinstance(scale, int):
             scale = [scale]*3
         self.instancer.scale = scale
-    @property
+    
+    @property    
     def radius(self):
         return self.get_radius()
+    
     def get_radius(self):
         return np.array(self.obj.batom.radius)
-    @property
+    
+    @property    
     def size(self):
         return self.get_size()
-    @size.setter
+    
+    @size.setter    
     def size(self, size):
         self.set_size(size)
+    
     def get_size(self):
         return np.array(self.instancer.scale*self.radius)
+    
     def set_size(self, size):
         scale = size/self.radius
         self.scale = [scale]*3
-    @property
+    
+    @property    
     def local_positions(self):
         return self.get_local_positions()
+    
     def get_local_positions(self):
         """
         using foreach_get and foreach_set to improve performance.
@@ -247,12 +269,15 @@ class Batom(BaseObject):
         self.obj.data.vertices.foreach_get('co', local_positions)  
         local_positions = local_positions.reshape((n, 3))
         return local_positions
-    @property
+    
+    @property    
     def positions(self):
         return self.get_positions()
-    @positions.setter
+    
+    @positions.setter    
     def positions(self, positions):
         self.set_positions(positions)
+    
     def get_positions(self):
         """
         Get global positions.
@@ -261,6 +286,7 @@ class Batom(BaseObject):
         positions = local2global(self.local_positions, 
                 np.array(self.obj.matrix_world))
         return positions
+    
     def set_positions(self, positions):
         """
         Set global positions to local vertices
@@ -276,6 +302,7 @@ class Batom(BaseObject):
         positions = positions.reshape((natom*3, 1))
         self.obj.data.vertices.foreach_set('co', positions)
         self.obj.data.update()
+    
     def get_scaled_positions(self, cell):
         """
         Get array of scaled_positions.
@@ -284,20 +311,25 @@ class Batom(BaseObject):
         cell = Cell.new(cell)
         scaled_positions = cell.scaled_positions(self.local_positions)
         return scaled_positions
-    @property
+    
+    @property    
     def nframe(self):
         return self.get_nframe()
+    
     def get_nframe(self):
         if self.obj.data.shape_keys is None:
             return 0
         nframe = len(self.obj.data.shape_keys.key_blocks)
         return nframe
-    @property
+    
+    @property    
     def frames(self):
         return self.get_frames()
-    @frames.setter
+    
+    @frames.setter    
     def frames(self, frames):
         self.set_frames(frames)
+    
     def get_frames(self):
         """
         read shape key
@@ -316,15 +348,18 @@ class Batom(BaseObject):
                             np.array(self.obj.matrix_world))
             frames[i] = local_positions
         return frames
-    @property
+    
+    @property    
     def color(self):
         return self.get_color()
-    @color.setter
+    
+    @color.setter    
     def color(self, color):
         """
         >>> h.color = [0.8, 0.1, 0.3, 1.0]
         """
         self.set_color(color)
+    
     def get_color(self):
         """
 
@@ -337,6 +372,7 @@ class Batom(BaseObject):
                 Alpha = node.inputs['Alpha'].default_value
         color = [node_color[0], node_color[1], node_color[2], Alpha]
         return color
+    
     def set_color(self, color):
         if len(color) == 3:
             color = [color[0], color[1], color[2], 1]
@@ -346,58 +382,74 @@ class Batom(BaseObject):
                 node.inputs['Base Color'].default_value = color
             if 'Alpha' in node.inputs:
                 node.inputs['Alpha'].default_value = color[3]
-    @property
+    
+    @property    
     def node(self):
         return self.get_node()
-    @node.setter
+    
+    @node.setter    
     def node(self, node):
         self.set_node(node)
+    
     def get_node(self):
         return self.material.node_tree.nodes
+    
     def set_node(self, node):
         for key, value in node.items():
             self.material.node_tree.nodes['Principled BSDF'].inputs[key].default_value = value
-    @property
+    
+    @property    
     def segments(self):
         return self.get_segments()
-    @segments.setter
+    
+    @segments.setter    
     def segments(self, segments):
         self.set_segments(segments)
+    
     def get_segments(self):
         nverts = len(self.instancer.data.vertices)
         return nverts
+    
     def set_segments(self, segments):
         if not isinstance(segments, int):
             raise Exception('Segments should be int!')
         self.clean_batoms_objects('instancer_atom_%s_%s'%(self.label, self.species))
         instancer = self.set_instancer(segments = segments)
         instancer.parent = self.obj
-    @property
+    
+    @property    
     def subdivisions(self):
         return self.get_subdivisions()
-    @subdivisions.setter
+    
+    @subdivisions.setter    
     def subdivisions(self, subdivisions):
         self.set_subdivisions(subdivisions)
+    
     def get_subdivisions(self):
         nverts = len(self.instancer.data.vertices)
         return nverts
+    
     def set_subdivisions(self, subdivisions):
         if not isinstance(subdivisions, int):
             raise Exception('subdivisions should be int!')
         self.clean_batoms_objects('instancer_atom_%s_%s'%(self.label, self.species))
         instancer = self.set_instancer(subdivisions = subdivisions, shape='ICO_SPHERE')
         instancer.parent = self.obj
-    @property
+    
+    @property    
     def shape(self):
         return self.get_shape()
-    @shape.setter
+    
+    @shape.setter    
     def shape(self, shape):
         self.set_shape(shape)
+    
     def get_shape(self):
         """
         todo"""
         # nverts = len(self.instancer.data.vertices)
         return 'to do'
+    
     def set_shape(self, shape):
         """
         "UV_SPHERE", "ICO_SPHERE", "CUBE"
@@ -409,9 +461,11 @@ class Batom(BaseObject):
         instancer = self.set_instancer(shape = shapes[shape])
         instancer.parent = self.obj
         self.scale = scale
+    
     def clean_batoms_objects(self, obj):
         obj = bpy.data.objects[obj]
         bpy.data.objects.remove(obj, do_unlink = True)
+    
     def delete_verts(self, index = []):
         """
         delete verts
@@ -428,6 +482,7 @@ class Batom(BaseObject):
             bpy.data.objects.remove(obj)
         else:
             bm.to_mesh(obj.data)
+    
     def delete(self, index = []):
         """
         delete atom.
@@ -446,10 +501,12 @@ class Batom(BaseObject):
         if isinstance(index, int):
             index = [index]
         self.delete_verts(index)
+    
     def __delitem__(self, index):
         """
         """
         self.delete(index)
+    
     def draw_constraints(self):
         """
         """
@@ -460,6 +517,7 @@ class Batom(BaseObject):
             if isinstance(c, FixAtoms):
                 for n, i in enumerate(c.index):
                     self.constrainatom += [i]
+    
     
     def set_frames(self, frames = None, frame_start = 0, only_basis = False):
         """
@@ -508,8 +566,10 @@ class Batom(BaseObject):
                 add_keyframe_to_shape_key(sk, 'value', 
                     [0, 1], [frame_start + i - 1, frame_start + i])
 
+    
     def __len__(self):
         return len(self.obj.data.vertices)
+    
     
     def __getitem__(self, index):
         """Return a subset of the Batom.
@@ -538,6 +598,7 @@ class Batom(BaseObject):
         #     positions = self[i]
         #     return positions[:, j]
 
+    
     def __setitem__(self, index, value):
         """Return a subset of the Batom.
 
@@ -563,6 +624,7 @@ class Batom(BaseObject):
         #     i, j = index
         #     batom.data.vertices[i].co[j] = np.array(value) - np.array(batom.location[j])
 
+    
     def repeat(self, m, cell):
         """
         In-place repeat of atoms.
@@ -605,6 +667,7 @@ class Batom(BaseObject):
                 frames_new.append(positions)
         self.set_frames(frames_new)
 
+    
     def copy(self, label, species):
         """
         Return a copy.
@@ -622,6 +685,7 @@ class Batom(BaseObject):
                     location = self.obj.location, 
                     scale = self.scale, material=self.material)
         return batom
+    
     def extend(self, other):
         """
         Extend batom object by appending batom from *other*.
@@ -638,25 +702,30 @@ class Batom(BaseObject):
         other.obj.select_set(True)
         bpy.context.view_layer.objects.active = self.obj
         bpy.ops.object.join()
+    
     def __iadd__(self, other):
         """
         >>> h1 += h2
         """
         self.extend(other)
         return self
+    
     def __add__(self, other):
         """
         >>> h1 = h1 + h2
         """
         self += other
         return self
+    
     def __iter__(self):
         batom = self.obj
         for i in range(len(self)):
             yield batom.matrix_world @ batom.data.vertices[i].co
+    
     def __repr__(self):
         s = "Batom('%s', positions = %s" % (self.species, list(self.positions))
         return s
+    
     def add_vertices(self, positions):
         """
         Todo: find a fast way.
@@ -670,9 +739,16 @@ class Batom(BaseObject):
         for pos in positions:
             bm.verts.new(pos)
         bm.to_mesh(self.obj.data)
+    
     def get_cell(self):
         if not self.label in bpy.data.collections:
             return None
         bcell = bpy.data.collections['%s_cell'%self.label]
         cell = np.array([bcell.matrix_world @ bcell.data.vertices[i].co for i in range(3)])
         return cell
+    
+    def make_real(self):
+        """
+        """
+        self.select = True
+        bpy.ops.object.duplicates_make_real()

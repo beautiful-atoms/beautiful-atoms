@@ -19,6 +19,7 @@ def draw_cell_curve(coll, verts, label = None):
             p.co = np.append(verts[i], [1.0]) # (add nurbs weight)
         cell = bpy.data.objects.new("cell_%s_edge"%label, crv)
         coll.objects.link(cell)
+
 def draw_cylinder(
                 name = None, 
                 datas = [], 
@@ -180,7 +181,7 @@ def bond_source(vertices = 12, depth = 1.0):
     faces1 = [faces[i] for i in range(len(faces)) if len(faces[i]) == n]
     faces2 = [faces[i] for i in range(len(faces)) if len(faces[i]) != n]
     return vertices, faces1, faces2
-# draw atoms
+
 def atom_source():
     bpy.ops.mesh.primitive_uv_sphere_add() #, segments=32, ring_count=16)
     # bpy.ops.mesh.primitive_cylinder_add()

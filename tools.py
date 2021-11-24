@@ -4,6 +4,7 @@ import time
 from numpy.core.numeric import indices
 
     
+
 def default_element_prop(element, radii_style = 'covalent', color_style = "JMOL"):
     """
     Get color, radii for element.
@@ -30,6 +31,7 @@ def default_element_prop(element, radii_style = 'covalent', color_style = "JMOL"
     element_prop['color'] = [color[0], color[1], color[2], 1.0]
     return element_prop
 
+
 def get_default_species_data(element, positions = [], radii_style = 'covalent', 
                 color_style = "JMOL", scale = [1, 1, 1], props = {}):
     """
@@ -54,6 +56,7 @@ def get_default_species_data(element, positions = [], radii_style = 'covalent',
             species_data[ele].update(props)
     return species_data
 
+
 def get_polyhedra_kind(color, width = 0.01, show_edge = True, props = {}):
     """
     Set initial data for polyhedra.
@@ -73,11 +76,13 @@ def get_polyhedra_kind(color, width = 0.01, show_edge = True, props = {}):
     polyhedra_kind.update(props)
     return polyhedra_kind
 
+
 def getEquidistantPoints(p1, p2, n):
     points = zip(np.linspace(p1[0], p2[0], n+1), 
                  np.linspace(p1[1], p2[1], n+1), 
                  np.linspace(p1[2], p2[2], n+1))
     return points
+
 
 def get_cell_vertices(cell):
     """
@@ -92,17 +97,17 @@ def get_cell_vertices(cell):
                                                     cell)
     cell_vertices.shape = (8, 3)
     return cell_vertices
+
+
 def get_canvas(vertices, direction = [0, 0 ,1], padding = 1):
     """
     Calculate canvas for camera. 
     Project vertices and cell on the plane of view.
     Find the boudanry of the object on the plane.
     """
-    canvas = np.zeros([2, 3])
-    canvas[0] = np.min(vertices, axis = 0)
-    canvas[1] = np.max(vertices, axis = 0)
+    
     # plane
-    canvas1 = np.zeros([2, 3])
+    canvas = np.zeros([2, 3])
     frame = rotate_frame(direction)
     #
     projz = np.dot(vertices, frame[2])
@@ -112,18 +117,16 @@ def get_canvas(vertices, direction = [0, 0 ,1], padding = 1):
     #
     # find canvas box
     canvas = np.zeros([2, 3])
-    canvas[0] = np.min(vertices, axis = 0)
-    canvas[1] = np.max(vertices, axis = 0)
-    canvas1 = np.zeros([2, 3])
-    canvas1[0, 0] = projx.min()
-    canvas1[1, 0] = projx.max()
-    canvas1[0, 1] = projy.min()
-    canvas1[1, 1] = projy.max()
-    canvas1[0, 2] = projz.min()
-    canvas1[1, 2] = projz.max()
-    canvas1[0] -= padding
-    canvas1[1] += padding
-    return canvas, canvas1
+    canvas[0, 0] = projx.min()
+    canvas[1, 0] = projx.max()
+    canvas[0, 1] = projy.min()
+    canvas[1, 1] = projy.max()
+    canvas[0, 2] = projz.min()
+    canvas[1, 2] = projz.max()
+    canvas[0] -= padding
+    canvas[1] += padding
+    return canvas
+
 def rotate_frame(direction):
     """
     rotate frame by algin z to direction
@@ -135,6 +138,7 @@ def rotate_frame(direction):
     ny = np.cross(nz, nx) + np.array([0, 1e-6, 0])
     ny = ny/np.linalg.norm(ny)
     return np.array([nx, ny, nz])
+
 
 def find_cage_sphere(cell, positions, radius, step = 1.0, 
                     boundary = [[0, 1], [0, 1], [0, 1]]):
@@ -154,6 +158,7 @@ def find_cage_sphere(cell, positions, radius, step = 1.0,
     flag = np.min(dists, axis = 1) >radius
     return positions_v[flag]
 
+
 def get_equivalent_indices(no, indices):
     """
     """
@@ -162,6 +167,7 @@ def get_equivalent_indices(no, indices):
     indices = sg.equivalent_reflections([indices])
     indices = indices.tolist()
     return indices
+
 
 def local2global(positions, matrix, reversed = False):
     if reversed:

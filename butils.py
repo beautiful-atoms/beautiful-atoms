@@ -3,6 +3,7 @@ from ase import Atom, Atoms
 from mathutils import Vector, Matrix
 
 
+
 def object_mode():
     for object in bpy.data.objects:
             if object.mode == 'EDIT':
@@ -157,7 +158,7 @@ def add_keyframe_visibility(obj, nframe, frame):
                 value[2*i + 1] = 1
         fc.keyframe_points.foreach_set('co', value)
 
-def look_at(obj, target, roll=0):
+def set_look_at(obj, target, roll=0):
         """
         Rotate obj to look at target
         """
@@ -171,3 +172,30 @@ def look_at(obj, target, roll=0):
         loc = loc.to_tuple()
         obj.matrix_world = quat @ rollMatrix
         obj.location = loc
+    
+def set_world(color = [0.2, 0.2, 0.2, 1.0]):
+        """
+        """
+        world = bpy.data.scenes['Scene'].world
+        world.use_nodes = True
+        node_tree = world.node_tree
+        node_tree.nodes["Background"].inputs["Strength"].default_value = 1.0
+        node_tree.nodes["Background"].inputs["Color"].default_value = color
+
+def clean_default(camera = False, light = True):
+        if 'Cube' in bpy.data.objects:
+            bpy.data.objects.remove(bpy.data.objects["Cube"], do_unlink=True)
+        if camera and 'Camera' in bpy.data.cameras:
+            bpy.data.cameras.remove(bpy.data.cameras['Camera'])
+        if light and 'Light' in bpy.data.lights:
+            bpy.data.lights.remove(bpy.data.lights['Light'])
+
+def show_index():
+        """
+        show index of vertices in Edit mode
+        """
+        bpy.context.preferences.view.show_developer_ui = True
+        for a in bpy.context.screen.areas:
+            if a.type == 'VIEW_3D':
+                overlay = a.spaces.active.overlay
+                overlay.show_extra_indices = True

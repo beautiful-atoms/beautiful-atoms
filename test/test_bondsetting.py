@@ -17,7 +17,9 @@ def test_replace():
     h2o['H_1'].color = [0.1, 0.8, 0, 1.0]
     h2o.bondsetting.add(['O', 'H_1'])
     h2o.model_type = 1
-    h2o.render.run([1, 0, 0], engine = 'eevee', output = 'bonds-replace.png')
+    h2o.render.viewport=[1, 0, 0]
+    h2o.render.engine = 'eevee'
+    h2o.get_image(output = 'bonds-replace.png')
 
 def test_add():
     from batoms.build import bulk
@@ -53,7 +55,7 @@ def test_search_bond():
     pk.boundary = 0.01
     pk.model_type = 2
     pk.draw_cell()
-    pk.render.run([0, 1, 0], engine = 'eevee', output = 'perovskite.png')
+    pk.get_image([0, 1, 0], engine = 'eevee', output = 'perovskite.png')
 
 
 def test_search_bond_2():
@@ -64,7 +66,7 @@ def test_search_bond_2():
     mol.boundary = 0.01
     mol.draw_cell()
     mol.model_type = 1
-    mol.render.run([1, -0.3, 0.1], engine = 'eevee', output = 'anthraquinone.png')
+    mol.get_image([1, -0.3, 0.1], engine = 'eevee', output = 'anthraquinone.png')
 
 def test_search_bond_urea():
     from batoms.bio import read
@@ -74,7 +76,7 @@ def test_search_bond_urea():
     mol.boundary = 2
     mol.draw_cell()
     mol.model_type = 1
-    mol.render.run([1, -0.3, 0.1], engine = 'eevee', output = 'urea.png')
+    mol.get_image([1, -0.3, 0.1], engine = 'eevee', output = 'urea.png')
 
 
 def test_search_bond_3():
@@ -88,7 +90,7 @@ def test_search_bond_3():
     mof.boundary = 0.01
     mof.bondsetting[('Zn', 'O')].polyhedra = True
     mof.model_type = 1
-    mof.render.run([0, 1, 0], engine = 'eevee', output = 'mof-5.png')
+    mof.get_image([0, 1, 0], engine = 'eevee', output = 'mof-5.png')
 
 
 def test_high_order_bond():
@@ -108,7 +110,7 @@ def test_high_order_bond():
     c6h6.bondsetting[('C_3', 'C_2')].order = 2
     c6h6.bondsetting[('C_5', 'C_4')].order = 2
     c6h6.model_type = 1
-    c6h6.render.run([0, 0, 1], engine = 'eevee', output = 'c6h6.png')
+    c6h6.get_image([0, 0, 1], engine = 'eevee', output = 'c6h6.png')
 
 
 def test_hydrogen_bond():
@@ -127,7 +129,7 @@ def test_hydrogen_bond():
     h2o.bondsetting[('H', 'O')].width = 0.01
     h2o.bondsetting[('H', 'O')].style = '2'
     h2o.model_type = 1
-    h2o.render.run([1, 0 ,0], engine = 'eevee', output = 'bonds-hb.png')
+    h2o.get_image([1, 0 ,0], engine = 'eevee', output = 'bonds-hb.png')
 
 
 

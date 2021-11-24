@@ -20,30 +20,22 @@ class Plane_PT_prepare(Panel):
     bl_idname = "PLANE_PT_Tools"
 
     def draw(self, context):
-        layout = self.layout
         plpanel = context.scene.plpanel
-
-        box = layout.box()
-        row = box.row()
+        
+        layout = self.layout
+        row = layout.row()
         row.prop(plpanel, "indices")
-        row = box.row()
-        row.prop(plpanel, "distance")
-        row = box.row()
-        row.prop(plpanel, "scale")
-        col = box.column(align=True)
-        col.prop(plpanel, "symmetry", expand  = True)
-        row = box.row()
+        layout.prop(plpanel, "distance")
+        layout.prop(plpanel, "scale")
+        layout.prop(plpanel, "symmetry", expand  = True)
+        row = layout.row()
         row.prop(plpanel, "crystal")
         row.prop(plpanel, "center")
-        col = box.column(align=True)
-        col.prop(plpanel, "slicing", expand  = True)
-        col.prop(plpanel, "boundary", expand  = True)
-        col.prop(plpanel, "show_edge")
-        row = box.row()
-        row.prop(plpanel, "color")
-        box = layout.box()
-        col = box.column(align=True)
-        col.operator("batoms.add_plane")
+        layout.prop(plpanel, "slicing", expand  = True)
+        layout.prop(plpanel, "boundary", expand  = True)
+        layout.prop(plpanel, "show_edge")
+        layout.prop(plpanel, "color")
+        layout.operator("batoms.add_plane")
 
 
 

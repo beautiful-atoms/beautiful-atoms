@@ -36,6 +36,7 @@ class Batoms(bpy.types.PropertyGroup):
     cell: FloatVectorProperty(name="cell", default = [0, 0, 0, 0, 0, 0, 0, 0, 0], size = 9)
     show_unit_cell: BoolProperty(name="show_unit_cell", default = True)
     boundary: FloatVectorProperty(name="boundary", default = [0.0, 1.0, 0.0, 1.0, 0.0, 1.0], size = 6)
+    render: StringProperty(name="render", default = 'batoms')
 
 class Batom(bpy.types.PropertyGroup):
     """
@@ -78,9 +79,11 @@ class BBond(bpy.types.PropertyGroup):
                ('2',"Dashed line", ""),
                ('3',"Dotted line", "")),
                default='1')
+    
     @property
     def name(self) -> str:
         return '%s-%s'%(self.species1, self.species2)
+    
     def as_dict(self) -> dict:
         setdict = {
                  'flag': self.flag, 
@@ -119,6 +122,7 @@ class BPolyhedra(bpy.types.PropertyGroup):
     color: FloatVectorProperty(name="color", size = 4)
     width: FloatProperty(name="width", default = 0.01)
     show_edge: BoolProperty(name="show_edge", default=True)
+    
     @property
     def name(self) -> str:
         return self.species
@@ -134,6 +138,7 @@ class BPolyhedra(bpy.types.PropertyGroup):
             'show_edge': self.show_edge,
         }
         return setdict
+    
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
         s = 'Center                show_edge           width \n'
@@ -161,6 +166,7 @@ class BIsosurface(bpy.types.PropertyGroup):
             'level': self.level,
         }
         return setdict
+    
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
         s = 'Name        level        color            \n'
@@ -186,9 +192,11 @@ class BPlane(bpy.types.PropertyGroup):
     scale: FloatProperty(name="scale", default = 1)
     show_edge: BoolProperty(name="show_edge", default=True)
     width: FloatProperty(name="width", default = 0.01)
+    
     @property
     def name(self) -> str:
         return '%s-%s-%s'%(self.indices[0], self.indices[1], self.indices[2])
+    
     def copy(self):
         bplane = self.__class__()
         for key, value in self.as_dict():
@@ -211,6 +219,7 @@ class BPlane(bpy.types.PropertyGroup):
             'width': self.width,
         }
         return setdict
+    
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
         s = 'Name        distance  crystal symmetry slicing  show_edge  boundary   edgewidth        \n'
@@ -236,6 +245,16 @@ class BLight(bpy.types.PropertyGroup):
     name: StringProperty(name="name", default = 'X')
     lock_to_camera: BoolProperty(name="lock_to_camera", default=False)
     direction: FloatVectorProperty(name="direction", default = [0, 0, 1], size = 3)
+    look_at: FloatVectorProperty(name="look_at", default = [0, 0, 0], size = 3)
+
+class BCamera(bpy.types.PropertyGroup):
+    """
+    """
+    flag: BoolProperty(name="flag", default=False)
+    label: StringProperty(name="label", default = 'X')
+    name: StringProperty(name="name", default = 'X')
+    direction: FloatVectorProperty(name="direction", default = [0, 0, 1], size = 3)
+    look_at: FloatVectorProperty(name="look_at", default = [0, 0, 0], size = 3)
 
 class BRender(bpy.types.PropertyGroup):
     """
@@ -243,4 +262,13 @@ class BRender(bpy.types.PropertyGroup):
     flag: BoolProperty(name="flag", default=False)
     label: StringProperty(name="label", default = 'X')
     engine: StringProperty(name="engine", default = 'BLENDER_EEVEE')
-    direction: FloatVectorProperty(name="direction", default = [0, 0, 1], size = 3)
+    compute_device_type: StringProperty(name="compute_device_type", default = 'CUDA')
+    animation: BoolProperty(name="animation", default=False)
+    run_render: BoolProperty(name="run_render", default=True)
+    gpu: BoolProperty(name="gpu", default=False)
+    viewport: FloatVectorProperty(name="viewport", default = [0, 0, 1], size = 3)
+    center: FloatVectorProperty(name="center", default = [0, 0, 1], size = 3)
+    distance: FloatProperty(name="distance", 
+                            description="Distance from camera",
+                            default = -1)
+    padding: FloatVectorProperty(name="padding", default = [1, 1, 1, 1], size = 4)
