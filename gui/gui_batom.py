@@ -3,6 +3,7 @@ from bpy.types import (Panel,
                        )
 from bpy.props import (FloatProperty,
                        FloatVectorProperty,
+                       StringProperty,
                        EnumProperty,
                        )
 
@@ -25,7 +26,9 @@ class Batom_PT_prepare(Panel):
         layout.label(text="Shape")
         col = layout.column()
         col.prop(btpanel, "batom_shape", expand  = True)
+        layout.prop(btpanel, "elements")
         layout.prop(btpanel, "scale")
+        layout.prop(btpanel, "size")
 
         layout.prop(btpanel, "batomcolor")
 
@@ -41,6 +44,17 @@ class BatomProperties(bpy.types.PropertyGroup):
         btpanel = bpy.context.scene.btpanel
         scale = btpanel.scale
         modify_batom_attr(self.selected_batom, 'scale', scale)
+    def Callback_modify_size(self, context):
+        btpanel = bpy.context.scene.btpanel
+        size = btpanel.size
+        modify_batom_attr(self.selected_batom, 'size', size)
+    def Callback_modify_elements(self, context):
+        import json
+        btpanel = bpy.context.scene.btpanel
+        elements = btpanel.elements
+        elements = elements.replace("'", '"')
+        elements = json.loads(elements)
+        modify_batom_attr(self.selected_batom, 'elements', elements)
     def Callback_modify_batomcolor(self, context):
         btpanel = bpy.context.scene.btpanel
         batomcolor = btpanel.batomcolor
@@ -57,8 +71,14 @@ class BatomProperties(bpy.types.PropertyGroup):
         options={'ENUM_FLAG'},
         )
     scale: FloatProperty(
-        name="scale", default=0.2,
+        name="scale", default=0.6,
         description = "scale", update = Callback_modify_scale)
+    size: FloatProperty(
+        name="size", default=1.5,
+        description = "size", update = Callback_modify_size)
+    elements: StringProperty(
+        name = "Elements", default='{"Al": 0.7, "Si": 0.3}',
+        description = "str or dict", update = Callback_modify_elements)
     batomcolor: FloatVectorProperty(
         name="color", 
         subtype='COLOR',

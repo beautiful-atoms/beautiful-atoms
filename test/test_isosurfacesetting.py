@@ -34,7 +34,7 @@ def test_diff():
     ag_pto_fe.isosurfacesetting.volume = volume
     ag_pto_fe.isosurfacesetting[1].level = 0.008
     ag_pto_fe.isosurfacesetting[2] = {'level': -0.008, 'color': [0, 0, 1, 0.8]}
-    ag_pto_fe.model_type = 1
+    ag_pto_fe.model_style = 1
     ag_pto_fe.draw_isosurface()
     ag_pto_fe.render.resolution = [3000, 3000]
     ag_pto_fe.get_image([0, 0, 1], engine = 'eevee', output = 'top.png')
@@ -42,5 +42,6 @@ def test_diff():
 
 
 if __name__ == '__main__':
+    test_slice()
     test_diff()
     print('\n Bondsetting: All pass! \n')

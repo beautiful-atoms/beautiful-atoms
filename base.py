@@ -137,21 +137,7 @@ class BaseObject():
         bpy.ops.object.select_all(action='DESELECT')
         self.obj.select_set(True)
         bpy.ops.transform.rotate(value=angle, orient_axis=axis.upper(), 
-                        orient_type = orient_type)
-    
-    def lock_to(self, obj = None):
-        """
-        track to obj
-        """
-        if obj is not None:
-            self.obj.constraints.new(type = 'COPY_LOCATION')
-            self.obj.constraints["Copy Location"].target = obj
-            self.obj.constraints.new(type = 'COPY_ROTATION')
-            self.obj.constraints["Copy Rotation"].target = obj
-        else:
-            for c in self.obj.constraints:
-                self.obj.constraints.remove(c)
-    
+                        orient_type = orient_type)    
 
 class BaseCollection():
     

@@ -58,7 +58,7 @@ class Setting():
         for ba in coll_atom.objects:
             species[ba.batom.species] = {
                 'color': ba.children[0].data.materials[0].diffuse_color,
-                'radius': ba.batom.radius}
+                'radius': ba.children[0].batom.radius}
         return species
     
     @property    

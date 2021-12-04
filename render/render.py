@@ -237,7 +237,7 @@ class Render(BaseCollection):
             return bpy.context.scene.cycles.use_motion_blur
 
     @use_motion_blur.setter    
-    def motion_blur(self, use_motion_blur):
+    def use_motion_blur(self, use_motion_blur):
         """
         'use_motion_blur': False,
         'motion_blur_position': 'START', 
@@ -289,13 +289,14 @@ class Render(BaseCollection):
         """
         Calculate canvas and direction
         """
+        from batoms.butils import lock_to
         # plane
         # light
         for name, light in self.lights.lights.items():
             if light.lock_to_camera:
-                self.lights['Default'].lock_to(self.camera.obj)
+                lock_to(self.lights['Default'].obj, self.camera.obj)
             else:
-                light.lock_to(None)
+                lock_to(light.obj, None)
                 light.direction = light.direction
                 # calculate direction in origial axis
     

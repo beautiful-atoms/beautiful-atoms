@@ -10,22 +10,30 @@ from bpy.props import (StringProperty,
                        FloatVectorProperty,
                        EnumProperty,
                        PointerProperty,
+                       CollectionProperty,
                        )
 
 class Batoms(bpy.types.PropertyGroup):
     """
     """
     flag: BoolProperty(name="flag", default=False)
-    model_type: EnumProperty(
-        name="model_type",
+    model_style: EnumProperty(
+        name="model_style",
         description="Structural models",
         items=(('0',"Space-filling", "Use ball"),
                ('1',"Ball-and-stick", "Use ball and stick"),
                ('2',"Polyhedral","Use polyhedral"),
                ('3',"Wireframe", "Use wireframe")),
-               default='0')
-    polyhedra_type: EnumProperty(
-        name="polyhedra_type",
+        default='0')
+    radius_style: EnumProperty(
+        name="radius_style",
+        description="Radii",
+        items=(('0',"Covalent", "covalent"),
+               ('1',"VDW", "van der Waals"),
+               ('2',"Ionic","ionic")),
+        default='0')
+    polyhedra_style: EnumProperty(
+        name="polyhedra_style",
         description="Polhhedra models",
         items=(('0',"atoms, bonds and polyhedra", "atoms, bonds and polyhedra"),
                ('1',"atoms, polyhedra", "atoms, polyhedra"),
@@ -38,14 +46,28 @@ class Batoms(bpy.types.PropertyGroup):
     boundary: FloatVectorProperty(name="boundary", default = [0.0, 1.0, 0.0, 1.0, 0.0, 1.0], size = 6)
     render: StringProperty(name="render", default = 'batoms')
 
+class Belement(bpy.types.PropertyGroup):
+    name: StringProperty(name="name", default = 'H')
+    occupancy: FloatProperty(name="occupancy")
+    radius: FloatProperty(name="radius")
+    color: FloatVectorProperty(name="color", size = 4, default = (0, 0.2, 0.8, 1))
+
 class Batom(bpy.types.PropertyGroup):
     """
     """
     flag: BoolProperty(name="flag", default=False)
     label: StringProperty(name="label", default = 'X')
     species: StringProperty(name="species", default = 'X')
-    element: StringProperty(name="element", default = '')
+    elements: CollectionProperty(name = 'Belements', 
+                            type = Belement)
     radius: FloatProperty(name="radius")
+    radii_style: EnumProperty(
+        name="radii_style",
+        description="Radii",
+        items=(('0',"Covalent", "covalent"),
+               ('1',"VDW", "van der Waals"),
+               ('2',"Ionic","ionic")),
+        default='0')
 
 class Bcell(bpy.types.PropertyGroup):
     """

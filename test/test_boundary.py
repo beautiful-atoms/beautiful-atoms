@@ -27,7 +27,7 @@ def test_bond_search():
     removeAll()
     tio2 = read('datas/tio2.cif')
     tio2.boundary = 0.01
-    tio2.model_type = 2
+    tio2.model_style = 2
     atoms = tio2.get_atoms_with_boundary()
     assert len(atoms) == 55
     tio2.draw_cell()

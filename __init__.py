@@ -58,8 +58,9 @@ from .modal import (
 # Register
 
 classes = [
-        custom_property.Batoms,
+        custom_property.Belement,
         custom_property.Batom,
+        custom_property.Batoms,
         custom_property.Bcell,
         custom_property.BBond,
         custom_property.BPolyhedra,

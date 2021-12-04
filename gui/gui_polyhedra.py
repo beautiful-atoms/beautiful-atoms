@@ -24,8 +24,8 @@ class Polyhedra_PT_prepare(Panel):
         layout = self.layout
         popanel = context.scene.popanel
     
-        layout.label(text="Polyhedra type")
-        layout.prop(popanel, "polyhedra_type", expand  = True)
+        layout.label(text="Polyhedra style")
+        layout.prop(popanel, "polyhedra_style", expand  = True)
 
         layout.prop(popanel, "show_edge")
         layout.prop(popanel, "width")
@@ -39,10 +39,10 @@ class PolyhedraProperties(bpy.types.PropertyGroup):
     @property
     def selected_polyhedra(self):
         return get_selected_objects('bpolyhedra')
-    def Callback_polyhedra_type(self, context):
+    def Callback_polyhedra_style(self, context):
         popanel = bpy.context.scene.popanel
-        polyhedra_type = list(popanel.polyhedra_type)[0]
-        modify_batoms_attr(self.selected_batoms, 'polyhedra_type', polyhedra_type)
+        polyhedra_style = list(popanel.polyhedra_style)[0]
+        modify_batoms_attr(self.selected_batoms, 'polyhedra_style', polyhedra_style)
     def Callback_modify_width(self, context):
         popanel = bpy.context.scene.popanel
         width = popanel.width
@@ -56,15 +56,15 @@ class PolyhedraProperties(bpy.types.PropertyGroup):
         polyhedracolor = popanel.polyhedracolor
         modify_polyhedra_attr(self.selected_batoms, self.selected_polyhedra, 'color', polyhedracolor)
 
-    polyhedra_type: EnumProperty(
-        name="polyhedra_type",
+    polyhedra_style: EnumProperty(
+        name="polyhedra_style",
         description="Polhhedra models",
         items=(('0',"0", "atoms, bonds and polyhedra"),
                ('1',"1", "atoms, polyhedra"),
                ('2',"2","central atoms, polyhedra"),
                ('3',"3", "polyhedra")),
         default={'0'}, 
-        update=Callback_polyhedra_type,
+        update=Callback_polyhedra_style,
         options={'ENUM_FLAG'},
         )
     width: FloatProperty(

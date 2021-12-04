@@ -29,8 +29,8 @@ def test_batoms():
     h2o.cell = [3, 3, 3]
     h2o.pbc = True
     assert h2o.pbc
-    h2o.model_type = 1
-    assert h2o.model_type == 1
+    h2o.model_style = 1
+    assert h2o.model_style == 1
     h2o.translate([0, 0, 2])
     assert np.allclose(h2o['O'].positions, np.array([[0, 0, 2.4]]))
     h2o.rotate(math.pi/2.0, 'Z')
@@ -73,7 +73,7 @@ def test_ase_species():
     from batoms.butils import removeAll
     from batoms import Batoms
     removeAll()
-    from ase.build import molecule
+    from ase.build import molecule, bulk
     h2o = molecule('H2O')
     h2o.new_array('species', np.array(h2o.get_chemical_symbols(), dtype = 'U20'))
     h2o.arrays['species'][1] = 'H_1'
@@ -82,6 +82,39 @@ def test_ase_species():
     species = h2o.species
     species.sort()
     assert species == ['H_1', 'H_test2', 'O']
+    # bulk
+    fe = bulk('Fe')
+    fe = Batoms(label = 'fe', atoms=fe)
+    assert fe.pbc == [True, True, True]
+
+
+def test_pymatgen_species():
+    from batoms.butils import removeAll
+    from batoms import Batoms
+    from pymatgen.core import Lattice, Structure
+    from pymatgen.core.structure import Molecule
+    removeAll()
+    # molecule
+    co = Molecule(["C","O"], [[0.0, 0.0, 0.0], [0.0, 0.0, 1.2]])
+    co = Batoms(label = 'co', atoms=co)
+    # lattice
+    fe = Structure(Lattice.cubic(2.8), ["Fe", "Fe"], [[0, 0, 0], [0.5, 0.5, 0.5]])
+    fe = Batoms(label = 'fe', atoms=fe)
+    assert fe.pbc == [True, True, True]
+
+def test_occupancy():
+    """
+    """
+    from batoms.butils import removeAll
+    from batoms import Batoms
+    removeAll()
+    from ase.build import bulk
+    au = bulk('Au', cubic = True)
+    au = Batoms('au', atoms = au)
+    au['Au'].elements = {'Au':0.75, 'Ag': 0.25}
+    assert len(au['Au'].elements) == 2
+    au.draw_cell()
+    au.get_image(output = 'batoms_occupancy')
 
 def test_get_and_set_positions():
     from batoms.butils import removeAll
@@ -124,7 +157,7 @@ def test_repeat():
     h2o.cell = [3, 3, 3]
     h2o.pbc = True
     h2o.repeat([2, 2, 2])
-    h2o.model_type = 1
+    h2o.model_style = 1
     assert len(h2o) == 24
 
 def test_repeat_animation():
@@ -134,7 +167,7 @@ def test_repeat_animation():
     tio2 = read('datas/tio2_10.xyz', index = ':')
     tio2.set_frames()   
     tio2.repeat([2, 2, 2])
-    tio2.model_type = 1
+    tio2.model_style = 1
     assert len(tio2) == 48
 
 
@@ -152,7 +185,7 @@ def test_cavity():
     removeAll()
     mof = read('datas/mof-5.cif')
     mof.draw_cavity_sphere(9.0, boundary = [[0.2, 0.8], [0.2, 0.8], [0.2, 0.8]])
-    mof.model_type = 2
+    mof.model_style = 2
     mof.draw_cell()
 
 
@@ -180,6 +213,8 @@ if __name__ == '__main__':
     test_batoms()
     test_from_coll()
     test_ase_species()
+    test_pymatgen_species()
+    test_occupancy()
     test_get_and_set_positions()
     test_cavity()
     test_get_geometry()

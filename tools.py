@@ -5,7 +5,7 @@ from numpy.core.numeric import indices
 
     
 
-def default_element_prop(element, radii_style = 'covalent', color_style = "JMOL"):
+def default_element_prop(element, radius_style = 'covalent', color_style = "JMOL"):
     """
     Get color, radii for element.
     """
@@ -14,46 +14,41 @@ def default_element_prop(element, radii_style = 'covalent', color_style = "JMOL"
     from batoms.data import jmol_colors, cpk_colors, vesta_color
     element_prop = {}
     number = chemical_symbols.index(element)
-    if color_style.upper() == 'JMOL':
+    color_style = color_style.upper()
+    radius_style = radius_style.upper()
+    if color_style == 'JMOL':
         color = jmol_colors[number]
-    elif color_style.upper() == 'CPK':
+    elif color_style == 'CPK':
         color = cpk_colors[number]
-    elif color_style.upper() == 'VESTA':
+    elif color_style == 'VESTA':
         color = vesta_color[element]
-    if radii_style.upper() == 'COVALENT':
+    if radius_style == 'COVALENT' or radius_style == '0':
         radius = covalent_radii[number]
-    elif radii_style.upper() == 'VDW':
+    elif radius_style == 'VDW' or radius_style == '1':
         radius = vdw_radii[number]
-    elif radii_style.upper() == 'IONIC':
+    elif radius_style == 'IONIC' or radius_style == '2':
         raise Exception('Ionic radii is not supported yet!')
+    else:
+        raise Exception('radius_style: %s is not supported yet!'%radius_style)
     element_prop['radius'] = radius
-    element_prop['element'] = element
     element_prop['color'] = [color[0], color[1], color[2], 1.0]
     return element_prop
 
-
-def get_default_species_data(element, positions = [], radii_style = 'covalent', 
-                color_style = "JMOL", scale = [1, 1, 1], props = {}):
+def get_default_species_data(elements, radius_style = 'covalent', 
+                color_style = "JMOL", props = {}):
     """
-    Set default color, radii for element,
+    Set default color, radii for elements,
     Todo fraction occupancy
     """
-    if isinstance(element, str):
-        species_data = default_element_prop(element, radii_style = radii_style, 
-                    color_style = color_style)
-        species_data['scale'] = scale
-        species_data['positions'] = positions
-        species_data['balltype'] = None
-        species_data.update(props)
-    elif isinstance(element, dict):
-        species_data = {}
-        for ele, fraction in element.items():
-            species_data[ele] = default_element_prop(ele, radii_style = radii_style, 
-                    color_style = color_style)
-            species_data[ele]['scale'] = scale
-            species_data[ele]['positions'] = positions
-            species_data[ele]['balltype'] = None
-            species_data[ele].update(props)
+    species_data = {'color':{}}
+    radius = 0
+    for ele, fraction in elements.items():
+        data = default_element_prop(ele, radius_style = radius_style, 
+                color_style = color_style)
+        radius += data['radius']*fraction
+        species_data['color'][ele] = data['color']
+    species_data['radius'] = radius
+    species_data.update(props)
     return species_data
 
 
@@ -181,7 +176,17 @@ def local2global(positions, matrix, reversed = False):
     positions = positions[:, :3]
     return positions
 
-    
+def npbool2bool(pbc):
+        """
+        """
+        newpbc = []
+        for i in range(3):
+            if pbc[i]:
+                newpbc.append(True)
+            else:
+                newpbc.append(False)
+        return newpbc
+
 if __name__ == "__main__":
     indices = (1, 1, 1)
     indices = get_equivalent_indices(225, indices)

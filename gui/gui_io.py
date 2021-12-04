@@ -24,7 +24,7 @@ class IMPORT_OT_batoms(Operator, ImportHelper):
     world: BoolProperty(
         name="World", default=False,
         description = "Do you need a world light?")
-    model_type: EnumProperty(
+    model_style: EnumProperty(
         name="Type",
         description="Choose model",
         items=(('0',"Space-filling", "Use ball"),
@@ -59,10 +59,10 @@ class IMPORT_OT_batoms(Operator, ImportHelper):
         row.label(text="Structure model")
         row = box.row()
         col = row.column()
-        col.prop(self, "model_type")
+        col.prop(self, "model_style")
         box = layout.box()
         row = box.row()
-        row.active = (self.model_type == "1")
+        row.active = (self.model_style == "1")
         #
         
 
@@ -73,7 +73,7 @@ class IMPORT_OT_batoms(Operator, ImportHelper):
 
         # Execute main routine
         import_batoms(self.inputfile, 
-               self.model_type,
+               self.model_style,
                self.camera,
                self.light,
                self.world,
@@ -84,7 +84,7 @@ class IMPORT_OT_batoms(Operator, ImportHelper):
 
 
 def import_batoms(inputfile, 
-               model_type = '0',
+               model_style = '0',
                camera = 'True',
                light = 'True',
                world = 'False',

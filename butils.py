@@ -172,7 +172,22 @@ def set_look_at(obj, target, roll=0):
         loc = loc.to_tuple()
         obj.matrix_world = quat @ rollMatrix
         obj.location = loc
-    
+
+def lock_to(obj, target = None, location = True, rotation = True):
+        """
+        track to obj
+        """
+        if target is not None:
+            if location:
+                obj.constraints.new(type = 'COPY_LOCATION')
+                obj.constraints["Copy Location"].target = target
+            if rotation:
+                obj.constraints.new(type = 'COPY_ROTATION')
+                obj.constraints["Copy Rotation"].target = target
+        else:
+            for c in obj.constraints:
+                obj.constraints.remove(c)
+
 def set_world(color = [0.2, 0.2, 0.2, 1.0]):
         """
         """

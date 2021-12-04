@@ -30,7 +30,7 @@ class Bcell(BaseObject):
                     [2, 5], [2, 6], [7, 5], [7, 6], 
                     [3, 2], [0, 6], [1, 5], [4, 7]
             ]
-        self.width = 0.05
+        self.width = 0.02
         self.color = color
         self.draw_cell_edge(array, location)
     

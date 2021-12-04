@@ -57,7 +57,7 @@ def translate(selected_vertices, displacement, fmax = 0.05, steps = 5, frame_sta
     batoms.set_frames([atoms], frame_start = frame_start)
     # set new positions of atoms
     batoms.positions = atoms
-    # batoms.model_type = 1
+    # batoms.model_style = 1
     # batoms.bondsetting.add(['Al', 'Al'])
     # batoms.draw_bonds()
     # batoms.draw()

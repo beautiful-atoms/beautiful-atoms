@@ -16,7 +16,7 @@ def test_replace():
     h2o.bondsetting.remove(['O', 'H_1'])
     h2o['H_1'].color = [0.1, 0.8, 0, 1.0]
     h2o.bondsetting.add(['O', 'H_1'])
-    h2o.model_type = 1
+    h2o.model_style = 1
     h2o.render.viewport=[1, 0, 0]
     h2o.render.engine = 'eevee'
     h2o.get_image(output = 'bonds-replace.png')
@@ -32,8 +32,6 @@ def test_add():
     assert len(au.bondsetting) == 1
     print('Pass add!')
 
-
-
 def test_polyhedra():
     from batoms.bio import read
     from batoms.butils import removeAll
@@ -45,7 +43,6 @@ def test_polyhedra():
     tio2.bondsetting.add(('Ti', 'O'))
     assert len(tio2.bondsetting) == 2
 
-
 def test_search_bond():
     from batoms.bio import read
     from batoms.butils import removeAll
@@ -53,10 +50,9 @@ def test_search_bond():
     pk = read('datas/perovskite.cif')
     pk.repeat([2, 2, 2])
     pk.boundary = 0.01
-    pk.model_type = 2
+    pk.model_style = 2
     pk.draw_cell()
     pk.get_image([0, 1, 0], engine = 'eevee', output = 'perovskite.png')
-
 
 def test_search_bond_2():
     from batoms.bio import read
@@ -65,7 +61,7 @@ def test_search_bond_2():
     mol = read('datas/anthraquinone.cif')
     mol.boundary = 0.01
     mol.draw_cell()
-    mol.model_type = 1
+    mol.model_style = 1
     mol.get_image([1, -0.3, 0.1], engine = 'eevee', output = 'anthraquinone.png')
 
 def test_search_bond_urea():
@@ -75,9 +71,8 @@ def test_search_bond_urea():
     mol = read('datas/urea.cif')
     mol.boundary = 2
     mol.draw_cell()
-    mol.model_type = 1
+    mol.model_style = 1
     mol.get_image([1, -0.3, 0.1], engine = 'eevee', output = 'urea.png')
-
 
 def test_search_bond_3():
     """
@@ -89,9 +84,8 @@ def test_search_bond_3():
     mof = read('datas/mof-5.cif')
     mof.boundary = 0.01
     mof.bondsetting[('Zn', 'O')].polyhedra = True
-    mof.model_type = 1
+    mof.model_style = 1
     mof.get_image([0, 1, 0], engine = 'eevee', output = 'mof-5.png')
-
 
 def test_high_order_bond():
     """
@@ -109,9 +103,8 @@ def test_high_order_bond():
     c6h6.bondsetting[('C_1', 'C_0')].order = 2
     c6h6.bondsetting[('C_3', 'C_2')].order = 2
     c6h6.bondsetting[('C_5', 'C_4')].order = 2
-    c6h6.model_type = 1
+    c6h6.model_style = 1
     c6h6.get_image([0, 0, 1], engine = 'eevee', output = 'c6h6.png')
-
 
 def test_hydrogen_bond():
     from ase.build import molecule
@@ -128,18 +121,16 @@ def test_hydrogen_bond():
     h2o.bondsetting[('H', 'O')].max = 3.0
     h2o.bondsetting[('H', 'O')].width = 0.01
     h2o.bondsetting[('H', 'O')].style = '2'
-    h2o.model_type = 1
+    h2o.model_style = 1
     h2o.get_image([1, 0 ,0], engine = 'eevee', output = 'bonds-hb.png')
-
-
 
 if __name__ == '__main__':
     test_replace()
+    test_add()
     test_polyhedra()
     test_hydrogen_bond()
     test_search_bond()
     test_search_bond_2()
     test_search_bond_3()
     test_high_order_bond()
-    test_add()
     print('\n Bondsetting: All pass! \n')

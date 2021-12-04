@@ -6,7 +6,7 @@ def test_animation():
     removeAll()
     atoms = read('datas/c2h6so_10.xyz', index = ':')
     batoms = Batoms('c2h6so', atoms = atoms, movie = True)
-    batoms.model_type = 1
+    batoms.model_style = 1
 
 def test_animation_2():
     from ase.io import read, write
@@ -16,7 +16,7 @@ def test_animation_2():
     atoms = read('datas/tio2_10.xyz', index = ':')
     tio2 = Batoms('tio2', atoms = atoms, movie = True)
     tio2.boundary = 0.01
-    tio2.model_type = 1
+    tio2.model_style = 1
 
 def test_batoms_animation():
     from ase.build import molecule
@@ -63,7 +63,7 @@ def test_batoms_animation_2():
     tio2 = Batoms(label = 'tio2', atoms = images)
     tio2.set_frames(images)
     tio2.boundary = 0.01
-    tio2.model_type = 1
+    tio2.model_style = 1
     write('datas/tio2_30.xyz', tio2.frames)
 
 

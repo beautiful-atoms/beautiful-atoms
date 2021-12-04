@@ -144,7 +144,7 @@ def modify_bond_attr(selected_batoms, selected_bond, key, value):
                     selected_bond_new.append('%s_bond_%s_%s_%s'%(bond.bbond.label, 
                         bond.bbond.species1, bond.bbond.species2, bond.bbond.species))
         batoms.draw_bonds()
-        if batoms.model_type == 2:
+        if batoms.model_style == 2:
             batoms.draw_polyhedras()
     for name in selected_bond_new:
         obj = bpy.data.objects.get(name)
@@ -160,7 +160,7 @@ def remove(selected_batoms, selected_bond):
                 batoms.bondsetting.remove([bond.bbond.species1, 
                         bond.bbond.species2])
         batoms.draw_bonds()
-        if batoms.model_type == 2:
+        if batoms.model_style == 2:
             batoms.draw_polyhedras()
 
 def add_bond(selected_batoms, selected_batom):
@@ -179,7 +179,7 @@ def add_bond(selected_batoms, selected_batom):
         elif len(species_list) > 2:
             raise Exception('Please select only two atoms')
         batoms.draw_bonds()
-        if batoms.model_type == 2:
+        if batoms.model_style == 2:
             batoms.draw_polyhedras()
 
 class RemoveButton(Operator):

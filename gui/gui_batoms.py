@@ -31,10 +31,11 @@ class Batoms_PT_prepare(Panel):
         layout = self.layout
         bapanel = context.scene.bapanel
 
-        layout.label(text="Model type")
-        box = layout.box()
-        col = box.column()
-        col.prop(bapanel, "model_type", expand  = True)
+        layout.label(text="Model style")
+        col = layout.column()
+        col.prop(bapanel, "model_style", expand  = True)
+        layout.label(text="Radius style")
+        layout.prop(bapanel, "radius_style", expand  = True)
         
         layout.prop(bapanel, "hide", expand  = True)
         layout.prop(bapanel, "scale")
@@ -62,10 +63,14 @@ class BatomsProperties(bpy.types.PropertyGroup):
     @property
     def selected_vertices(self):
         return get_selected_vertices()
-    def Callback_model_type(self, context):
+    def Callback_model_style(self, context):
         bapanel = bpy.context.scene.bapanel
-        model_type = list(bapanel.model_type)[0]
-        modify_batoms_attr(self.selected_batoms, 'model_type', model_type)
+        model_style = list(bapanel.model_style)[0]
+        modify_batoms_attr(self.selected_batoms, 'model_style', model_style)
+    def Callback_radius_style(self, context):
+        bapanel = bpy.context.scene.bapanel
+        radius_style = list(bapanel.radius_style)[0]
+        modify_batoms_attr(self.selected_batoms, 'radius_style', radius_style)
     def Callback_modify_hide(self, context):
         bapanel = bpy.context.scene.bapanel
         modify_batoms_attr(self.selected_batoms, 'hide', bapanel.hide)
@@ -76,15 +81,25 @@ class BatomsProperties(bpy.types.PropertyGroup):
         bapanel = bpy.context.scene.bapanel
         export_atoms(self.selected_batoms, bapanel.filetype)
     
-    model_type: EnumProperty(
-        name="model_type",
+    model_style: EnumProperty(
+        name="model_style",
         description="Structural models",
         items=(('0',"Space-filling", "Use ball and stick"),
                ('1',"Ball-and-stick", "Use ball"),
                ('2',"Polyhedral","Use polyhedral"),
                ('3',"Stick", "Use stick")),
         default={'0'}, 
-        update=Callback_model_type,
+        update=Callback_model_style,
+        options={'ENUM_FLAG'},
+        )
+    radius_style: EnumProperty(
+        name="radius_style",
+        description="Structural models",
+        items=(('0',"Covalent", "covalent"),
+               ('1',"VDW", "van der Waals"),
+               ('2',"Ionic","ionic")),
+        default={'0'}, 
+        update=Callback_radius_style,
         options={'ENUM_FLAG'},
         )
     
