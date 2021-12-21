@@ -95,6 +95,15 @@ def draw_surface_from_vertices(name,
     return obj
     # print('bonds: {0}   {1:10.2f} s'.format(name, time() - tstart))
 
+def draw_vertices(name, vertices):
+    datas = {'vertices': vertices,
+             'edges': [], 
+             'faces': [],
+             'color': [0.5, 0.5, 0.5, 1.0],
+             'battr_inputs': {}}
+    coll = bpy.data.collections['Collection']
+    draw_surface_from_vertices(name, datas, coll)
+
 def draw_text(coll_text = None, atoms = None, type = None):
     tstart = time()
     positions = atoms.positions

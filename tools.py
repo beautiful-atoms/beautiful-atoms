@@ -2,6 +2,7 @@ import numpy as np
 import time
 
 from numpy.core.numeric import indices
+from numpy.lib import angle
 
     
 
@@ -94,6 +95,29 @@ def get_cell_vertices(cell):
     return cell_vertices
 
 
+def get_box(vertices, padding = 4):
+    """
+    Find a minmum box contains all atoms
+    """
+    # find box
+    box = np.zeros((3, 2))
+    for i in range(3):
+        box[i, 0] = vertices[:, i].min() - padding
+        box[i, 1] = vertices[:, i].max() + padding
+    return box
+
+def build_grid(box, resolution):
+    """
+    generate gridpoints
+    """
+    grids = []
+    for i in range(3):
+        grids.append(np.arange(box[i, 0], box[i, 1], resolution))
+    x, y, z = np.meshgrid(grids[0], grids[1], grids[2], indexing = 'ij')#, sparse=True)
+    shape = x.shape
+    meshgrids = np.c_[x.ravel(), y.ravel(), z.ravel()]
+    return meshgrids, shape
+
 def get_canvas(vertices, direction = [0, 0 ,1], padding = 1):
     """
     Calculate canvas for camera. 
@@ -102,7 +126,7 @@ def get_canvas(vertices, direction = [0, 0 ,1], padding = 1):
     """
     
     # plane
-    canvas = np.zeros([2, 3])
+    canvas = np.zeros((2, 3))
     frame = rotate_frame(direction)
     #
     projz = np.dot(vertices, frame[2])
@@ -187,7 +211,151 @@ def npbool2bool(pbc):
                 newpbc.append(False)
         return newpbc
 
-if __name__ == "__main__":
-    indices = (1, 1, 1)
-    indices = get_equivalent_indices(225, indices)
-    print(indices)
+
+def heron3(a, b, c):
+    s = (a + b + c)/2
+    A = np.sqrt(s*(s - a)*(s - b)*(s - c))
+    return A
+
+def heron4(u, v, w, U, V, W):
+    X = (w - U + v)*(U + v + w)
+    x = (U - v + w)*(v - w + U)
+    Y = (u - V + w)*(V + w + u)
+    y = (V - w + u)*(w - u + V)
+    Z = (v - W + u)*(W + u + v)
+    z = (W - u + v)*(u - v + W)
+    a = np.sqrt(x*Y*Z)
+    b = np.sqrt(y*Z*X)
+    c = np.sqrt(z*X*Y)
+    d = np.sqrt(x*y*z)
+    V = np.sqrt((-a + b + c + d)*(a - b + c + d)*(a + b - c + d)*(a + b + c - d))
+    V = V/192/u/v/w
+    return V
+
+def calc_V2(u, v, w, U, V, W):
+    a1 = np.square(u)
+    a2 = np.square(v)
+    a3 = np.square(w)
+    a4 = np.square(W)
+    a5 = np.square(U)
+    a6 = np.square(V)
+    V2 = (a1*a5*(a2 + a3 + a4 + a6 - a1 - a5) + 
+         a2*a6*(a1 + a3 + a4 + a5 - a2 - a6) + 
+         a3*a4*(a1 + a2 + a5 + a6 - a3 - a4) -
+         a1*a2*a4 - a2*a3*a5 - a1*a3*a6 - a4*a5*a6)/144 
+    return V2
+
+def heron42(u, v, w, U, V, W):
+    V2 = calc_V2(u, v, w, U, V, W)
+    V2 = np.where(V2>0, V2, 1e-6)
+    Volume = np.sqrt(V2)
+    return Volume
+
+def calc_origin_2(p, p0, p1, r0, r1, r):
+    xaxis = p1 - p0
+    # xaxis = np.sign(xaxis[:, 0])[:, None]*xaxis
+    l0 = r0 + r
+    l1 = r1 + r
+    l2 = np.linalg.norm(xaxis, axis = 1)
+    #
+    vec = p - p0
+    xaxis = xaxis/l2[:, None]
+    zaxis = np.cross(xaxis, vec)
+    zaxis = zaxis/np.linalg.norm(zaxis, axis = 1)[:, None]
+    yaxis = np.cross(zaxis, xaxis)
+    v = (np.square(l0) + np.square(l2) - np.square(l1))/2/l0/l2
+    v[v>1] = 1
+    # print(min(v), max(v))
+    angles = np.arccos(v)
+    origin = p0 + l0[:, None]*(np.cos(angles)[:, None]*xaxis + np.sin(angles)[:, None]*yaxis)
+    # print(xaxis[33], yaxis[33], zaxis[33], l0[33], l1[33], h[33], x[33], origin[33])
+    # print(xaxis, yaxis, zaxis, l0, l1, l2)
+    # print(x, h)
+    # print(np.cos(angles), np.sin(angles))
+    # print(p, p0, p1, r0, r1, r)
+    # print(p[23], p[24])
+    # print(origin[23], origin[24])
+    # print(origin)
+    return origin #, xaxis, yaxis, zaxis
+
+def check_origin_2(p, p0, p1, r0, r1, r, eps):
+    origins = calc_origin_2(p, p0, p1, r0, r1, r)
+    vec = p - origins
+    norms = np.linalg.norm(vec, axis = 1)
+    indices = np.where(norms<eps)[0]
+    return indices, origins[indices]
+
+def check_origin_3(p, p0, p1, p2, r0, r1, r2, r, eps):
+    origins = calc_origin_3(p, p0, p1, p2, r0, r1, r2, r)
+    vec = p - origins
+    norms = np.linalg.norm(vec, axis = 1)
+    indices = np.where(norms<eps)[0]
+    return indices, origins[indices]
+
+def calc_origin_3(p, p0, p1, p2, r0, r1, r2, r):    
+    l0 = r0 + r
+    l1 = r1 + r
+    l2 = r2 + r
+    l3 = p1 - p0
+    l4 = p2 - p0
+    l5 = p2 - p1
+    l3 = np.linalg.norm(l3, axis = 1)
+    l4 = np.linalg.norm(l4, axis = 1)
+    l5 = np.linalg.norm(l5, axis = 1)
+    xaxis = p1 - p0
+    xaxis = xaxis/np.linalg.norm(xaxis, axis = 1)[:, None]
+    vec1 = p2 - p0
+    zaxis = np.cross(xaxis, vec1)
+    zaxis = zaxis/np.linalg.norm(zaxis, axis = 1)[:, None]
+    yaxis = np.cross(zaxis, xaxis)
+    #-------------------------
+    V = heron42(l0, l1, l2, l5, l4, l3)
+    A = heron3(l3, l4, l5)
+    h = 3*V/A
+    angles1 = np.arccos((np.square(l3) + np.square(l0) - np.square(l1))/2/l3/l0)
+    h1 = l0*np.sin(angles1)
+    x = l0*np.cos(angles1)
+    y = np.sqrt(h1*h1 - h*h)
+    # sign of y
+    angles2 = np.arccos((np.square(l4) + np.square(l3) - np.square(l5))/2/l4/l3)
+    h2 = np.sqrt(x*x + l4*l4 - 2*x*l4*np.cos(angles2))
+    h3 = np.sqrt(l2*l2 - h*h)
+    # angles3 = np.arccos((np.square(y) + np.square(h3) - np.square(h2))/2/y/h3)
+    projy = np.where(h2 > h3, 1, -1)*y
+    # sign of z
+    vec = p - p0
+    projz = np.sign(np.einsum('ij,ij->i', vec, zaxis))*h
+    origin = p0 + x[:, None]*xaxis + projy[:, None]*yaxis + projz[:, None]*zaxis
+    #
+    # print(V, A, h, h1, x, y)
+    v0 = p0 - origin
+    pl0 = np.linalg.norm(v0, axis = 1)
+    # print(l0 - pl0)
+    v1 = p1 - origin
+    pl1 = np.linalg.norm(v1, axis = 1)
+    # print(l1 - pl1)
+    v2 = p2 - origin
+    pl2 = np.linalg.norm(v2, axis = 1)
+    # print(l2 - pl2)
+    # print('x, y, h: ', V, A, x, y, h)
+    # print(xaxis[0], zaxis[0])
+    return origin
+
+if __name__ == '__main__':
+    # V = heron4(6, 7, 8, 9, 10, 11)
+    # V3 = heron4(2.59, 2.92, 2.59, 0.96, 1.52, 0.96)
+    # print(V, V2, V3)
+    p0 = np.array([[-2.5, 0, 0], [0, 0.7632, -0.4770]])
+    p1 = np.array([[0, -0.7632, -0.4770], [0, 0, 0.11926]])
+    p2 = np.array([[0, 0, 0.11926], [0, -0.7632, -0.4770]])
+    r0 = np.array([1.2, 1.2])
+    r1 = np.array([1.2, 1.52])
+    r2 = np.array([1.52, 1.2])
+    r = 1.4
+    p = np.array([[0.89120579, 0.98369867, -0.53714401],
+             [-0.89120579, -0.98369867, 0.53714401]])
+    p = np.array([[-0.63896561,  0.47235048, -1.45207691],
+                [-0.80025041,  0.32016024, -1.3009696]])
+    # origin = calc_origin(p, p0, p1, r0, r1, r)
+    origin = calc_origin_3(p, p0, p1, p2, r0, r1, r2, r)
+    print(origin)

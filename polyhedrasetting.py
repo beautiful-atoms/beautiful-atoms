@@ -1,6 +1,6 @@
 """
 """
-from batoms.bondsetting import Setting, tuple2string
+from batoms.base import Setting, tuple2string
 import numpy as np
 from time import time
 

@@ -1,7 +1,7 @@
 import bpy
 from ase import Atom, Atoms
 from mathutils import Vector, Matrix
-
+import numpy as np
 
 
 def object_mode():
@@ -214,3 +214,17 @@ def show_index():
             if a.type == 'VIEW_3D':
                 overlay = a.spaces.active.overlay
                 overlay.show_extra_indices = True
+    
+def get_area(me):
+    npoly = len(me.polygons)
+    areas = np.zeros(npoly)
+    me.polygons.foreach_get('area', areas)
+    total_area = np.sum(areas)
+    return total_area
+
+def get_volume(me):
+    import bmesh
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    volume = bm.calc_volume()
+    return volume

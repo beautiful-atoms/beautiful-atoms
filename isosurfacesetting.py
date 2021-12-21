@@ -3,7 +3,7 @@
 import bpy
 import numpy as np
 from time import time
-from batoms.bondsetting import Setting
+from batoms.base import Setting
 
 default_colors = [(1, 1, 0, 0.8), (0.0, 0.0, 1.0, 0.8)]
 
@@ -159,7 +159,6 @@ class IsosurfaceSetting(Setting):
                                 'battr_inputs': {'bisosurface': iso.as_dict()}
                             }
         return isosurface
-
 
 def calc_isosurface(volume, cell, level,
                     gradient_direction = 'descent',

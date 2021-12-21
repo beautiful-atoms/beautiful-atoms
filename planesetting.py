@@ -6,7 +6,7 @@ To insert lattice planes in structural models.
 """
 from numpy.core.records import array
 import bpy
-from batoms.bondsetting import Setting, tuple2string
+from batoms.base import Setting, tuple2string
 import numpy as np
 from time import time
 from batoms.tools import get_equivalent_indices

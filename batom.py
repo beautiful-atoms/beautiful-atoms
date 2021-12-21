@@ -13,7 +13,7 @@ from batoms.tools import get_default_species_data
 import numpy as np
 from batoms.base import BaseObject
 
-shapes = ["UV_SPHERE", "ICO_SPHERE", "CUBE"]
+shapes = ["UV_SPHERE", "ICO_SPHERE", "CUBE", "METABALL"]
 
 
 class Batom(BaseObject):
@@ -75,6 +75,7 @@ class Batom(BaseObject):
                 materials = None,
                 node_inputs = None,
                 instancer_data = None,
+                metaball = False,
                  ):
         #
         if species:
@@ -105,7 +106,7 @@ class Batom(BaseObject):
                                 props = self.props)
             if color:
                 self.species_data['color'] = color
-            self.build_object(species, elements, positions, location)
+            self.build_object(species, elements, positions, location, metaball = metaball)
             self.build_material(species, node_inputs, material_style, materials)
             self.build_instancer(radius = self.species_data['radius'], 
                             scale = scale,
@@ -179,6 +180,8 @@ class Batom(BaseObject):
             if shape.upper() == 'CUBE':
                 bpy.ops.mesh.primitive_cube_add(size = radius)
                 shade_smooth = False
+            if shape.upper() == 'METABALL':
+                bpy.ops.object.metaball_add(type = 'BALL', location = [0, 0, 0])
             obj = bpy.context.view_layer.objects.active
             if isinstance(scale, float):
                 scale = [scale]*3
@@ -190,14 +193,75 @@ class Batom(BaseObject):
         # obj.data.materials.append(self.material)
         if shade_smooth:
             bpy.ops.object.shade_smooth()
-        obj.hide_set(True)
+        if shape.upper() != 'METABALL':
+            obj.hide_set(True)
         obj.parent = self.obj
         self.obj.instance_type = 'VERTS'
+        # self.obj.show_instancer_for_viewport = False
+        # self.obj.show_instancer_for_render = False
         #
         self.assign_materials()
         bpy.context.view_layer.update()
         return obj
     
+    def draw_SAS_mb(self, render_resolution = 0.2,
+                resolution = 0.4,
+                threshold = 1e-4,
+                stiffness = 1,
+                indices = None,
+                update_method = 'FAST'
+                ):
+        """
+        Algorithm: Metaball
+        Computes density from given metaball at given position.
+        Metaball equation is: 
+        dens = `(1 - r^2 / R^2)^3 * s`
+        r = distance from center
+        R = metaball radius
+        s - metaball stiffness
+        field = threshold - dens;
+        """
+        from batoms.material import create_material
+        stiffness = min(stiffness, 10)
+        frames = self.batoms.frames
+        n = len(frames[0])
+        if indices is None:
+            indices = range(n)
+        radii = self.batoms.radii_vdw
+        tstart = time()
+        #
+        self.build_metaball(render_resolution = render_resolution,
+                resolution = resolution,
+                threshold = threshold,
+                update_method = update_method)
+        color = default_colors[0]
+        mat = create_material(self.sas_name,
+                        # material_style = 'plastic',
+                        color = color)
+        obj = self.sas_obj
+        mb = obj.data
+        obj.data.materials.append(mat)
+        atoms = frames[0]
+        positions = atoms.positions
+        scale = (1 - (threshold/stiffness)**(1.0/3))**(0.5)
+        # print('scale: %s', scale)
+        mb.elements.clear()
+        for i in indices:
+            mbele = mb.elements.new(type = 'BALL')
+            mbele.co = positions[i]
+            mbele.radius = (radii[i] + self.probe)/scale
+            mbele.stiffness = stiffness
+        # add frames
+        nframe = len(frames)
+        self.nframe = nframe
+        for i in range(1, nframe):
+            positions = frames[i].positions
+            for j in indices:
+                mb.elements[j].co = positions[j]
+                mb.elements[j].keyframe_insert(data_path='co', frame = i)
+        print('Build_SAS: %s'%(time() - tstart))
+        return obj
+
     def assign_materials(self):
         # sort element by occu
         mesh = self.instancer.data

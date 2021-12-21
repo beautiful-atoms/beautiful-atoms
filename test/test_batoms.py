@@ -60,6 +60,16 @@ def test_from_coll():
     assert len(h2o) == 3
     h2o.translate([2, 0, 0])
 
+def test_batoms_metaball():
+    """
+    """
+    from batoms.butils import removeAll
+    from batoms import Batoms
+    removeAll()
+    h2o = Batoms('h2o', {'O': [[5, 0, 0.40]], 
+                        'H': [[5, -0.76, -0.2], [5, 0.76, -0.2]]},
+                    shape = 3)
+
 def test_render():
     from batoms.butils import removeAll
     from batoms import Batoms

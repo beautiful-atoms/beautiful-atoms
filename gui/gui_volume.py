@@ -11,7 +11,7 @@ from batoms.batoms import Batoms
 
 # The panel.
 class Volume_PT_prepare(Panel):
-    bl_label       = "Volume"
+    bl_label       = "Surface"
     bl_space_type  = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
@@ -22,11 +22,16 @@ class Volume_PT_prepare(Panel):
         layout = self.layout
         vopanel = context.scene.vopanel
 
+        layout.label(text="Isosurface")
         layout.prop(vopanel, "level")
-        layout.prop(vopanel, "color")
+        layout.prop(vopanel, "color_iso")
 
-        layout.operator("batoms.add_level")
         layout.prop(vopanel, "label")
+        layout.operator("batoms.add_level")
+
+        layout.label(text="SASA")
+        layout.prop(vopanel, "color_sasa")
+
 
 
 
@@ -39,28 +44,39 @@ class VolumeProperties(bpy.types.PropertyGroup):
         return get_selected_objects('bisosurface')
     def Callback_modify_level(self, context):
         vopanel = bpy.context.scene.vopanel
-        modify_volume_attr(self.selected_batoms, self.selected_isosurface, 'level', vopanel.level)
-    def Callback_modify_color(self, context):
+        modify_isosurface_attr(self.selected_batoms, self.selected_isosurface, 'level', vopanel.level)
+    def Callback_modify_color_iso(self, context):
         vopanel = bpy.context.scene.vopanel
-        color = vopanel.color
-        modify_volume_attr(self.selected_batoms, self.selected_isosurface, 'color', color)
+        color = vopanel.color_iso
+        modify_isosurface_attr(self.selected_batoms, self.selected_isosurface, 'color', color)
+    def Callback_modify_color_sasa(self, context):
+        vopanel = bpy.context.scene.vopanel
+        color = vopanel.color_sasa
+        modify_isosurface_attr(self.selected_batoms, self.selected_isosurface, 'color', color)
 
     
     level: FloatProperty(
         name="Level", default=0.01,
         description = "level for isosurface", update = Callback_modify_level)
-    color: FloatVectorProperty(
+    color_iso: FloatVectorProperty(
         name="color", 
         subtype='COLOR',
         default=(0.1, 0.8, 0.4 ,1.0),
         size =4,
         description="color picker",
-        update = Callback_modify_color)
+        update = Callback_modify_color_iso)
+    color_sasa: FloatVectorProperty(
+        name="color", 
+        subtype='COLOR',
+        default=(0.1, 0.8, 0.4 ,1.0),
+        size =4,
+        description="color picker",
+        update = Callback_modify_color_sasa)
     label: StringProperty(
         name="label", default='2',
         description = "new level")
 
-def modify_volume_attr(batoms_name_list, bisosurface_name_list, key, value):
+def modify_isosurface_attr(batoms_name_list, bisosurface_name_list, key, value):
     selected_isosurface_new = []
     for batoms_name in batoms_name_list:
         batoms = Batoms(label = batoms_name)
@@ -72,8 +88,21 @@ def modify_volume_attr(batoms_name_list, bisosurface_name_list, key, value):
         batoms.draw_isosurface()
     for name in selected_isosurface_new:
         obj = bpy.data.objects.get(name)
-        obj.select_set(True)        
-    
+        obj.select_set(True)
+
+def modify_sasa_attr(batoms_name_list, bsasa_name_list, key, value):
+    selected_sasa_new = []
+    for batoms_name in batoms_name_list:
+        batoms = Batoms(label = batoms_name)
+        for sasa_name in bsasa_name_list:
+            obj = bpy.data.objects[sasa_name]
+            if obj.bsasa.label == batoms_name:
+                setattr(batoms.sasasetting[obj.bsasa.name], key, value)
+            selected_sasa_new.append(sasa_name)
+        batoms.draw_sasa()
+    for name in selected_sasa_new:
+        obj = bpy.data.objects.get(name)
+        obj.select_set(True)
 
 def add_level(name, level, color):
     """

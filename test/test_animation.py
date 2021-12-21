@@ -18,6 +18,16 @@ def test_animation_2():
     tio2.boundary = 0.01
     tio2.model_style = 1
 
+def test_animation_metaball():
+from ase.io import read
+from batoms import Batoms
+from batoms.butils import removeAll
+removeAll()
+atoms = read('test/datas/tio2_10.xyz', index = ':')
+batoms = Batoms('c2h6so', atoms = atoms, movie = True, shape = 3)
+    # batoms.model_style = 1
+
+
 def test_batoms_animation():
     from ase.build import molecule
     from batoms.butils import removeAll

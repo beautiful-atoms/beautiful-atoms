@@ -4,17 +4,18 @@ Definition of the Batoms class in the batoms package.
 """
 
 import bpy
-from ase import Atoms, spacegroup
+from ase import Atoms
 from batoms.base import BaseCollection
 from batoms.batom import Batom
 from batoms.bondsetting import BondSetting, build_bondlists, calc_bond_data
 from batoms.polyhedrasetting import PolyhedraSetting, build_polyhedralists
 from batoms.isosurfacesetting import IsosurfaceSetting
 from batoms.planesetting import PlaneSetting
+from batoms.mssetting import MSsetting
 from batoms.cell import Bcell
 from batoms.render.render import Render
 from batoms.boundary import search_boundary, search_bond
-from batoms.bdraw import draw_cylinder, draw_surface_from_vertices, draw_2d_slicing
+from batoms.bdraw import draw_cylinder, draw_surface_from_vertices
 from batoms.butils import object_mode, show_index
 import numpy as np
 from time import time
@@ -28,7 +29,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 subcollections = ['atom', 'cell', 'bond', 'polyhedra', 'instancer', 
-'instancer_atom', 'volume', 'ghost', 'boundary', 'search', 'text', 'plane']
+'instancer_atom', 'volume', 'surface', 'ghost', 'boundary', 'search', 'text', 'plane']
 
 class Batoms(BaseCollection):
     """
@@ -104,6 +105,7 @@ class Batoms(BaseCollection):
                 node_inputs = None,
                 movie = False,
                 draw = True, 
+                metaball = False,
                  ):
         #
         self.parent = None
@@ -132,7 +134,8 @@ class Batoms(BaseCollection):
             self.set_collection(model_style, polyhedra_style, boundary)
             self.from_species(species, pbc, cell, 
                             species_props = species_props, 
-                            radius_style = radius_style)
+                            radius_style = radius_style,
+                            metaball = metaball)
             self.coll.batoms.show_unit_cell = show_unit_cell
         elif self.label:
             # print('Build from collection')
@@ -170,6 +173,7 @@ class Batoms(BaseCollection):
                             planesetting = planesetting)
         elif isinstance(planesetting, PlaneSetting):
             self.planesetting = planesetting
+        self.mssetting = MSsetting(self.label, probe = 1.4, batoms = self)
         if draw:
             self.draw()
         if movie:
@@ -179,7 +183,7 @@ class Batoms(BaseCollection):
     
     def from_species(self, species, pbc = None, cell = None,
                         species_props = {}, 
-                        radius_style = 'covelent', ):
+                        radius_style = 'covelent', metaball = False):
         """
         """
         if isinstance(species, dict):
@@ -191,7 +195,8 @@ class Batoms(BaseCollection):
                             material_style=self.material_style, 
                             node_inputs=self.node_inputs, 
                             radius_style = radius_style, 
-                            color_style=self.color_style)
+                            color_style=self.color_style,
+                            metaball = metaball)
                 self.coll.children['%s_atom'%self.label].objects.link(ba.obj)
                 bpy.data.collections['Collection'].objects.unlink(ba.obj)
                 self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
@@ -388,14 +393,13 @@ class Batoms(BaseCollection):
     def draw_voronoi(self):
         """Draw voronoi.
         """
-        from batoms.sasa import SASAsetting
         object_mode()
-        self.clean_atoms_objects('volume', ['voronoi'])
+        self.clean_atoms_objects('surface', ['voronoi'])
         atoms = self.atoms
-        sasa = SASAsetting(self.label)
+        ms = MSsetting(self.label)
         length = self.cell.length
         limit = [[0, length[0]], [0, length[1]], [0, length[2]]]
-        voronoi = sasa.build_voronoi(atoms.positions, 
+        voronoi = ms.build_voronoi(atoms.positions, 
                                         atoms.arrays['radii'], 
                                         limit)
         name = '%s_%s'%(self.label, 'voronoi')
@@ -404,18 +408,50 @@ class Batoms(BaseCollection):
                             coll = self.coll.children['%s_volume'%self.label],
                         )
     
-    def draw_SASA(self):
-        """Draw SASA.
+    def draw_SAS(self, probe = 1.4, area = False,
+                render_resolution = 0.2,
+                resolution = 0.4,
+                threshold = 1e-6,
+                stiffness = 1,
+                indices = None,
+                ):
+        """Draw SAS.
         """
         object_mode()
-        self.clean_atoms_objects('volume', ['SASA'])
-        SASA = self.SASAsetting.build_SASA(self.positions, )
-        for name, SASA_data in SASA.items():
-            name = '%s_%s_%s'%(self.label, 'SASA', name)
-            draw_surface_from_vertices(name, 
-                                datas = SASA_data,
-                                coll = self.coll.children['%s_volume'%self.label],
-                            )
+        self.clean_atoms_objects('surface', ['sas'])
+        self.mssetting.probe = probe
+        self.mssetting.batoms = self
+        SAS = self.mssetting.build_SAS_mb(
+                            render_resolution = render_resolution,
+                            resolution = resolution,
+                            threshold = threshold,
+                            stiffness = stiffness,
+                            indices = indices)
+        if area:
+            self.mssetting.get_sasa()
+    
+    def draw_SES(self, probe = 1.4, resolution = 0.4,
+                threshold = 1e-4,
+                stiffness = 1,
+                smooth = None,
+                subdivide = 0,
+                refine = True,
+                steps = 5,
+                ):
+        """Draw SES.
+        """
+        object_mode()
+        self.clean_atoms_objects('surface', ['ses'])
+        self.mssetting.probe = probe
+        self.mssetting.batoms = self
+        SES = self.mssetting.build_SES(resolution = resolution,
+                                threshold = threshold,
+                                stiffness = stiffness,
+                                smooth = smooth,
+                                subdivide = subdivide,
+                                refine = refine, 
+                                steps = steps)
+        self.clean_atoms_objects('surface', ['sas'])
     
     def draw_cavity_sphere(self, radius, boundary = [[0, 1], [0, 1], [0, 1]]):
         """ Draw cavity as a sphere for porous materials
@@ -1236,6 +1272,21 @@ class Batoms(BaseCollection):
     @property
     def radii(self):
         return self.atoms.arrays['radii']
+
+    @property
+    def radii_vdw(self):
+        from ase.data import vdw_radii, chemical_symbols
+        object_mode()
+        radii = []
+        batoms = self.batoms
+        for species, batom in batoms.items():
+            # ghost site will not save
+            element = list(batom.elements.keys())[0]
+            if element == 'X': continue
+            number = chemical_symbols.index(element)
+            radius = [vdw_radii[number]]*len(batom)
+            radii.extend(radius)
+        return radii
     
     @property
     def species(self):
@@ -1599,7 +1650,8 @@ class Batoms(BaseCollection):
                     output = None,
                     center = None,
                     padding = None, 
-                    canvas = None, ):
+                    canvas = None, 
+                    gpu = False):
         """Rendering the model.
 
         Ask the attached render to rendering the model.
@@ -1621,6 +1673,7 @@ class Batoms(BaseCollection):
             self.render.viewport = viewport
         if engine is not None:
             self.render.engine = engine
+        self.render.gpu = gpu
         image = self.render.run(self, frame = frame, 
                                     animation = animation, 
                                     output = output,
@@ -1635,3 +1688,4 @@ class Batoms(BaseCollection):
         """
         self.select = True
         bpy.ops.object.duplicates_make_real()
+    
