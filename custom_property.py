@@ -1,5 +1,3 @@
-from ase.atoms import default
-from numpy.core.numeric import indices
 import bpy
 from bpy.props import (StringProperty,
                        BoolProperty,
@@ -13,38 +11,6 @@ from bpy.props import (StringProperty,
                        CollectionProperty,
                        )
 
-class Batoms(bpy.types.PropertyGroup):
-    """
-    """
-    flag: BoolProperty(name="flag", default=False)
-    model_style: EnumProperty(
-        name="model_style",
-        description="Structural models",
-        items=(('0',"Space-filling", "Use ball"),
-               ('1',"Ball-and-stick", "Use ball and stick"),
-               ('2',"Polyhedral","Use polyhedral"),
-               ('3',"Wireframe", "Use wireframe")),
-        default='0')
-    radius_style: EnumProperty(
-        name="radius_style",
-        description="Radii",
-        items=(('0',"Covalent", "covalent"),
-               ('1',"VDW", "van der Waals"),
-               ('2',"Ionic","ionic")),
-        default='0')
-    polyhedra_style: EnumProperty(
-        name="polyhedra_style",
-        description="Polhhedra models",
-        items=(('0',"atoms, bonds and polyhedra", "atoms, bonds and polyhedra"),
-               ('1',"atoms, polyhedra", "atoms, polyhedra"),
-               ('2',"central atoms, polyhedra","central atoms, polyhedra"),
-               ('3',"polyhedra", "polyhedra")),
-               default='0')
-    pbc: BoolVectorProperty(name="pbc", default = [False, False, False], size = 3)
-    cell: FloatVectorProperty(name="cell", default = [0, 0, 0, 0, 0, 0, 0, 0, 0], size = 9)
-    show_unit_cell: BoolProperty(name="show_unit_cell", default = True)
-    boundary: FloatVectorProperty(name="boundary", default = [0.0, 1.0, 0.0, 1.0, 0.0, 1.0], size = 6)
-    render: StringProperty(name="render", default = 'batoms')
 
 class Belement(bpy.types.PropertyGroup):
     name: StringProperty(name="name", default = 'H')
@@ -68,6 +34,13 @@ class Batom(bpy.types.PropertyGroup):
                ('1',"VDW", "van der Waals"),
                ('2',"Ionic","ionic")),
         default='0')
+    
+class Bsite(bpy.types.PropertyGroup):
+    """
+    """
+    flag: BoolProperty(name="flag", default=False)
+    label: StringProperty(name="label", default = 'X')
+    index: IntProperty(name="index", default = 0)
 
 class Bcell(bpy.types.PropertyGroup):
     """
@@ -75,7 +48,7 @@ class Bcell(bpy.types.PropertyGroup):
     flag: BoolProperty(name="flag", default=False)
     label: StringProperty(name="label", default = '')
 
-class BBond(bpy.types.PropertyGroup):
+class Bbond(bpy.types.PropertyGroup):
     """
     """
     flag: BoolProperty(name="flag", default=False)
@@ -134,7 +107,7 @@ class BBond(bpy.types.PropertyGroup):
         s += '-'*60 + '\n'
         return s
 
-class BPolyhedra(bpy.types.PropertyGroup):
+class Bpolyhedra(bpy.types.PropertyGroup):
     """
     """
     flag: BoolProperty(name="flag", default=False)
@@ -170,7 +143,7 @@ class BPolyhedra(bpy.types.PropertyGroup):
         return s
 
 
-class BIsosurface(bpy.types.PropertyGroup):
+class Bisosurface(bpy.types.PropertyGroup):
     """
     """
     flag: BoolProperty(name="flag", default=False)
@@ -197,7 +170,7 @@ class BIsosurface(bpy.types.PropertyGroup):
         s += '-'*60 + '\n'
         return s
 
-class BPlane(bpy.types.PropertyGroup):
+class Bplane(bpy.types.PropertyGroup):
     """
     """
     flag: BoolProperty(name="flag", default=False)
@@ -251,7 +224,7 @@ class BPlane(bpy.types.PropertyGroup):
         s += '-'*60 + '\n'
         return s
 
-class BVolume(bpy.types.PropertyGroup):
+class Bvolume(bpy.types.PropertyGroup):
     """
     """
     flag: BoolProperty(name="flag", default=False)
@@ -259,7 +232,7 @@ class BVolume(bpy.types.PropertyGroup):
     npoint: IntProperty(name="npoint")
     shape: IntVectorProperty(name="shape", size = 3)
 
-class BLight(bpy.types.PropertyGroup):
+class Blight(bpy.types.PropertyGroup):
     """
     """
     flag: BoolProperty(name="flag", default=False)
@@ -269,7 +242,7 @@ class BLight(bpy.types.PropertyGroup):
     direction: FloatVectorProperty(name="direction", default = [0, 0, 1], size = 3)
     look_at: FloatVectorProperty(name="look_at", default = [0, 0, 0], size = 3)
 
-class BCamera(bpy.types.PropertyGroup):
+class Bcamera(bpy.types.PropertyGroup):
     """
     """
     flag: BoolProperty(name="flag", default=False)
@@ -278,7 +251,7 @@ class BCamera(bpy.types.PropertyGroup):
     direction: FloatVectorProperty(name="direction", default = [0, 0, 1], size = 3)
     look_at: FloatVectorProperty(name="look_at", default = [0, 0, 0], size = 3)
 
-class BRender(bpy.types.PropertyGroup):
+class Brender(bpy.types.PropertyGroup):
     """
     """
     flag: BoolProperty(name="flag", default=False)
@@ -294,3 +267,164 @@ class BRender(bpy.types.PropertyGroup):
                             description="Distance from camera",
                             default = -1)
     padding: FloatVectorProperty(name="padding", default = [1, 1, 1, 1], size = 4)
+
+class Bsheet(bpy.types.PropertyGroup):
+    """
+    """
+    flag: BoolProperty(name="flag", default=False)
+    label: StringProperty(name="label", default = '')
+    name: StringProperty(name = "name")
+    # sheetId: IntProperty(name="sheetId", default=0)
+    # chainId: StringProperty(name="chainId", default='A')
+    startChain: StringProperty(name="startChain")
+    startResi: IntProperty(name="startResi", default=0)
+    endChain: StringProperty(name="endChain")
+    endResi: IntProperty(name="endResi", default=0)
+    color: FloatVectorProperty(name="color1", size = 4, default = (0.0, 0.0, 1.0, 1))
+    extrude: FloatProperty(name="width", default = 2.0)
+    depth: FloatProperty(name="width", default = 0.05)
+    
+    @property
+    def name(self) -> str:
+        return '%s-%s-%s-%s'%(self.startChain, self.startResi, self.endChain, self.endResi)
+    
+    def as_dict(self) -> dict:
+        setdict = {
+                 'flag': self.flag, 
+                  'label': self.label, 
+                  'startChain': self.startChain, 
+                  'startResi': self.startResi, 
+                  'endChain': self.endChain, 
+                  'endResi': self.endResi, 
+                  'name': self.name, 
+                  'color': self.color,
+                  'extrude': self.extrude,
+                  'depth': self.depth,
+        }
+        return setdict
+
+    def __repr__(self) -> str:
+        s = '-'*60 + '\n'
+        s = 'Name   startChain   startResi   endChain   endResi\n'
+        s += '{0:10s} {1:10s}   {2:10s}      {3:10s}   {4:10s} \n'.format(\
+                self.name, self.startChain, str(self.startResi),self.endChain, str(self.endResi) )
+        s += '-'*60 + '\n'
+        return s
+
+
+class Bhelix(bpy.types.PropertyGroup):
+    """
+    """
+    flag: BoolProperty(name="flag", default=False)
+    label: StringProperty(name="label", default = '')
+    name: StringProperty(name = "name")
+    # helixId: IntProperty(name="helixId", default=0)
+    # chainId: StringProperty(name="chainId", default='A')
+    startChain: StringProperty(name="startChain")
+    startResi: IntProperty(name="startResi", default=0)
+    endChain: StringProperty(name="endChain")
+    endResi: IntProperty(name="endResi", default=0)
+    color: FloatVectorProperty(name="color1", size = 4, default = (1.0, 0.0, 0.0, 1))
+    extrude: FloatProperty(name="width", default = 2.0)
+    depth: FloatProperty(name="width", default = 0.05)
+    
+    @property
+    def name(self) -> str:
+        return '%s-%s-%s-%s'%(self.startChain, self.startResi, self.endChain, self.endResi)
+    
+    def as_dict(self) -> dict:
+        setdict = {
+                 'flag': self.flag, 
+                  'label': self.label, 
+                  'startChain': self.startChain, 
+                  'startResi': self.startResi, 
+                  'endChain': self.endChain, 
+                  'endResi': self.endResi, 
+                  'name': self.name, 
+                  'color': self.color,
+                  'extrude': self.extrude,
+                  'depth': self.depth,
+        }
+        return setdict
+
+    def __repr__(self) -> str:
+        s = '-'*60 + '\n'
+        s = 'Name   startChain   startResi   endChain   endResi\n'
+        s += '{0:10s} {1:10s}   {2:10s}      {3:10s}   {4:10s} \n'.format(\
+                self.name, self.startChain, str(self.startResi),self.endChain, str(self.endResi) )
+        s += '-'*60 + '\n'
+        return s
+
+class Batoms_coll(bpy.types.PropertyGroup):
+    """
+    """
+    flag: BoolProperty(name="flag", default=False)
+    model_style: EnumProperty(
+        name="model_style",
+        description="Structural models",
+        items=(('0',"Space-filling", "Use ball"),
+               ('1',"Ball-and-stick", "Use ball and stick"),
+               ('2',"Polyhedral","Use polyhedral"),
+               ('3',"Wireframe", "Use wireframe")),
+        default='0')
+    radius_style: EnumProperty(
+        name="radius_style",
+        description="Radii",
+        items=(('0',"Covalent", "covalent"),
+               ('1',"VDW", "van der Waals"),
+               ('2',"Ionic","ionic")),
+        default='0')
+    polyhedra_style: EnumProperty(
+        name="polyhedra_style",
+        description="Polhhedra models",
+        items=(('0',"atoms, bonds and polyhedra", "atoms, bonds and polyhedra"),
+               ('1',"atoms, polyhedra", "atoms, polyhedra"),
+               ('2',"central atoms, polyhedra","central atoms, polyhedra"),
+               ('3',"polyhedra", "polyhedra")),
+               default='0')
+    pbc: BoolVectorProperty(name="pbc", default = [False, False, False], size = 3)
+    cell: FloatVectorProperty(name="cell", default = [0, 0, 0, 0, 0, 0, 0, 0, 0], size = 9)
+    show_unit_cell: BoolProperty(name="show_unit_cell", default = True)
+    boundary: FloatVectorProperty(name="boundary", default = [0.0, 1.0, 0.0, 1.0, 0.0, 1.0], size = 6)
+    render: StringProperty(name="render", default = 'batoms')
+    bbond: CollectionProperty(name = 'Bbond', 
+                            type = Bbond)
+    bplane: CollectionProperty(name = 'Bplane', 
+                            type = Bplane)
+    bisosurface: CollectionProperty(name = 'Bisosurface', 
+                            type = Bisosurface)
+    bpolyhedra: CollectionProperty(name = 'Bpolyhedra', 
+                            type = Bpolyhedra)
+    bsheet: CollectionProperty(name = 'Bsheet', 
+                            type = Bsheet)
+    bhelix: CollectionProperty(name = 'Bhelix', 
+                            type = Bhelix)
+    brender: PointerProperty(name = 'Brender', 
+                            type = Brender)
+                            
+    # BRibbon = Bribbon()
+
+
+class Batoms_obj(bpy.types.PropertyGroup):
+    """
+    """
+    batom: PointerProperty(name = 'Batom', 
+                            type = Batom)
+    bcell: PointerProperty(name = 'Bcell', 
+                            type = Bcell)
+    bbond: PointerProperty(name = 'Bbond', 
+                            type = Bbond)
+    bplane: PointerProperty(name = 'Bplane', 
+                            type = Bplane)
+    bvolume: PointerProperty(name = 'Bvolume', 
+                            type = Bvolume)
+    bisosurface: PointerProperty(name = 'Bisosurface', 
+                            type = Bisosurface)
+    bpolyhedra: PointerProperty(name = 'Bpolyhedra', 
+                            type = Bpolyhedra)
+    bsheet: PointerProperty(name = 'Bsheet', 
+                            type = Bsheet)
+    blight: PointerProperty(name = 'Blight', 
+                            type = Blight)
+    bcamera: PointerProperty(name = 'Bcamera', 
+                            type = Bcamera)

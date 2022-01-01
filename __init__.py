@@ -6,7 +6,7 @@
 bl_info = {
     "name": "Batoms toolbar",
     "author": "Xing Wang",
-    "version": (0, 1, 0),
+    "version": (1, 0, 0),
     "blender": (2, 83, 0),
     "location": "File -> Import -> Batoms (xyz, cif, pdb, ...)",
     "description": """Python module for drawing and 
@@ -24,10 +24,12 @@ import bpy
 from bpy.types import (
     Collection,
     Object,
+    MeshVertex,
 )
 from bpy.props import (
     PointerProperty,
     CollectionProperty,
+    IntProperty,
 )
 
 from . import (
@@ -60,16 +62,19 @@ from .modal import (
 classes = [
         custom_property.Belement,
         custom_property.Batom,
-        custom_property.Batoms,
         custom_property.Bcell,
-        custom_property.BBond,
-        custom_property.BPolyhedra,
-        custom_property.BIsosurface,
-        custom_property.BVolume,
-        custom_property.BPlane,
-        custom_property.BLight,
-        custom_property.BCamera,
-        custom_property.BRender,
+        custom_property.Bbond,
+        custom_property.Bpolyhedra,
+        custom_property.Bisosurface,
+        custom_property.Bvolume,
+        custom_property.Bplane,
+        custom_property.Blight,
+        custom_property.Bcamera,
+        custom_property.Brender,
+        custom_property.Bsheet,
+        custom_property.Bhelix,
+        custom_property.Batoms_coll,
+        custom_property.Batoms_obj,
         gui_io.IMPORT_OT_batoms,
         gui_batoms.Batoms_PT_prepare,
         gui_batoms.BatomsProperties,
@@ -141,36 +146,9 @@ def register():
     scene.pmgpanel = PointerProperty(type=gui_pymatgen.PymatgenProperties)
     scene.pubcpanel = PointerProperty(type=gui_pubchem.PubchemProperties)
     Collection.batoms = PointerProperty(name = 'Batoms', 
-                            type = custom_property.Batoms)
-    Collection.bbond = CollectionProperty(name = 'BBond', 
-                            type = custom_property.BBond)
-    Collection.bpolyhedra = CollectionProperty(name = 'BPolyhedra', 
-                            type = custom_property.BPolyhedra)
-    Collection.bisosurface = CollectionProperty(name = 'BIsosurface', 
-                            type = custom_property.BIsosurface)
-    Collection.bplane = CollectionProperty(name = 'BPlane', 
-                            type = custom_property.BPlane)
-    Collection.brender = PointerProperty(name = 'BRender', 
-                            type = custom_property.BRender)
-    Object.batom = PointerProperty(name = 'Batom', 
-                            type = custom_property.Batom)
-    Object.bcell = PointerProperty(name = 'Bcell', 
-                            type = custom_property.Bcell)
-    Object.bbond = PointerProperty(name = 'BBond', 
-                            type = custom_property.BBond)
-    Object.bpolyhedra = PointerProperty(name = 'BPolyhedra', 
-                            type = custom_property.BPolyhedra)
-    Object.bisosurface = PointerProperty(name = 'BIsosurface', 
-                            type = custom_property.BIsosurface)
-    Object.bvolume = PointerProperty(name = 'BVolume', 
-                            type = custom_property.BVolume)
-    Object.bplane = PointerProperty(name = 'BPlane', 
-                            type = custom_property.BPlane)
-    Object.blight = PointerProperty(name = 'BLight', 
-                            type = custom_property.BLight)
-    Object.bcamera = PointerProperty(name = 'BCamera', 
-                            type = custom_property.BCamera)
-    
+                            type = custom_property.Batoms_coll)
+    Object.batoms = PointerProperty(name = 'Batom', 
+                            type = custom_property.Batoms_obj)
 
 def unregister():
 

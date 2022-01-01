@@ -27,19 +27,19 @@ def get_selected_batoms():
     batoms_list = []
     for obj in bpy.context.selected_objects:
         for p in ['batom', 'bbond', 'bisosurface', 'bpolyhedra', 'bplane']:
-            if getattr(obj, p).flag:
-                batoms_list.append(getattr(obj, p).label)
+            if getattr(obj.batoms, p).flag:
+                batoms_list.append(getattr(obj.batoms, p).label)
     batoms_list = list(set(batoms_list))
     return batoms_list
 
 def get_selected_objects(attr):
     """
     """
-    bond_list = []
+    objs = []
     for obj in bpy.context.selected_objects:
-        if getattr(obj, attr).flag:
-            bond_list.append(obj.name)
-    return bond_list
+        if getattr(obj.batoms, attr).flag:
+            objs.append(obj.name)
+    return objs
 
 def get_selected_vertices():
     """
@@ -51,7 +51,7 @@ def get_selected_vertices():
     selected_vertices = []
     objs = []
     for obj in bpy.context.objects_in_mode:
-        if obj.batom.flag:
+        if obj.batoms.batom.flag:
             objs.append(obj)
     if len(objs) == 0:
         print('Warning: No atoms is selected, please switch to Edit mode.')
@@ -66,7 +66,7 @@ def get_selected_vertices():
         obj.data.vertices.foreach_get('select', sel)
         index = np.where(sel)[0]
         if len(index) > 0:
-            selected_vertices.append((obj.batom.label, obj.batom.species, obj.name, index))
+            selected_vertices.append((obj.batoms.batom.label, obj.batoms.batom.species, obj.name, index))
     # back to whatever mode we were in
     bpy.ops.object.mode_set(mode='EDIT')
     return selected_vertices

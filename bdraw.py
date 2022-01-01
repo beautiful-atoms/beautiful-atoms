@@ -1,3 +1,4 @@
+from os import remove
 from ase import data
 from scipy.spatial.transform import rotation
 import bpy
@@ -5,6 +6,7 @@ from batoms.material import create_material
 import numpy as np
 from time import time
 #========================================================
+
 def draw_cell_curve(coll, verts, label = None):
     """
     Draw unit cell by edge, however, can not be rendered.
@@ -87,7 +89,7 @@ def draw_surface_from_vertices(name,
     obj.data.materials.append(material)
     #
     for name, inputs in datas['battr_inputs'].items():
-        battr = getattr(obj, name)
+        battr = getattr(obj.batoms, name)
         for key, value in inputs.items():
             setattr(battr, key, value)
     bpy.ops.object.shade_smooth()

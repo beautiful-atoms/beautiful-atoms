@@ -1,3 +1,4 @@
+from ase import data
 import bpy
 import numpy as np
 from batoms.butils import object_mode, set_look_at
@@ -8,22 +9,22 @@ class BaseObject():
         self.obj_name = obj_name
         self.bobj_name = bobj_name
     
-    @property    
+    @property
     def obj(self):
         return self.get_obj()
     
     def get_obj(self):
         return bpy.data.objects.get(self.obj_name)
     
-    @property    
+    @property
     def bobj(self):
         return self.get_bobj()
     
     def get_bobj(self):
-        bobj = getattr(self.obj, self.bobj_name)
+        bobj = getattr(self.obj.batoms, self.bobj_name)
         return bobj
     
-    @property    
+    @property
     def location(self):
         return self.get_location()
     
@@ -37,7 +38,7 @@ class BaseObject():
     def set_location(self, location):
         self.obj.location = location
     
-    @property    
+    @property
     def type(self):
         return self.get_type()
     # this is weak, because not work for mesh object
@@ -52,7 +53,7 @@ class BaseObject():
     def set_type(self, type):
         self.obj.data.type = type.upper()
     
-    @property    
+    @property
     def hide(self):
         return self.get_hide()
     
@@ -67,7 +68,7 @@ class BaseObject():
         self.obj.hide_render = state
         self.obj.hide_set(state)
     
-    @property    
+    @property
     def select(self):
         return self.get_select()
     
@@ -81,14 +82,14 @@ class BaseObject():
     def set_select(self, state):
         self.obj.select_set(state)
     
-    @property    
+    @property
     def scene(self):
         return self.get_scene()
     
     def get_scene(self):
         return bpy.data.scenes['Scene']
     
-    @property    
+    @property
     def look_at(self):
         return self.get_look_at()
     
@@ -143,14 +144,14 @@ class BaseCollection():
     def __init__(self, coll_name):
         self.coll_name = coll_name
     
-    @property    
+    @property
     def coll(self):
         return self.get_coll()
     
     def get_coll(self):
         return bpy.data.collections.get(self.coll_name)
     
-    @property    
+    @property
     def scene(self):
         return self.get_scene()
     
@@ -188,15 +189,15 @@ class Setting():
             data[b.name] = b
         return data
     
-    @property    
+    @property
     def collection(self):
         return self.get_collection()
     
     def get_collection(self):
-        collection = getattr(bpy.data.collections[self.label], self.name)
+        collection = getattr(bpy.data.collections[self.label].batoms, self.name)
         return collection
     
-    @property    
+    @property
     def species(self):
         return self.get_species()
     
@@ -207,12 +208,12 @@ class Setting():
         species = {}
         coll_atom = bpy.data.collections['%s_atom'%self.label]
         for ba in coll_atom.objects:
-            species[ba.batom.species] = {
+            species[ba.batoms.batom.species] = {
                 'color': ba.children[0].data.materials[0].diffuse_color,
-                'radius': ba.children[0].batom.radius}
+                'radius': ba.children[0].batoms.batom.radius}
         return species
     
-    @property    
+    @property
     def data(self):
         return self.get_data()
     
@@ -236,6 +237,18 @@ class Setting():
             setattr(subset, key, value)
         subset.label = self.label
         subset.flag = True
+    
+    def from_dict(self, datas):
+        if isinstance(datas, dict):
+            datas = [datas]
+        for data in datas:
+            subset = self.find(data['name'])
+            if subset is None:
+                subset = self.collection.add()
+            for key, value in data.items():
+                setattr(subset, key, value)
+            subset.label = self.label
+            subset.flag = True
     
     def copy(self, label):
         object_mode()
@@ -291,3 +304,12 @@ class Setting():
             return None
         else:
             return self.collection[i]
+    
+    def __repr__(self) -> str:
+        s = '-'*60 + '\n'
+        s = 'Name\n'
+        for b in self.collection:
+            s += '{0:10s}  \n'.format(\
+                b.name)
+        s += '-'*60 + '\n'
+        return s

@@ -135,7 +135,7 @@ class Bbond(BaseObject):
         obj.location = location
         obj.data.materials.append(self.material)
         for name, inputs in battr_inputs.items():
-            battr = getattr(obj, name)
+            battr = getattr(obj.batoms, name)
             for key, value in inputs.items():
                 setattr(battr, key, value)
         bpy.data.collections['Collection'].objects.link(obj)
@@ -145,14 +145,14 @@ class Bbond(BaseObject):
     def from_bbond(self, label):
         if label not in bpy.data.objects:
             raise Exception("%s is not a object!"%label)
-        elif not bpy.data.objects[label].bbond.flag:
+        elif not bpy.data.objects[label].batoms.bbond.flag:
             raise Exception("%s is not Bbond object!"%label)
         obj = bpy.data.objects[label]
-        self.species = obj.bbond.species
-        self.label = obj.bbond.label
-        self.element = obj.bbond.element
+        self.species = obj.batoms.bbond.species
+        self.label = obj.batoms.bbond.label
+        self.element = obj.batoms.bbond.element
         self.species_data = {
-            'radius':obj.bbond.radius,
+            'radius':obj.batoms.bbond.radius,
             'scale':obj.scale,
         } 
     
@@ -191,14 +191,14 @@ class Bbond(BaseObject):
         return self.get_width()
     
     def get_width(self):
-        return np.array(self.obj.bbond.width)
+        return np.array(self.obj.batoms.bbond.width)
     
     @property    
     def segments(self):
         return self.get_segments()
     
     def get_segments(self):
-        return self.obj.bbond.segments
+        return self.obj.batoms.bbond.segments
     
     @segments.setter    
     def segments(self, segments):

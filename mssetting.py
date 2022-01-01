@@ -105,13 +105,13 @@ class MSsetting(Setting):
         print('Marching_cube: %s'%(time() - tstart))
         return isosurface
     
-    def draw_SAS(self, resolution = 0.4, probe = 1.4):
+    def draw_SAS(self, resolution = 0.4, probe = 1.4, parallel = 1):
         """
         1) Generate meshgrids
         2) Calculate power distance for grids
         3) Marching cube find isosurface = 5
         """
-        from batoms.bdraw import draw_surface_from_vertices
+        from batoms.bdraw import draw_surface_from_vertices, draw_vertices
         self.resolution = resolution
         self.probe = probe
         print('Resolution: {:1.3f}, Probe: {:1.3}'.format(self.resolution, self.probe))
@@ -119,10 +119,16 @@ class MSsetting(Setting):
         radii = np.array(self.batoms.radii_vdw) + self.probe
         self.get_box(self.batoms.positions, padding = max(radii) + self.resolution)
         self.build_grid()
+        # draw_vertices('meshgrid', self.meshgrids)
         print('Grid Points: %s %s %s'%self.shape)
         positions = self.batoms.positions
-        self.indices_sas, self.volume_sas = self.calc_power_distance(self.meshgrids, positions, radii)
-        volume = self.volume_sas.reshape(self.shape)
+        # ngrid = np.product(self.shape)
+        # self.volume_sas = np.ones(ngrid)*4
+        # self.indices_sas = self.query_radius(self.meshgrids, positions, radii)
+        # self.volume_sas[self.indices_sas] = 6
+        indices_sas, volume_sas = self.calc_power_distance(self.meshgrids, 
+                                        positions, radii, parallel = parallel)
+        volume = volume_sas.reshape(self.shape)
         isosurface = self.calc_isosurface(volume, 5, spacing = self.spacing, origin = self.box_origin)
         print('Vertices: %s'%len(isosurface['vertices']))
         obj = bpy.data.objects.get(self.sas_name)
@@ -135,7 +141,7 @@ class MSsetting(Setting):
                         )
         print('Draw SAS: %s'%(time() - tstart))
 
-    def draw_SES(self, resolution = 0.4, probe = 1.4):
+    def draw_SES(self, resolution = 0.4, probe = 1.4, parallel = 1):
         """
         1) Get SAS
         2) Point probe sphere on vertices of SAS mesh
@@ -151,10 +157,12 @@ class MSsetting(Setting):
         radii = np.array(self.batoms.radii_vdw) + self.probe
         self.get_box(self.batoms.positions, padding = max(radii) + self.resolution + self.probe)
         self.build_grid()
+        # draw_vertices('meshgrid', self.meshgrids)
         print('Grid Points: %s %s %s'%self.shape)
         positions = self.batoms.positions
         # build SAS
-        indices_sas, volume_sas = self.calc_power_distance(self.meshgrids, positions, radii)
+        indices_sas, volume_sas = self.calc_power_distance(self.meshgrids, 
+                                        positions, radii, parallel = parallel)
         volume = volume_sas.reshape(self.shape)
         spacing = [self.resolution]*3
         isosurface = self.calc_isosurface(volume, 5, self.spacing, origin = self.box_origin)
@@ -164,7 +172,8 @@ class MSsetting(Setting):
         indices = np.where(volume_sas < 5)[0]
         volume_sas1[indices]
         # select grid points inside sas for query
-        indices_sas1, tmp = self.calc_power_distance(self.meshgrids[indices], positions, radii)
+        indices_sas1, tmp = self.calc_power_distance(self.meshgrids[indices], 
+                                        positions, radii, parallel = parallel)
         volume_sas1[indices] = tmp
         #----------------------------
         tstart1 = time()
@@ -175,7 +184,8 @@ class MSsetting(Setting):
         self.volume_ses = np.where(volume_sas > 5, 4, volume_sas)
         self.volume_ses = np.where(volume_sas1 < 5, 6, self.volume_ses)
         indices = np.where((volume_sas < 5) & (volume_sas1 > 5))[0]
-        indices_ses, volume_ses = self.calc_power_distance(self.meshgrids[indices], vertices, radii)
+        indices_ses, volume_ses = self.calc_power_distance(self.meshgrids[indices], 
+                                        vertices, radii, parallel = parallel)
         self.volume_ses[indices] = volume_ses
         volume = self.volume_ses.reshape(self.shape)
         isosurface = self.calc_isosurface(volume, 5, self.spacing, origin = self.box_origin)
@@ -318,7 +328,28 @@ class MSsetting(Setting):
         indices, distance = self.calc_power_distance(vertices, positions, radii, k=k)
         return indices, distance
 
-    def calc_power_distance(self, points, positions, radii, k = 1):
+    def query_radius(self, points, positions, radii, k = 1):
+        """
+        Algorithm:
+        Use KDTree to query the tree for neighbors within a radius r.
+        """
+        from scipy import spatial
+        tstart = time()
+        npoint = len(points)
+        #----------------------------------------------------
+        tstart = time()
+        tree = spatial.KDTree(points)
+        print('KDTree point: %s'%(time() - tstart))
+        tstart = time()
+        indices = tree.query_ball_point(positions, radii)
+        print('KDTree query: %s'%(time() - tstart))
+        tstart = time()
+        indices = np.unique(np.concatenate(indices).astype(int))
+        print('array indices: %s'%(time() - tstart))
+        return indices
+
+    def calc_power_distance(self, points, positions, radii, 
+                            k = 1, parallel = 1):
         """
         Algorithm:
         Use KDTree to find the nearest atom for all vertices with
@@ -327,17 +358,18 @@ class MSsetting(Setting):
         from scipy import spatial
         tstart = time()
         npoint = len(points)
+        #----------------------------------------------------
         # change to 4-dimension to set power distance
         points = np.append(points, np.zeros((npoint, 1)), axis = 1)
         # maxr = max(max(radii), 5)
         maxr = 5
         radii = np.sqrt(maxr*maxr - np.square(radii)).reshape(-1, 1)
         positions = np.append(positions, radii, axis = 1)
-        #
-        tree = spatial.KDTree(positions)
-        print('KDTree: %s'%(time() - tstart))
         tstart = time()
-        distance, indices = tree.query(points, k = k)
+        tree = spatial.KDTree(positions)
+        print('KDTree positions: %s'%(time() - tstart))
+        tstart = time()
+        distance, indices = tree.query(points, k = k, workers=parallel)
         print('KDTree query: %s'%(time() - tstart))
         return indices, distance
 

@@ -356,8 +356,8 @@ class PlaneSetting(Setting):
                 # x2 = np.dot(np.array([0, 0, 0]), normal) - np.dot(point, normal)
                 index = np.where(x1 > -1e-6)[0]
                 if len(index) == 0: continue
-                if obj.batom.flag:
-                    batoms.delete(obj.batom.species, index)
+                if obj.batoms.batom.flag:
+                    batoms.delete(obj.batoms.batom.species, index)
                 else:
                     bm = bmesh.new()
                     bm.from_mesh(obj.data)

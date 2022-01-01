@@ -67,7 +67,7 @@ class Render(BaseCollection):
         coll = bpy.data.collections.get(self.coll_name)
         # load from collection
         self.output = output
-        if coll and coll.brender.flag:
+        if coll and coll.batoms.brender.flag:
             self.lights = Lights(label)
             self.camera = Camera(label)
         else:
@@ -95,10 +95,10 @@ class Render(BaseCollection):
         for sub_name in subcollections:
             subcoll = bpy.data.collections.new('%s_%s'%(self.label, sub_name))
             coll.children.link(subcoll)
-        coll.brender.flag = True
-        coll.brender.viewport = viewport
-        coll.brender.animation = animation
-        coll.brender.run_render = run_render
+        coll.batoms.brender.flag = True
+        coll.batoms.brender.viewport = viewport
+        coll.batoms.brender.animation = animation
+        coll.batoms.brender.run_render = run_render
 
     def set(self, **kwargs):
         """
@@ -129,35 +129,35 @@ class Render(BaseCollection):
     
     @property    
     def viewport(self):
-        return np.array(self.coll.brender.viewport)
+        return np.array(self.coll.batoms.brender.viewport)
     
     @viewport.setter    
     def viewport(self, viewport):
         if viewport is not None:
             viewport = viewport/np.linalg.norm(viewport)
-            self.coll.brender.viewport = viewport
+            self.coll.batoms.brender.viewport = viewport
             self.update_camera()
             self.update_light()
         
     @property    
     def distance(self):
-        return self.coll.brender.distance
+        return self.coll.batoms.brender.distance
     
     @distance.setter    
     def distance(self, distance):
         if distance is not None:
-            self.coll.brender.distance = distance
+            self.coll.batoms.brender.distance = distance
             self.update_camera()
             self.update_light()
 
     @property    
     def center(self):
-        return np.array(self.coll.brender.center)
+        return np.array(self.coll.batoms.brender.center)
     
     @center.setter    
     def center(self, center):
         if center is not None:
-            self.coll.brender.center = center
+            self.coll.batoms.brender.center = center
             self.update_camera()
             self.update_light()
     
@@ -170,10 +170,10 @@ class Render(BaseCollection):
         self.set_gpu(gpu)
     
     def get_gpu(self):
-        return self.coll.brender.gpu
+        return self.coll.batoms.brender.gpu
     
     def set_gpu(self, gpu):
-        self.coll.brender.gpu = gpu
+        self.coll.batoms.brender.gpu = gpu
         if gpu:
             self.scene.cycles.device = 'GPU'
             bpy.context.preferences.addons["cycles"].preferences.get_devices()
@@ -181,11 +181,11 @@ class Render(BaseCollection):
                 device["use"] = 1 # Using all devices, include GPU and CPU
     @property    
     def run_render(self):
-        return self.coll.brender.run_render
+        return self.coll.batoms.brender.run_render
     
     @run_render.setter
     def run_render(self, run_render):
-        self.coll.brender.run_render = run_render
+        self.coll.batoms.brender.run_render = run_render
     
     @property    
     def studiolight(self):
@@ -328,7 +328,7 @@ class Render(BaseCollection):
         if self.run_render:
             self.scene.frame_end = self.batoms.nframe
             self.scene.render.filepath = '{0}'.format(self.output)
-            bpy.ops.render.render(write_still = 1, animation = self.coll.brender.animation)
+            bpy.ops.render.render(write_still = 1, animation = self.coll.batoms.brender.animation)
         else:
             print('saving to {0}.blend'.format(self.output))
             bpy.ops.wm.save_as_mainfile('EXEC_SCREEN', 

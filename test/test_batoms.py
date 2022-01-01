@@ -79,11 +79,37 @@ def test_render():
     h2o.get_image(viewport = [1, 0, 0], output = 'batoms_render_viewport.png')
     h2o.get_image(canvas=[5, 5, 5], output = 'batoms_render.png_canvas')
 
-def test_ase_species():
+def test_ase_arrays():
     from batoms.butils import removeAll
     from batoms import Batoms
+    from batoms.pdbparser import read_pdb
     removeAll()
+    atoms = read_pdb('datas/1tim.pdb')
+    atoms
+    p1tim = Batoms('p1tim', atoms = atoms)
+    # p1tim['C'].index
+    il = p1tim['C'].obj.data.vertex_layers_int.get('index')
+    il.data[0].value
+    p1tim['C'].index[0]
+    p1tim['C'].attributes
+    p1tim.atoms
+
+def test_ase_sort():
+    from batoms.butils import removeAll
+    from batoms import Batoms
+    from ase.build import molecule
+    removeAll()
+    mol = molecule('C2H6SO')
+    mol.get_chemical_symbols()
+    c2h6so = Batoms('c2h6so', atoms = mol)
+    c2h6so.arrays['elements']
+
+
+def test_ase_species():
+    from batoms.butils import removeAll
     from ase.build import molecule, bulk
+    from batoms import Batoms
+    removeAll()
     h2o = molecule('H2O')
     h2o.new_array('species', np.array(h2o.get_chemical_symbols(), dtype = 'U20'))
     h2o.arrays['species'][1] = 'H_1'
@@ -155,6 +181,7 @@ def test_transform():
     from batoms.bio import read
     removeAll()
     tio2 = read('test/datas/tio2.cif')
+    # tio2.model_style = 2
     tio2_t = tio2.transform([[1, 1, 0, 0], [-1, 1, 0, 0], [0, 0, 1, 0]])
     assert len(tio2_t) == 12
 
@@ -222,6 +249,7 @@ if __name__ == '__main__':
     test_from_batom()
     test_batoms()
     test_from_coll()
+    test_ase_arrays()
     test_ase_species()
     test_pymatgen_species()
     test_occupancy()

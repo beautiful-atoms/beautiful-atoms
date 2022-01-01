@@ -1,6 +1,7 @@
 """
 Definition of the Batoms class in the batoms package.
 
+
 """
 
 import bpy
@@ -12,6 +13,7 @@ from batoms.polyhedrasetting import PolyhedraSetting, build_polyhedralists
 from batoms.isosurfacesetting import IsosurfaceSetting
 from batoms.planesetting import PlaneSetting
 from batoms.mssetting import MSsetting
+from batoms.ribbon import Ribbon
 from batoms.cell import Bcell
 from batoms.render.render import Render
 from batoms.boundary import search_boundary, search_bond
@@ -29,7 +31,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 subcollections = ['atom', 'cell', 'bond', 'polyhedra', 'instancer', 
-'instancer_atom', 'volume', 'surface', 'ghost', 'boundary', 'search', 'text', 'plane']
+'instancer_atom', 'volume', 'surface', 'ghost', 'boundary', 'search', 'text', 'plane', 'ribbon']
 
 class Batoms(BaseCollection):
     """
@@ -86,7 +88,10 @@ class Batoms(BaseCollection):
     def __init__(self, label,
                 species = None,
                 atoms = None, 
+                indices = None,
                 pbc = False, cell = None,
+                info = {},
+                attributes = {},
                 bondsetting = None,
                 polyhedrasetting = None,
                 isosurfacesetting = None,
@@ -126,13 +131,13 @@ class Batoms(BaseCollection):
             else:
                 frames = [atoms]
             if 'ase' in str(type(atoms)):
-                species, cell, pbc = self.from_ase(atoms)
+                species, attributes, cell, pbc, info = self.from_ase(atoms)
             elif 'pymatgen' in str(type(atoms)):
-                species, cell, pbc = self.from_pymatgen(atoms)
+                species, attributes, cell, pbc, info = self.from_pymatgen(atoms)
             self._frames = frames
         if species:
             self.set_collection(model_style, polyhedra_style, boundary)
-            self.from_species(species, pbc, cell, 
+            self.from_species(species, attributes = attributes, pbc = pbc, cell = cell, 
                             species_props = species_props, 
                             radius_style = radius_style,
                             metaball = metaball)
@@ -174,6 +179,11 @@ class Batoms(BaseCollection):
         elif isinstance(planesetting, PlaneSetting):
             self.planesetting = planesetting
         self.mssetting = MSsetting(self.label, probe = 1.4, batoms = self)
+        self.ribbon = Ribbon(self.label, batoms = self)
+        if 'sheet' in info:
+            self.ribbon.sheet.from_dict(info['sheet'])
+        if 'helix' in info:
+            self.ribbon.helix.from_dict(info['helix'])
         if draw:
             self.draw()
         if movie:
@@ -181,15 +191,21 @@ class Batoms(BaseCollection):
         show_index()
         # self.select = True
     
-    def from_species(self, species, pbc = None, cell = None,
+    def from_species(self, species, attributes = {}, pbc = None, cell = None,
                         species_props = {}, 
                         radius_style = 'covelent', metaball = False):
         """
         """
         if isinstance(species, dict):
+            n = 0
             for sp, positions in species.items():
+                if sp not in attributes: attributes[sp] = {}
                 if sp not in species_props: species_props[sp] = {}
-                ba = Batom(sp, positions, segments = self.segments, 
+                n1 = n + len(positions)
+                if 'index' not in attributes[sp]:
+                    attributes[sp]['index'] = np.array(range(n, n1), dtype = int)
+                # print(attributes)
+                ba = Batom(sp, positions, attributes = attributes[sp], segments = self.segments, 
                             label = self.label, 
                             shape = self.shape, props = species_props[sp], 
                             material_style=self.material_style, 
@@ -200,6 +216,7 @@ class Batoms(BaseCollection):
                 self.coll.children['%s_atom'%self.label].objects.link(ba.obj)
                 bpy.data.collections['Collection'].objects.unlink(ba.obj)
                 self.coll.children['%s_instancer'%self.label].objects.link(ba.instancer)
+                n = n1
                 # bpy.data.collections['Collection'].objects.unlink(ba.instancer)
         elif isinstance(species, list):
             for batom in species:
@@ -221,30 +238,41 @@ class Batoms(BaseCollection):
             atoms.new_array('species', np.array(atoms.get_chemical_symbols(), dtype = 'U20'))
         species_list = np.unique(atoms.arrays['species'])
         species = {}
+        attributes = {}
         for sp in species_list:
-            indices = np.where(atoms.arrays['species'] == sp)
-            species[sp] = atoms.positions[indices]
-        return species, atoms.cell, npbool2bool(atoms.pbc)
+            attributes[sp] = {}
+            indices1 = np.where(atoms.arrays['species'] == sp)[0]
+            species[sp] = atoms.positions[indices1]
+            attributes[sp]['index'] = indices1
+            for key, data in atoms.arrays.items():
+                if key not in ['species', 'positions', 'numbers']:
+                    attributes[sp][key] = data[indices1]
+        info = atoms.info
+        return species, attributes, atoms.cell, npbool2bool(atoms.pbc), info
     
     @staticmethod
     def from_pymatgen(structure):
         """
         Import structure from Pymatgen structure.
         """
-        symbols = [str(site.specie.symbol) for site in structure]
+        symbols = np.array([str(site.specie.symbol) for site in structure])
         if hasattr(structure, "lattice"):
             cell = structure.lattice.matrix
             pbc = True
         else:
             cell = None
             pbc = False
-        species_list = list(set(symbols))
+        species_list = np.unique(symbols)
         species = {}
+        attributes = {}
         for sp in species_list:
-            positions = [structure[index].coords for index, x 
-                           in enumerate(symbols) if x == sp]
+            attributes[sp] = {}
+            indices1 = np.where(symbols == sp)[0]
+            positions = [structure[index].coords for index in indices1]
             species[sp] = positions
-        return species, cell, pbc
+            attributes[sp]['index'] = indices1
+        info = {}
+        return species, attributes, cell, pbc, info
     
     def from_collection(self, collection_name):
         """
@@ -781,7 +809,10 @@ class Batoms(BaseCollection):
             raise SystemExit('dict not supported yet!')
     
     def __len__(self):
-        return len(self.positions)
+        n = 0
+        for ba in self.batoms.values():
+            n += len(ba)
+        return n
     
     def __repr__(self) -> str:
         text = []
@@ -1180,8 +1211,8 @@ class Batoms(BaseCollection):
         build ASE atoms from batoms dict.
         """
         atoms = self.batoms2atoms(self.batoms, X = X)
-        atoms_boundary = self.batoms2atoms(self.batoms_boundary, X = X)
-        atoms_search = self.batoms2atoms(self.batoms_search, X = X)
+        atoms_boundary = self.batoms2atoms(self.batoms_boundary, X = X, sort = False)
+        atoms_search = self.batoms2atoms(self.batoms_search, X = X, sort = False)
         atoms = atoms + atoms_boundary + atoms_search
         atoms.pbc = False
         return atoms
@@ -1245,7 +1276,7 @@ class Batoms(BaseCollection):
         return self.get_positions()
     
     def get_positions(self):
-        return self.atoms.positions
+        return self.arrays['positions']
     
     def get_scaled_positions(self):
         return self.atoms.get_scaled_positions()
@@ -1261,17 +1292,24 @@ class Batoms(BaseCollection):
             for species, positions in species_dict.items():
                 self[species].positions = positions
         elif 'ase' in str(type(species_dict)):
-            species, cell, pbc = self.from_ase(species_dict)
+            species, attributes, cell, pbc, info = self.from_ase(species_dict)
             for sp, batom in self.batoms.items():
                 batom.positions = species[sp]
         elif 'pymatgen' in str(type(species_dict)):
-            species, cell, pbc = self.from_pymatgen(species_dict)
+            species, attributes, cell, pbc, info = self.from_pymatgen(species_dict)
             for sp, batom in self.batoms.items():
                 batom.positions = species[sp]
     
     @property
+    def elements(self):
+        return self.get_elements()
+    
+    def get_elements(self):
+        return self.arrays['elements']
+
+    @property
     def radii(self):
-        return self.atoms.arrays['radii']
+        return self.arrays['radii']
 
     @property
     def radii_vdw(self):
@@ -1298,7 +1336,7 @@ class Batoms(BaseCollection):
         """
         species = []
         for obj in self.coll_atom.objects:
-            species.append(obj.batom.species)
+            species.append(obj.batoms.batom.species)
         return species
     
     @property
@@ -1323,7 +1361,7 @@ class Batoms(BaseCollection):
     def get_batoms(self):
         batoms = {}
         for obj in self.coll_atom.objects:
-            batoms[obj.batom.species] = Batom(label = obj.name)
+            batoms[obj.batoms.batom.species] = Batom(label = obj.name)
         return batoms
     
     @property
@@ -1335,7 +1373,7 @@ class Batoms(BaseCollection):
         for obj in self.coll_boundary.objects:
             if frame is not None and not obj.name.endswith(str(frame)):
                 continue
-            batoms_boundary[obj.batom.species] = Batom(label = obj.name)
+            batoms_boundary[obj.batoms.batom.species] = Batom(label = obj.name)
         return batoms_boundary
     
     @property
@@ -1347,10 +1385,52 @@ class Batoms(BaseCollection):
         for obj in self.coll_search.objects:
             if frame is not None and not obj.name.endswith(str(frame)):
                 continue
-            batoms_search[obj.batom.species] = Batom(label = obj.name)
+            batoms_search[obj.batoms.batom.species] = Batom(label = obj.name)
         return batoms_search
     
-    def batoms2atoms(self, batoms, local = False, X = False):
+    @property
+    def arrays(self):
+        return self.get_arrays()
+    
+    def get_arrays(self, batoms = None, local = False, X = False, sort = True):
+        """
+        """
+        object_mode()
+        if batoms is None:
+            batoms = self.batoms
+        n = 0
+        for species, batom in batoms.items():
+            n += len(batom)
+        arrays = {'species': np.empty(n, dtype = 'U20'), 
+                  'elements':np.empty(n, dtype = 'U20'), 
+                  'positions': np.zeros((n, 3), dtype = float),
+                  'radii': np.zeros(n, dtype=float)}
+        i = 0
+        for species, batom in batoms.items():
+            i1 = i + len(batom)
+            # ghost site will not save
+            element = list(batom.elements.keys())[0]
+            if not X and element == 'X': continue
+            if '_boundary' in species: species = species.split('_boundary')[0]
+            if '_search' in species: species = species.split('_search')[0]
+            arrays['species'][i:i1] = species
+            arrays['elements'][i:i1] = element
+            arrays['radii'][i:i1] = batom.radius
+            attributes = batom.attributes
+            for key, array in attributes.items():
+                if key not in arrays:
+                    arrays[key] = attributes[key]
+                else:
+                    arrays[key] = np.append(arrays[key], array)
+            arrays['positions'][i:i1] = batom.positions
+            i = i1
+        if sort:
+            argsort = arrays['index'].argsort()
+            for key in arrays.keys():
+                arrays[key] = arrays[key][argsort]
+        return arrays
+
+    def batoms2atoms(self, batoms, local = False, X = False, sort = True):
         """
         save batoms objects to ASE atoms
 
@@ -1365,29 +1445,15 @@ class Batoms(BaseCollection):
         object_mode()
         # self.reset_batom_location()
         atoms = Atoms()
-        species_list = []
-        symbols = []
-        radii = []
-        positions = []
-        for species, batom in batoms.items():
-            # ghost site will not save
-            element = list(batom.elements.keys())[0]
-            if not X and element == 'X': continue
-            if '_boundary' in species: species = species.split('_boundary')[0]
-            if '_search' in species: species = species.split('_search')[0]
-            species_list.extend([species]*len(batom))
-            symbol = [element]*len(batom)
-            radius = [batom.radius]*len(batom)
-            symbols.extend(symbol)
-            radii.extend(radius)
-            positions.extend(batom.positions)
+        arrays = self.get_arrays(batoms, local = local, X = X, sort = sort)
+        atoms = Atoms(arrays['elements'], arrays['positions'], cell = self.cell, pbc = self.pbc)
+        for key, array in arrays.items():
+            if key not in ['positions', 'elements']:
+                atoms.new_array(key, array)
         """
         Because no file format will save the location of the cell
         We have to shfit it to origin.
         """
-        atoms = Atoms(symbols, positions, cell = self.cell, pbc = self.pbc)
-        atoms.new_array('species', np.array(species_list, dtype = 'U20'))
-        atoms.new_array('radii', np.array(radii))
         if local:
             atoms.positions = atoms.positions - self.cell.origin
             atoms.info['origin'] = self.cell.origin
@@ -1528,10 +1594,11 @@ class Batoms(BaseCollection):
     def get_hide(self):
         return 'Unknown'
     
-    def set_hide(self, state):
+    def set_hide(self, state, only_atoms = False):
         names = self.coll.all_objects.keys()
         for name in names:
             obj = bpy.data.objects.get(name)
+            if only_atoms and not obj.batoms.batom.flag: continue
             obj.hide_render = state
             obj.hide_set(state)
     

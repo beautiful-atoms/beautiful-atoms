@@ -38,7 +38,7 @@ from batoms.butils import removeAll
 removeAll()
 h2o = molecule('H2O')
 h2o = Batoms('h2o', atoms = h2o)
-h2o.mssetting.draw_SAS_isosurface(probe = 0.0)
+h2o.mssetting.draw_SAS(probe = 1.4)
 area = h2o.mssetting.get_sasa(partial = True)[0]
 
 def test_SES():
@@ -54,8 +54,16 @@ from batoms.butils import removeAll
 removeAll()
 h2o = molecule('H2O')
 h2o = Batoms('h2o', atoms = h2o)
-h2o.mssetting.draw_SES_isosurface(resolution=0.4, probe=1.4)
+h2o.mssetting.draw_SES(resolution=0.4, probe=1.4)
 area = h2o.mssetting.get_sasa(partial = True)[0]
+
+def perf():
+tstart = time()
+indices = range(1e6)
+distance = np.zeros(1e6)
+for i in indices:
+    distance = 0
+print('time: %s'(time() - tstart))
 
 
 def test_SAS_area_kras():
@@ -77,7 +85,7 @@ from batoms.butils import removeAll
 removeAll()
 kras = read('test/datas/kras.pdb')
 kras = Batoms('kras', atoms = kras)
-kras.mssetting.draw_SAS_isosurface()
+kras.mssetting.draw_SAS(parallel=6)
 area = kras.mssetting.get_sasa()
 
 
@@ -289,7 +297,7 @@ from batoms.butils import removeAll
 removeAll()
 kras = read('test/datas/kras.pdb')
 kras = Batoms('kras', atoms = kras)
-kras.mssetting.draw_SES_isosurface(resolution = 0.3)
+kras.mssetting.draw_SES(parallel=2)
 area = kras.mssetting.get_sesa()
     assert abs(area - 20016.1) < 200
 

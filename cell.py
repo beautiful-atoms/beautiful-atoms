@@ -55,9 +55,9 @@ class Bcell(BaseObject):
             obj_edge = bpy.data.objects.new(self.obj_name, mesh)
             obj_edge.data = mesh
             obj_edge.location = location
-            obj_edge.bcell.flag = True
+            obj_edge.batoms.bcell.flag = True
             bpy.data.collections['Collection'].objects.link(obj_edge)
-        elif bpy.data.objects[self.obj_name].bcell.flag:
+        elif bpy.data.objects[self.obj_name].batoms.bcell.flag:
             # print('%s exist and is bcell, use it.'%self.obj_name)
             pass
         else:

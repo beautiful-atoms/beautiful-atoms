@@ -54,9 +54,9 @@ class IsosurfaceSetting(Setting):
         mesh.update()
         obj = bpy.data.objects.new(name, mesh)
         obj.data = mesh
-        obj.bvolume.is_bvolume = True
-        obj.bvolume.shape = shape
-        obj.bvolume.npoint = npoint
+        obj.batoms.bvolume.is_bvolume = True
+        obj.batoms.bvolume.shape = shape
+        obj.batoms.bvolume.npoint = npoint
         bpy.data.collections[self.label].children['%s_volume'%self.label].objects.link(obj)
         obj.hide_set(True)
         obj.hide_render = True
@@ -69,14 +69,14 @@ class IsosurfaceSetting(Setting):
     def get_npoint(self):
         if "volume_%s"%self.label not in bpy.data.objects:
             return 0
-        return bpy.data.objects["volume_%s"%self.label].bvolume.npoint
+        return bpy.data.objects["volume_%s"%self.label].batoms.bvolume.npoint
     
     @npoint.setter    
     def npoint(self, npoint):
         self.set_npoint(npoint)
     
     def set_npoint(self, npoint):
-        bpy.data.objects["volume_%s"%self.label].bvolume.npoint = npoint
+        bpy.data.objects["volume_%s"%self.label].batoms.bvolume.npoint = npoint
     
     @property    
     def mesh(self):
@@ -94,7 +94,7 @@ class IsosurfaceSetting(Setting):
         return self.get_shape()
     
     def get_shape(self):
-        shape = bpy.data.objects["volume_%s"%self.label].bvolume.shape
+        shape = bpy.data.objects["volume_%s"%self.label].batoms.bvolume.shape
         return shape
     
     @property    

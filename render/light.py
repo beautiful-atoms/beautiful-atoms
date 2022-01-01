@@ -77,19 +77,19 @@ class Light(BaseObject):
         self.set_direction(direction)
     
     def get_direction(self):
-        return self.obj.blight.direction[:]
+        return self.obj.batoms.blight.direction[:]
     
     def set_direction(self, direction):
         from batoms.tools import rotate_frame
         self.lock_to_camera = False
-        self.obj.blight.direction = direction
+        self.obj.batoms.blight.direction = direction
         #
-        new_frame = rotate_frame(self.coll.brender.viewport)
+        new_frame = rotate_frame(self.coll.batoms.brender.viewport)
         dirction = np.dot(direction, new_frame)
         dirction = dirction/np.linalg.norm(dirction)
-        location = self.look_at + dirction*self.coll.brender.distance
+        location = self.look_at + dirction*self.coll.batoms.brender.distance
         self.location = location
-        self.look_at = self.coll.brender.center
+        self.look_at = self.coll.batoms.brender.center
     
     @property    
     def lock_to_camera(self):
@@ -100,10 +100,10 @@ class Light(BaseObject):
         self.set_lock_to_camera(lock_to_camera)
     
     def get_lock_to_camera(self):
-        return self.obj.blight.lock_to_camera
+        return self.obj.batoms.blight.lock_to_camera
     
     def set_lock_to_camera(self, lock_to_camera):
-        self.obj.blight.lock_to_camera = lock_to_camera
+        self.obj.batoms.blight.lock_to_camera = lock_to_camera
     
     def create_light(self, type, location, energy):
         '''
@@ -112,7 +112,7 @@ class Light(BaseObject):
         '''
         # check light exist or not
         if self.obj_name in bpy.data.objects:
-            if not bpy.data.objects[self.obj_name].blight.flag:
+            if not bpy.data.objects[self.obj_name].batoms.blight.flag:
                 raise Exception("%s is not a Light for Batoms!"%self.obj_name)
             light = bpy.data.objects[self.obj_name]
         else:
@@ -125,9 +125,9 @@ class Light(BaseObject):
             light.data.use_nodes = True
             light.data.node_tree.nodes['Emission'].inputs['Strength'].default_value = 0.1
             light.location = Vector(location)
-            light.blight.flag = True
-            light.blight.label = self.label
-            light.blight.name = self.name
+            light.batoms.blight.flag = True
+            light.batoms.blight.label = self.label
+            light.batoms.blight.name = self.name
     
     def __repr__(self) -> str:
         s = "Light('%s', energy = %s, direction = %s, lock_to_camera = %s)" \
@@ -159,10 +159,10 @@ class Lights(BaseCollection):
     def get_lights(self):
         lights = {}
         for l in self.coll.objects:
-            lights[l.blight.name] = Light(l.blight.label, 
-                                        l.blight.name,
-                                        direction=l.blight.direction,
-                                        lock_to_camera=l.blight.lock_to_camera)
+            lights[l.batoms.blight.name] = Light(l.batoms.blight.label, 
+                                        l.batoms.blight.name,
+                                        direction=l.batoms.blight.direction,
+                                        lock_to_camera=l.batoms.blight.lock_to_camera)
         return lights
     
     def __getitem__(self, name):
