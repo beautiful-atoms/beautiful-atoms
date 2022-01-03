@@ -654,18 +654,24 @@ class MSsetting(Setting):
         print('SES: area: {:1.3f}, volume: {:1.3f}'.format(area, volume))
         return area, volume
 
-'''
-    def build_SAS_Shrake_Rupley(self, positions, radii, cell, pbc, subdivisions = 5):
+    def build_SAS_Shrake_Rupley(self, probe = 1.4, subdivisions = 2):
         """
         Algorithm: ShrakeRupley
         """
-        from batoms.neighborlist import primitive_neighbor_list
+        from scipy import spatial
         #
         tstart = time()
-        nli, nlj = primitive_neighbor_list('ij', pbc, cell, positions, radii, self_interaction=False)
-        print('build_bondlists: {0:10.2f} s'.format(time() - tstart))
+        self.probe = probe
+        atoms = self.batoms
+        pbc = atoms.pbc
+        cell = atoms.cell
+        positions = atoms.positions
+        radii = np.array(self.batoms.radii_vdw) + self.probe
+        # nli, nlj = primitive_neighbor_list('ij', pbc, cell, positions, radii, self_interaction=False)
+        # print('build_bondlists: {0:10.2f} s'.format(time() - tstart))
         # bondlists = np.append(np.array([nli, nlj], dtype=int).T, np.array(nlS, dtype=int), axis = 1)
-        nb = len(nli)
+        # nb = len(nli)
+        na = len(positions)
         #
         tstart = time()
         bpy.ops.mesh.primitive_ico_sphere_add(subdivisions = subdivisions)
@@ -676,42 +682,60 @@ class MSsetting(Setting):
         sphere0 = np.empty(n*3, dtype=np.float64)
         me.vertices.foreach_get('co', sphere0)  
         sphere0 = sphere0.reshape((n, 3))
-        spheres = np.tile(sphere0, (nb, 1, 1))
+        spheres = np.tile(sphere0, (na, 1, 1))
         #
         radii = np.array(radii).reshape(-1, 1)
-        scales = radii[nli]
+        scales = radii
         scales = np.concatenate((scales, scales, scales), axis = 1)
         spheres = spheres*scales[:, None]
         #
-        origini = positions[nli]
+        origini = positions
         spheres += origini[:, None]
         print('build_spheres: {0:10.2f} s'.format(time() - tstart))
         #
-        originj = positions[nlj]
-        # distance vector
-        vecs = spheres -  originj[:, None]
-        # distance
-        dis = np.linalg.norm(vecs, axis = 2)
-        dis = dis.reshape(-1, 1)
-        cutoff = radii[nlj]
-        cutoff = np.tile(cutoff, (n))
-        cutoff = cutoff.reshape(-1, 1)
-        # < radii
-        index = np.where(dis > cutoff)[0]
         spheres = spheres.reshape(-1, 3)
-        verts = spheres[index]
+        indices, distances = self.calc_power_distance(spheres, positions, radii)
+        mask = np.where(distances > 4.98)
+        spheres = spheres[mask]
+        #
+        tstart1 = time()
+        faces = []
+        '''
+        # tri = spatial.Delaunay(spheres)
+        # faces = tri.simplices
+        tree = spatial.KDTree(spheres)
+        print('KDTree positions: %s'%(time() - tstart))
+        distance, indices = tree.query(spheres, k = 3)
+        indices0 = np.arange(len(spheres))
+        indices0 = indices0.reshape(-1, 1)
+        faces = np.concatenate((indices0, indices[:, 1:]), axis = 1)
+        faces = faces.tolist()
+        print('build_faces: %s'%(time() - tstart1))
+        '''
         #
         color = default_colors[0]
-        SAS = {'vertices': verts, 
+        SAS_Shrake_Rupley = {'vertices': spheres.reshape(-1, 3), 
                             'edges': [], 
-                            'faces': [],
+                            # 'faces': [],
+                            'faces': faces,
                             # 'faces': list(tri.simplices),
                             'color': default_colors[0],
                             'battr_inputs': {},
                         }
+        print('vertices: ', len(SAS_Shrake_Rupley['vertices']))
         print('build_SAS: %s'%(time() - tstart))
+        self.SAS_Shrake_Rupley = SAS_Shrake_Rupley
         bpy.data.objects.remove(source, do_unlink=True)
-        return SAS
+        # return 0
+    
+    def draw_SAS_Shrake_Rupley(self):
+        from batoms.bdraw import draw_surface_from_vertices
+        name = '%s_%s'%(self.label, 'SAS')
+        draw_surface_from_vertices(name, 
+                                datas = self.SAS_Shrake_Rupley,
+                                coll = self.batoms.coll.children['%s_volume'%self.label],
+                            )
+'''
 
     def build_SAS_Voronoi(self, positions, radii, cell, subdivisions = 3):
         """

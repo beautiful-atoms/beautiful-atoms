@@ -24,6 +24,17 @@ def test_voronoi_molecule():
     c2h6.scale = 0.1
     c2h6.draw_voronoi()
 
+def test_shrake():
+from ase.io import read
+from batoms.batoms import Batoms
+from batoms.butils import removeAll
+import numpy as np
+removeAll()
+kras = read('test/datas/1jj2.pdb')
+kras = Batoms('kras', atoms = kras)
+kras.mssetting.draw_SAS(resolution = 2)
+kras.mssetting.build_SAS_Shrake_Rupley(subdivisions = 2)
+kras.mssetting.draw_SAS_Shrake_Rupley()
 
 def test_SAS():
     """

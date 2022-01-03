@@ -179,11 +179,7 @@ class Batoms(BaseCollection):
         elif isinstance(planesetting, PlaneSetting):
             self.planesetting = planesetting
         self.mssetting = MSsetting(self.label, probe = 1.4, batoms = self)
-        self.ribbon = Ribbon(self.label, batoms = self)
-        if 'sheet' in info:
-            self.ribbon.sheet.from_dict(info['sheet'])
-        if 'helix' in info:
-            self.ribbon.helix.from_dict(info['helix'])
+        self.ribbon = Ribbon(self.label, batoms = self, datas = info)
         if draw:
             self.draw()
         if movie:
@@ -1316,14 +1312,11 @@ class Batoms(BaseCollection):
         from ase.data import vdw_radii, chemical_symbols
         object_mode()
         radii = []
-        batoms = self.batoms
-        for species, batom in batoms.items():
-            # ghost site will not save
-            element = list(batom.elements.keys())[0]
+        elements = self.arrays['elements']
+        for element in elements:
             if element == 'X': continue
             number = chemical_symbols.index(element)
-            radius = [vdw_radii[number]]*len(batom)
-            radii.extend(radius)
+            radii.append(vdw_radii[number])
         return radii
     
     @property

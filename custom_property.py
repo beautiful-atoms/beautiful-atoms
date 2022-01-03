@@ -281,8 +281,8 @@ class Bsheet(bpy.types.PropertyGroup):
     endChain: StringProperty(name="endChain")
     endResi: IntProperty(name="endResi", default=0)
     color: FloatVectorProperty(name="color1", size = 4, default = (0.0, 0.0, 1.0, 1))
-    extrude: FloatProperty(name="width", default = 2.0)
-    depth: FloatProperty(name="width", default = 0.05)
+    extrude: FloatProperty(name="extrude", default = 1.0)
+    depth: FloatProperty(name="depth", default = 0.25)
     
     @property
     def name(self) -> str:
@@ -325,8 +325,8 @@ class Bhelix(bpy.types.PropertyGroup):
     endChain: StringProperty(name="endChain")
     endResi: IntProperty(name="endResi", default=0)
     color: FloatVectorProperty(name="color1", size = 4, default = (1.0, 0.0, 0.0, 1))
-    extrude: FloatProperty(name="width", default = 2.0)
-    depth: FloatProperty(name="width", default = 0.05)
+    extrude: FloatProperty(name="extrude", default = 1.0)
+    depth: FloatProperty(name="depth", default = 0.25)
     
     @property
     def name(self) -> str:
@@ -344,6 +344,48 @@ class Bhelix(bpy.types.PropertyGroup):
                   'color': self.color,
                   'extrude': self.extrude,
                   'depth': self.depth,
+        }
+        return setdict
+
+    def __repr__(self) -> str:
+        s = '-'*60 + '\n'
+        s = 'Name   startChain   startResi   endChain   endResi\n'
+        s += '{0:10s} {1:10s}   {2:10s}      {3:10s}   {4:10s} \n'.format(\
+                self.name, self.startChain, str(self.startResi),self.endChain, str(self.endResi) )
+        s += '-'*60 + '\n'
+        return s
+
+
+class Bturn(bpy.types.PropertyGroup):
+    """
+    """
+    flag: BoolProperty(name="flag", default=False)
+    label: StringProperty(name="label", default = '')
+    name: StringProperty(name = "name")
+    # turnId: IntProperty(name="turnId", default=0)
+    # chainId: StringProperty(name="chainId", default='A')
+    startChain: StringProperty(name="startChain")
+    startResi: IntProperty(name="startResi", default=0)
+    endChain: StringProperty(name="endChain")
+    endResi: IntProperty(name="endResi", default=0)
+    color: FloatVectorProperty(name="color1", size = 4, default = (0.0, 1.0, 0.0, 1))
+    radius: FloatProperty(name="radius", default = 0.25)
+    
+    @property
+    def name(self) -> str:
+        return '%s-%s-%s-%s'%(self.startChain, self.startResi, self.endChain, self.endResi)
+    
+    def as_dict(self) -> dict:
+        setdict = {
+                 'flag': self.flag, 
+                  'label': self.label, 
+                  'startChain': self.startChain, 
+                  'startResi': self.startResi, 
+                  'endChain': self.endChain, 
+                  'endResi': self.endResi, 
+                  'name': self.name, 
+                  'color': self.color,
+                  'radius': self.radius,
         }
         return setdict
 
@@ -399,6 +441,8 @@ class Batoms_coll(bpy.types.PropertyGroup):
                             type = Bsheet)
     bhelix: CollectionProperty(name = 'Bhelix', 
                             type = Bhelix)
+    bturn: CollectionProperty(name = 'Bturn', 
+                            type = Bturn)
     brender: PointerProperty(name = 'Brender', 
                             type = Brender)
                             

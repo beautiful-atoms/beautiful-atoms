@@ -73,6 +73,7 @@ classes = [
         custom_property.Brender,
         custom_property.Bsheet,
         custom_property.Bhelix,
+        custom_property.Bturn,
         custom_property.Batoms_coll,
         custom_property.Batoms_obj,
         gui_io.IMPORT_OT_batoms,
