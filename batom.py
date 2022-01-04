@@ -6,7 +6,6 @@ This module defines the Batom object in the batoms package.
 
 from time import time
 
-from numpy.core.records import array
 import bpy
 import bmesh
 from batoms.butils import object_mode
@@ -61,6 +60,7 @@ class Batom(BaseObject):
 
     """
     def __init__(self, 
+                name,
                 species = None,
                 positions = None,
                 attributes = {},
@@ -82,16 +82,14 @@ class Batom(BaseObject):
                 metaball = False,
                  ):
         #
-        if species:
-            self.label = label
-            self.name = species
-            obj_name = '%s_atom_%s'%(self.label, species)
-            self.instancer_name = '{0}_instancer_atom_{1}'.format(self.label, species)
-        else:
-            obj_name = label
+        self.name = name
+        obj_name = name
+        self.instancer_name = 'instancer_%s'%name
+        if species is None:
+            species = name
         bobj_name = 'batom'
         BaseObject.__init__(self, obj_name = obj_name, bobj_name = bobj_name)
-        if species:
+        if positions is not None:
             positions = np.array(positions)
             if len(positions.shape) == 2:
                 self._frames = np.array([positions])
@@ -110,8 +108,16 @@ class Batom(BaseObject):
                                 props = self.props)
             if color:
                 self.species_data['color'] = color
-            self.build_object(species, elements, positions, attributes, location, metaball = metaball)
-            self.build_material(species, node_inputs, material_style, materials)
+            self.build_object(species, elements = elements, 
+                        positions = positions, 
+                        attributes = attributes, 
+                        location = location,
+                        label = label,
+                        metaball = metaball)
+            self.build_material(species, label = label, 
+                            node_inputs = node_inputs, 
+                            material_style = material_style, 
+                            materials = materials)
             self.build_instancer(radius = self.species_data['radius'], 
                             scale = scale,
                             segments = segments, 
@@ -119,10 +125,10 @@ class Batom(BaseObject):
                             instancer_data = instancer_data)
             self.set_frames(self._frames, only_basis = True)
         else:
-            self.from_batom(label)
-            self.instancer_name = '{0}_instancer_atom_{1}'.format(self.label, self.species)
+            self.from_batom(name)
+            self.instancer_name = 'instancer_{0}'.format(self.name)
     
-    def build_material(self, species, node_inputs = None, 
+    def build_material(self, species, label = 'batoms', node_inputs = None, 
                 material_style = 'default', materials = None):
         """
         """
@@ -131,9 +137,9 @@ class Batom(BaseObject):
             for name, mat in materials.items():
                 mat1 = mat.copy()
                 label = name.split('_')[0]
-                mat1.name = name.replace(label, self.label)
+                mat1.name = name.replace(label, label)
         for ele, color in self.species_data['color'].items():
-            name = '{0}_material_atom_{1}_{2}'.format(self.label, species, ele)
+            name = '{0}_material_atom_{1}_{2}'.format(label, species, ele)
             if name not in bpy.data.materials:
                 create_material(name,
                             color = color,
@@ -141,7 +147,7 @@ class Batom(BaseObject):
                             material_style = material_style,
                             backface_culling = True)
     
-    def build_object(self, species, elements, positions, attributes, location, metaball = False):
+    def build_object(self, species, elements, positions, attributes, location, label = 'batoms', metaball = False):
         """
         build child object and add it to main objects.
         """
@@ -152,40 +158,14 @@ class Batom(BaseObject):
             obj.location = location
             obj.batoms.batom.flag = True
             obj.batoms.batom.species = species
-            obj.batoms.batom.label = self.label
+            obj.batoms.batom.label = label
             for ele, occupancy in elements.items():
                 eledata = obj.batoms.batom.elements.add()
                 eledata.name = ele
                 eledata.occupancy = occupancy
             bpy.data.collections['Collection'].objects.link(obj)
             # Assigning attributes to vertexes
-            me = obj.data
-            for key, data in attributes.items():
-                # print(key)
-                dtype = type(attributes[key][0])
-                if dtype == np.int_:
-                    layer = me.vertex_layers_int.new(name = key)
-                    layer.data.foreach_set("value", data)
-                elif dtype == np.float_:
-                    layer = me.vertex_layers_float.new(name = key)
-                    layer.data.foreach_set("value", data)
-                elif dtype == np.str_:
-                    # foreach_set not work with str
-                    # can not set len of bytes when using me.vertex_layers_string,
-                    # so use bmesh
-                    data = data.astype(bytes)
-                    bm = bmesh.new()
-                    bm.from_mesh(me)
-                    layer = bm.verts.layers.string.new(key)
-                    bm.verts.ensure_lookup_table()
-                    nvert = len(bm.verts)
-                    for i in range(nvert):
-                        v = bm.verts[i]
-                        v[layer] = data[i]
-                    bm.to_mesh(me)
-                    bm.clear()             
-                else:
-                    raise Exception('Data type %s not supported!'%dtype)
+            self.set_attributes(attributes)
         elif bpy.data.objects[self.obj_name].batoms.batom.flag:
             obj = bpy.data.objects[self.obj_name]
         else:
@@ -324,13 +304,13 @@ class Batom(BaseObject):
                 tos = toe
             mesh.polygons.foreach_set('material_index', material_indexs)
 
-    def from_batom(self, label):
-        if label not in bpy.data.objects:
-            raise Exception("%s is not a object!"%label)
-        elif not bpy.data.objects[label].batoms.batom.flag:
-            raise Exception("%s is not Batom object!"%label)
-        obj = bpy.data.objects[label]
-        self.label = obj.batoms.batom.label
+    def from_batom(self, name):
+        if name not in bpy.data.objects:
+            raise Exception("%s is not a object!"%name)
+        elif not bpy.data.objects[name].batoms.batom.flag:
+            raise Exception("%s is not Batom object!"%name)
+        obj = bpy.data.objects[name]
+        # self.label = obj.batoms.batom.label
         self.species_data = {
             'radius':obj.batoms.batom.radius,
             'scale':obj.scale,
@@ -356,6 +336,20 @@ class Batom(BaseObject):
             materials[ele] = mat
         return materials
     
+    @property
+    def label(self):
+        return self.get_label()
+    
+    @label.setter
+    def label(self, label):
+        self.set_label(label)
+    
+    def get_label(self):
+        return self.obj.batoms.batom.label
+    
+    def set_label(self, label):
+        self.obj.batoms.batom.label = label
+
     @property
     def scale(self):
         return self.get_scale()
@@ -513,6 +507,7 @@ class Batom(BaseObject):
         """
         Set global positions to local vertices
         """
+        object_mode()
         from batoms.tools import local2global
         natom = len(self)
         if len(positions) != natom:
@@ -522,8 +517,16 @@ class Batom(BaseObject):
                 np.array(self.obj.matrix_world), reversed = True)
         # rashpe to (natoms*3, 1) and use forseach_set
         positions = positions.reshape((natom*3, 1))
-        self.obj.data.vertices.foreach_set('co', positions)
+        # I don't know why 'Basis' shape keys is not updated when editing mesh,
+        # so we edit the 'Basis' shape keys directly.
+        # self.obj.data.vertices.foreach_set('co', positions)
+        self.obj.data.shape_keys.key_blocks[0].data.foreach_set('co', positions)
         self.obj.data.update()
+        # bpy.context.view_layer.update()
+        # I don't why this is need to update the mesh positions
+        bpy.context.view_layer.objects.active = self.obj
+        bpy.ops.object.mode_set(mode = 'EDIT')
+        bpy.ops.object.mode_set(mode = 'OBJECT')
     
     def get_scaled_positions(self, cell):
         """
@@ -538,6 +541,10 @@ class Batom(BaseObject):
     def attributes(self):
         return self.get_attributes()
     
+    @attributes.setter
+    def attributes(self, attributes):
+        self.set_attributes(attributes)
+
     def get_attributes(self):
         """
         using foreach_get and foreach_set to improve performance.
@@ -561,6 +568,44 @@ class Batom(BaseObject):
                 attributes[key].append(d.value.decode())
             attributes[key] = np.array(attributes[key])
         return attributes
+    
+    def set_attributes(self, attributes):
+        me = self.obj.data
+        for key, data in attributes.items():
+            # print(key)
+            if key == 'positions':
+                self.positions = data
+                continue
+            dtype = type(attributes[key][0])
+            if dtype == np.int_:
+                layer = me.vertex_layers_int.get(key)
+                if layer is None:
+                    layer = me.vertex_layers_int.new(name = key)
+                layer.data.foreach_set("value", data)
+            elif dtype == np.float_:
+                layer = me.vertex_layers_float.get(key)
+                if layer is None:
+                    layer = me.vertex_layers_float.new(name = key)
+                layer.data.foreach_set("value", data)
+            elif dtype == np.str_:
+                # foreach_set not work with str
+                # can not set len of bytes when using me.vertex_layers_string,
+                # so use bmesh
+                data = data.astype(bytes)
+                bm = bmesh.new()
+                bm.from_mesh(me)
+                layer = bm.verts.layers.string.get(key)
+                if layer is None:
+                    layer = bm.verts.layers.string.new(key)
+                bm.verts.ensure_lookup_table()
+                nvert = len(bm.verts)
+                for i in range(nvert):
+                    v = bm.verts[i]
+                    v[layer] = data[i]
+                bm.to_mesh(me)
+                bm.clear()             
+            else:
+                raise Exception('Data type %s not supported!'%dtype)
     
     @property
     def index(self):
@@ -759,6 +804,7 @@ class Batom(BaseObject):
             bpy.data.objects.remove(obj)
         else:
             bm.to_mesh(obj.data)
+            bm.clear()
     
     def delete(self, index = []):
         """
@@ -900,7 +946,7 @@ class Batom(BaseObject):
         #     batom.data.vertices[i].co[j] = np.array(value) - np.array(batom.location[j])
 
     
-    def repeat(self, m, cell):
+    def repeat(self, m, cell, natom):
         """
         In-place repeat of atoms.
 
@@ -918,15 +964,21 @@ class Batom(BaseObject):
         n = len(self)
         frames = self.frames
         positions = self.positions
+        index = self.index
         positions = np.tile(positions, (M,) + (1,) * (len(positions.shape) - 1))
+        index = np.tile(index, (M,) + (1,) * (len(index.shape) - 1))
         i0 = 0
+        n1 = 0
         for m0 in range(m[0]):
             for m1 in range(m[1]):
                 for m2 in range(m[2]):
                     i1 = i0 + n
                     positions[i0:i1] += np.dot((m0, m1, m2), cell)
+                    index[i0:i1] += n1*natom
                     i0 = i1
+                    n1 += 1
         self.add_vertices(positions[n:])
+        self.set_attributes({'index': index})
         # repeat frames
         frames_new = []
         if self.nframe > 1:
@@ -943,7 +995,7 @@ class Batom(BaseObject):
         self.set_frames(frames_new)
 
     
-    def copy(self, species, label = 'batoms'):
+    def copy(self, name):
         """
         Return a copy.
 
@@ -952,16 +1004,21 @@ class Batom(BaseObject):
 
         For example, copy H species:
         
-        >>> h_new = h.copy(label = 'h_new', species = 'H')
+        >>> h_new = h.copy(name = 'h_new', species = 'H')
 
         """
         object_mode()
-        batom = Batom(species, self.local_positions, 
-                    label = label,
-                    elements = self.elements, 
-                    location = self.obj.location, 
-                    scale = self.scale, 
-                    materials = self.materials)
+        #
+        obj = self.obj.copy()
+        obj.data = self.obj.data.copy()
+        obj.name = obj.data.name = name
+        #
+        instancer = self.instancer.copy()
+        bpy.data.collections['Collection'].objects.link(instancer)
+        instancer.hide_set(True)
+        instancer.name = 'instancer_%s'%(name)
+        instancer.parent = obj
+        batom = self.__class__(name)
         return batom
     
     def extend(self, other):
@@ -1001,7 +1058,9 @@ class Batom(BaseObject):
             yield batom.matrix_world @ batom.data.vertices[i].co
     
     def __repr__(self):
-        s = "Batom('%s', elements = %s, positions = %s" % (self.species, str(self.elements), list(self.positions))
+        s = "Batom('%s', species = '%s', elements = %s, \
+                    positions = %s" % (self.name, self.species,  \
+                    str(self.elements), list(self.positions))
         return s
     
     def add_vertices(self, positions):
@@ -1013,10 +1072,10 @@ class Batom(BaseObject):
         bm = bmesh.new()
         bm.from_mesh(self.obj.data)
         bm.verts.ensure_lookup_table()
-        verts = []
         for pos in positions:
             bm.verts.new(pos)
         bm.to_mesh(self.obj.data)
+        bm.clear()
     
     def get_cell(self):
         if not self.label in bpy.data.collections:

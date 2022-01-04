@@ -5,7 +5,6 @@ https://behreajj.medium.com/scripting-curves-in-blender-with-python-c487097efd13
 
 """
 
-import batom
 import bpy
 import numpy as np
 from time import time
@@ -223,7 +222,7 @@ class Ribbon():
         """
         arrays = self.batoms.arrays
         sheet_datas = {}
-        indices_C = np.where((arrays['atomtypes'] == 'C1') | (arrays['atomtypes'] == 'CA'))[0]
+        indices_C = np.where((arrays['types'] == 'ATOM') & ((arrays['atomtypes'] == 'C1') | (arrays['atomtypes'] == 'CA')))[0]
         for data in self.sheet.collection:
             sheet_datas[data.name] = data.as_dict()
             istart = np.where((arrays['chainids'] == data.startChain) & (arrays['residuenumbers'] == data.startResi))[0][0]
@@ -247,7 +246,8 @@ class Ribbon():
         """
         arrays = self.batoms.arrays
         helix_datas = {}
-        indices_C = np.where((arrays['atomtypes'] == 'C1') | (arrays['atomtypes'] == 'CA'))[0]
+        # indices_C = np.where((arrays['atomtypes'] == 'C1') | (arrays['atomtypes'] == 'CA'))[0]
+        indices_C = np.where((arrays['types'] == 'ATOM') & ((arrays['atomtypes'] == 'C1') | (arrays['atomtypes'] == 'CA')))[0]
         # print(indices_C)
         for data in self.helix.collection:
             helix_datas[data.name] = data.as_dict()
@@ -310,7 +310,7 @@ class Ribbon():
         self.build_turn_dict()
         arrays = self.batoms.arrays
         turn_datas = {}
-        indices_C = np.where((arrays['atomtypes'] == 'C1') | (arrays['atomtypes'] == 'CA'))[0]
+        indices_C = np.where((arrays['types'] == 'ATOM') & ((arrays['atomtypes'] == 'C1') | (arrays['atomtypes'] == 'CA')))[0]
         imin = min(indices_C)
         imax = max(indices_C)
         # print(indices_C)
@@ -331,3 +331,8 @@ class Ribbon():
         for name, data in self.turn_datas.items():
             draw_rope_from_vertices('turn-%s'%name, data, self.coll)
         self.batoms.set_hide(True, only_atoms = True)
+    
+    def draw(self):
+        self.draw_sheet()
+        self.draw_helix()
+        self.draw_turn()

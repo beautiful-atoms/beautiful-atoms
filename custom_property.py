@@ -1,3 +1,4 @@
+from ase.atoms import default
 import bpy
 from bpy.props import (StringProperty,
                        BoolProperty,
@@ -11,7 +12,6 @@ from bpy.props import (StringProperty,
                        CollectionProperty,
                        )
 
-
 class Belement(bpy.types.PropertyGroup):
     name: StringProperty(name="name", default = 'H')
     occupancy: FloatProperty(name="occupancy")
@@ -23,6 +23,7 @@ class Batom(bpy.types.PropertyGroup):
     """
     flag: BoolProperty(name="flag", default=False)
     label: StringProperty(name="label", default = 'X')
+    select: StringProperty(name="select", default = 'sel0')
     species: StringProperty(name="species", default = 'X')
     elements: CollectionProperty(name = 'Belements', 
                             type = Belement)
@@ -397,6 +398,47 @@ class Bturn(bpy.types.PropertyGroup):
         s += '-'*60 + '\n'
         return s
 
+
+class Bselect(bpy.types.PropertyGroup):
+    """
+    """
+    flag: BoolProperty(name="flag", default=False)
+    name: StringProperty(name="name", default = 'sel0')
+    show: BoolProperty(name="show", default = True)
+    model_style: EnumProperty(
+        name="model_style",
+        description="Structural models",
+        items=(('0',"Space-filling", "Use ball"),
+               ('1',"Ball-and-stick", "Use ball and stick"),
+               ('2',"Polyhedral","Use polyhedral"),
+               ('3',"Wireframe", "Use wireframe")),
+        default='0')
+    radius_style: EnumProperty(
+        name="radius_style",
+        description="Radii",
+        items=(('0',"Covalent", "covalent"),
+               ('1',"VDW", "van der Waals"),
+               ('2',"Ionic","ionic")),
+        default='0')
+    polyhedra_style: EnumProperty(
+        name="polyhedra_style",
+        description="Polhhedra models",
+        items=(('0',"atoms, bonds and polyhedra", "atoms, bonds and polyhedra"),
+               ('1',"atoms, polyhedra", "atoms, polyhedra"),
+               ('2',"central atoms, polyhedra","central atoms, polyhedra"),
+               ('3',"polyhedra", "polyhedra")),
+               default='0')
+    bbond: CollectionProperty(name = 'Bbond', 
+                            type = Bbond)
+    bpolyhedra: CollectionProperty(name = 'Bpolyhedra', 
+                            type = Bpolyhedra)
+    def __repr__(self) -> str:
+        s = '-'*60 + '\n'
+        s = 'Name   model_style   radius_style     show \n'
+        s += '{0:10s} {1:10s}   {2:10s}   {3:10s} \n'.format(\
+                self.name, str(self.model_style), self.radius_style, str(self.show))
+        s += '-'*60 + '\n'
+        return s
 class Batoms_coll(bpy.types.PropertyGroup):
     """
     """
@@ -428,7 +470,6 @@ class Batoms_coll(bpy.types.PropertyGroup):
     cell: FloatVectorProperty(name="cell", default = [0, 0, 0, 0, 0, 0, 0, 0, 0], size = 9)
     show_unit_cell: BoolProperty(name="show_unit_cell", default = True)
     boundary: FloatVectorProperty(name="boundary", default = [0.0, 1.0, 0.0, 1.0, 0.0, 1.0], size = 6)
-    render: StringProperty(name="render", default = 'batoms')
     bbond: CollectionProperty(name = 'Bbond', 
                             type = Bbond)
     bplane: CollectionProperty(name = 'Bplane', 
@@ -443,6 +484,8 @@ class Batoms_coll(bpy.types.PropertyGroup):
                             type = Bhelix)
     bturn: CollectionProperty(name = 'Bturn', 
                             type = Bturn)
+    bselect: CollectionProperty(name = 'Bselect', 
+                            type = Bselect)
     brender: PointerProperty(name = 'Brender', 
                             type = Brender)
                             

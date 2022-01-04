@@ -10,10 +10,17 @@ def test_batom():
     import numpy as np
     from batoms.butils import removeAll
     removeAll()
-    # 
     positions = np.array([[0, 0, 0], [1.52, 0, 0]])
-    h = Batom('H', positions = positions)
+    h = Batom('atom_H', species = 'H', positions = positions)
     assert isinstance(h, Batom)
+    #
+    # from object
+    h2=Batom('atom_H')
+    assert isinstance(h2, Batom)
+    # copy
+    h3 = h.copy('atom_H3')
+    assert isinstance(h3, Batom)
+    #
     h.translate([0, 0, 2])
     assert np.allclose(h.positions, np.array([[0, 0, 2], [1.52, 0, 2]]))
     # properties
@@ -24,13 +31,10 @@ def test_batom():
     assert np.allclose(h.scale, np.array([2, 2, 2]))
     assert np.allclose(h.size, 2.40)
     # extend
-    h1 = Batom('H_1', [[0, 0, 2], [2, 0, 2]])
-    h = h + h1
-    h2 = h.copy('H_2')
-    # from object
-    assert isinstance(h2, Batom)
-    h3=Batom(label = 'batoms_atom_H_2')
-    assert isinstance(h3, Batom)
+    h1 = Batom('atom_H_1', species = 'H_1', positions = [[0, 0, 2], [2, 0, 2]])
+    h4 = h + h1
+    assert isinstance(h4, Batom)
+
 
 def test_positions():
     from batoms import Batom
@@ -49,7 +53,7 @@ def test_batom_animation():
     from batoms.butils import removeAll
     removeAll()
     positions = np.array([[0, 0 ,0], [1.52, 0, 0]])
-    o = Batom('O', positions)
+    o = Batom('O', positions = positions)
     images = []
     for i in range(10):
         images.append(positions + np.array([i, 0, 0]))     
@@ -60,7 +64,7 @@ def test_batom_animation():
     o.repeat([2, 1, 1], cell)
     # join
     positions = np.array([[0.76, 0 ,0]])
-    o_1 = Batom('O_1', positions)
+    o_1 = Batom('O_1', positions = positions)
     images = []
     for i in range(10):
         images.append(positions + np.array([i, 0, 0]))

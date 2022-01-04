@@ -22,7 +22,7 @@ ATOM     25  CA  LYS A   5      48.356  17.146  -2.714  1.00  0.00           C
     """
 
     line = line.rstrip('\n')
-    type_record = line[0:6]
+    type_record = line[0:6].strip()
     name = line[12:16].strip()
     altloc = line[16]
     resname = line[17:21]
@@ -54,7 +54,7 @@ ATOM     25  CA  LYS A   5      48.356  17.146  -2.714  1.00  0.00           C
         bfactor = 0.0
     # segid = line[72:76] # not used
     symbol = line[76:78].strip().upper()
-    return symbol, name, altloc, resname, coord, occupancy, bfactor, resseq, chainid
+    return symbol, name, altloc, resname, coord, occupancy, bfactor, resseq, chainid, type_record
 
 def read_line_cyrstal(line):
     cellpar = [float(line[6:15]),  # a
@@ -118,6 +118,7 @@ def read_pdb(fileobj, index=-1, read_arrays=True):
     trans = np.zeros(3)
     occ = []
     bfactor = []
+    types = []
     residuenames = []
     residuenumbers = []
     atomtypes = []
@@ -143,7 +144,9 @@ def read_pdb(fileobj, index=-1, read_arrays=True):
                 'residuenames': residuenames,
                 'atomtypes': atomtypes,
                 'residuenumbers': residuenumbers,
-                'chainids': chainids}
+                'chainids': chainids,
+                'types': types,
+                }
         for name, array in info.items():
             if len(array) == 0:
                 pass
@@ -184,6 +187,7 @@ def read_pdb(fileobj, index=-1, read_arrays=True):
             bfactor.append(line_info[6])
             residuenumbers.append(line_info[7])
             chainids.append(line_info[8])
+            types.append(line_info[9])
 
             symbols.append(symbol)
             positions.append(position)
@@ -226,5 +230,5 @@ def read_pdb(fileobj, index=-1, read_arrays=True):
 
 if __name__ == "__main__":
     images = read_pdb('test/datas/2piw.pdb')
-    print(images)
+    print(images.arrays['types'])
     print(images.info['helix'])
