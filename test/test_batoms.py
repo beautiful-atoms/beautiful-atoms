@@ -5,6 +5,59 @@ from batoms.butils import removeAll
 import numpy as np
 
 
+
+def test_batoms():
+    """
+    """
+from batoms.butils import removeAll
+from batoms.batoms import Batoms
+import numpy as np
+removeAll()
+h2o = Batoms('h2o', species = ['O', 'H', 'H'], elements={'O':{'O':0.8, 'N': 0.2}, 'H':{'H': 0.8}}, positions= [[0, 0, 0.40], [0, -0.76, -0.2], [0, 0.76, -0.2]])
+assert isinstance(h2o, Batoms)
+assert len(h2o.species) == 2
+assert len(h2o) == 3
+# properties
+h2o.cell = [3, 3, 3]
+h2o.pbc = True
+assert h2o.pbc
+h2o.cell = [3, 3, 3]
+h2o.repeat([2, 2, 2])
+h2o.scale = 0.5
+h2o.model_style = 1
+assert h2o.model_style == 1
+h2o.translate([0, 0, 2])
+assert np.allclose(h2o[0].positions, np.array([[0, 0, 2.4]]))
+# h2o.rotate(math.pi/2.0, 'Z')
+#
+def test_batoms_copy():
+from batoms.butils import removeAll
+from batoms import Batom
+import numpy as np
+removeAll()
+h2o = Batom('h2o', species = ['O', 'H', 'H'], elements={'O':{'O':0.8, 'N': 0.2}, 'H':{'H': 0.8}}, positions= [[0, 0, 0.40], [0, -0.76, -0.2], [0, 0.76, -0.2]])
+h2o_2 = h2o.copy('h2o_2')
+# assert isinstance(h2o_2, Batoms)
+h2o_2 = Batom('h2o_2')
+#
+# delete
+del h2o_2['h2o_2_atom_H'][[0]]
+assert len(h2o_2['h2o_2_atom_H']) == 1
+#
+h2o_2.replace('O', 'C', [0])
+#
+h2o['atom_O'][0] = [0, 0, 2.0]
+index = [0, 1]
+h2o['atom_H'][index, 0] += 2
+
+def test_batoms():
+    """
+    """
+
+assert isinstance(h2o, Batom)
+assert len(h2o.species) == 2
+assert len(h2o) == 3
+
 def test_from_batom():
 from batoms.batom import Batom
 from batoms.batoms import Batoms
@@ -18,41 +71,6 @@ assert isinstance(h2o, Batoms)
 assert len(h2o.species) == 2
 assert len(h2o) == 5
 
-def test_batoms():
-    """
-    """
-import math
-from batoms.butils import removeAll
-from batoms import Batoms
-import numpy as np
-removeAll()
-h2o = Batoms('h2o', {'O': [[0, 0, 0.40]], 'H': [[0, -0.76, -0.2], [0, 0.76, -0.2]]})
-assert isinstance(h2o, Batoms)
-assert len(h2o.species) == 2
-assert len(h2o) == 3
-# properties
-h2o.cell = [3, 3, 3]
-h2o.pbc = True
-assert h2o.pbc
-h2o.model_style = 1
-assert h2o.model_style == 1
-h2o.translate([0, 0, 2])
-assert np.allclose(h2o['atom_O'].positions, np.array([[0, 0, 2.4]]))
-# h2o.rotate(math.pi/2.0, 'Z')
-#
-h2o_2 = h2o.copy('h2o_2')
-assert isinstance(h2o_2, Batoms)
-h2o_2 = Batoms(label='h2o_2')
-#
-# delete
-del h2o_2['h2o_2_atom_H'][[0]]
-assert len(h2o_2['h2o_2_atom_H']) == 1
-#
-h2o_2.replace('h2o_2_atom_O', 'C', [0])
-#
-h2o['atom_O'][0] = [0, 0, 2.0]
-index = [0, 1]
-h2o['atom_H'][index, 0] += 2
 
 def test_from_coll():
 from batoms.butils import removeAll
@@ -86,17 +104,12 @@ def test_render():
 
 def test_ase_arrays():
 from batoms.butils import removeAll
-from batoms import Batoms
+from batoms import Batoms, Batom
 from batoms.pdbparser import read_pdb
 removeAll()
 atoms = read_pdb('test/datas/1tim.pdb')
-atoms
-p1tim = Batoms('p1tim', atoms = atoms)
-# p1tim['C'].index
-il = p1tim['atom_C'].obj.data.vertex_layers_int.get('index')
-il.data[0].value
-p1tim['atom_C'].index[0]
-p1tim['atom_C'].attributes
+p1tim = Batom('p1tim', atoms = atoms)
+p1tim.attributes
 p1tim.atoms
 
 def test_set_arrays():
@@ -110,7 +123,7 @@ h2o.pbc = True
 h2o.cell = [3, 3, 3]
 h2o = h2o*[2, 1, 1]
 print(h2o.arrays)
-del h2o['atom_H'][[2]]
+del h2o[[2]]
 print(h2o.arrays)
 h2o.set_arrays({'positions': h2o.arrays['positions'] + 5})
 print(h2o.positions)

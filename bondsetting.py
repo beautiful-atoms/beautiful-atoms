@@ -21,13 +21,14 @@ class BondSetting(Setting):
         Cutoff used to calculate the maxmium bondlength for bond pairs.
     """
     
-    def __init__(self, label, bondsetting = None, cutoff = 1.3) -> None:
+    def __init__(self, label, batoms = None, bondsetting = None, cutoff = 1.3) -> None:
         Setting.__init__(self, label)
         self.label = label
         self.name = 'bbond'
         self.cutoff = cutoff
+        self.batoms = batoms
         if len(self) == 0:
-            self.set_default(self.species, cutoff)
+            self.set_default(self.batoms.species_props, cutoff)
         if bondsetting is not None:
             for key, data in bondsetting.items():
                 self[key] = data
@@ -63,13 +64,13 @@ class BondSetting(Setting):
         for b in other:
             self[(b.species1, b.species2)] = b.as_dict()
         # new
-        species1 = set(self.species)
-        species2 = set(other.species)
+        species1 = set(self.batoms.species_props)
+        species2 = set(other.batoms.species_props)
         nspecies1 = species1 - species2
         nspecies2 = species2 - species1
         for sp1 in nspecies1:
             for sp2 in nspecies2:
-                species = {sp1: self.species[sp1], sp2: other.species[sp2]}
+                species = {sp1: self.batoms.species_props[sp1], sp2: other.batoms.species_props[sp2]}
                 self.set_default(species, self.cutoff, self_interaction = False)
     
     def add(self, bondpairs):
@@ -78,7 +79,7 @@ class BondSetting(Setting):
         if isinstance(bondpairs[0], (str, int, float)):
             bondpairs = [bondpairs]
         for bondpair in bondpairs:
-            species = {sp: self.species[sp] for sp in bondpair}
+            species = {sp: self.batoms.species_props[sp] for sp in bondpair}
             maxlength = species[bondpair[0]]['radius'] + \
                         species[bondpair[1]]['radius']
             self[bondpair] = {'max': maxlength*self.cutoff, 

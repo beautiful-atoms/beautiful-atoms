@@ -17,11 +17,12 @@ class PolyhedraSetting(Setting):
 
     """
     
-    def __init__(self, label, polyhedrasetting = None) -> None:
+    def __init__(self, label, batoms = None, polyhedrasetting = None) -> None:
         Setting.__init__(self, label)
         self.name = 'bpolyhedra'
+        self.batoms = batoms
         if len(self) == 0:
-            self.set_default(self.species)
+            self.set_default(self.batoms.species_props)
         if polyhedrasetting is not None:
             for key, data in polyhedrasetting.items():
                 self[key] = data
@@ -56,7 +57,7 @@ class PolyhedraSetting(Setting):
     def add(self, polyhedras):
         if isinstance(polyhedras, str):
             polyhedras = [polyhedras]
-        species = {sp: self.species[sp] for sp in polyhedras}
+        species = {sp: self.batoms.species_props[sp] for sp in polyhedras}
         self.set_default(species)
     
     def __repr__(self) -> str:

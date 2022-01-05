@@ -14,7 +14,10 @@ class BaseObject():
         return self.get_obj()
     
     def get_obj(self):
-        return bpy.data.objects.get(self.obj_name)
+        obj = bpy.data.objects.get(self.obj_name)
+        if obj is None:
+            raise KeyError('%s object is not exist.'%self.obj_name)
+        return obj
     
     @property
     def bobj(self):
@@ -196,22 +199,6 @@ class Setting():
     def get_collection(self):
         collection = getattr(bpy.data.collections[self.label].batoms, self.name)
         return collection
-    
-    @property
-    def species(self):
-        return self.get_species()
-    
-    def get_species(self) -> dict:
-        """
-        read species from collection.
-        """
-        species = {}
-        coll_atom = bpy.data.collections['%s_atom'%self.label]
-        for ba in coll_atom.objects:
-            species[ba.batoms.batom.species] = {
-                'color': ba.children[0].data.materials[0].diffuse_color,
-                'radius': ba.children[0].batoms.batom.radius}
-        return species
     
     @property
     def data(self):

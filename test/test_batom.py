@@ -3,6 +3,28 @@ from batoms.batom import Batom
 import numpy as np
 from batoms.butils import removeAll
 
+def test_batoms():
+    """
+    """
+from batoms.butils import removeAll
+from batoms import Batom
+import numpy as np
+removeAll()
+h2o = Batom('h2o', species = ['O', 'H', 'H'], elements={'O':{'O':0.8, 'N': 0.2}, 'H':{'H': 0.8}}, positions= [[0, 0, 0.40], [0, -0.76, -0.2], [0, 0.76, -0.2]])
+h2o.pbc = True
+h2o.cell = [3, 3, 3]
+h2o.attributes
+h2o.scale = 0.5
+h2o.repeat([2, 2, 2])
+
+assert isinstance(h2o, Batom)
+assert len(h2o.species) == 2
+assert len(h2o) == 3
+
+
+h2o = Batom('h2o', species = ['O', 'H', 'H'], elements={'O':{'O':0.8, 'N': 0.2}, 'H':{'H': 0.8}}, positions= [[0, 0, 0.40], [0, -0.76, -0.2], [0, 0.76, -0.2]])
+
+
 def test_batom():
     """
     """

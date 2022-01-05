@@ -198,6 +198,13 @@ def set_world(color = [0.2, 0.2, 0.2, 1.0]):
         node_tree.nodes["Background"].inputs["Strength"].default_value = 1.0
         node_tree.nodes["Background"].inputs["Color"].default_value = color
 
+def get_nodes_by_name(nodes, name, type):
+    node = nodes.get(name)
+    if node is None:
+        node = nodes.new(type)
+        node.name = name
+    return node
+
 def clean_default(camera = False, light = True):
         if 'Cube' in bpy.data.objects:
             bpy.data.objects.remove(bpy.data.objects["Cube"], do_unlink=True)

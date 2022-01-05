@@ -41,16 +41,19 @@ def get_default_species_data(elements, radius_style = 'covalent',
     Set default color, radii for elements,
     Todo fraction occupancy
     """
-    species_data = {'color':{}}
-    radius = 0
-    for ele, fraction in elements.items():
-        data = default_element_prop(ele, radius_style = radius_style, 
-                color_style = color_style)
-        radius += data['radius']*fraction
-        species_data['color'][ele] = data['color']
-    species_data['radius'] = radius
-    species_data.update(props)
-    return species_data
+    species_props = {}
+    for sp, data in elements.items():
+        radius = 0
+        species_props[sp] = {'color':{}}
+        for ele, fraction in data.items():
+            data = default_element_prop(ele, radius_style = radius_style, 
+                    color_style = color_style)
+            radius += data['radius']*fraction
+            species_props[sp]['color'][ele] = data['color']
+        species_props[sp]['radius'] = radius
+        if sp in props:
+            species_props[sp].update(props[sp])
+    return species_props
 
 
 def get_polyhedra_kind(color, width = 0.01, show_edge = True, props = {}):

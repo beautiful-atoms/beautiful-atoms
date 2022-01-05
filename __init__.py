@@ -61,6 +61,7 @@ from .modal import (
 
 classes = [
         custom_property.Belement,
+        custom_property.Bspecies,
         custom_property.Batom,
         custom_property.Bcell,
         custom_property.Bbond,

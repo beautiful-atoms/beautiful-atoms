@@ -12,9 +12,7 @@ from batoms.butils import removeAll
 removeAll()
 atoms = read_pdb('test/datas/2piw.pdb')  # 1tim
 batoms = Batoms('protein', atoms = atoms)
-batoms.ribbon.draw_sheet()
-batoms.ribbon.draw_helix()
-batoms.ribbon.draw_turn()
+batoms.ribbon.draw()
 
 
 

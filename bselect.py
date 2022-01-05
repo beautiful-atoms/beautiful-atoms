@@ -30,7 +30,6 @@ metals
 
 import bpy
 from batoms.base import Setting
-from batoms.batom import Batom
 from batoms.bondsetting import BondSetting, build_bondlists, calc_bond_data
 from batoms.polyhedrasetting import PolyhedraSetting, build_polyhedralists
 from batoms.isosurfacesetting import IsosurfaceSetting
