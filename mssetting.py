@@ -39,6 +39,15 @@ class MSsetting(Setting):
         self.sas_name = '%s_sas'%self.label
         self.ses_name = '%s_ses'%self.label
         self.resolution = resolution
+    
+    def set_collection(self, label):
+        """
+        """
+        if not bpy.data.collections.get(label):
+            coll = bpy.data.collections.new(label)
+            self.batoms.coll.children.link(coll)
+            coll.batoms.flag = True
+            coll.batoms.label = label
         
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
@@ -136,7 +145,7 @@ class MSsetting(Setting):
             bpy.data.objects.remove(obj, do_unlink = True)
         draw_surface_from_vertices(self.sas_name, 
                             datas = isosurface,
-                            coll = self.batoms.coll.children['%s_surface'%self.label],
+                            coll = self.batoms.coll.children['%s_surface'%self.batoms.coll_name],
                             backface_culling = False,
                         )
         print('Draw SAS: %s'%(time() - tstart))
@@ -195,7 +204,7 @@ class MSsetting(Setting):
             bpy.data.objects.remove(obj, do_unlink = True)
         draw_surface_from_vertices(self.ses_name, 
                             datas = isosurface,
-                            coll = self.batoms.coll.children['%s_surface'%self.label],
+                            coll = self.batoms.coll.children['%s_surface'%self.batoms.coll_name],
                             backface_culling = False,
                         )
         print('Time SES: %s'%(time() - tstart))
@@ -219,16 +228,16 @@ class MSsetting(Setting):
         areas = np.zeros(npoly)
         me.polygons.foreach_get('area', areas)
         pareas = {}
-        atoms = self.batoms.atoms
-        positions = atoms.positions
-        symbols = atoms.get_chemical_symbols()
+        arrays = self.batoms.arrays
+        positions = arrays['positions']
+        symbols = arrays['species']
         natom = len(positions)
         radii = np.array(self.batoms.radii_vdw) + self.probe
         atom_indices, distance = self.map_face_to_atom(me, positions, radii)
         for j in range(natom):
             parea = np.sum(areas[atom_indices==j])
             pareas[j] = [symbols[j], parea]
-            print('atom: {}, area: {:1.3f}'.format(symbols[j], parea))
+            print('species: {}, area: {:1.3f}'.format(symbols[j], parea))
         # print(pareas_list)
         return pareas
     
@@ -387,7 +396,7 @@ class MSsetting(Setting):
         obj = bpy.data.objects.new(self.sas_name, tmp)
         obj.data.materials.append(self.sas_mat)
         # print('SAS to mesh evaluated: %s'%(time() - tstart))
-        coll = self.batoms.coll.children['%s_surface'%self.label]
+        coll = self.batoms.coll.children['%s_surface'%self.batoms.coll_name]
         coll.objects.link(obj)
         return obj
     
@@ -511,7 +520,7 @@ class MSsetting(Setting):
         self.origins_probe2 = origins_probe2
         self.origins_probe3 = origins_probe3
         if obj is not None:
-            self.select_mesh(obj, mask3, mode = 'VERT')
+            self.batoms_mesh(obj, mask3, mode = 'VERT')
         return indices, mask1, mask2, mask3
     
     def select_mesh(self, obj, mask, mode = 'VERT'):
@@ -557,7 +566,7 @@ class MSsetting(Setting):
         # mask = np.where((((delta0 < eps) & (proj > 0.1)) | (delta1 < eps)) & (lengths > eps/2/number_cuts), True, False)
         mask = np.where((((delta0 < eps)) | (delta1 < eps)) & (lengths > eps/2/number_cuts), True, False)
         # print(eps, lengths[2608], mask[2608])
-        self.select_mesh(self.ses_obj, mask, mode = 'EDGE')
+        self.batoms_mesh(self.ses_obj, mask, mode = 'EDGE')
         bpy.ops.mesh.subdivide(number_cuts = number_cuts, smoothness = 0, fractal_along_normal = 0)
         # return
         bpy.ops.object.mode_set(mode = 'OBJECT')
@@ -595,7 +604,7 @@ class MSsetting(Setting):
         repeat += subdivide
         tstart = time()
         bpy.context.view_layer.objects.active = self.ses_obj
-        self.select_mesh(self.ses_obj, mask, mode = 'VERT')
+        self.batoms_mesh(self.ses_obj, mask, mode = 'VERT')
         if repeat > 0:
             bpy.ops.mesh.vertices_smooth(factor = 0.5, repeat = repeat)
         bpy.ops.object.mode_set(mode = 'OBJECT')

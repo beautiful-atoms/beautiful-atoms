@@ -1,10 +1,60 @@
 import numpy as np
-import time
+import math
 
-from numpy.core.numeric import indices
-from numpy.lib import angle
 
-    
+def from_ase(atoms):
+    """
+    Import structure from ASE atoms.
+    """
+    from ase import Atoms
+    from batoms.tools import npbool2bool
+    if isinstance(atoms, list):
+        frames = atoms
+        atoms = frames[0]
+    else:
+        frames = [atoms]
+    nframe = len(frames)
+    natom = len(atoms)
+    if 'species' not in atoms.arrays:
+        atoms.new_array('species', np.array(atoms.get_chemical_symbols(), dtype = 'U20'))
+    if 'scale' not in atoms.arrays:
+        atoms.new_array('scale', np.ones(len(atoms)))
+    arrays = atoms.arrays
+    species = arrays.pop('species')
+    info = atoms.info
+    # read frames
+    if nframe > 1:
+        positions = np.zeros((nframe, natom, 3))
+        for i in range(1, nframe):
+            positions[i, :, :] = frames[i].positions
+        arrays.pop('positions')
+    else:
+        positions = arrays.pop('positions')
+    return species, positions, arrays, atoms.cell, npbool2bool(atoms.pbc), info    
+
+def from_pymatgen(structure):
+    """
+    Import structure from Pymatgen structure.
+    """
+    attributes = {}
+    symbols = np.array([str(site.specie.symbol) for site in structure])
+    natom = len(symbols)
+    attributes['species'] = np.array(symbols, dtype='U20')
+    if hasattr(structure, "lattice"):
+        cell = structure.lattice.matrix
+        pbc = True
+    else:
+        cell = None
+        pbc = False
+    positions = [structure[i].coords for i in range(natom)]
+    info = {}
+    return symbols, positions, attributes, cell, pbc, info
+         
+def string2Number (s):
+    return int.from_bytes(s.encode(), 'little')
+
+def number2String (n):
+    return n.to_bytes(math.ceil(n.bit_length() / 8), 'little').decode()
 
 def default_element_prop(element, radius_style = 'covalent', color_style = "JMOL"):
     """
@@ -42,23 +92,22 @@ def get_default_species_data(elements, radius_style = 'covalent',
     Todo fraction occupancy
     """
     species_props = {}
-    for sp, data in elements.items():
-        radius = 0
-        species_props[sp] = {'color':{}}
-        for ele, fraction in data.items():
-            data = default_element_prop(ele, radius_style = radius_style, 
-                    color_style = color_style)
-            radius += data['radius']*fraction
-            species_props[sp]['color'][ele] = data['color']
-        species_props[sp]['radius'] = radius
-        if sp in props:
-            species_props[sp].update(props[sp])
+    radius = 0
+    species_props = {'color':{}}
+    for ele, fraction in elements.items():
+        data = default_element_prop(ele, radius_style = radius_style, 
+                color_style = color_style)
+        radius += data['radius']*fraction
+        species_props['color'][ele] = data['color']
+    species_props['radius'] = radius
+    species_props.update(props)
     return species_props
 
 
 def get_polyhedra_kind(color, width = 0.01, show_edge = True, props = {}):
     """
     Set initial data for polyhedra.
+    
     """
     polyhedra_kind = {'color': color,
                     'vertices': [],

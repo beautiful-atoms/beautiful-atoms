@@ -88,9 +88,22 @@ def remove_collection(name, keep_batom = True):
     collection = bpy.data.collections.get(name)
     bpy.data.collections.remove(collection)
         
-def clean_objects():
-    for item in bpy.data.objects:
-        bpy.data.objects.remove(item)
+def clean_objects_by_name(name):
+    obj = bpy.data.objects.get(name)
+    bpy.data.objects.remove(obj)
+
+def clean_coll_objects(coll, names = None):
+    """
+    remove all bond object in the bond collection
+    """
+    if not names:
+        for obj in coll.all_objects:
+            bpy.data.objects.remove(obj, do_unlink = True)
+    else:
+        for name in names:
+            for obj in coll.all_objects:
+                if name in obj.name:
+                    bpy.data.objects.remove(obj, do_unlink = True)    
 
 def removeAll():
     for mesh in bpy.data.meshes:
@@ -198,7 +211,7 @@ def set_world(color = [0.2, 0.2, 0.2, 1.0]):
         node_tree.nodes["Background"].inputs["Strength"].default_value = 1.0
         node_tree.nodes["Background"].inputs["Color"].default_value = color
 
-def get_nodes_by_name(nodes, name, type):
+def get_nodes_by_name(nodes, name, type = None):
     node = nodes.get(name)
     if node is None:
         node = nodes.new(type)

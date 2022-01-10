@@ -22,7 +22,7 @@ class PolyhedraSetting(Setting):
         self.name = 'bpolyhedra'
         self.batoms = batoms
         if len(self) == 0:
-            self.set_default(self.batoms.species_props)
+            self.set_default(self.batoms.species.species_props)
         if polyhedrasetting is not None:
             for key, data in polyhedrasetting.items():
                 self[key] = data
@@ -42,17 +42,18 @@ class PolyhedraSetting(Setting):
         subset.label = self.label
         subset.flag = True
     
-    def set_default(self, species):
+    def set_default(self, species_props):
         """
         """
-        for sp, data in species.items():
-            self[sp] = {
-                'flag': True,
-                'label': self.label,
-                'species': sp,
-                'color': np.append(data['color'][:3], 0.3),
-                'width': 0.005,
-            }
+        for sel, data in species_props.items():
+            for sp, data in data.items():
+                self[sp] = {
+                    'flag': True,
+                    'label': self.label,
+                    'species': sp,
+                    'color': np.append(data['color'][:3], 0.3),
+                    'width': 0.005,
+                }
     
     def add(self, polyhedras):
         if isinstance(polyhedras, str):

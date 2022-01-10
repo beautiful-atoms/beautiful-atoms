@@ -28,7 +28,7 @@ class BondSetting(Setting):
         self.cutoff = cutoff
         self.batoms = batoms
         if len(self) == 0:
-            self.set_default(self.batoms.species_props, cutoff)
+            self.set_default(self.batoms.species.species_props, cutoff)
         if bondsetting is not None:
             for key, data in bondsetting.items():
                 self[key] = data
@@ -52,13 +52,14 @@ class BondSetting(Setting):
         subset.label = self.label
         subset.flag = True
     
-    def set_default(self, species, cutoff = 1.3, self_interaction = True):
+    def set_default(self, species_props, cutoff = 1.3, self_interaction = True):
         """
         """
-        bondtable = get_bondtable(self.label, species, cutoff=cutoff, 
-                    self_interaction = self_interaction)
-        for key, value in bondtable.items():
-            self[key] = value
+        for sel, data in species_props.items():
+            bondtable = get_bondtable(self.label, sel, data, cutoff=cutoff, 
+                        self_interaction = self_interaction)
+            for key, value in bondtable.items():
+                self[key] = value
     
     def extend(self, other):
         for b in other:
@@ -148,7 +149,7 @@ class BondSetting(Setting):
         return np.array(offsets_skin1), np.array(bondlist1), np.array(offsets_skin2), np.array(bondlist2)
 
 
-def get_bondtable(label, speciesdict, cutoff = 1.3, self_interaction = True):
+def get_bondtable(label, select, speciesdict, cutoff = 1.3, self_interaction = True):
     """
     """
     from batoms.data import default_bonds
@@ -172,6 +173,7 @@ def get_bondtable(label, speciesdict, cutoff = 1.3, self_interaction = True):
             bondtable[pair12] = {
                     'flag': True,
                     'label': label,
+                    'select': select,
                     'species1': species1, 
                     'species2': species2, 
                     'min': 0.5, 
@@ -198,30 +200,31 @@ def get_bondtable(label, speciesdict, cutoff = 1.3, self_interaction = True):
             bondtable[pair]['style'] = '2'
     return bondtable
 
-def build_bondlists(atoms, cutoff):
+def build_bondlists(species, positions, cell, pbc, cutoff):
     """
     The default bonds are stored in 'default_bonds'
     Get all pairs of bonding atoms
     remove_bonds
     """
-    from batoms.neighborlist import neighbor_list
+    from batoms.neighborlist import neighbor_list, primitive_neighbor_list
     if len(cutoff) == 0: return {}
     #
     tstart = time()
-    nli, nlj, nlS = neighbor_list('ijS', atoms, cutoff, self_interaction=False)
+    # nli, nlj, nlS = neighbor_list('ijS', atoms, cutoff, self_interaction=False)
+    nli, nlj, nlS = primitive_neighbor_list('ijS', pbc,
+                                   cell,
+                                   positions, cutoff, species=species,
+                                   self_interaction=False,
+                                   max_nbins=1e6)
     # print('build_bondlists: {0:10.2f} s'.format(time() - tstart))
     bondlists = np.append(np.array([nli, nlj], dtype=int).T, np.array(nlS, dtype=int), axis = 1)
     return bondlists
 
-def calc_bond_data(atoms, species_props, bondlists, bondsetting):
+def calc_bond_data(speciesarray, positions, cell, radii, bondlists, bondsetting):
     """
     """
     from ase.data import chemical_symbols
-    positions = atoms.positions
     chemical_symbols = np.array(chemical_symbols)
-    if 'species' not in atoms.arrays:
-        atoms.new_array('species', np.array(atoms.get_chemical_symbols(), dtype = 'U20'))
-    speciesarray = np.array(atoms.arrays['species'])
     bond_kinds = {}
     if len(bondlists) == 0:
         bond_kinds = {}
@@ -237,12 +240,12 @@ def calc_bond_data(atoms, species_props, bondlists, bondsetting):
         #------------------------------------
         # bond vector and length
         offset = bondlists1[:, 2:5]
-        R = np.dot(offset, atoms.cell)
+        R = np.dot(offset, cell)
         vec = positions[bondlists1[:, 0]] - (positions[bondlists1[:, 1]] + R)
         length = np.linalg.norm(vec, axis = 1)
         nvec = vec/length[:, None]
-        pos = [positions[bondlists1[:, 0]] - nvec*species_props[spi]['size']*0.5,
-                positions[bondlists1[:, 1]] + R + nvec*species_props[spj]['size']*0.5]
+        pos = [positions[bondlists1[:, 0]] - nvec*radii[bondlists1[:, 1]][:, None]*0.5,
+                positions[bondlists1[:, 1]] + R + nvec*radii[bondlists1[:, 1]][:, None]*0.5]
         vec = pos[0] - pos[1]
         length = np.linalg.norm(vec, axis = 1) + 1e-8
         nvec = vec/length[:, None]

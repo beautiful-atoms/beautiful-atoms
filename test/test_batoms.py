@@ -4,7 +4,12 @@ from batoms.batoms import Batoms
 from batoms.butils import removeAll
 import numpy as np
 
-
+def test_empty():
+from batoms.butils import removeAll
+from batoms.batoms import Batoms
+import numpy as np
+removeAll()
+h2o = Batoms('h2o')
 
 def test_batoms():
     """
@@ -13,10 +18,24 @@ from batoms.butils import removeAll
 from batoms.batoms import Batoms
 import numpy as np
 removeAll()
-h2o = Batoms('h2o', species = ['O', 'H', 'H'], elements={'O':{'O':0.8, 'N': 0.2}, 'H':{'H': 0.8}}, positions= [[0, 0, 0.40], [0, -0.76, -0.2], [0, 0.76, -0.2]])
+h2o = Batoms('h2o', species = ['O', 'H', 'H'], 
+            species_props={'O':{'elements': {'O':0.8, 'N': 0.2}}, 
+                           'H':{'elements': {'H': 0.8}}}, 
+            positions= [[0, 0, 0.40], [0, -0.76, -0.2], [0, 0.76, -0.2]])
+
+h2o.species['O'] = {'elements': {'O':0.3, 'Cl':0.3}}
+    
+h2o.obj.data.attributes['scale'].data[1].value = 3
+h2o[1].scale = 1
+h2o[1].show = 0
+
 assert isinstance(h2o, Batoms)
 assert len(h2o.species) == 2
 assert len(h2o) == 3
+h2o[0]
+h2o['H']
+
+
 # properties
 h2o.cell = [3, 3, 3]
 h2o.pbc = True
@@ -32,10 +51,13 @@ assert np.allclose(h2o[0].positions, np.array([[0, 0, 2.4]]))
 #
 def test_batoms_copy():
 from batoms.butils import removeAll
-from batoms import Batom
+from batoms import Batoms
 import numpy as np
 removeAll()
-h2o = Batom('h2o', species = ['O', 'H', 'H'], elements={'O':{'O':0.8, 'N': 0.2}, 'H':{'H': 0.8}}, positions= [[0, 0, 0.40], [0, -0.76, -0.2], [0, 0.76, -0.2]])
+h2o = Batoms('h2o', species = ['O', 'H', 'H'], 
+            positions= [[0, 0, 0.40], [0, -0.76, -0.2], [0, 0.76, -0.2]],
+            pbc = True,
+            cell = [3, 3, 3])
 h2o_2 = h2o.copy('h2o_2')
 # assert isinstance(h2o_2, Batoms)
 h2o_2 = Batom('h2o_2')
@@ -104,11 +126,11 @@ def test_render():
 
 def test_ase_arrays():
 from batoms.butils import removeAll
-from batoms import Batoms, Batom
+from batoms import Batoms
 from batoms.pdbparser import read_pdb
 removeAll()
 atoms = read_pdb('test/datas/1tim.pdb')
-p1tim = Batom('p1tim', atoms = atoms)
+p1tim = Batoms('p1tim', aseAtoms = atoms)
 p1tim.attributes
 p1tim.atoms
 
@@ -205,11 +227,8 @@ from batoms import Batoms
 from ase.build import molecule
 from batoms.butils import removeAll
 removeAll()
-co = molecule('CO')
-co = Batoms(label = 'co', atoms = co)
-co.translate([0, 0, 2])
-h2o = molecule('H2O')
-h2o = Batoms(label = 'h2o', atoms = h2o)
+h2o = Batoms('h2o', species = ['O', 'H', 'H'], positions= [[0, 0, 0.40], [0, -0.76, -0.2], [0, 0.76, -0.2]])
+co = Batoms('co', species = ['C', 'O'], positions= [[1, 0, 0], [2.3, 0, 0]])
 h2o.extend(co)
 assert len(h2o.species) == 3
 assert len(h2o) == 5

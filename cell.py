@@ -3,8 +3,9 @@
 import bpy
 import numpy as np
 from ase.cell import Cell
-from batoms.butils import object_mode
+from batoms.butils import object_mode, clean_objects_by_name
 from batoms.base import BaseObject
+from batoms.bdraw import draw_cylinder
 
 class Bcell(BaseObject):
     """
@@ -16,6 +17,7 @@ class Bcell(BaseObject):
                 array = np.zeros([3, 3]), 
                 location = np.array([0, 0, 0]),
                 color = (0.0, 0.0, 0.0, 1.0),
+                batoms = None,
                 ) -> None:
         """
         ver: 3x3 verlike object
@@ -23,8 +25,9 @@ class Bcell(BaseObject):
         """
         self.label = label
         self.name = 'edge'
-        obj_name = '%s_cell_edge'%(self.label)
+        obj_name = '%s_cell'%(self.label)
         bobj_name = 'bcell'
+        self.batoms = batoms
         BaseObject.__init__(self, obj_name = obj_name, bobj_name = bobj_name)
         self.edges = [[3, 0], [3, 1], [4, 0], [4, 1],
                     [2, 5], [2, 6], [7, 5], [7, 6], 
@@ -32,9 +35,9 @@ class Bcell(BaseObject):
             ]
         self.width = 0.02
         self.color = color
-        self.draw_cell_edge(array, location)
+        self.build_object(array, location)
     
-    def draw_cell_edge(self, array, location):
+    def build_object(self, array, location):
         """
         Draw unit cell by edge, however, can not be rendered.
         """
@@ -56,7 +59,10 @@ class Bcell(BaseObject):
             obj_edge.data = mesh
             obj_edge.location = location
             obj_edge.batoms.bcell.flag = True
-            bpy.data.collections['Collection'].objects.link(obj_edge)
+            if self.batoms:
+                self.batoms.coll.objects.link(obj_edge)
+            else:
+                bpy.data.collections['Collection'].objects.link(obj_edge)
         elif bpy.data.objects[self.obj_name].batoms.bcell.flag:
             # print('%s exist and is bcell, use it.'%self.obj_name)
             pass
@@ -86,7 +92,7 @@ class Bcell(BaseObject):
             cell_cylinder['centers'].append(center)
             cell_cylinder['normals'].append(nvec)
         return cell_cylinder
-    
+
     def __repr__(self) -> str:
         numbers = self.array.tolist()
         s = 'Cell({})'.format(numbers)
@@ -194,3 +200,58 @@ class Bcell(BaseObject):
         """Center of unit cell.
         """
         return (self.array[0] + self.array[1] + self.array[2])/2.0
+    
+    def draw_curve_from_vertices_nurbs(self, label, vertices, coll,
+                ):
+        """
+        """
+        from batoms.material import create_material
+        name = '%s_cell'%label
+        crv = bpy.data.curves.new(name, 'CURVE')
+        crv.dimensions = '3D'
+        crv.resolution_u = 30
+        crv.fill_mode = 'FULL'
+        spline = crv.splines.new(type='POLY')
+        nvert = len(vertices)
+        spline.points.add(nvert-1)
+        # vertices = np.append(vertices, np.zeros((nvert, 1)), axis = 1)
+        vertices = np.append(vertices, np.ones((len(vertices), 1)), axis = 1)
+        vertices = vertices.reshape(-1, 1)
+        spline.points.foreach_set('co', vertices)
+        crv.bevel_mode = 'OBJECT'
+        bpy.ops.object.mode_set(mode='OBJECT')
+        obj = bpy.data.objects.new(name, crv)
+        #
+        obj.data.materials.append(self.material)
+        coll.objects.link(obj)
+    
+    def build_materials(self, label, color,
+                node_type = 'Principled BSDF', 
+                use_smooth = True,
+                node_inputs = None, 
+                material_style = 'plastic', 
+                backface_culling = True):
+        """
+        """
+        from batoms.material import create_material
+        name = '%s_cell'%(label)
+        if name not in bpy.data.materials:
+            create_material(name,
+                        color = color,
+                        node_inputs = node_inputs,
+                        material_style = material_style,
+                        backface_culling = True)
+    
+    def build_bevel_object(self, label, radius):
+        # Create bevel control curve.
+        name = '%s_cell_bevel_object'%(label)
+        bpy.ops.curve.primitive_bezier_circle_add(radius = radius)
+        bevel_control = bpy.context.active_object
+        bevel_control.data.name = bevel_control.name = '%s_bevel'%name
+        # Set the main curve's bevel control to the bevel control curve.
+        self.obj.data.bevel_object = self.bevel_control
+    
+    @property
+    def bevel_object(self):
+        name = '%s_cell_bevel_object'%(self.label)
+        return bpy.data.objects.get(name)

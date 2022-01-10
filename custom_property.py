@@ -21,10 +21,10 @@ class Belement(bpy.types.PropertyGroup):
 
 class Bspecies(bpy.types.PropertyGroup):
     name: StringProperty(name="name", default = 'H')
+    species: StringProperty(name="species", default = 'H')
     elements: CollectionProperty(name = 'Belements', 
                             type = Belement)
-    radius: FloatProperty(name="radius")
-
+    radius: FloatProperty(name="radius", default = 1.0)
 
 class Batom(bpy.types.PropertyGroup):
     """
@@ -55,12 +55,16 @@ class Bcell(bpy.types.PropertyGroup):
     """
     flag: BoolProperty(name="flag", default=False)
     label: StringProperty(name="label", default = '')
+    pbc: BoolVectorProperty(name="pbc", default = [False, False, False], size = 3)
+    show_unit_cell: BoolProperty(name="show_unit_cell", default = True)
+    
 
 class Bbond(bpy.types.PropertyGroup):
     """
     """
     flag: BoolProperty(name="flag", default=False)
-    label: StringProperty(name="label", default = '')
+    label: StringProperty(name="label", default = 'batoms')
+    select: StringProperty(name="select", default = 'sel0')
     species1: StringProperty(name="species1")
     species2: StringProperty(name="species2")
     species: StringProperty(name="species")
@@ -411,7 +415,6 @@ class Bselect(bpy.types.PropertyGroup):
     """
     flag: BoolProperty(name="flag", default=False)
     name: StringProperty(name="name", default = 'sel0')
-    show: BoolProperty(name="show", default = True)
     model_style: EnumProperty(
         name="model_style",
         description="Structural models",
@@ -435,10 +438,9 @@ class Bselect(bpy.types.PropertyGroup):
                ('2',"central atoms, polyhedra","central atoms, polyhedra"),
                ('3',"polyhedra", "polyhedra")),
                default='0')
-    bbond: CollectionProperty(name = 'Bbond', 
-                            type = Bbond)
-    bpolyhedra: CollectionProperty(name = 'Bpolyhedra', 
-                            type = Bpolyhedra)
+    bspecies: CollectionProperty(name = 'Bspecies', 
+                            type = Bspecies)
+
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
         s = 'Name   model_style   radius_style     show \n'
@@ -450,6 +452,7 @@ class Batoms_coll(bpy.types.PropertyGroup):
     """
     """
     flag: BoolProperty(name="flag", default=False)
+    label: StringProperty(name="label", default = 'batoms')
     model_style: EnumProperty(
         name="model_style",
         description="Structural models",
@@ -473,7 +476,6 @@ class Batoms_coll(bpy.types.PropertyGroup):
                ('2',"central atoms, polyhedra","central atoms, polyhedra"),
                ('3',"polyhedra", "polyhedra")),
                default='0')
-    pbc: BoolVectorProperty(name="pbc", default = [False, False, False], size = 3)
     cell: FloatVectorProperty(name="cell", default = [0, 0, 0, 0, 0, 0, 0, 0, 0], size = 9)
     show_unit_cell: BoolProperty(name="show_unit_cell", default = True)
     boundary: FloatVectorProperty(name="boundary", default = [0.0, 1.0, 0.0, 1.0, 0.0, 1.0], size = 6)
@@ -495,6 +497,8 @@ class Batoms_coll(bpy.types.PropertyGroup):
                             type = Bselect)
     brender: PointerProperty(name = 'Brender', 
                             type = Brender)
+    bspecies: CollectionProperty(name = 'Bspecies', 
+                            type = Bspecies)
                             
     # BRibbon = Bribbon()
 
@@ -503,32 +507,7 @@ class Batoms_obj(bpy.types.PropertyGroup):
     """
     """
     flag: BoolProperty(name="flag", default=False)
-    model_style: EnumProperty(
-        name="model_style",
-        description="Structural models",
-        items=(('0',"Space-filling", "Use ball"),
-               ('1',"Ball-and-stick", "Use ball and stick"),
-               ('2',"Polyhedral","Use polyhedral"),
-               ('3',"Wireframe", "Use wireframe")),
-        default='0')
-    radius_style: EnumProperty(
-        name="radius_style",
-        description="Radii",
-        items=(('0',"Covalent", "covalent"),
-               ('1',"VDW", "van der Waals"),
-               ('2',"Ionic","ionic")),
-        default='0')
-    polyhedra_style: EnumProperty(
-        name="polyhedra_style",
-        description="Polhhedra models",
-        items=(('0',"atoms, bonds and polyhedra", "atoms, bonds and polyhedra"),
-               ('1',"atoms, polyhedra", "atoms, polyhedra"),
-               ('2',"central atoms, polyhedra","central atoms, polyhedra"),
-               ('3',"polyhedra", "polyhedra")),
-               default='0')
-    pbc: BoolVectorProperty(name="pbc", default = [False, False, False], size = 3)
-    cell: FloatVectorProperty(name="cell", default = [0, 0, 0, 0, 0, 0, 0, 0, 0], size = 9)
-    show_unit_cell: BoolProperty(name="show_unit_cell", default = True)
+    
     boundary: FloatVectorProperty(name="boundary", default = [0.0, 1.0, 0.0, 1.0, 0.0, 1.0], size = 6)
     
     batom: PointerProperty(name = 'Batom', 

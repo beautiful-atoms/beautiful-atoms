@@ -96,7 +96,6 @@ def draw_rope_from_vertices(name, data, coll,
     obj.data.materials.append(material)
     coll.objects.link(obj)
 
-
 def draw_sheet_from_vertices(name, data, coll,
                 node_type = 'Principled BSDF', 
                 use_smooth = True,
@@ -238,7 +237,7 @@ class Ribbon():
         self.build_sheet()
         for name, data in self.sheet_datas.items():
             draw_sheet_from_vertices('sheet-%s'%name, data, self.coll)
-        self.batoms.set_hide(True, only_atoms = True)
+        self.batoms.selects['sel0'].show = False
     
     def build_helix(self):
         """
@@ -265,7 +264,7 @@ class Ribbon():
         self.build_helix()
         for name, data in self.helix_datas.items():
             draw_sheet_from_vertices('helix-%s'%name, data, self.coll)
-        self.batoms.set_hide(True, only_atoms = True)
+        self.batoms.selects['sel0'].show = False
     
     def build_turn_dict(self):
         """
@@ -330,7 +329,7 @@ class Ribbon():
         self.build_turn()
         for name, data in self.turn_datas.items():
             draw_rope_from_vertices('turn-%s'%name, data, self.coll)
-        self.batoms.set_hide(True, only_atoms = True)
+        self.batoms.selects['sel0'].show = False
     
     def draw(self):
         self.draw_sheet()

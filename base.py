@@ -152,7 +152,10 @@ class BaseCollection():
         return self.get_coll()
     
     def get_coll(self):
-        return bpy.data.collections.get(self.coll_name)
+        coll = bpy.data.collections.get(self.coll_name)
+        if coll is None:
+            coll = bpy.data.collections.new(self.coll_name)
+        return coll
     
     @property
     def scene(self):
@@ -160,6 +163,41 @@ class BaseCollection():
     
     def get_scene(self):
         return bpy.data.scenes['Scene']
+    
+    def translate(self, displacement):
+        """Translate atomic positions.
+
+        The displacement argument is an xyz vector.
+
+        For example, move H species molecule by a vector [0, 0, 5]
+
+        >>> h.translate([0, 0, 5])
+        """
+        object_mode()
+        bpy.ops.object.select_all(action='DESELECT')
+        self.obj.select_set(True)
+        bpy.ops.transform.translate(value=displacement)
+    
+    def rotate(self, angle, axis = 'Z', orient_type = 'GLOBAL'):
+        """Rotate atomic based on a axis and an angle.
+
+        Parameters:
+
+        angle: float
+            Angle that the atoms is rotated around the axis.
+        axis: str
+            'X', 'Y' or 'Z'.
+
+        For example, rotate h2o molecule 90 degree around 'Z' axis:
+        
+        >>> h.rotate(90, 'Z')
+
+        """
+        object_mode()
+        bpy.ops.object.select_all(action='DESELECT')
+        self.obj.select_set(True)
+        bpy.ops.transform.rotate(value=angle, orient_axis=axis.upper(), 
+                        orient_type = orient_type)    
 
 
 def tuple2string(index):
@@ -182,9 +220,13 @@ class Setting():
         The label define the batoms object that a Setting belong to.
     """
     
-    def __init__(self, label) -> None:
+    def __init__(self, label, coll_name = None) -> None:
         self.label = label
         self.name = 'base'
+        if coll_name is None:
+            self.coll_name = self.label
+        else:
+            self.coll_name = coll_name
     
     def get_data(self):
         data = {}
@@ -193,11 +235,22 @@ class Setting():
         return data
     
     @property
+    def coll(self):
+        return self.get_coll()
+    
+    def get_coll(self):
+        coll = bpy.data.collections.get(self.coll_name)
+        if coll is None:
+            coll = bpy.data.collections.new(self.coll_name)
+            bpy.data.scenes['Scene'].collection.children.link(coll)
+        return coll
+
+    @property
     def collection(self):
         return self.get_collection()
     
     def get_collection(self):
-        collection = getattr(bpy.data.collections[self.label].batoms, self.name)
+        collection = getattr(self.coll.batoms, self.name)
         return collection
     
     @property

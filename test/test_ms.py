@@ -48,9 +48,9 @@ from batoms.batoms import Batoms
 from batoms.butils import removeAll
 removeAll()
 h2o = molecule('H2O')
-h2o = Batoms('h2o', atoms = h2o)
+h2o = Batoms('h2o', aseAtoms = h2o)
 h2o.mssetting.draw_SAS(probe = 1.4)
-area = h2o.mssetting.get_sasa(partial = True)[0]
+area = h2o.mssetting.get_psasa()
 
 def test_SES():
     """
