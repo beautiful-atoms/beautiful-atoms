@@ -22,14 +22,14 @@ def test_render():
 
 
 def test_render_init():
-    from batoms.butils import removeAll
-    from batoms import Batoms
-    removeAll()
-    from ase.build import molecule
-    h2o = molecule('H2O')
-    h2o = Batoms('h2o', atoms = h2o)
-    h2o.render.init()
-    h2o.render.viewport = [1, 0, 0]
+from batoms.butils import removeAll
+from batoms import Batoms
+removeAll()
+from ase.build import molecule
+h2o = molecule('H2O')
+h2o = Batoms('h2o', from_ase = h2o)
+h2o.render.init()
+h2o.render.viewport = [1, 0, 0]
     nh3 = molecule('NH3')
     nh3 = Batoms('nh3', atoms = nh3)
     nh3.translate([3, 3, 0])

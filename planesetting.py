@@ -10,6 +10,8 @@ from batoms.base import Setting, tuple2string
 import numpy as np
 from time import time
 from batoms.tools import get_equivalent_indices
+from batoms.butils import clean_coll_objects
+from batoms.bdraw import draw_cylinder, draw_surface_from_vertices, draw_2d_slicing
 import bmesh
 
 class PlaneSetting(Setting):
@@ -26,7 +28,7 @@ class PlaneSetting(Setting):
     """
     
     def __init__(self, label, batoms = None, plane = None) -> None:
-        Setting.__init__(self, label)
+        Setting.__init__(self, label, coll_name='%s_plane'%label)
         self.name = 'bplane'
         self.batoms = batoms
         if plane is not None:
@@ -365,6 +367,70 @@ class PlaneSetting(Setting):
                     verts_select = [bm.verts[i] for i in index] 
                     bmesh.ops.delete(bm, geom=verts_select, context='VERTS')
                     bm.to_mesh(obj.data)
+    
+    def draw_lattice_plane(self, no = None, cuts = None, cmap = 'bwr', include_center = False):
+        """Draw plane
+        no: int
+            spacegroup of structure, if None, no will be determined by 
+            get_spacegroup_number()
+        cuts: int
+            The number of subdivide for selected plane for 2d slicing
+        camp: str, 
+        default 'bwr'
+            colormaps for 2d slicing.
+        include_center: bool
+            include center of plane in the mesh
+        """
+        if no is not None:
+            self.no = no
+        planes = self.build_plane(self.batoms.cell, include_center = include_center)
+        clean_coll_objects(self.coll, 'plane')
+        for species, plane in planes.items():
+            if plane['boundary']:
+                name = '%s_%s_%s'%(self.label, 'plane', species)
+                self.build_boundary(plane['indices'], batoms = self)
+                bpy.context.view_layer.update()
+            else:
+                name = '%s_%s_%s'%(self.label, 'plane', species)
+                draw_surface_from_vertices(name, plane,
+                        coll = self.coll)
+                if plane['show_edge']:
+                    name = '%s_%s_%s'%(self.label, 'plane_edge', species)
+                    draw_cylinder(name = name, 
+                                datas = plane['edges_cylinder'],
+                                coll = self.coll)
+                if plane['slicing']:
+                    name = '%s_%s_%s'%(self.label, 'plane', species)
+                    self.build_slicing(name, self.batoms.volume, 
+                                            self.batoms.cell, cuts = cuts, cmap = cmap)
+            
+    def draw_crystal_shape(self, no = None, origin = None):
+        """Draw crystal shape
+        no: int
+            spacegroup of structure, if None, no will be determined by 
+            get_spacegroup_number()
+        origin: xyz vector
+            The center of cyrstal shape
+        """
+        if no is not None:
+            self.no = no
+        if origin is None:
+            origin = self.batoms.cell.origin
+        planes = self.build_crystal(self.batoms.cell, origin = origin)
+        clean_coll_objects(self.coll, 'crystal')
+        for species, plane in planes.items():
+            name = '%s_%s_%s'%(self.label, 'crystal', species)
+            draw_surface_from_vertices(name, plane,
+                    coll = self.coll)
+            if plane['show_edge']:
+                name = '%s_%s_%s'%(self.label, 'crystal_edge', species)
+                draw_cylinder(name = name, 
+                            datas = plane['edges_cylinder'],
+                            coll = self.coll)
+            if plane['boundary']:
+                name = '%s_%s_%s'%(self.label, 'plane', species)
+                self.build_boundary(plane['indices'], batoms = self)
+                bpy.context.view_layer.update()
 
 
 def save_image(data, filename, interpolation = 'bicubic'):

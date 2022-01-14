@@ -259,7 +259,7 @@ class Render(BaseCollection):
         batoms = self.batoms
         if padding is None:
             sizes = [0]
-            sizes.extend([ba.size.max() for ba in batoms.batoms.values()])
+            sizes.extend([ba.size.max() for ba in batoms.size.values()])
             padding = max(sizes) + 0.5
         if center is None:
             center = batoms.get_center_of_geometry()

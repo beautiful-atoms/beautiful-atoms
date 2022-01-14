@@ -94,12 +94,15 @@ assert len(h2o.species) == 2
 assert len(h2o) == 5
 
 
-def test_from_coll():
+def test_from_batoms():
 from batoms.butils import removeAll
 from batoms import Batoms
 removeAll()
-batoms = Batoms('h2o', {'O': [[0, 0, 0.40]], 'H': [[0, -0.76, -0.2], [0, 0.76, -0.2]]})
-h2o = Batoms('h2o')
+h2o = Batoms('h2o', species = ['O', 'H', 'H'], 
+            species_props={'O':{'elements': {'O':0.8, 'N': 0.2}}, 
+                           'H':{'elements': {'H': 0.8}}}, 
+            positions= [[0, 0, 0.40], [0, -0.76, -0.2], [0, 0.76, -0.2]])
+test = Batoms(load = 'h2o')
 assert isinstance(h2o, Batoms)
 assert len(h2o.species) == 2
 assert len(h2o) == 3

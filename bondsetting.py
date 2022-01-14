@@ -22,7 +22,7 @@ class BondSetting(Setting):
     """
     
     def __init__(self, label, batoms = None, bondsetting = None, cutoff = 1.3) -> None:
-        Setting.__init__(self, label)
+        Setting.__init__(self, label, coll_name='%s_bond'%label)
         self.label = label
         self.name = 'bbond'
         self.cutoff = cutoff
@@ -65,13 +65,13 @@ class BondSetting(Setting):
         for b in other:
             self[(b.species1, b.species2)] = b.as_dict()
         # new
-        species1 = set(self.batoms.species_props)
-        species2 = set(other.batoms.species_props)
+        species1 = set(self.batoms.species.species_props)
+        species2 = set(other.batoms.species.species_props)
         nspecies1 = species1 - species2
         nspecies2 = species2 - species1
         for sp1 in nspecies1:
             for sp2 in nspecies2:
-                species = {sp1: self.batoms.species_props[sp1], sp2: other.batoms.species_props[sp2]}
+                species = {sp1: self.batoms.species.species_props[sp1], sp2: other.batoms.species.species_props[sp2]}
                 self.set_default(species, self.cutoff, self_interaction = False)
     
     def add(self, bondpairs):
@@ -80,7 +80,7 @@ class BondSetting(Setting):
         if isinstance(bondpairs[0], (str, int, float)):
             bondpairs = [bondpairs]
         for bondpair in bondpairs:
-            species = {sp: self.batoms.species_props[sp] for sp in bondpair}
+            species = {sp: self.batoms.species.species_props[sp] for sp in bondpair}
             maxlength = species[bondpair[0]]['radius'] + \
                         species[bondpair[1]]['radius']
             self[bondpair] = {'max': maxlength*self.cutoff, 
@@ -148,6 +148,74 @@ class BondSetting(Setting):
                 offsets_skin2.extend(temp)
         return np.array(offsets_skin1), np.array(bondlist1), np.array(offsets_skin2), np.array(bondlist2)
 
+    def draw_bonds(self, mask):
+        """Draw bonds.
+        calculate bond in all farmes, and save
+        get the max number of bonds for each pair
+        draw the bonds
+        add shape key
+        the extra bonds use the find bond data.
+        """
+        
+        from batoms.bond import Bbond
+        from batoms.butils import clean_coll_objects
+        # if not self.bondlist:
+        object_mode()
+        # clean_coll_objects(self.coll, 'bond')
+        frames = self.batoms.get_frames()
+        arrays = self.batoms.arrays
+        size = arrays['radius'][mask]*arrays['scale'][mask]
+        species = arrays['species'][mask]
+        # frames_boundary = self.batoms.get_frames(self.batoms.batoms_boundary)
+        # frames_search = self.batoms.get_frames(self.batoms.batoms_search)
+        nframe = len(frames)
+        bond_datas = {}
+        tstart = time()
+        for f in range(nframe):
+            print('update bond: ', f)
+            positions = frames[f][mask]
+            # if len(frames_boundary) > 0:
+            #     positions_boundary = frames_boundary[f][mask]
+            #     positions = positions + positions_boundary
+            # if len(frames_search) > 0:
+            #     positions_search = frames_search[f][mask]
+            #     positions = positions + positions_search
+            self.bondlist = build_bondlists(species, positions, 
+                        self.batoms.cell, self.batoms.pbc, self.cutoff_dict)
+            bond_kinds = calc_bond_data(species, positions, self.batoms.cell, size, self.bondlist, self)
+            if f == 0:
+                bond_datas = bond_kinds
+            else:
+                for kind, bond_data in bond_kinds.items():
+                    if kind not in bond_datas:
+                        bond_datas[kind] = bond_kinds[kind]
+                    else:
+                        bond_datas[kind]['positions'].extend(bond_data['positions'])
+                        if len(bond_data['positions']) > 0:
+                            if bond_datas[kind]['nposition'] < len(bond_data['positions'][0]):
+                                bond_datas[kind]['nposition'] = len(bond_data['positions'][0])
+        # print('calc bond: {0:10.2f} s'.format(time() - tstart))
+        for species, bond_data in bond_datas.items():
+            nframe = len(bond_data['positions'])
+            if nframe == 0: continue
+            # change to same length
+            # find max
+            nbs = [bond_data['positions'][i].shape[0] for i in range(nframe)]
+            nb_max = max(nbs)
+            frames_bond = np.zeros((nframe, nb_max, 7))
+            for i in range(nframe):
+                frames_bond[i, 0:nbs[i], :] = bond_data['positions'][i]
+                frames_bond[i, nbs[i]:, 0:3] = frames[i][0]
+            bb = Bbond(self.batoms.label, species, frames_bond, 
+                        color = bond_data['color'],
+                        width = bond_data['width'],
+                        segments = bond_data['segments'],
+                        battr_inputs=bond_data['battr_inputs'])
+            self.coll.objects.link(bb.obj)
+            bpy.data.collections['Collection'].objects.unlink(bb.obj)
+            bb.set_frames()
+        bpy.context.scene.frame_set(self.batoms.nframe)
+        print('draw bond: {0:10.2f} s'.format(time() - tstart))
 
 def get_bondtable(label, select, speciesdict, cutoff = 1.3, self_interaction = True):
     """

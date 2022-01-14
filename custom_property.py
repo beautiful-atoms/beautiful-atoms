@@ -25,6 +25,20 @@ class Bspecies(bpy.types.PropertyGroup):
     elements: CollectionProperty(name = 'Belements', 
                             type = Belement)
     radius: FloatProperty(name="radius", default = 1.0)
+    radius_style: EnumProperty(
+        name="radius_style",
+        description="Radii",
+        items=(('0',"Covalent", "covalent"),
+               ('1',"VDW", "van der Waals"),
+               ('2',"Ionic","ionic")),
+        default='0')
+    color_style: EnumProperty(
+        name="color_style",
+        description="Color",
+        items=(('0',"JMOL", "JMOL"),
+               ('1',"VESTA", "VESTA"),
+               ('2',"CPK","CPK")),
+        default='0')
 
 class Batom(bpy.types.PropertyGroup):
     """
@@ -409,6 +423,36 @@ class Bturn(bpy.types.PropertyGroup):
         s += '-'*60 + '\n'
         return s
 
+class Bmssetting(bpy.types.PropertyGroup):
+    """
+    """
+    flag: BoolProperty(name="flag", default=False)
+    name: StringProperty(name = "name")
+    label: StringProperty(name="label", default = 'batoms')
+    probe: FloatProperty(name="probe", default = 1.4)
+    resolution: FloatProperty(name="resolution", default = 0.5)
+    select: StringProperty(name="select", default = 'sel0')
+    color: FloatVectorProperty(name="color", size = 4, default = [0, 1, 1, 1.0])
+
+    def as_dict(self) -> dict:
+        setdict = {
+            'flag': self.flag, 
+            'label': self.label, 
+            'name': self.name, 
+            'color': self.color,
+            'probe': self.probe,
+            'resolution': self.resolution,
+            'select': self.select,
+        }
+        return setdict
+    
+    def __repr__(self) -> str:
+        s = '-'*60 + '\n'
+        s = 'Name   select     probe   resolution    color  \n'
+        s += '{:6s}  {:6s}  {:1.3f}  {:1.3f}  [{:1.2f}  {:1.2f}  {:1.2f}   {:1.2f}] \n'.format(\
+                self.name, self.select, self.probe, self.resolution, self.color[0], self.color[1], self.color[2], self.color[3])
+        s += '-'*60 + '\n'
+        return s
 
 class Bselect(bpy.types.PropertyGroup):
     """
@@ -448,6 +492,7 @@ class Bselect(bpy.types.PropertyGroup):
                 self.name, str(self.model_style), self.radius_style, str(self.show))
         s += '-'*60 + '\n'
         return s
+        
 class Batoms_coll(bpy.types.PropertyGroup):
     """
     """
@@ -476,7 +521,6 @@ class Batoms_coll(bpy.types.PropertyGroup):
                ('2',"central atoms, polyhedra","central atoms, polyhedra"),
                ('3',"polyhedra", "polyhedra")),
                default='0')
-    cell: FloatVectorProperty(name="cell", default = [0, 0, 0, 0, 0, 0, 0, 0, 0], size = 9)
     show_unit_cell: BoolProperty(name="show_unit_cell", default = True)
     boundary: FloatVectorProperty(name="boundary", default = [0.0, 1.0, 0.0, 1.0, 0.0, 1.0], size = 6)
     bbond: CollectionProperty(name = 'Bbond', 
@@ -499,6 +543,9 @@ class Batoms_coll(bpy.types.PropertyGroup):
                             type = Brender)
     bspecies: CollectionProperty(name = 'Bspecies', 
                             type = Bspecies)
+    bmssetting: CollectionProperty(name = 'Bmssetting', 
+                            type = Bmssetting)
+    
                             
     # BRibbon = Bribbon()
 

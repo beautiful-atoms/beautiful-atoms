@@ -91,20 +91,22 @@ class Camera(BaseObject):
             * ORTHO
         lens: float
         '''
-        if not self.obj:
-            if self.obj_name in bpy.data.cameras:
-                camera_data = bpy.data.cameras[self.obj_name]
-            else:
-                camera_data = bpy.data.cameras.new(self.obj_name)
-            camera = bpy.data.objects.new(self.obj_name, camera_data)
-            camera.data.lens = lens
-            camera.data.type = type
-            camera.location = Vector(location)
-            if coll is not None:
-                coll.objects.link(camera)
-            set_lock_camera_to_view(lock_camera_to_view)
-            if look_at is not None:
-                self.look_at = look_at
+        if self.obj_name in bpy.data.cameras:
+            camera_data = bpy.data.cameras[self.obj_name]
+        else:
+            camera_data = bpy.data.cameras.new(self.obj_name)
+        obj = bpy.data.objects.get(self.obj_name)
+        if obj:
+            bpy.data.objects.remove(obj, do_unlink = True)
+        camera = bpy.data.objects.new(self.obj_name, camera_data)
+        camera.data.lens = lens
+        camera.data.type = type
+        camera.location = Vector(location)
+        if coll is not None:
+            coll.objects.link(camera)
+        set_lock_camera_to_view(lock_camera_to_view)
+        if look_at is not None:
+            self.look_at = look_at
     def __repr__(self) -> str:
         s = 'Camera:   type = %s, location = %s, ortho_scale = %s \n' \
                 %(self.type, self.location, self.ortho_scale)

@@ -7,8 +7,8 @@ from bpy.props import (FloatProperty,
                        EnumProperty,
                        )
 
-from batoms.butils import get_selected_objects
-from batoms import Batom
+from batoms.butils import get_selected_batoms, get_selected_vertices
+from batoms import Batoms
 
 class Batom_PT_prepare(Panel):
     bl_label       = "Batom"
@@ -34,31 +34,34 @@ class Batom_PT_prepare(Panel):
 
 class BatomProperties(bpy.types.PropertyGroup):
     @property
-    def selected_batom(self):
-        return get_selected_objects('batom')
+    def selected_batoms(self):
+        return get_selected_batoms('batom')
+    @property
+    def selected_vertices(self):
+        return get_selected_vertices()
     def Callback_batom_shape(self, context):
         btpanel = bpy.context.scene.btpanel
         batom_shape = int(list(btpanel.batom_shape)[0])
-        modify_batom_attr(self.selected_batom, 'shape', batom_shape)
+        modify_batom_attr(self.selected_vertices, 'shape', batom_shape)
     def Callback_modify_scale(self, context):
         btpanel = bpy.context.scene.btpanel
         scale = btpanel.scale
-        modify_batom_attr(self.selected_batom, 'scale', scale)
+        modify_batom_attr(self.selected_vertices, 'scale', scale)
     def Callback_modify_size(self, context):
         btpanel = bpy.context.scene.btpanel
         size = btpanel.size
-        modify_batom_attr(self.selected_batom, 'size', size)
+        modify_batom_attr(self.selected_vertices, 'size', size)
     def Callback_modify_elements(self, context):
         import json
         btpanel = bpy.context.scene.btpanel
         elements = btpanel.elements
         elements = elements.replace("'", '"')
         elements = json.loads(elements)
-        modify_batom_attr(self.selected_batom, 'elements', elements)
+        modify_batom_attr(self.selected_vertices, 'elements', elements)
     def Callback_modify_batomcolor(self, context):
         btpanel = bpy.context.scene.btpanel
         batomcolor = btpanel.batomcolor
-        modify_batom_attr(self.selected_batom, 'color', batomcolor)
+        modify_batom_attr(self.selected_vertices, 'color', batomcolor)
 
     batom_shape: EnumProperty(
         name="shape",
@@ -87,11 +90,10 @@ class BatomProperties(bpy.types.PropertyGroup):
         description="color picker",
         update = Callback_modify_batomcolor)
 
-def modify_batom_attr(batom_name_list, key, value):
-    batom_list = []
-    for name in batom_name_list:
-        batom = Batom(label = name)
-        setattr(batom, key, value)
-        batom_list.append(batom)
-    for batom in batom_list:
-        batom.select = True
+def modify_batom_attr(selected_vertices, key, value):
+    for label, indices in selected_vertices:
+        batoms = Batoms(label = label)
+        if key in ['scale', 'size']:
+            array0 = batoms.attributes[key]
+            array0[indices] = value
+            batoms.set_attributes({key: array0})

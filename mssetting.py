@@ -27,19 +27,25 @@ class MSsetting(Setting):
     
     def __init__(self, label, probe = 1.4, batoms = None,
                 render_resolution = 0.2,
-                resolution = 0.4,
+                resolution = 0.5,
                 threshold = 1e-4,
                 update_method = 'FAST'
                 ) -> None:
         Setting.__init__(self, label)
         self.label = label
-        self.name = 'bMS'
+        self.name = 'bmssetting'
         self.probe = probe
         self.batoms = batoms
         self.sas_name = '%s_sas'%self.label
         self.ses_name = '%s_ses'%self.label
         self.resolution = resolution
+        if len(self) == 0:
+            self['1'] = {'select': 'sel0'}
     
+
+    def add(self, name, datas = {}):
+        self[name] = datas
+
     def set_collection(self, label):
         """
         """
@@ -51,13 +57,21 @@ class MSsetting(Setting):
         
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
-        s = 'probe = %s \n'%(self.probe)
+        s = 'name  select  probe   resolution    color  \n'
+        for ms in self.collection:
+            s += '{:4s}  {:6s}   {:1.3f}  {:1.3f} [{:1.1f}  {:1.1f}  {:1.1f}  {:1.1f}] \n'.format(\
+                ms.name, ms.select, ms.probe, ms.resolution, ms.color[0], ms.color[1], ms.color[2], ms.color[3])
         s += '-'*60 + '\n'
         return s
 
     @property    
-    def sas_obj(self):
-        return bpy.data.objects.get(self.sas_name)
+    def sas_objs(self):
+        sas_objs = {}
+        for ms in self.collection:
+            sas_name = '%s_%s_sas'%(self.label, ms.name)
+            obj = bpy.data.objects.get(sas_name)
+            sas_objs[ms.name] = obj
+        return sas_objs
     
     @property    
     def sas_mb(self):
@@ -68,8 +82,13 @@ class MSsetting(Setting):
         return bpy.data.materials.get(self.sas_name)
     
     @property    
-    def ses_obj(self):
-        return bpy.data.objects.get(self.ses_name)
+    def ses_objs(self):
+        ses_objs = {}
+        for ms in self.collection:
+            sas_name = '%s_%s_ses'%(self.label, ms.name)
+            obj = bpy.data.objects.get(sas_name)
+            ses_objs[ms.name] = obj
+        return ses_objs
     
     @property
     def spacing(self):
@@ -82,15 +101,17 @@ class MSsetting(Setting):
         from batoms.tools import get_box
         self.box = get_box(vertices, padding = padding)
         self.box_origin = self.box[:, 0]
+        return self.box, self.box_origin
 
-    def build_grid(self):
+    def build_grid(self, resolution):
         """
         generate gridpoints
         """
         from batoms.tools import build_grid
-        self.meshgrids, self.shape = build_grid(self.box, self.resolution)
+        self.meshgrids, self.shape = build_grid(self.box, resolution)
     
-    def calc_isosurface(self, volume, level, spacing, origin = [0, 0, 0]):
+    def calc_isosurface(self, volume, level, spacing, origin = [0, 0, 0],
+                        color = (0.2, 0.1, 0.9, 1.0)):
         """
         Computes an isosurface from a volume grid.
         Parameters:
@@ -104,7 +125,6 @@ class MSsetting(Setting):
                         spacing = spacing)
         verts += origin
         faces = list(faces)
-        color = default_colors[0]
         isosurface = {'vertices': verts, 
                                 'edges': [], 
                                 'faces': faces, 
@@ -114,43 +134,47 @@ class MSsetting(Setting):
         print('Marching_cube: %s'%(time() - tstart))
         return isosurface
     
-    def draw_SAS(self, resolution = 0.4, probe = 1.4, parallel = 1):
+    def draw_SAS(self, parallel = 1):
         """
         1) Generate meshgrids
         2) Calculate power distance for grids
         3) Marching cube find isosurface = 5
         """
         from batoms.bdraw import draw_surface_from_vertices, draw_vertices
-        self.resolution = resolution
-        self.probe = probe
-        print('Resolution: {:1.3f}, Probe: {:1.3}'.format(self.resolution, self.probe))
-        tstart = time()
-        radii = np.array(self.batoms.radii_vdw) + self.probe
-        self.get_box(self.batoms.positions, padding = max(radii) + self.resolution)
-        self.build_grid()
-        # draw_vertices('meshgrid', self.meshgrids)
-        print('Grid Points: %s %s %s'%self.shape)
-        positions = self.batoms.positions
-        # ngrid = np.product(self.shape)
-        # self.volume_sas = np.ones(ngrid)*4
-        # self.indices_sas = self.query_radius(self.meshgrids, positions, radii)
-        # self.volume_sas[self.indices_sas] = 6
-        indices_sas, volume_sas = self.calc_power_distance(self.meshgrids, 
-                                        positions, radii, parallel = parallel)
-        volume = volume_sas.reshape(self.shape)
-        isosurface = self.calc_isosurface(volume, 5, spacing = self.spacing, origin = self.box_origin)
-        print('Vertices: %s'%len(isosurface['vertices']))
-        obj = bpy.data.objects.get(self.sas_name)
-        if obj is not None:
-            bpy.data.objects.remove(obj, do_unlink = True)
-        draw_surface_from_vertices(self.sas_name, 
-                            datas = isosurface,
-                            coll = self.batoms.coll.children['%s_surface'%self.batoms.coll_name],
-                            backface_culling = False,
-                        )
-        print('Draw SAS: %s'%(time() - tstart))
+        for ms in self.collection:
+            resolution = ms.resolution
+            probe = ms.probe
+            print('Resolution: {:1.3f}, Probe: {:1.3}'.format(resolution, probe))
+            tstart = time()
+            mask = self.batoms.selects[ms.select].mask
+            radii = np.array(self.batoms.radii_vdw[mask]) + probe
+            positions = self.batoms.positions[mask]
+            self.get_box(positions, padding = max(radii) + resolution)
+            self.build_grid(resolution = resolution)
+            # draw_vertices('meshgrid', self.meshgrids)
+            print('Grid Points: %s %s %s'%self.shape)
+            # ngrid = np.product(self.shape)
+            # self.volume_sas = np.ones(ngrid)*4
+            # self.indices_sas = self.query_radius(self.meshgrids, positions, radii)
+            # self.volume_sas[self.indices_sas] = 6
+            indices_sas, volume_sas = self.calc_power_distance(self.meshgrids, 
+                                            positions, radii, parallel = parallel)
+            volume = volume_sas.reshape(self.shape)
+            isosurface = self.calc_isosurface(volume, 5, spacing = self.spacing, origin = self.box_origin)
+            isosurface['color'] = ms.color
+            print('Vertices: %s'%len(isosurface['vertices']))
+            sas_name = '%s_%s_sas'%(self.label, ms.name)
+            obj = bpy.data.objects.get(sas_name)
+            if obj is not None:
+                bpy.data.objects.remove(obj, do_unlink = True)
+            draw_surface_from_vertices(sas_name, 
+                                datas = isosurface,
+                                coll = self.batoms.coll.children['%s_surface'%self.batoms.coll_name],
+                                backface_culling = False,
+                            )
+            print('Draw SAS: %s'%(time() - tstart))
 
-    def draw_SES(self, resolution = 0.4, probe = 1.4, parallel = 1):
+    def draw_SES(self, parallel = 1):
         """
         1) Get SAS
         2) Point probe sphere on vertices of SAS mesh
@@ -159,62 +183,67 @@ class MSsetting(Setting):
         5) Marching cube find isosurface = 5
         """
         from batoms.bdraw import draw_surface_from_vertices, draw_vertices
-        self.resolution = resolution
-        self.probe = probe
-        print('Resolution: {:1.3f}, Probe: {:1.3}'.format(self.resolution, self.probe))
-        tstart = time()
-        radii = np.array(self.batoms.radii_vdw) + self.probe
-        self.get_box(self.batoms.positions, padding = max(radii) + self.resolution + self.probe)
-        self.build_grid()
-        # draw_vertices('meshgrid', self.meshgrids)
-        print('Grid Points: %s %s %s'%self.shape)
-        positions = self.batoms.positions
-        # build SAS
-        indices_sas, volume_sas = self.calc_power_distance(self.meshgrids, 
-                                        positions, radii, parallel = parallel)
-        volume = volume_sas.reshape(self.shape)
-        spacing = [self.resolution]*3
-        isosurface = self.calc_isosurface(volume, 5, self.spacing, origin = self.box_origin)
-        # build SAS with probe = -self.resolution
-        radii = np.array(self.batoms.radii_vdw) - self.resolution
-        volume_sas1 = np.where(volume_sas > 5, 6, volume_sas)
-        indices = np.where(volume_sas < 5)[0]
-        volume_sas1[indices]
-        # select grid points inside sas for query
-        indices_sas1, tmp = self.calc_power_distance(self.meshgrids[indices], 
-                                        positions, radii, parallel = parallel)
-        volume_sas1[indices] = tmp
-        #----------------------------
-        tstart1 = time()
-        vertices = isosurface['vertices']
-        nvert = len(vertices)
-        radii = np.ones(nvert)*self.probe
-        # select grid points between sas and sas1
-        self.volume_ses = np.where(volume_sas > 5, 4, volume_sas)
-        self.volume_ses = np.where(volume_sas1 < 5, 6, self.volume_ses)
-        indices = np.where((volume_sas < 5) & (volume_sas1 > 5))[0]
-        indices_ses, volume_ses = self.calc_power_distance(self.meshgrids[indices], 
-                                        vertices, radii, parallel = parallel)
-        self.volume_ses[indices] = volume_ses
-        volume = self.volume_ses.reshape(self.shape)
-        isosurface = self.calc_isosurface(volume, 5, self.spacing, origin = self.box_origin)
-        print('Vertices: %s'%len(isosurface['vertices']))
-        obj = bpy.data.objects.get(self.ses_name)
-        if obj is not None:
-            bpy.data.objects.remove(obj, do_unlink = True)
-        draw_surface_from_vertices(self.ses_name, 
-                            datas = isosurface,
-                            coll = self.batoms.coll.children['%s_surface'%self.batoms.coll_name],
-                            backface_culling = False,
-                        )
-        print('Time SES: %s'%(time() - tstart))
-        self.get_sesa()
+        for ms in self.collection:
+            resolution = ms.resolution
+            probe = ms.probe
+            print('Resolution: {:1.3f}, Probe: {:1.3}'.format(resolution, probe))
+            tstart = time()
+            mask = self.batoms.selects[ms.select].mask
+            radii_vdw = np.array(self.batoms.radii_vdw[mask])
+            radii = radii_vdw + probe
+            positions = self.batoms.positions[mask]
+            self.get_box(positions, padding = max(radii) + resolution + probe)
+            self.build_grid(resolution = resolution)
+            # draw_vertices('meshgrid', self.meshgrids)
+            print('Grid Points: %s %s %s'%self.shape)
+            # build SAS
+            indices_sas, volume_sas = self.calc_power_distance(self.meshgrids, 
+                                            positions, radii, parallel = parallel)
+            volume = volume_sas.reshape(self.shape)
+            spacing = [self.resolution]*3
+            isosurface = self.calc_isosurface(volume, 5, self.spacing, origin = self.box_origin)
+            # build SAS with probe = -self.resolution
+            radii = radii_vdw - resolution
+            volume_sas1 = np.where(volume_sas > 5, 6, volume_sas)
+            indices = np.where(volume_sas < 5)[0]
+            volume_sas1[indices]
+            # select grid points inside sas for query
+            indices_sas1, tmp = self.calc_power_distance(self.meshgrids[indices], 
+                                            positions, radii, parallel = parallel)
+            volume_sas1[indices] = tmp
+            #----------------------------
+            tstart1 = time()
+            vertices = isosurface['vertices']
+            nvert = len(vertices)
+            radii = np.ones(nvert)*probe
+            # select grid points between sas and sas1
+            self.volume_ses = np.where(volume_sas > 5, 4, volume_sas)
+            self.volume_ses = np.where(volume_sas1 < 5, 6, self.volume_ses)
+            indices = np.where((volume_sas < 5) & (volume_sas1 > 5))[0]
+            indices_ses, volume_ses = self.calc_power_distance(self.meshgrids[indices], 
+                                            vertices, radii, parallel = parallel)
+            self.volume_ses[indices] = volume_ses
+            volume = self.volume_ses.reshape(self.shape)
+            isosurface = self.calc_isosurface(volume, 5, self.spacing, origin = self.box_origin)
+            isosurface['color'] = ms.color
+            print('Vertices: %s'%len(isosurface['vertices']))
+            ses_name = '%s_%s_ses'%(self.label, ms.name)
+            obj = bpy.data.objects.get(ses_name)
+            if obj is not None:
+                bpy.data.objects.remove(obj, do_unlink = True)
+            draw_surface_from_vertices(ses_name, 
+                                datas = isosurface,
+                                coll = self.batoms.coll.children['%s_surface'%self.batoms.coll_name],
+                                backface_culling = False,
+                            )
+            print('Time SES: %s'%(time() - tstart))
+            self.get_sesa(ms.name)
     
-    def get_sasa(self):
+    def get_sasa(self, name):
         """
         """
         from batoms.butils import get_area, get_volume
-        me = self.sas_obj.data
+        me = self.sas_objs[name].data
         area = get_area(me)
         volume = get_volume(me)
         print('Area: {:5.3f},    Volume: {:5.3f}'.format(area, volume))
@@ -223,7 +252,7 @@ class MSsetting(Setting):
     def get_psasa(self):
         """
         """
-        me = self.sas_obj.data
+        me = self.sas_objs.data
         npoly = len(me.polygons)
         areas = np.zeros(npoly)
         me.polygons.foreach_get('area', areas)
@@ -241,11 +270,11 @@ class MSsetting(Setting):
         # print(pareas_list)
         return pareas
     
-    def get_sesa(self):
+    def get_sesa(self, name):
         """
         """
         from batoms.butils import get_area, get_volume
-        me = self.ses_obj.data
+        me = self.ses_objs[name].data
         area = get_area(me)
         volume = get_volume(me)
         print('SES: area: {:1.3f}, volume: {:1.3f}'.format(area, volume))
@@ -257,7 +286,7 @@ class MSsetting(Setting):
         """
         tstart = time()
         depsgraph = bpy.context.evaluated_depsgraph_get()
-        me = self.sas_obj.evaluated_get(depsgraph).to_mesh()
+        me = self.sas_objs.evaluated_get(depsgraph).to_mesh()
         nvert = len(me.vertices)
         npoly = len(me.polygons)
         print('vertices: %s, polygons: %s.'%(nvert, npoly))
@@ -387,7 +416,7 @@ class MSsetting(Setting):
         """
         import bmesh
         mbmesh = self.to_mesh()
-        bpy.data.objects.remove(self.sas_obj, do_unlink = True)
+        bpy.data.objects.remove(self.sas_objs, do_unlink = True)
         bpy.data.metaballs.remove(self.sas_mb, do_unlink = True)
         bm = bmesh.new()
         bm.from_mesh(mbmesh)

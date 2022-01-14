@@ -19,8 +19,8 @@ def read(filename, **kwargs):
         # tstart = time()
         volume, atoms = read_cube_data(filename, **kwargs)
         # print('Read cube: {0:1.2f}'.format(time() - tstart))
-        batoms = Batoms(label, atoms = atoms, volume=volume)
+        batoms = Batoms(label, from_ase = atoms, volume=volume)
     else:
         atoms = io.read(filename=filename, **kwargs)
-        batoms = Batoms(label = label, atoms = atoms)
+        batoms = Batoms(label = label, from_ase = atoms)
     return batoms

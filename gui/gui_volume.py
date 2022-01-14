@@ -29,8 +29,8 @@ class Volume_PT_prepare(Panel):
         layout.prop(vopanel, "label")
         layout.operator("batoms.add_level")
 
-        layout.label(text="SASA")
-        layout.prop(vopanel, "color_sasa")
+        layout.label(text="SAS")
+        layout.prop(vopanel, "color_sas")
 
 
 
@@ -49,10 +49,10 @@ class VolumeProperties(bpy.types.PropertyGroup):
         vopanel = bpy.context.scene.vopanel
         color = vopanel.color_iso
         modify_isosurface_attr(self.selected_batoms, self.selected_isosurface, 'color', color)
-    def Callback_modify_color_sasa(self, context):
+    def Callback_modify_color_sas(self, context):
         vopanel = bpy.context.scene.vopanel
-        color = vopanel.color_sasa
-        modify_isosurface_attr(self.selected_batoms, self.selected_isosurface, 'color', color)
+        color = vopanel.color_sas
+        modify_ms_attr(self.selected_batoms, self.selected_isosurface, 'color', color)
 
     
     level: FloatProperty(
@@ -65,13 +65,13 @@ class VolumeProperties(bpy.types.PropertyGroup):
         size =4,
         description="color picker",
         update = Callback_modify_color_iso)
-    color_sasa: FloatVectorProperty(
+    color_sas: FloatVectorProperty(
         name="color", 
         subtype='COLOR',
         default=(0.1, 0.8, 0.4 ,1.0),
         size =4,
         description="color picker",
-        update = Callback_modify_color_sasa)
+        update = Callback_modify_color_sas)
     label: StringProperty(
         name="label", default='2',
         description = "new level")
@@ -82,27 +82,24 @@ def modify_isosurface_attr(batoms_name_list, bisosurface_name_list, key, value):
         batoms = Batoms(label = batoms_name)
         for isosurface_name in bisosurface_name_list:
             iso = bpy.data.objects[isosurface_name]
-            if iso.bisosurface.label == batoms_name:
-                setattr(batoms.isosurfacesetting[iso.bisosurface.name], key, value)
+            if iso.batoms.bisosurface.label == batoms_name:
+                setattr(batoms.isosurfacesetting[iso.batoms.bisosurface.name], key, value)
             selected_isosurface_new.append(isosurface_name)
-        batoms.draw_isosurface()
+        batoms.isosurfacesetting.draw_isosurface()
     for name in selected_isosurface_new:
         obj = bpy.data.objects.get(name)
         obj.select_set(True)
 
-def modify_sasa_attr(batoms_name_list, bsasa_name_list, key, value):
-    selected_sasa_new = []
+def modify_ms_attr(batoms_name_list, bms_name_list, key, value):
+    selected_ms_new = []
     for batoms_name in batoms_name_list:
         batoms = Batoms(label = batoms_name)
-        for sasa_name in bsasa_name_list:
-            obj = bpy.data.objects[sasa_name]
-            if obj.bsasa.label == batoms_name:
-                setattr(batoms.sasasetting[obj.bsasa.name], key, value)
-            selected_sasa_new.append(sasa_name)
-        batoms.draw_sasa()
-    for name in selected_sasa_new:
-        obj = bpy.data.objects.get(name)
-        obj.select_set(True)
+        for ms_name in bms_name_list:
+            obj = bpy.data.objects[ms_name]
+            if obj.bms.label == batoms_name:
+                setattr(batoms.mssetting[obj.bms.name], key, value)
+            selected_ms_new.append(ms_name)
+        batoms.mssetting.draw_SAS()
 
 def add_level(name, level, color):
     """
@@ -111,7 +108,7 @@ def add_level(name, level, color):
     for batoms_name in selected_batoms:
         batoms = Batoms(label = batoms_name)
         batoms.isosurfacesetting[name] = {'level': level, 'color': color}
-        batoms.draw_isosurface()
+        batoms.isosurfacesetting.draw_isosurface()
 
 class AddButton(Operator):
     bl_idname = "batoms.add_level"

@@ -7,11 +7,11 @@ import numpy as np
 
 
 def test_replace():
-    from ase.build import molecule
-    from batoms.batoms import Batoms
-    from batoms.butils import removeAll
-    removeAll()
-    h2o = Batoms('h2o', atoms = molecule('H2O'))
+from ase.build import molecule
+from batoms.batoms import Batoms
+from batoms.butils import removeAll
+removeAll()
+h2o = Batoms('h2o', aseAtoms = molecule('H2O'))
     h2o.replace('H', 'H_1', [0])
     h2o.bondsetting.remove(['O', 'H_1'])
     h2o['H_1'].color = [0.1, 0.8, 0, 1.0]

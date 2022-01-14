@@ -42,8 +42,8 @@ class Cell_PT_prepare(Panel):
 
 class CellProperties(bpy.types.PropertyGroup):
     def selected_batoms(self, context):
-        if context.object.batom.flag:
-            return context.object.batom.label
+        if context.object.batoms.batom.flag:
+            return context.object.batoms.batom.label
         return None
     def Callback_modify_transform(self, context):
         clpanel = bpy.context.scene.clpanel
@@ -102,9 +102,9 @@ class ApplyCell(Operator):
     def execute(self, context):
         clpanel = bpy.context.scene.clpanel
         cell = [clpanel.cell_a, clpanel.cell_b, clpanel.cell_c]
-        if not context.object.batom.flag:
+        if not context.object.batoms.batom.flag:
             return {'FINISHED'}
-        batoms = Batoms(label=context.object.batom.label)
+        batoms = Batoms(label=context.object.batoms.batom.label)
         batoms.cell = cell
         return {'FINISHED'}
 
@@ -115,9 +115,9 @@ class ApplyTransform(Operator):
     def execute(self, context):
         clpanel = bpy.context.scene.clpanel
         transform = [clpanel.transform_a, clpanel.transform_b, clpanel.transform_c]
-        if not context.object.batom.flag:
+        if not context.object.batoms.batom.flag:
             return {'FINISHED'}
-        batoms = Batoms(label=context.object.batom.label)
+        batoms = Batoms(label=context.object.batoms.batom.label)
         batoms.transform(transform)
         return {'FINISHED'}
 class ApplyBoundary(Operator):
@@ -127,9 +127,9 @@ class ApplyBoundary(Operator):
     def execute(self, context):
         clpanel = bpy.context.scene.clpanel
         boundary = [clpanel.boundary_a, clpanel.boundary_b, clpanel.boundary_c]
-        if not context.object.batom.flag:
+        if not context.object.batoms.batom.flag:
             return {'FINISHED'}
-        batoms = Batoms(label=context.object.batom.label)
+        batoms = Batoms(label=context.object.batoms.batom.label)
         batoms.boundary = boundary
         return {'FINISHED'}
 

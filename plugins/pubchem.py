@@ -7,5 +7,5 @@ def pubchem_search(cid):
     # import ssl
     # ssl._create_default_https_context = ssl._create_unverified_context
     data = pubchem_search(cid = cid)
-    batoms = Batoms(label = 'cid_%s'%cid, atoms = data.atoms)
+    batoms = Batoms(label = 'cid_%s'%cid, from_ase = data.atoms)
     return batoms

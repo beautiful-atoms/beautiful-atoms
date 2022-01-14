@@ -15,7 +15,7 @@ au111 = fcc111('Au', (4, 4, 4), vacuum = 0)
 mol = molecule('CH3CH2OH')
 mol.translate([5, 5, 10])
 atoms = au111 + mol
-au111 = Batoms('au111', aseAtoms = atoms)
+au111 = Batoms('au111', from_ase = atoms)
 au111.cell[2, 2] += 10
 indices = np.arange(64)
 sel1 = au111.selects.add('ham', indices)
@@ -34,7 +34,6 @@ h2o.pbc = True
 h2o.cell = [3, 3, 3]
 h2o = h2o*[2, 1, 1]
 indices = [0, 1, 2]
-data = {'name': 'sel1', 'indices': indices}
 sel1 = h2o.selects.add('sel1', indices)
 sel0 = h2o.selects['sel0']
 sel0.scale = 0.5

@@ -37,7 +37,7 @@ class Batoms_PT_prepare(Panel):
         layout.label(text="Radius style")
         layout.prop(bapanel, "radius_style", expand  = True)
         
-        layout.prop(bapanel, "hide", expand  = True)
+        layout.prop(bapanel, "show", expand  = True)
         layout.prop(bapanel, "scale")
 
         layout.operator("batoms.replace")
@@ -58,9 +58,6 @@ class BatomsProperties(bpy.types.PropertyGroup):
     def selected_batoms(self):
         return get_selected_batoms()
     @property
-    def selected_batom(self):
-        return get_selected_objects('batom')
-    @property
     def selected_vertices(self):
         return get_selected_vertices()
     def Callback_model_style(self, context):
@@ -71,9 +68,9 @@ class BatomsProperties(bpy.types.PropertyGroup):
         bapanel = bpy.context.scene.bapanel
         radius_style = list(bapanel.radius_style)[0]
         modify_batoms_attr(self.selected_batoms, 'radius_style', radius_style)
-    def Callback_modify_hide(self, context):
+    def Callback_modify_show(self, context):
         bapanel = bpy.context.scene.bapanel
-        modify_batoms_attr(self.selected_batoms, 'hide', bapanel.hide)
+        modify_batoms_attr(self.selected_batoms, 'show', bapanel.show)
     def Callback_modify_scale(self, context):
         bapanel = bpy.context.scene.bapanel
         modify_batoms_attr(self.selected_batoms, 'scale', bapanel.scale)
@@ -103,13 +100,10 @@ class BatomsProperties(bpy.types.PropertyGroup):
         options={'ENUM_FLAG'},
         )
     
-    hide: BoolProperty(name="hide",
+    show: BoolProperty(name="show",
                 default=False, 
-                description = "Hide all object for view and rendering",
-                update = Callback_modify_hide)
-    single: BoolProperty(name="single", 
-                default=False, 
-                description = "Separate the species into single atom")
+                description = "show all object for view and rendering",
+                update = Callback_modify_show)
     scale: FloatProperty(
         name="scale", default=1.0,
         description = "scale", update = Callback_modify_scale)
@@ -132,39 +126,28 @@ class BatomsProperties(bpy.types.PropertyGroup):
         name = "File type", default='xyz',
         description = "save batoms to file", update = Callback_export_atoms)
 
-
 def modify_batoms_attr(selected_batoms, key, value):
     """
     """
     batoms_list = []
     for name in selected_batoms:
-        batoms = Batoms(label = name)
+        batoms = Batoms(name)
         setattr(batoms, key, value)
         batoms_list.append(batoms)
-    # Restor the selected state
-    for batoms in batoms_list:
-        batoms.select = True
 def export_atoms(selected_batoms, filetype = 'xyz'):
     batoms_list = []
     for name in selected_batoms:
-        batoms = Batoms(label = name)
+        batoms = Batoms(name)
         batoms.write('%s.%s'%(batoms.label, filetype))
         batoms_list.append(batoms)
     for batoms in batoms_list:
         batoms.select = True
 
-def replace_atoms(species1):
-    batom_list = []
+def replace_atoms(species):
     selected_vertices = get_selected_vertices()
-    for label, species, name, index in selected_vertices:
+    for label, index in selected_vertices:
         batoms = Batoms(label = label)
-        batoms.replace(species, species1, index)
-        batom_list.append(name)
-    for name in batom_list:
-        if name in bpy.data.objects:
-            obj = bpy.data.objects.get(name)
-            bpy.context.view_layer.objects.active = obj
-            bpy.ops.object.mode_set(mode='EDIT')
+        batoms.replace(index, species)
 
 class ReplaceButton(Operator):
     bl_idname = "batoms.replace"
@@ -189,14 +172,12 @@ class MeasureButton(Operator):
         replace_atoms(bapanel.species)
         return {'FINISHED'}
 
-
-
 def fragmentate(suffix):
     batom_list = []
     selected_vertices = get_selected_vertices()
-    for label, species, name, index in selected_vertices:
+    for label, indices in selected_vertices:
         batoms = Batoms(label = label)
-        batoms.fragmentate(species, index, suffix)
+        batoms.fragmentate(species, indices, suffix)
         batom_list.append(name)
     for name in batom_list:
         if name in bpy.data.objects:

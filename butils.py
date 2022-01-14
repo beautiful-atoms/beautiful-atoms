@@ -66,7 +66,7 @@ def get_selected_vertices():
         obj.data.vertices.foreach_get('select', sel)
         index = np.where(sel)[0]
         if len(index) > 0:
-            selected_vertices.append((obj.batoms.batom.label, obj.batoms.batom.species, obj.name, index))
+            selected_vertices.append((obj.batoms.batom.label, index))
     # back to whatever mode we were in
     bpy.ops.object.mode_set(mode='EDIT')
     return selected_vertices

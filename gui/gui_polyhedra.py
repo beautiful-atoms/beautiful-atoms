@@ -87,10 +87,10 @@ def modify_polyhedra_attr(selected_batoms, selected_polyhedra, key, value):
         batoms = Batoms(label = batoms_name)
         for polyhedra_name in selected_polyhedra:
             polyhedra = bpy.data.objects[polyhedra_name]
-            if polyhedra.bpolyhedra.label == batoms_name:
-                setattr(batoms.polyhedrasetting[polyhedra.bpolyhedra.species], key, value)
+            if polyhedra.batoms.bpolyhedra.label == batoms_name:
+                setattr(batoms.polyhedrasetting[polyhedra.batoms.bpolyhedra.species], key, value)
                 selected_polyhedra_new.append(polyhedra_name)
-        batoms.draw_polyhedras()
+        batoms.draw()
     for name in selected_polyhedra_new:
         obj = bpy.data.objects.get(name)
         obj.select_set(True)        

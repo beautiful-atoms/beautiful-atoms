@@ -4,20 +4,24 @@ import numpy as np
 from batoms.base import Setting
 from batoms.tools import get_default_species_data, string2Number, number2String
 
+
+class species():
+    def __init__(self, name, species, elements, radius_style, color_style
+                ) -> None:
+        self.species = species
+        self.elements = elements
+        self.name = name
+
 class Bspecies(Setting):
     """Bspecies Class
     """
     def __init__(self, label, coll_name, species = {}, batoms = None,
-                radius_style = 'covalent',
-                color_style = 'JMOL',
                 material_style = 'default',
                 ) -> None:
         Setting.__init__(self, label, coll_name=coll_name)
         self.label = label
         self.name = 'bspecies'
         self.batoms = batoms
-        self.radius_style = radius_style
-        self.color_style = color_style
         for sp, data in species.items():
             self[sp] = data
     
@@ -30,9 +34,13 @@ class Bspecies(Setting):
         """
         self.add(name, data)
         
-    def add(self, name, data, instancer = None):
+    def add(self, name, data):
         """
         """
+        if 'color_style' not in data: 
+            data['color_style'] = '0'
+        if 'radius_style' not in data: 
+            data['radius_style'] = '0'
         sp = self.find(name)
         if sp is None:
             sp = self.collection.add()
@@ -41,8 +49,8 @@ class Bspecies(Setting):
         # add default props
         data['elements'] = self.check_elements(data['elements'])
         props = get_default_species_data(data['elements'],
-                                radius_style = self.radius_style, 
-                                color_style = self.color_style)
+                                radius_style = data['radius_style'], 
+                                color_style = data['color_style'])
         props.update(data)
         #
         for key, value in props.items():
@@ -57,7 +65,7 @@ class Bspecies(Setting):
             eledata.color = props['color'][ele]
         if hasattr(self.batoms, 'selects'):
             for sel in self.batoms.selects:
-                sel.build_instancer(sp)
+                self.build_instancer(sp, select = sel.name)
         else:
             self.batoms.build_instancer(sp)
 
@@ -240,6 +248,15 @@ class Bspecies(Setting):
                         shape = 'UV_SPHERE', shade_smooth = True):
         name = '%s_%s_%s'%(self.label, sp.name, select)
         radius = sp.radius
+        natom = len(self.batoms)
+        if natom >= 1e3:
+            segments = [16, 16]
+        if natom >= 1e4:
+            segments = [10, 10]
+        if natom >= 1e5:
+            segments = [8, 8]
+        if natom >= 1e6:
+            segments = [6, 6]
         if name in bpy.data.objects:
             obj = bpy.data.objects.get(name)
             bpy.data.objects.remove(obj, do_unlink = True)
@@ -304,5 +321,24 @@ class Bspecies(Setting):
 
     def build_instancers(self):
         for sel in self.batoms.selects:
-            for sp in self.batoms.species:
+            for sp in self:
                 self.build_instancer(sp, select = sel.name)
+            
+    @property
+    def radius_style(self):
+        return self.get_radius_style()
+    
+    @radius_style.setter
+    def radius_style(self, radius_style):
+        self.set_radius_style(radius_style)
+    
+    def get_radius_style(self):
+        return self.coll.batoms.radius_style
+    
+    def set_radius_style(self, radius_style):
+        # print(species_props)
+        for sel in self.batoms.selects:
+            for sp in self:
+                sp.radius_style = str(radius_style)
+                self.build_instancer(sp, select = sel.name)
+        self.batoms.build_geometry_node()

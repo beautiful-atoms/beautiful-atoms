@@ -1,33 +1,8 @@
 """
-select expression
-
-all
-none
-
-
-Logical
-not Sele
-sele1 and sele2
-
-
-Properties
-element O
-
-
-Coordinates
-z<5
-
-
-
-Chemcial classses
-
-solvent: water
-hydrogens: 
-metals
-
 
 """
 
+from math import exp
 import bpy
 from batoms.base import Setting, BaseCollection
 from batoms.bspecies import Bspecies
@@ -41,7 +16,7 @@ import numpy as np
 from batoms.butils import object_mode, show_index
 from time import time
 
-from tools import string2Number
+from batoms.tools import string2Number
 
 subcollections = []
 
@@ -231,7 +206,7 @@ class Select():
         s = '-'*60 + '\n'
         s = 'Name   model_style   radius_style     show \n'
         s += '{0:10s} {1:10s}   {2:10s}   {3:10s} \n'.format(\
-                self.name, str(self.model_style), self.radius_style, str(self.show))
+                self.name, str(self.model_style[0]), self.radius_style[0], str(self.show[0]))
         s += '-'*60 + '\n'
         return s
 
@@ -281,12 +256,13 @@ class Selects(Setting):
         i = 0
         for name, sel in self.selects.items():
             s += '{:3d}   {:10s}  {:5s}   {} \n'.format(i, 
-                    name, str(sel.model_style), str(sel.show))
+                    name, str(sel.model_style[0]), str(sel.show[0]))
             i += 1
         return s
     
-    def add(self, name, indices):
-        print(name, string2Number(name))
+    def add(self, name, expre):
+        indices = elect_expression(expre, self.batoms)
+        # print(name, string2Number(name))
         select = self.batoms.attributes['select']
         select[indices] = string2Number(name)
         select = {'select': select}
@@ -305,3 +281,42 @@ class Selects(Setting):
         return sel
     
 
+def elect_expression(expre, batoms):
+    """
+    select expression
+
+all
+none
+
+Logical
+not Sele
+sele1 and sele2
+
+
+Properties
+element O
+
+Coordinates
+z<5
+
+Chemcial classses
+
+solvent: water
+hydrogens: 
+metals
+
+"""
+    if isinstance(expre, (list, np.ndarray)):
+        return expre
+    if isinstance(expre, str):
+        if 'chain' in expre:
+            chainid = expre.split()[1]
+            print('chain %s'%chainid)
+            indices = np.where(batoms.attributes['chainids'] == chainid)[0]
+        if 'species' in expre:
+            species = expre.split()[1]
+            print('species %s'%species)
+            indices = np.where(batoms.attributes['species'] == species)[0]
+        
+    return indices
+        

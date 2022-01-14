@@ -76,6 +76,7 @@ classes = [
         custom_property.Bhelix,
         custom_property.Bturn,
         custom_property.Bselect,
+        custom_property.Bmssetting,
         custom_property.Batoms_coll,
         custom_property.Batoms_obj,
         gui_io.IMPORT_OT_batoms,

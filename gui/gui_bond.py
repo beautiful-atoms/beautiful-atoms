@@ -129,23 +129,21 @@ def modify_bond_attr(selected_batoms, selected_bond, key, value):
         batoms = Batoms(label = batoms_name)
         for bond_name in selected_bond:
             bond = bpy.data.objects[bond_name]
-            if bond.bbond.label == batoms_name:
+            if bond.batoms.bbond.label == batoms_name:
                 if key != 'color':
-                    setattr(batoms.bondsetting['%s-%s'%(bond.bbond.species1, 
-                        bond.bbond.species2)], key, value)
+                    setattr(batoms.bondsetting['%s-%s'%(bond.batoms.bbond.species1, 
+                        bond.batoms.bbond.species2)], key, value)
                 else:
-                    index = [bond.bbond.species1, bond.bbond.species2].index(bond.bbond.species) + 1
-                    setattr(batoms.bondsetting['%s-%s'%(bond.bbond.species1, 
-                            bond.bbond.species2)], 'color%s'%index, value)
-                if batoms.bondsetting['%s-%s'%(bond.bbond.species1, bond.bbond.species2)].style == '0':
-                    selected_bond_new.append('%s_bond_%s_%s'%(bond.bbond.label, 
-                        bond.bbond.species1, bond.bbond.species2))
+                    index = [bond.batoms.bbond.species1, bond.batoms.bbond.species2].index(bond.batoms.bbond.species) + 1
+                    setattr(batoms.bondsetting['%s-%s'%(bond.batoms.bbond.species1, 
+                            bond.batoms.bbond.species2)], 'color%s'%index, value)
+                if batoms.bondsetting['%s-%s'%(bond.batoms.bbond.species1, bond.batoms.bbond.species2)].style == '0':
+                    selected_bond_new.append('%s_bond_%s_%s'%(bond.batoms.bbond.label, 
+                        bond.batoms.bbond.species1, bond.batoms.bbond.species2))
                 else:
-                    selected_bond_new.append('%s_bond_%s_%s_%s'%(bond.bbond.label, 
-                        bond.bbond.species1, bond.bbond.species2, bond.bbond.species))
-        batoms.draw_bonds()
-        if batoms.model_style == 2:
-            batoms.draw_polyhedras()
+                    selected_bond_new.append('%s_bond_%s_%s_%s'%(bond.batoms.bbond.label, 
+                        bond.batoms.bbond.species1, bond.batoms.bbond.species2, bond.batoms.bbond.species))
+        batoms.draw()
     for name in selected_bond_new:
         obj = bpy.data.objects.get(name)
         obj.select_set(True)     
@@ -156,12 +154,10 @@ def remove(selected_batoms, selected_bond):
         batoms = Batoms(label = batoms_name)
         for bond_name in selected_bond:
             bond = bpy.data.objects[bond_name]
-            if bond.bbond.label == batoms_name:
-                batoms.bondsetting.remove([bond.bbond.species1, 
-                        bond.bbond.species2])
-        batoms.draw_bonds()
-        if batoms.model_style == 2:
-            batoms.draw_polyhedras()
+            if bond.batoms.bbond.label == batoms_name:
+                batoms.bondsetting.remove([bond.batoms.bbond.species1, 
+                        bond.batoms.bbond.species2])
+        batoms.draw()
 
 def add_bond(selected_batoms, selected_batom):
     selected_bond_new = []
@@ -178,9 +174,7 @@ def add_bond(selected_batoms, selected_batom):
             batoms.bondsetting.add([species_list[0], species_list[1]])
         elif len(species_list) > 2:
             raise Exception('Please select only two atoms')
-        batoms.draw_bonds()
-        if batoms.model_style == 2:
-            batoms.draw_polyhedras()
+        batoms.draw()
 
 class RemoveButton(Operator):
     bl_idname = "bond.remove"

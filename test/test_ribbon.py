@@ -10,20 +10,20 @@ from batoms.batoms import Batoms
 from batoms.pdbparser import read_pdb
 from batoms.butils import removeAll
 removeAll()
-atoms = read_pdb('test/datas/2piw.pdb')  # 1tim
-batoms = Batoms('protein', atoms = atoms)
+atoms = read_pdb('test/datas/1ema.pdb')  # 1ema, 1tim
+batoms = Batoms('protein', from_ase = atoms)
+batoms.ribbon.draw_sheet()
+batoms.ribbon.draw_helix()
 batoms.ribbon.draw()
-
-
 
 def test_helix():
 from batoms.batoms import Batoms
 from batoms.pdbparser import read_pdb
 from batoms.butils import removeAll
 removeAll()
-atoms = read_pdb('test/datas/2piw.pdb')  # 1tim
-batoms = Batoms('protein', atoms = atoms)
-batoms.ribbon.helix.draw_helix()
+atoms = read_pdb('test/datas/1jj2.pdb')  # 1tim
+batoms = Batoms('protein', from_ase = atoms)
+batoms.ribbon.draw()
 
 if __name__ == '__main__':
     test_sheet()

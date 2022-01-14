@@ -6,18 +6,18 @@ import numpy as np
 from time import time
 
 def test_slice():
-    from batoms.batoms import Batoms
-    from batoms.bio import read
-    from batoms.butils import removeAll
-    removeAll()
-    h2o = read('/home/xing/ase/batoms/h2o-homo.cube')
-    # h2o = read('/home/xing/ase/batoms/fe.cube')
-    h2o.isosurfacesetting.delete(1)
-    h2o.draw_isosurface()
-    h2o.planesetting[(1, 0, 0)] = {'distance': 6, 'slicing': True}
-    h2o.draw_lattice_plane()
-    h2o.get_image([0, 0, 1], engine = 'eevee')
-
+from batoms.batoms import Batoms
+from batoms.bio import read
+from batoms.butils import removeAll
+removeAll()
+h2o = read('/home/xing/ase/batoms/h2o-homo.cube')
+# h2o = read('/home/xing/ase/batoms/fe.cube')
+h2o.isosurfacesetting['1'] = {'level':-0.001}
+h2o.isosurfacesetting['2'] = {'level':0.001, 'color': [0, 0, 0.8, 0.5]}
+h2o.isosurfacesetting.draw_isosurface()
+h2o.planesetting[(1, 0, 0)] = {'distance': 6, 'slicing': True}
+h2o.planesetting.draw_lattice_plane()
+h2o.get_image([0, 0, 1], engine = 'eevee')
 
 def test_diff():
     from batoms.batoms import Batoms

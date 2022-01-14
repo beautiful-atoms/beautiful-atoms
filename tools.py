@@ -2,7 +2,7 @@ import numpy as np
 import math
 
 
-def from_ase(atoms):
+def read_from_ase(atoms):
     """
     Import structure from ASE atoms.
     """
@@ -25,14 +25,14 @@ def from_ase(atoms):
     # read frames
     if nframe > 1:
         positions = np.zeros((nframe, natom, 3))
-        for i in range(1, nframe):
+        for i in range(0, nframe):
             positions[i, :, :] = frames[i].positions
         arrays.pop('positions')
     else:
         positions = arrays.pop('positions')
     return species, positions, arrays, atoms.cell, npbool2bool(atoms.pbc), info    
 
-def from_pymatgen(structure):
+def read_from_pymatgen(structure):
     """
     Import structure from Pymatgen structure.
     """
@@ -67,11 +67,11 @@ def default_element_prop(element, radius_style = 'covalent', color_style = "JMOL
     number = chemical_symbols.index(element)
     color_style = color_style.upper()
     radius_style = radius_style.upper()
-    if color_style == 'JMOL':
+    if color_style == 'JMOL' or color_style == '0':
         color = jmol_colors[number]
-    elif color_style == 'CPK':
+    elif color_style == 'CPK' or color_style == '1':
         color = cpk_colors[number]
-    elif color_style == 'VESTA':
+    elif color_style == 'VESTA' or color_style == '2':
         color = vesta_color[element]
     if radius_style == 'COVALENT' or radius_style == '0':
         radius = covalent_radii[number]

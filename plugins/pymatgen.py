@@ -14,7 +14,7 @@ def pymatgen_search(key, id):
         # Structure for material id
         structure = m.get_structure_by_material_id(id)
         label = id.replace('-', '_')
-        batoms = Batoms(label, atoms=structure)
+        batoms = Batoms(label, from_pymatgen = structure)
         # Dos for material id
         return batoms
 

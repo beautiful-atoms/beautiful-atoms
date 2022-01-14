@@ -3,6 +3,10 @@
 from batoms.base import Setting, tuple2string
 import numpy as np
 from time import time
+from batoms.butils import object_mode, clean_coll_objects
+from batoms.bdraw import draw_surface_from_vertices, draw_cylinder
+from batoms.bondsetting import build_bondlists
+
 
 class PolyhedraSetting(Setting):
     """
@@ -18,7 +22,7 @@ class PolyhedraSetting(Setting):
     """
     
     def __init__(self, label, batoms = None, polyhedrasetting = None) -> None:
-        Setting.__init__(self, label)
+        Setting.__init__(self, label, coll_name='%s_polyhedra'%label)
         self.name = 'bpolyhedra'
         self.batoms = batoms
         if len(self) == 0:
@@ -69,18 +73,52 @@ class PolyhedraSetting(Setting):
                 p.species, p.color[0], p.color[1], p.color[2], p.color[3], p.width)
         s += '-'*60 + '\n'
         return s
+    
+    def draw_polyhedra(self, mask, bondlist = None):
+        """Draw polyhedra.
+        Parameters:
+        bondlist: dict
+        """
+        object_mode()
+        # clean_coll_objects(self.coll, 'polyhedra')
+        frames = self.batoms.get_frames()
+        arrays = self.batoms.arrays
+        size = arrays['radius'][mask]*arrays['scale'][mask]
+        species = arrays['species'][mask]
+        # frames_boundary = self.batoms.get_frames(self.batoms.batoms_boundary)
+        # frames_search = self.batoms.get_frames(self.batoms.batoms_search)
+        nframe = len(frames)
+        bond_datas = {}
+        tstart = time()
+        for f in range(nframe):
+            print('update polyhedra: ', f)
+            positions = frames[f][mask]
+        if bondlist is None:
+            bondlist = build_bondlists(species, positions, 
+                        self.batoms.cell, self.batoms.pbc, self.batoms.bondsetting.cutoff_dict)
+        polyhedra_kinds = build_polyhedralists(species, positions, self.batoms.cell, bondlist, 
+                          self.batoms.bondsetting, self)
+        for species, polyhedra_data in polyhedra_kinds.items():
+            name = '%s_%s_polyhedra'%(self.label, species)
+            draw_surface_from_vertices(name, 
+                                datas = polyhedra_data,
+                                use_smooth = False,
+                                coll = self.coll,
+                                )
+            if polyhedra_data['show_edge']:
+                name = '%s_%s_polyhedra_edge'%(self.label, species)
+                draw_cylinder(name = name, 
+                            datas = polyhedra_data['edge'],
+                            coll = self.coll)
 
 
-def build_polyhedralists(atoms, bondlists, bondsetting, polyhedrasetting):
+def build_polyhedralists(speciesarray, positions, cell,
+                bondlists, bondsetting, polyhedrasetting):
         """
         """
         from scipy.spatial import ConvexHull
         from batoms.tools import get_polyhedra_kind
         tstart = time()
-        if 'species' not in atoms.arrays:
-            atoms.new_array('species', np.array(atoms.get_chemical_symbols(), dtype = 'U20'))
-        speciesarray = np.array(atoms.arrays['species'])
-        positions = atoms.positions
         polyhedra_kinds = {}
         polyhedra_dict = {}
         for b in bondsetting:
@@ -90,7 +128,7 @@ def build_polyhedralists(atoms, bondlists, bondsetting, polyhedrasetting):
                 if spi not in polyhedra_dict: polyhedra_dict[spi] = []
                 polyhedra_dict[spi].append(spj)
         # loop center atoms
-        npositions = positions[bondlists[:, 1]] + np.dot(bondlists[:, 2:5], atoms.cell)
+        npositions = positions[bondlists[:, 1]] + np.dot(bondlists[:, 2:5], cell)
         for spi, spjs in polyhedra_dict.items():
             poly = polyhedrasetting[spi]
             polyhedra_kind = get_polyhedra_kind(color = poly.color, 

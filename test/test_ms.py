@@ -132,14 +132,16 @@ from batoms.batoms import Batoms
 from batoms.butils import removeAll
 removeAll()
 atp = read('test/datas/ATP.pdb')
-atp = Batoms('atp', atoms = atp)
-atp.draw_SAS(probe = 1.4, resolution = 0.4, threshold = 1e-6)
+atp = Batoms('atp', aseAtoms = atp)
+sel1 = atp.selects.add('sel1', np.arange(20))
+atp.mssetting.add('2', {'select':'sel1', 'color': [0.8, 0.1, 0.1, 1.0]})
+atp.mssetting.draw_SAS()
 area = atp.mssetting.get_sasa()
 parea = atp.mssetting.get_psasa()
     assert abs(area - 657.8) < 10
     atp.get_image([0, 0, 1], padding = 3, engine = 'eevee', output = 'sas-atp.png')
 
-def test_SAS_select():
+def test_SAS():
     """
 
     isosurface resolution 3 sasurface 1.4
@@ -156,9 +158,33 @@ from batoms.butils import removeAll
 import numpy as np
 removeAll()
 kras = read('test/datas/kras.pdb')
-kras = Batoms('kras', atoms = kras)
+kras = Batoms('kras', from_ase = kras)
 indices = np.where(kras.positions[:, 2] < 0)[0]
-kras.draw_SAS(probe = 1.4, indices = indices, resolution = 0.4, area = True)
+kras.mssetting.draw_SAS()
+
+def test_SAS_select():
+    """
+
+    isosurface resolution 3 sasurface 1.4
+
+    isosurface area set 0
+
+    Jmol    650.3
+    Batoms:  655.6
+    freesasa: 657.80
+    """
+from batoms.pdbparser import read_pdb
+from batoms.batoms import Batoms
+from batoms.butils import removeAll
+import numpy as np
+removeAll()
+pro = read_pdb('test/datas/1tim.pdb')
+pro = Batoms('pro', from_ase = pro)
+pro.selects.add('A', 'chain A')
+pro.mssetting.add('2', {'select':'A', 'color': [0.8, 0.1, 0.1, 1.0]})
+# pro.mssetting.draw_SAS()
+pro.mssetting.draw_SES()
+
 
 def test_SAS_area_kras():
     """
@@ -307,26 +333,26 @@ from batoms.batoms import Batoms
 from batoms.butils import removeAll
 removeAll()
 kras = read('test/datas/kras.pdb')
-kras = Batoms('kras', atoms = kras)
+kras = Batoms('kras', from_ase = kras)
 kras.mssetting.draw_SES(parallel=2)
 area = kras.mssetting.get_sesa()
     assert abs(area - 20016.1) < 200
 
 def test_SES_performance():
-    from time import time
-    from ase.io import read
-    from batoms.batoms import Batoms
-    from batoms.butils import removeAll
-    removeAll()
-    atp = read('datas/ATP.pdb')
-    atp.center(4)
-    atp = atp*[3, 3, 3]
-    atp = Batoms('atp', atoms = atp)
-    tstart = time()
-    atp.draw_SES(probe = 1.2, resolution = 0.4, threshold = 1e-4)
-    t = time() - tstart
-    assert t < 5
-    print('time: %s'%t)
+from time import time
+from ase.io import read
+from batoms.batoms import Batoms
+from batoms.butils import removeAll
+removeAll()
+atp = read('test/datas/ATP.pdb')
+atp.center(2)
+atp = atp*[3, 3, 3]
+atp = Batoms('atp', from_ase = atp)
+tstart = time()
+atp.mssetting.draw_SES(parallel=2)
+t = time() - tstart
+assert t < 5
+print('time: %s'%t)
 
 if __name__ == '__main__':
     test_voronoi_bulk()

@@ -498,18 +498,29 @@ def neighbor_list(quantities, a, cutoff, self_interaction=False,
                                    self_interaction=self_interaction,
                                    max_nbins=max_nbins)
 
+def neighbor_kdtree(positions, k = 20, parallel = 1):
+    from scipy.spatial import KDTree
+    tree = KDTree(positions)
+    tstart = time.time()
+    print('KDTree positions: %s'%(time.time() - tstart))
+    distance, indices = tree.query(positions, k = k, workers=parallel)
+    print('KDTree query: %s'%(time.time() - tstart))
+    return indices, distance
 
 if __name__ == "__main__":
     from ase.io import read, write
     from ase.build import molecule, bulk
     from ase.visualize import view
     from ase import Atom, Atoms
-    atoms = read('docs/source/_static/datas/tio2.cif')
-    atoms.arrays['species'] = atoms.get_chemical_symbols()
-    # atoms = read('docs/source/_static/datas/mof-5.cif')
-    atoms.arrays['species'][0] = 'Ti_1'
-    cutoff = {('Ti', 'O'): [0.5, 2.5], ('O', 'O'):[0.5, 1.5]}
-    i, j, S = neighbor_list('ijS', atoms, cutoff)
-    print(i)
-    print(j)
-    print(S)
+    h2o = molecule('H2O')
+    h2o.pbc = True
+    h2o.cell = [3, 3, 3]
+    h2o = h2o*[50, 50, 50]
+    print(len(h2o))
+    h2o.arrays['species'] = h2o.get_chemical_symbols()
+    # h2o = read('docs/source/_static/datas/mof-5.cif')
+    cutoff = {('O', 'H'): [0.0, 1.0]}
+    tstart = time.time()
+    i, j, S = neighbor_list('ijS', h2o, cutoff)
+    print('time %s'%(time.time() - tstart))
+    neighbor_kdtree(h2o.positions, k = 10)

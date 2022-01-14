@@ -30,7 +30,6 @@ class ASE_PT_prepare(Panel):
         layout.operator("batoms.add_molecule")
         layout.operator("batoms.add_bulk")
         layout.operator("batoms.add_atoms")
-
         #
         layout.label(text="Surface:")
         layout.prop(asepanel, "indices")
@@ -67,8 +66,9 @@ class AddMolecule(Operator):
     def execute(self, context):
         asepanel = context.scene.asepanel
         atoms = molecule(asepanel.formula)
-        Batoms(label = asepanel.label, atoms = atoms)
+        Batoms(label = asepanel.label, from_ase = atoms)
         return {'FINISHED'}
+
 class AddBulk(Operator):
     bl_idname = "batoms.add_bulk"
     bl_label = "Add bulk"
@@ -76,8 +76,9 @@ class AddBulk(Operator):
     def execute(self, context):
         asepanel = context.scene.asepanel
         atoms = bulk(asepanel.formula)
-        Batoms(label = asepanel.label, atoms = atoms)
-        return {'FINISHED'}     
+        Batoms(label = asepanel.label, from_ase = atoms)
+        return {'FINISHED'}  
+
 class AddAtoms(Operator):
     bl_idname = "batoms.add_atoms"
     bl_label = "Add atoms"
@@ -85,8 +86,9 @@ class AddAtoms(Operator):
     def execute(self, context):
         asepanel = context.scene.asepanel
         atoms = Atoms(asepanel.formula)
-        Batoms(label = asepanel.label, atoms = atoms)
+        Batoms(label = asepanel.label, from_ase = atoms)
         return {'FINISHED'}
+        
 class AddSurface(Operator):
     @property
     def selected_batoms(self):
@@ -111,5 +113,5 @@ class AddSurface(Operator):
                                     termination=asepanel.termination)
         batoms.hide = True
         label = batoms.label + ''.join(str(i) for i in asepanel.indices)
-        Batoms(label = label, atoms = atoms, movie = True)
+        Batoms(label = label, from_ase = atoms, movie = True)
         return {'FINISHED'}
