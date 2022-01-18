@@ -133,6 +133,7 @@ class Batoms(BaseCollection):
             if not species_props:
                 species_props = {sp: {'elements':{sp.split('_')[0]:1.0}} for sp in species}
             self._species = Bspecies(label, label, species_props, self)
+            self.build_geometry_node()
             self.selects.add('sel0', np.arange(len(self)))
             if isinstance(scale, (int, float)):
                 scale = np.ones(natom)*scale
@@ -145,7 +146,6 @@ class Batoms(BaseCollection):
                                'show': show,
                                })
             self.set_attributes(attributes)
-            self.build_geometry_node()
             if volume is not None:
                 self.build_volume(volume)
             self._cell = Bcell(label, cell, batoms = self)
@@ -205,74 +205,88 @@ class Batoms(BaseCollection):
         Geometry node for everything!
         """
         from batoms.butils import get_nodes_by_name
-        obj = self.obj
-        gn = self.gnodes
+        name = 'GeometryNodes_%s'%self.label
+        modifier = self.obj.modifiers.new(name = name, type = 'NODES')
+        modifier.node_group.name = name
+        GroupInput = modifier.node_group.nodes.get('Group Input')
+        GroupInput.outputs.new(type = 'INT', name = 'select')
+        GroupInput.outputs.new(type = 'INT', name = 'species')
+        GroupInput.outputs.new(type = 'INT', name = 'show')
+        GroupInput.outputs.new(type = 'INT', name = 'scale')
+        # the above codes not works. maybe bug in blender, 
+        # we add this, maybe deleted in the future
+        for i in range(1, 5):
+            test = get_nodes_by_name(modifier.node_group.nodes, 
+                            'BooleanMath_%s'%i,
+                            'FunctionNodeCompareFloats')
+            modifier.node_group.links.new(GroupInput.outputs[i], test.inputs[0])
+        # the Input_1 is Geometry
+        modifier['Input_2_use_attribute'] = 1
+        modifier['Input_2_attribute_name'] = 'select'
+        modifier['Input_3_use_attribute'] = 1
+        modifier['Input_3_attribute_name'] = 'species_index'
+        modifier['Input_4_use_attribute'] = 1
+        modifier['Input_4_attribute_name'] = 'show'
+        modifier['Input_5_use_attribute'] = 1
+        modifier['Input_5_attribute_name'] = 'scale'
+        gn = modifier
         # print(gn.name)
-        GroupInput = gn.node_group.nodes.get('Group Input')
-        GroupInput.outputs.new(type = 'Boolean', name = 'species_index')
-        GroupInput.outputs.new(type = 'Boolean', name = 'show')
-        GroupInput.outputs.new(type = 'Boolean', name = 'scale')
-        GroupInput.outputs.new(type = 'Boolean', name = 'select')
         # print(GroupInput.outputs[:])
         GroupOutput = gn.node_group.nodes.get('Group Output')
         JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
                         'JoinGeometry_%s'%self.label, 
                         'GeometryNodeJoinGeometry')
         gn.node_group.links.new(JoinGeometry.outputs['Geometry'], GroupOutput.inputs['Geometry'])
-        for sel in self.selects:
-            selname = sel.name
-            CompareSelect = get_nodes_by_name(gn.node_group.nodes, 
-                        'select_%s_%s'%(self.label, selname),
-                        'FunctionNodeCompareFloats')
-            CompareSelect.operation = 'EQUAL'
-            CompareSelect.inputs[1].default_value = string2Number(selname)
-            gn.node_group.links.new(GroupInput.outputs[1], CompareSelect.inputs[0])
-        for sp in self.species:
-            CompareSpecies = get_nodes_by_name(gn.node_group.nodes, 
-                        'CompareFloats_%s_%s'%(self.label, sp.name),
-                        'FunctionNodeCompareFloats')
-            CompareSpecies.operation = 'EQUAL'
-            CompareSpecies.inputs[1].default_value = string2Number(sp.name)
-        for selname, sel in self.selects.selects.items():
-            for sp in self.species:
-                InstanceOnPoint = get_nodes_by_name(gn.node_group.nodes,
-                            'InstanceOnPoint_%s_%s_%s'%(self.label, selname, sp.name), 
-                            'GeometryNodeInstanceOnPoints')
-                ObjectInfo = get_nodes_by_name(gn.node_group.nodes, 
-                            'ObjectInfo_%s_%s_%s'%(self.label, selname, sp.name),
-                            'GeometryNodeObjectInfo')
-                ObjectInfo.inputs['Object'].default_value = self.species.instancers[selname][sp.name]
-                #
-                BoolSelectSpecies = get_nodes_by_name(gn.node_group.nodes, 
-                                'BooleanMath_%s_%s_%s_0'%(self.label, selname, sp.name),
-                                'FunctionNodeBooleanMath')
-                BoolShow = get_nodes_by_name(gn.node_group.nodes, 
-                            'BooleanMath_%s_%s_%s_1'%(self.label, selname, sp.name),
-                            'FunctionNodeBooleanMath')
-                # BooleanMath.inputs[1].default_value = True
-                CompareSelect = get_nodes_by_name(gn.node_group.nodes, 
-                        'select_%s_%s'%(self.label, selname))
-                CompareSpecies = get_nodes_by_name(gn.node_group.nodes, 
-                        'CompareFloats_%s_%s'%(self.label, sp.name))
-                gn.node_group.links.new(GroupInput.outputs['Geometry'], InstanceOnPoint.inputs['Points'])
-                gn.node_group.links.new(GroupInput.outputs[1], CompareSelect.inputs[0])
-                gn.node_group.links.new(GroupInput.outputs[2], CompareSpecies.inputs[0])
-                gn.node_group.links.new(GroupInput.outputs[3], BoolShow.inputs[0])
-                gn.node_group.links.new(GroupInput.outputs[4], InstanceOnPoint.inputs['Scale'])
-                gn.node_group.links.new(CompareSelect.outputs[0], BoolSelectSpecies.inputs[0])
-                gn.node_group.links.new(CompareSpecies.outputs[0], BoolSelectSpecies.inputs[1])
-                gn.node_group.links.new(BoolSelectSpecies.outputs[0], BoolShow.inputs[1])
-                gn.node_group.links.new(BoolShow.outputs['Boolean'], InstanceOnPoint.inputs['Selection'])
-                gn.node_group.links.new(ObjectInfo.outputs['Geometry'], InstanceOnPoint.inputs['Instance'])
-                gn.node_group.links.new(InstanceOnPoint.outputs['Instances'], JoinGeometry.inputs['Geometry'])
-        gn['Input_2_use_attribute'] = 1
-        gn['Input_2_attribute_name'] = 'select'
-        gn['Input_3_use_attribute'] = 1
-        gn['Input_3_attribute_name'] = 'species_index'
-        gn['Input_4_use_attribute'] = 1
-        gn['Input_4_attribute_name'] = 'show'
-        gn['Input_5_use_attribute'] = 1
-        gn['Input_5_attribute_name'] = 'scale'
+    
+    def add_geometry_node(self, sp, select):
+        """
+        """
+        from batoms.butils import get_nodes_by_name
+        gn = self.gnodes
+        GroupInput = gn.node_group.nodes.get('Group Input')
+        JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
+                        'JoinGeometry_%s'%self.label, 
+                        'GeometryNodeJoinGeometry')
+        selname = select.name
+        CompareSelect = get_nodes_by_name(gn.node_group.nodes, 
+                    'select_%s_%s'%(self.label, selname),
+                    'FunctionNodeCompareFloats')
+        CompareSelect.operation = 'EQUAL'
+        # CompareSelect.data_type = 'INT'
+        CompareSelect.inputs[1].default_value = string2Number(selname)
+        gn.node_group.links.new(GroupInput.outputs[1], CompareSelect.inputs[0])
+        CompareSpecies = get_nodes_by_name(gn.node_group.nodes, 
+                    'CompareFloats_%s_%s'%(self.label, sp.name),
+                    'FunctionNodeCompareFloats')
+        CompareSpecies.operation = 'EQUAL'
+        # CompareSpecies.data_type = 'INT'
+        CompareSpecies.inputs[1].default_value = string2Number(sp.name)
+        InstanceOnPoint = get_nodes_by_name(gn.node_group.nodes,
+                    'InstanceOnPoint_%s_%s_%s'%(self.label, selname, sp.name), 
+                    'GeometryNodeInstanceOnPoints')
+        ObjectInfo = get_nodes_by_name(gn.node_group.nodes, 
+                    'ObjectInfo_%s_%s_%s'%(self.label, selname, sp.name),
+                    'GeometryNodeObjectInfo')
+        ObjectInfo.inputs['Object'].default_value = self.species.instancers[selname][sp.name]
+        #
+        BoolSelectSpecies = get_nodes_by_name(gn.node_group.nodes, 
+                        'BooleanMath_%s_%s_%s_0'%(self.label, selname, sp.name),
+                        'FunctionNodeBooleanMath')
+        BoolShow = get_nodes_by_name(gn.node_group.nodes, 
+                    'BooleanMath_%s_%s_%s_1'%(self.label, selname, sp.name),
+                    'FunctionNodeBooleanMath')
+        #
+        gn.node_group.links.new(GroupInput.outputs['Geometry'], InstanceOnPoint.inputs['Points'])
+        gn.node_group.links.new(GroupInput.outputs[1], CompareSelect.inputs[0])
+        gn.node_group.links.new(GroupInput.outputs[2], CompareSpecies.inputs[0])
+        gn.node_group.links.new(GroupInput.outputs[3], BoolShow.inputs[0])
+        gn.node_group.links.new(GroupInput.outputs[4], InstanceOnPoint.inputs['Scale'])
+        gn.node_group.links.new(CompareSelect.outputs[0], BoolSelectSpecies.inputs[0])
+        gn.node_group.links.new(CompareSpecies.outputs[0], BoolSelectSpecies.inputs[1])
+        gn.node_group.links.new(BoolSelectSpecies.outputs[0], BoolShow.inputs[1])
+        gn.node_group.links.new(BoolShow.outputs['Boolean'], InstanceOnPoint.inputs['Selection'])
+        gn.node_group.links.new(ObjectInfo.outputs['Geometry'], InstanceOnPoint.inputs['Instance'])
+        gn.node_group.links.new(InstanceOnPoint.outputs['Instances'], JoinGeometry.inputs['Geometry'])        
 
     def build_volume(self, volume):
         """
@@ -806,11 +820,8 @@ class Batoms(BaseCollection):
         self.set_gnodes(gnodes)
     
     def get_gnodes(self):
-        gnodes = self.obj.modifiers.get("GeometryNodes_%s"%self.label)
         name = 'GeometryNodes_%s'%self.label
         gnodes = self.obj.modifiers.get(name)
-        if gnodes is None:
-            gnodes = self.obj.modifiers.new(name = name, type = 'NODES')
         return gnodes
     
     def set_gnodes(self, gnodes):
@@ -1511,7 +1522,7 @@ class Batoms(BaseCollection):
     def draw_ball_and_stick(self, scale = 0.4):
         mask = np.where(self.model_style == 1, True, False)
         self.set_attribute_with_indices('scale', mask, scale)
-        self.bondsetting.draw_bonds(mask)
+        self.bondsetting.draw_bonds()
     
     def draw_polyhedra(self, scale = 0.4):
         mask = np.where(self.model_style == 2, True, False)
@@ -1519,7 +1530,7 @@ class Batoms(BaseCollection):
         self.set_attribute_with_indices('show', mask, True)
         if self.polyhedra_style == 0:
             self.set_attribute_with_indices('scale', mask, scale)
-            self.bondsetting.draw_bonds(mask)
+            # self.bondsetting.draw_bonds()
         if self.polyhedra_style == 1:
             self.set_attribute_with_indices('scale', mask, scale)
         elif self.polyhedra_style == 2:

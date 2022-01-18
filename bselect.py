@@ -276,8 +276,9 @@ class Selects(Setting):
         subset.flag = True
         # species_props = self.batoms.
         self.batoms.species.build_instancers()
-        self.batoms.build_geometry_node()
         sel = Select(self.label, name = name, batoms = self.batoms)
+        for sp in self.batoms.species:
+            self.batoms.add_geometry_node(sp, sel)
         return sel
     
 

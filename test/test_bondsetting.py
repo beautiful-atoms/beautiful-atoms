@@ -6,12 +6,41 @@ import numpy as np
 
 
 
-def test_replace():
+def test_bondsetting():
+from ase.io import read
 from ase.build import molecule
 from batoms.batoms import Batoms
 from batoms.butils import removeAll
 removeAll()
-h2o = Batoms('h2o', aseAtoms = molecule('H2O'))
+mof = read('test/datas/mof-5.cif')
+h2o = molecule('CH3CH2OH')
+h2o.pbc = True
+h2o.center(3)
+h2o = Batoms('h2o', from_ase = mof)
+# h2o.bondsetting.remove('C-C')
+# h2o.bondsetting.remove('O-O')
+h2o.model_style = 1
+bpy.data.objects['h2o_bond_center'].data.attributes['order'].data[0].value = 2
+bpy.data.objects['h2o_bond_center'].data.attributes['style'].data[0].value = 2
+
+def test_model_style():
+
+from batoms.batoms import Batoms
+from ase.build import molecule
+from batoms.butils import removeAll
+removeAll()
+mol = molecule('H2O')
+h2o = Batoms('h2o', from_ase = mol)
+h2o.pbc = True
+h2o.cell = [3, 3, 3]
+h2o = h2o*[2, 1, 1]
+indices = [0, 1, 2]
+sel1 = h2o.selects.add('sel1', indices)
+sel0 = h2o.selects['sel0']
+sel1.model_style = 1
+sel0.scale = 0.5
+sel1.scale = [2, 2, 2]
+h2o.draw_space_filling()
     h2o.replace('H', 'H_1', [0])
     h2o.bondsetting.remove(['O', 'H_1'])
     h2o['H_1'].color = [0.1, 0.8, 0, 1.0]

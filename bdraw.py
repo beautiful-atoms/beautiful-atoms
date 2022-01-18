@@ -193,6 +193,42 @@ def bond_source(vertices = 12, depth = 1.0):
     faces2 = [faces[i] for i in range(len(faces)) if len(faces[i]) != n]
     return vertices, faces1, faces2
 
+# draw bonds
+def cylinder2(vertices = 16, depth = 1.0):
+    bpy.ops.mesh.primitive_cylinder_add(vertices = 32, depth = 1)
+    obj = bpy.context.view_layer.objects.active
+    me = obj.data
+    # select edges for subdivde
+    n = len(me.vertices)
+    vertices = np.zeros(n*3, dtype=np.float64)
+    me.vertices.foreach_get('co', vertices)  
+    vertices = vertices.reshape((n, 3))
+    #
+    me.update()
+    m = len(me.edges)
+    selects = np.zeros(m, dtype=bool)
+    for i in range(m):
+        v0 = me.edges[i].vertices[0]
+        v1 = me.edges[i].vertices[1]
+        center = (vertices[v0] + vertices[v1])/2
+        print(i, v0, v1, center)
+        if np.isclose(center[2], 0):
+            selects[i] = True
+
+    bpy.ops.object.mode_set(mode = 'EDIT')
+    bpy.ops.mesh.select_all(action='DESELECT')
+    bpy.ops.object.mode_set(mode = 'OBJECT')
+    me.edges.foreach_set('select', selects)
+    bpy.ops.object.mode_set(mode = 'EDIT')
+    bpy.ops.mesh.subdivide(number_cuts = 1, smoothness = 0, fractal_along_normal = 0)
+    bpy.ops.object.mode_set(mode = 'OBJECT')
+    #
+    m = len(me.polygons)
+    centers = np.zeros(m*3, dtype=np.float64)
+    me.polygons.foreach_get('center', centers)  
+    centers = centers.reshape((m, 3))
+    return obj
+
 def atom_source():
     bpy.ops.mesh.primitive_uv_sphere_add() #, segments=32, ring_count=16)
     # bpy.ops.mesh.primitive_cylinder_add()

@@ -103,7 +103,7 @@ class Bbond(bpy.types.PropertyGroup):
     
     @property
     def name(self) -> str:
-        return '%s-%s'%(self.species1, self.species2)
+        return '%s-%s-%s'%(self.select, self.species1, self.species2)
     
     def as_dict(self) -> dict:
         setdict = {
@@ -127,9 +127,9 @@ class Bbond(bpy.types.PropertyGroup):
         return setdict
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
-        s = 'Bondpair      min     max   Search_bond    Polyhedra \n'
-        s += '{0:10s} {1:4.3f}   {2:4.3f}      {3:10s}   {4:10s} \n'.format(\
-                self.name, self.min, self.max, str(self.search), str(self.polyhedra))
+        s = 'Bondpair   select   min     max   Search_bond    Polyhedra \n'
+        s += '{:10s} {:10s} {:4.3f}   {:4.3f}      {:10s}   {:10s} \n'.format(\
+                self.name, self.select, self.min, self.max, str(self.search), str(self.polyhedra))
         s += '-'*60 + '\n'
         return s
 

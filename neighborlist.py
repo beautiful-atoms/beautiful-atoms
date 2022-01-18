@@ -498,29 +498,216 @@ def neighbor_list(quantities, a, cutoff, self_interaction=False,
                                    self_interaction=self_interaction,
                                    max_nbins=max_nbins)
 
-def neighbor_kdtree(positions, k = 20, parallel = 1):
-    from scipy.spatial import KDTree
-    tree = KDTree(positions)
+def neighbor_kdtree(quantities, species, positions, cell, pbc,
+                    cutoffs, self_interaction=False,
+                    use_scaled_positions=False,
+                    max_nbins=1e6):
+    """
+    
+    """
+    tstart1 = time.time()
+    if use_scaled_positions:
+        scaled_positions = positions
+        positions = np.dot(scaled_positions, cell)
+    else:
+        scaled_positions = np.linalg.solve(complete_cell(cell).T,
+                                              positions.T).T
+    # find region outside cell for periodic caculation, supercell 
+    max_cutoff = np.array([x for x in cutoffs.values()]).max()
+    # Compute distances of cell faces.
+    face_dist_c = 1/(np.linalg.norm(np.linalg.pinv(cell).T, axis = 1) + 1e-9)
+    boundary = max_cutoff/face_dist_c
+    ib = np.array([np.floor(-boundary), np.ceil(1+boundary)], dtype=int)
+    for c in range(3):
+        if not pbc[c]:
+            ib[:, c] = [0, 1]
+    M = np.product(ib[1] - ib[0])
+    natom = len(scaled_positions)
+    # repeat the scaled_positions so that it completely covers the boundary
+    scaled_positions_b = np.tile(scaled_positions, (M, ) + (1, ) * (len(scaled_positions.shape) - 1))
+    offsets_b = np.zeros((M*natom, 3), dtype=int)
+    tstart1 = time.time()
+    indices0 = np.arange(natom)
+    indices_b = np.tile(indices0, (M, ) + (1, ) * (len(indices0.shape) - 1))
+    species_b = np.tile(species, (M, ) + (1, ) * (len(species.shape) - 1))
+    i0 = 0
+    for m0 in range(ib[0, 0], ib[1, 0]):
+        for m1 in range(ib[0, 1], ib[1, 1]):
+            for m2 in range(ib[0, 2], ib[1, 2]):
+                i1 = i0 + natom
+                scaled_positions_b[i0:i1] += np.array([m0, m1, m2])
+                offsets_b[i0:i1] = np.array([m0, m1, m2])
+                i0 = i1
+    # find atoms inside boundary
+    ind =  np.where((scaled_positions_b[:, 0] > -boundary[0]) & (scaled_positions_b[:, 0] < 1 + boundary[0]) \
+                & (scaled_positions_b[:, 1] > -boundary[1]) & (scaled_positions_b[:, 1] < 1 + boundary[1]) \
+                & (scaled_positions_b[:, 2] > -boundary[2]) & (scaled_positions_b[:, 2] < 1 + boundary[2]))[0]
+    scaled_positions_b = scaled_positions_b[ind]
+    indices_b = indices_b[ind]
+    species_b = species_b[ind]
+    offsets_b = offsets_b[ind]
+    print('build boundary: {:1.2f}'.format(time.time() - tstart1))
+    #
+    i = []
+    j = []
+    j_b = []
+    positions_b = np.dot(scaled_positions_b, cell)
+    for pair, cutoff in cutoffs.items():
+        indices1 = np.where(species == pair[0])[0]
+        indices2 = np.where(species_b == pair[1])[0]
+        p1 = positions[indices1]
+        p2 = positions_b[indices2]
+        if len(p1) == 0 or len(p2) == 0: continue
+        indices_min = None
+        # qurey the less one is faster, flip is needed
+        flip = False
+        if len(p1) < len(p2):
+            # find max
+            indices_max = primitive_neighbor_kdtree(p1, 
+                p2, cutoff = cutoff[1], parallel = 1)
+            # find min
+            if cutoff[0] > 1e-6:
+                indices_min = primitive_neighbor_kdtree(p1, 
+                    p2, cutoff = cutoff[0], parallel = 1)
+        else:
+            flip = True
+            indices_max = primitive_neighbor_kdtree(p2, 
+                p1, cutoff = cutoff[1], parallel = 1)
+            if cutoff[0] > 1e-6:
+                indices_min = primitive_neighbor_kdtree(p2, 
+                    p1, cutoff = cutoff[0], parallel = 1)
+        
+        n = len(p2) if flip else len(p1)
+        i2 = []
+        i1 = []
+        if indices_min is not None:
+            for k in range(n):
+                indices_mid = set(indices_max[k]) - set(indices_min[k])
+                m = len(indices_mid)
+                i1.extend([k]*m)
+                i2.extend(indices_mid)
+        else:
+            for k in range(n):
+                # offsets1 = offsets[indices[k]]
+                m = len(indices_max[k])
+                i1.extend([k]*m)
+                i2.extend(indices_max[k])
+        # map indices to original atoms, and the boudary atoms
+        if flip:
+            i1_o = indices1[i2]
+            i2_b = indices2[i1]
+        else:
+            i1_o = indices1[i1]
+            i2_b = indices2[i2]
+        i2_o = indices_b[i2_b]
+        # remove bothways for same species, e.g. ('C', 'C')
+        if pair[0] == pair[1]:
+            mask = np.where((i1_o > i2_o) & ((offsets_b[i2_b] == 0).all(axis = 1)), False, True)
+            i1_o = i1_o[mask]
+            i2_o = i2_o[mask]
+            i2_b = i2_b[mask]
+        i.extend(i1_o)
+        j.extend(i2_o)
+        j_b.extend(i2_b)
+    # Compute distance vectors.
+    # print(indices3[i1][:, 0])
     tstart = time.time()
-    print('KDTree positions: %s'%(time.time() - tstart))
-    distance, indices = tree.query(positions, k = k, workers=parallel)
-    print('KDTree query: %s'%(time.time() - tstart))
-    return indices, distance
+    distance_vector = positions[i] - positions_b[j_b]
+    # distance_vectors.append(distance_vector)
+    distances = np.sqrt(np.sum(distance_vector*distance_vector, axis = 1))
+    offsets = offsets_b[j_b]
+    # Remove all self-interaction.
+    i = np.array(i)
+    j = np.array(j)
+    if not self_interaction:
+        mask = np.where((i == j) & (np.prod(offsets == [0, 0, 0], axis = -1)), False, True)
+        # print(mask)
+        i = i[mask]
+        j = j[mask]
+        distances = distances[mask]
+        offsets = offsets[mask]
+    print('Build distances: {:1.2f}'.format(time.time() - tstart))
+    #=====================================
+    retvals = []
+    for q in quantities:
+        if q == 'i':
+            retvals += [i]
+        elif q == 'j':
+            retvals += [j]
+        elif q == 'D':
+            retvals += [distance_vector]
+        elif q == 'd':
+            retvals += [distances]
+        elif q == 'S':
+            retvals += [offsets]
+        else:
+            raise ValueError('Unsupported quantity specified.')
+    if len(retvals) == 1:
+        return retvals[0]
+    else:
+        return tuple(retvals)
+
+def primitive_neighbor_kdtree(positions1, positions2, 
+                cutoff = 1.0, parallel = 1):
+    """
+    """
+    from scipy.spatial import KDTree
+    #
+    tstart = time.time()
+    tree = KDTree(positions2)
+    indices = tree.query_ball_point(positions1, r = cutoff, workers=parallel)
+    print('KDTree: {:1.2f}'.format(time.time() - tstart))
+    return indices
 
 if __name__ == "__main__":
     from ase.io import read, write
     from ase.build import molecule, bulk
     from ase.visualize import view
     from ase import Atom, Atoms
-    h2o = molecule('H2O')
+    mof = read('test/datas/mof-5.cif')
+    pro = read('test/datas/1tim.pdb')
+    # kras = kras*[2, 2, 2]
+    # kras.center(2)
+    h2o = molecule('CH3CH2OH')
     h2o.pbc = True
-    h2o.cell = [3, 3, 3]
-    h2o = h2o*[50, 50, 50]
-    print(len(h2o))
-    h2o.arrays['species'] = h2o.get_chemical_symbols()
-    # h2o = read('docs/source/_static/datas/mof-5.cif')
-    cutoff = {('O', 'H'): [0.0, 1.0]}
+    h2o.center(3)
+    # h2o.cell = [4, 7, 5]
+    atoms = h2o
+    atoms = atoms*[1, 1, 1]
+    atoms.write('h2o-20-20-20.xyz')
+    print(len(atoms))
+    # view(atoms)
+    atoms.arrays['species'] = atoms.get_chemical_symbols()
+    print(atoms.arrays['species'])
+    # atoms = read('docs/source/_static/datas/mof-5.cif')
+    cutoff = {
+        # ('O', 'H'): [0.0, 1.261], 
+            # ('O', 'O'): [0.0, 1.39],
+            # ('H', 'H'): [0.0, 1.39],
+            # ('C', 'H'): [0.0, 1.39],
+            # ('C', 'O'): [0.0, 1.8],
+            ('C', 'C'): [0.0, 1.99],
+                }
     tstart = time.time()
-    i, j, S = neighbor_list('ijS', h2o, cutoff)
+    i, j, d, S = neighbor_list('ijdS', atoms, cutoff)
     print('time %s'%(time.time() - tstart))
-    neighbor_kdtree(h2o.positions, k = 10)
+    print(i, j, S)
+    cutoffs = {
+        # (30, 8) : [0.000, 2.444],
+        # (30, 1) : [0.000, 1.989],
+        # (8, 8)  : [0.000, 1.716],
+        (8, 1)  : [0.000, 1.261],
+        # (6, 8)  : [0.000, 1.846],
+        # (6, 6)  : [0.000, 1.976],
+        # (1, 1)  : [0.000, 1.076],
+        # (6, 1)  : [0.000, 1.391],
+        (1, 8)  : [1.200, 2.100],
+        }
+    tstart = time.time()
+    scaled_positions = atoms.get_scaled_positions()
+    species = atoms.numbers
+    i, j, d, offsets = neighbor_kdtree('ijdS', species, 
+                atoms.positions, atoms.get_cell(complete=True), atoms.pbc,
+            cutoffs, use_scaled_positions=False)
+    print('time %s'%(time.time() - tstart))
+    print(i, j, d, offsets)
