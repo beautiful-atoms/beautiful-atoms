@@ -4,6 +4,7 @@ This module defines the Bonds object in the Batoms package.
 
 """
 
+from pandas import offsets
 import bpy
 import bmesh
 from time import time
@@ -14,17 +15,16 @@ from batoms.base import BaseObject
 from batoms.bondsetting import BondSettings
 
 default_attributes = [
-        ['style', 'INT'], 
-        ['atoms_index1', 'INT'], 
-        ['atoms_index2', 'INT'], 
-        ['atoms_index3', 'INT'], 
-        ['atoms_index4', 'INT'], 
-        ['species_index1', 'INT'], 
-        ['species_index2', 'INT'], 
-        ['show', 'BOOLEAN'], 
-        ['select', 'INT'],
-        ['order', 'INT'],
-        ['model_style', 'INT'],
+            ['atoms_index1', 'INT'],
+            ['atoms_index2', 'INT'],
+            ['atoms_index3', 'INT'],
+            ['atoms_index4', 'INT'],
+            ['species_index1', 'INT'],
+            ['species_index2', 'INT'],
+            ['order', 'INT'],
+            ['style', 'INT'],
+            ['show', 'BOOLEAN'],
+            ['model_style', 'INT'],
         ]
 
 default_bond_datas = {
@@ -36,7 +36,7 @@ default_bond_datas = {
         'species_index2': np.ones(0, dtype = int),
         'centers':np.zeros((0, 3)),
         # 'vectors':np.zeros((0, 3)),
-        # 'offsets':np.zeros((0, 3)),
+        'offsets':np.zeros((0, 3)),
         # 'eulers':np.eye(3),
         # 'lengths':np.zeros((0, 3)),
         'widths': np.ones(0, dtype = float),
@@ -112,25 +112,25 @@ class Bonds(BaseObject):
         if len(bond_datas['centers'].shape) == 2:
             self._frames = (np.array([bond_datas['centers']]), 
                             # np.array([bond_datas['vectors']]),
-                            # np.array([bond_datas['offsets']]),
+                            np.array([bond_datas['offsets']]),
                             # np.array([bond_datas['eulers']]),
                             # np.array([bond_datas['lengths']]),
                             )
             centers = bond_datas['centers']
             # vectors = bond_datas['vectors']
-            # offsets = bond_datas['offsets']
+            offsets = bond_datas['offsets']
             # eulers = bond_datas['eulers']
             # lengths = bond_datas['lengths']
         elif len(bond_datas['centers'].shape) == 3:
             self._frames = (bond_datas['centers'], 
                             # bond_datas['vectors'], 
-                            # bond_datas['offsets'], 
+                            bond_datas['offsets'], 
                             # bond_datas['eulers'], 
                             # bond_datas['lengths'],
                             )
             centers = bond_datas['centers'][0]
             # vectors = bond_datas['vectors'][0]
-            # offsets = bond_datas['offsets'][0]
+            offsets = bond_datas['offsets'][0]
             # eulers = bond_datas['eulers'][0]
             # lengths = bond_datas['lengths'][0]
         else:
@@ -171,17 +171,17 @@ class Bonds(BaseObject):
         # obj = bpy.data.objects.new(name, mesh)
         # self.setting.coll.objects.link(obj)
         # obj.hide_set(True)
-        # #
-        # name = '%s_bond_offset'%self.label
-        # if name in bpy.data.objects:
-        #     obj = bpy.data.objects.get(name)
-        #     bpy.data.objects.remove(obj, do_unlink = True)
-        # mesh = bpy.data.meshes.new(name)
-        # mesh.from_pydata(offsets, [], [])
-        # mesh.update()
-        # obj = bpy.data.objects.new(name, mesh)
-        # self.setting.coll.objects.link(obj)
-        # obj.hide_set(True)
+        #
+        name = '%s_bond_offset'%self.label
+        if name in bpy.data.objects:
+            obj = bpy.data.objects.get(name)
+            bpy.data.objects.remove(obj, do_unlink = True)
+        mesh = bpy.data.meshes.new(name)
+        mesh.from_pydata(offsets, [], [])
+        mesh.update()
+        obj = bpy.data.objects.new(name, mesh)
+        self.setting.coll.objects.link(obj)
+        obj.hide_set(True)
         # # calc euler angles
         # name = '%s_bond_rotation'%self.label
         # if name in bpy.data.objects:
@@ -255,17 +255,12 @@ class Bonds(BaseObject):
         name = 'GeometryNodes_%s_bond'%self.label
         modifier = self.obj.modifiers.new(name = name, type = 'NODES')
         modifier.node_group.name = name
+        #------------------------------------------------------------------
+        # select attributes
         GroupInput = modifier.node_group.nodes.get('Group Input')
-        GroupInput.outputs.new(type = 'INT', name = 'atoms1')
-        GroupInput.outputs.new(type = 'INT', name = 'atoms2')
-        GroupInput.outputs.new(type = 'INT', name = 'atoms3')
-        GroupInput.outputs.new(type = 'INT', name = 'atoms4')
-        GroupInput.outputs.new(type = 'INT', name = 'species1')
-        GroupInput.outputs.new(type = 'INT', name = 'species2')
-        GroupInput.outputs.new(type = 'INT', name = 'order')
-        GroupInput.outputs.new(type = 'INT', name = 'style')
-        GroupInput.outputs.new(type = 'INT', name = 'show')
-        GroupInput.outputs.new(type = 'BOOLEAN', name = 'model_style')
+        # add new output sockets
+        for att in default_attributes:
+            GroupInput.outputs.new(type = att[1], name = att[0])
         # the above codes not works. maybe bug in blender, 
         # we add this, maybe deleted in the future
         for i in range(1, 11):
@@ -273,178 +268,153 @@ class Bonds(BaseObject):
                             'BooleanMath_%s'%i,
                             'FunctionNodeCompareFloats')
             modifier.node_group.links.new(GroupInput.outputs[i], test.inputs[0])
-        # the Input_1 is Geometry
-        modifier['Input_2_use_attribute'] = 1
-        modifier['Input_2_attribute_name'] = 'atoms_index1'
-        modifier['Input_3_use_attribute'] = 1
-        modifier['Input_3_attribute_name'] = 'atoms_index2'
-        modifier['Input_4_use_attribute'] = 1
-        modifier['Input_4_attribute_name'] = 'atoms_index3'
-        modifier['Input_5_use_attribute'] = 1
-        modifier['Input_5_attribute_name'] = 'atoms_index4'
-        modifier['Input_6_use_attribute'] = 1
-        modifier['Input_6_attribute_name'] = 'species_index1'
-        modifier['Input_7_use_attribute'] = 1
-        modifier['Input_7_attribute_name'] = 'species_index2'
-        modifier['Input_8_use_attribute'] = 1
-        modifier['Input_8_attribute_name'] = 'order'
-        modifier['Input_9_use_attribute'] = 1
-        modifier['Input_9_attribute_name'] = 'style'
-        modifier['Input_10_use_attribute'] = 1
-        modifier['Input_10_attribute_name'] = 'show'
-        modifier['Input_11_use_attribute'] = 1
-        modifier['Input_11_attribute_name'] = 'model_style'
+        #
+        i = 2
+        for att in default_attributes:
+            modifier['Input_%s_use_attribute'%i] = 1
+            modifier['Input_%s_attribute_name'%i] = att[0]
+            i += 1
         gn = modifier
-        # print(gn.name)
-        # print(GroupInput.outputs[:])
+        #------------------------------------------------------------------
         GroupOutput = gn.node_group.nodes.get('Group Output')
         JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
-                        'JoinGeometry_%s'%self.label, 
+                        '%s_JoinGeometry'%self.label, 
                         'GeometryNodeJoinGeometry')
         gn.node_group.links.new(GroupInput.outputs['Geometry'], JoinGeometry.inputs['Geometry'])
         gn.node_group.links.new(JoinGeometry.outputs['Geometry'], GroupOutput.inputs['Geometry'])
-        # Get two positions from batoms
+        #------------------------------------------------------------------
+        # calculate bond vector, length, rotation based on the index
+        # Get four positions from batoms, bond and the second bond for high order bond plane
         ObjectBatoms = get_nodes_by_name(gn.node_group.nodes, 
-                    'ObjectInfo_%s_Batoms'%self.label,
+                    '%s_ObjectBatoms'%self.label,
                     'GeometryNodeObjectInfo')
         ObjectBatoms.inputs['Object'].default_value = self.batoms.obj
         PositionBatoms = get_nodes_by_name(gn.node_group.nodes, 
-                        'Position%s_Batoms'%(self.label),
+                        '%s_PositionBatoms'%(self.label),
                         'GeometryNodeInputPosition')
-        AttributeTransferBatoms0 = get_nodes_by_name(gn.node_group.nodes, 
-                    '%s_AttributeTransferBatoms0'%self.label,
+        TransferBatoms = []
+        for i in range(4):
+            tmp = get_nodes_by_name(gn.node_group.nodes, 
+                        '%s_TransferBatoms%s'%(self.label, i),
+                        'GeometryNodeAttributeTransfer')
+            tmp.mapping = 'INDEX'
+            tmp.data_type = 'FLOAT_VECTOR'
+            TransferBatoms.append(tmp)
+        for i in range(4):
+            gn.node_group.links.new(ObjectBatoms.outputs['Geometry'], TransferBatoms[i].inputs['Target'])
+            gn.node_group.links.new(PositionBatoms.outputs['Position'], TransferBatoms[i].inputs['Attribute'])
+            gn.node_group.links.new(GroupInput.outputs[i + 1], TransferBatoms[i].inputs['Index'])
+        #------------------------------------------------------------------
+        # add positions with offsets
+        # transfer offsets from object self.obj_o
+        ObjectOffsets = get_nodes_by_name(gn.node_group.nodes, 
+                        '%s_ObjectOffsets'%(self.label),
+                        'GeometryNodeObjectInfo')
+        ObjectOffsets.inputs['Object'].default_value = self.obj_o
+        PositionOffsets = get_nodes_by_name(gn.node_group.nodes, 
+                        '%s_PositionOffsets'%(self.label),
+                        'GeometryNodeInputPosition')
+        TransferOffsets = get_nodes_by_name(gn.node_group.nodes, 
+                    '%s_TransferOffsets'%self.label,
                     'GeometryNodeAttributeTransfer')
-        AttributeTransferBatoms0.mapping = 'INDEX'
-        AttributeTransferBatoms0.data_type = 'FLOAT_VECTOR'
-        AttributeTransferBatoms1 = get_nodes_by_name(gn.node_group.nodes, 
-                    '%s_AttributeTransferBatoms1'%self.label,
-                    'GeometryNodeAttributeTransfer')
-        AttributeTransferBatoms1.mapping = 'INDEX'
-        AttributeTransferBatoms1.data_type = 'FLOAT_VECTOR'
-        AttributeTransferBatoms2 = get_nodes_by_name(gn.node_group.nodes, 
-                    '%s_AttributeTransferBatoms2'%self.label,
-                    'GeometryNodeAttributeTransfer')
-        AttributeTransferBatoms2.mapping = 'INDEX'
-        AttributeTransferBatoms2.data_type = 'FLOAT_VECTOR'
-        AttributeTransferBatoms3 = get_nodes_by_name(gn.node_group.nodes, 
-                    '%s_AttributeTransferBatoms3'%self.label,
-                    'GeometryNodeAttributeTransfer')
-        AttributeTransferBatoms3.mapping = 'INDEX'
-        AttributeTransferBatoms3.data_type = 'FLOAT_VECTOR'
-        # set center of bond by the center
-        SetPosition = get_nodes_by_name(gn.node_group.nodes,
-                        'SetPosition_%s'%self.label, 
-                        'GeometryNodeSetPosition')
-        gn.node_group.links.new(GroupInput.outputs['Geometry'], SetPosition.inputs['Geometry'])
-        VectorCenter = get_nodes_by_name(gn.node_group.nodes, 
-                    'VectorCenter_%s'%self.label,
-                    'ShaderNodeVectorMath')
-        VectorCenter.operation = 'ADD'
+        TransferOffsets.mapping = 'INDEX'
+        TransferOffsets.data_type = 'FLOAT_VECTOR'
+        gn.node_group.links.new(ObjectOffsets.outputs['Geometry'], TransferOffsets.inputs['Target'])
+        gn.node_group.links.new(PositionOffsets.outputs['Position'], TransferOffsets.inputs['Attribute'])
+        # we need three add operations
+        # two: Get the positions with offset for atoms2, and atom4
+        # one: Get center = (positions1 + positions2)/2
+        VectorAdd = []
+        for i in range(3):
+            tmp = get_nodes_by_name(gn.node_group.nodes, 
+                        '%s_VectorAdd%s'%(self.label, i),
+                        'ShaderNodeVectorMath')
+            tmp.operation = 'ADD'
+            VectorAdd.append(tmp)
+        gn.node_group.links.new(TransferBatoms[1].outputs[0], VectorAdd[0].inputs[0])
+        gn.node_group.links.new(TransferOffsets.outputs[0], VectorAdd[0].inputs[1])
+        gn.node_group.links.new(TransferBatoms[3].outputs[0], VectorAdd[1].inputs[0])
+        gn.node_group.links.new(TransferOffsets.outputs[0], VectorAdd[1].inputs[1])
+        #
+        # divide by 2 to get the center
         VectorDivide = get_nodes_by_name(gn.node_group.nodes, 
                     'VectorDivide_%s'%self.label,
                     'ShaderNodeVectorMath')
         VectorDivide.operation = 'DIVIDE'
         VectorDivide.inputs[1].default_value = (2, 2, 2)
-        gn.node_group.links.new(ObjectBatoms.outputs['Geometry'], AttributeTransferBatoms0.inputs['Target'])
-        gn.node_group.links.new(ObjectBatoms.outputs['Geometry'], AttributeTransferBatoms1.inputs['Target'])
-        gn.node_group.links.new(ObjectBatoms.outputs['Geometry'], AttributeTransferBatoms2.inputs['Target'])
-        gn.node_group.links.new(ObjectBatoms.outputs['Geometry'], AttributeTransferBatoms3.inputs['Target'])
-        gn.node_group.links.new(PositionBatoms.outputs['Position'], AttributeTransferBatoms0.inputs['Attribute'])
-        gn.node_group.links.new(PositionBatoms.outputs['Position'], AttributeTransferBatoms1.inputs['Attribute'])
-        gn.node_group.links.new(PositionBatoms.outputs['Position'], AttributeTransferBatoms2.inputs['Attribute'])
-        gn.node_group.links.new(PositionBatoms.outputs['Position'], AttributeTransferBatoms3.inputs['Attribute'])
-        gn.node_group.links.new(GroupInput.outputs[1], AttributeTransferBatoms0.inputs['Index'])
-        gn.node_group.links.new(GroupInput.outputs[2], AttributeTransferBatoms1.inputs['Index'])
-        gn.node_group.links.new(GroupInput.outputs[3], AttributeTransferBatoms2.inputs['Index'])
-        gn.node_group.links.new(GroupInput.outputs[4], AttributeTransferBatoms3.inputs['Index'])
-        gn.node_group.links.new(AttributeTransferBatoms0.outputs[0], VectorCenter.inputs[0])
-        gn.node_group.links.new(AttributeTransferBatoms1.outputs[0], VectorCenter.inputs[1])
-        gn.node_group.links.new(VectorCenter.outputs[0], VectorDivide.inputs[0])
+        gn.node_group.links.new(TransferBatoms[0].outputs[0], VectorAdd[2].inputs[0])
+        gn.node_group.links.new(VectorAdd[0].outputs[0], VectorAdd[2].inputs[1])
+        gn.node_group.links.new(VectorAdd[2].outputs[0], VectorDivide.inputs[0])
+        # set center of the bond
+        SetPosition = get_nodes_by_name(gn.node_group.nodes,
+                        '%s_SetPosition'%self.label, 
+                        'GeometryNodeSetPosition')
+        gn.node_group.links.new(GroupInput.outputs['Geometry'], SetPosition.inputs['Geometry'])
         gn.node_group.links.new(VectorDivide.outputs[0], SetPosition.inputs['Position'])
-        # set length of bond
-        CombineXYZ = get_nodes_by_name(gn.node_group.nodes,
-                        '%s_CombineXYZ'%self.label, 
-                        'ShaderNodeCombineXYZ')
-        CombineXYZ.inputs[0].default_value = 1
-        CombineXYZ.inputs[1].default_value = 1
-        VectorSubtract0 = get_nodes_by_name(gn.node_group.nodes, 
-                    '%s_VectorSubtract0'%self.label,
-                    'ShaderNodeVectorMath')
-        VectorSubtract0.operation = 'SUBTRACT'
-        VectorSubtract1 = get_nodes_by_name(gn.node_group.nodes, 
-                    '%s_VectorSubtract1'%self.label,
-                    'ShaderNodeVectorMath')
-        VectorSubtract1.operation = 'SUBTRACT'
+        # get the vector for the bond and the length
+        # also the vector for the second bond
+        VectorSubtract = []
+        for i in range(2):
+            tmp = get_nodes_by_name(gn.node_group.nodes, 
+                        '%s_VectorSubtract%s'%(self.label, i),
+                        'ShaderNodeVectorMath')
+            tmp.operation = 'SUBTRACT'
+            VectorSubtract.append(tmp)
         VectorLength = get_nodes_by_name(gn.node_group.nodes, 
-                    'VectorLength_%s'%self.label,
+                    '%s_VectorLength'%self.label,
                     'ShaderNodeVectorMath')
         VectorLength.operation = 'LENGTH'
         VectorCross0 = get_nodes_by_name(gn.node_group.nodes, 
                     '%s_VectorCross0'%self.label,
                     'ShaderNodeVectorMath')
         VectorCross0.operation = 'CROSS_PRODUCT'
-        gn.node_group.links.new(AttributeTransferBatoms0.outputs[0], VectorSubtract0.inputs[0])
-        gn.node_group.links.new(AttributeTransferBatoms1.outputs[0], VectorSubtract0.inputs[1])
-        gn.node_group.links.new(AttributeTransferBatoms2.outputs[0], VectorSubtract1.inputs[0])
-        gn.node_group.links.new(AttributeTransferBatoms3.outputs[0], VectorSubtract1.inputs[1])
-        gn.node_group.links.new(VectorSubtract0.outputs[0], VectorLength.inputs[0])
-        gn.node_group.links.new(VectorLength.outputs['Value'], CombineXYZ.inputs['Z'])
-        # cross for rotation
-        gn.node_group.links.new(VectorSubtract0.outputs[0], VectorCross0.inputs[0])
-        gn.node_group.links.new(VectorSubtract1.outputs[0], VectorCross0.inputs[1])
-        # set rotation
-        AlignEuler0 = get_nodes_by_name(gn.node_group.nodes, 
-                    '%s_AlignEuler0'%self.label,
-                    'FunctionNodeAlignEulerToVector')
-        AlignEuler0.axis = 'Z'
-        # AlignEuler0.pivot_axis = 'Z'
-        AlignEuler1 = get_nodes_by_name(gn.node_group.nodes, 
-                    '%s_AlignEuler1'%self.label,
-                    'FunctionNodeAlignEulerToVector')
-        AlignEuler1.axis = 'Y'
-        AlignEuler1.pivot_axis = 'Z'
-        gn.node_group.links.new(VectorSubtract0.outputs[0], AlignEuler0.inputs['Vector'])
-        gn.node_group.links.new(AlignEuler0.outputs[0], AlignEuler1.inputs['Rotation'])
-        gn.node_group.links.new(VectorCross0.outputs[0], AlignEuler1.inputs['Vector'])
-            
-        # ObjectRotation = get_nodes_by_name(gn.node_group.nodes, 
-        #                 'ObjectInfo_%s_Rotation'%(self.label),
-        #                 'GeometryNodeObjectInfo')
-        # ObjectRotation.inputs['Object'].default_value = self.obj_r
-        # PositionRotation = get_nodes_by_name(gn.node_group.nodes, 
-        #                 'Position%s_Rotation'%(self.label),
-        #                 'GeometryNodeInputPosition')
-        # AttributeTransferRotation = get_nodes_by_name(gn.node_group.nodes, 
-        #             'AttributeTransfer_%s_Rotation'%self.label,
-        #             'GeometryNodeAttributeTransfer')
-        # AttributeTransferRotation.mapping = 'INDEX'
-        # AttributeTransferRotation.data_type = 'FLOAT_VECTOR'
+        gn.node_group.links.new(TransferBatoms[0].outputs[0], VectorSubtract[0].inputs[0])
+        gn.node_group.links.new(VectorAdd[0].outputs[0], VectorSubtract[0].inputs[1])
+        gn.node_group.links.new(TransferBatoms[2].outputs[0], VectorSubtract[1].inputs[0])
+        gn.node_group.links.new(VectorAdd[1].outputs[0], VectorSubtract[1].inputs[1])
+        # calc the bond length, use it to build scale
+        gn.node_group.links.new(VectorSubtract[0].outputs[0], VectorLength.inputs[0])
         #
-        # ObjectScale = get_nodes_by_name(gn.node_group.nodes, 
-        #             'ObjectInfo_%s_Scale'%(self.label),
-        #             'GeometryNodeObjectInfo')
-        # ObjectScale.inputs['Object'].default_value = self.obj_s
-        # PositionScale = get_nodes_by_name(gn.node_group.nodes, 
-        #                 'Position%s_Scale'%(self.label),
-        #                 'GeometryNodeInputPosition')
-        # AttributeTransferScale = get_nodes_by_name(gn.node_group.nodes, 
-        #             'AttributeTransfer_%s_Scale'%self.label,
-        #             'GeometryNodeAttributeTransfer')
-        # AttributeTransferScale.mapping = 'INDEX'
-        # AttributeTransferScale.data_type = 'FLOAT_VECTOR'
+        CombineXYZ = get_nodes_by_name(gn.node_group.nodes,
+                        '%s_CombineXYZ'%self.label, 
+                        'ShaderNodeCombineXYZ')
+        CombineXYZ.inputs[0].default_value = 1
+        CombineXYZ.inputs[1].default_value = 1
+        gn.node_group.links.new(VectorLength.outputs['Value'], CombineXYZ.inputs['Z'])
+        # cross for rotation, for high order bond
+        gn.node_group.links.new(VectorSubtract[0].outputs[0], VectorCross0.inputs[0])
+        gn.node_group.links.new(VectorSubtract[1].outputs[0], VectorCross0.inputs[1])
+        # get Euler for rotation
+        # we need align two vectors to fix a plane
+        # we build the instancer by fix bond diection to Z, and high order bond shift to X
+        # thus the the normal of high order bond plane is Y
+        AlignEuler = []
+        for i in range(2):
+            tmp = get_nodes_by_name(gn.node_group.nodes, 
+                        '%s_AlignEuler%s'%(self.label, i),
+                        'FunctionNodeAlignEulerToVector')
+            AlignEuler.append(tmp)
+        AlignEuler[0].axis = 'Z'
+        AlignEuler[1].axis = 'Y'
+        # We should fix Z when align Y
+        AlignEuler[1].pivot_axis = 'Z'
+        gn.node_group.links.new(VectorSubtract[0].outputs[0], AlignEuler[0].inputs['Vector'])
+        gn.node_group.links.new(AlignEuler[0].outputs[0], AlignEuler[1].inputs['Rotation'])
+        gn.node_group.links.new(VectorCross0.outputs[0], AlignEuler[1].inputs['Vector'])
+        # find bond kinds by the names of species
         for sp in self.batoms.species:
-            CompareSpecies1 = get_nodes_by_name(gn.node_group.nodes, 
-                        'CompareSpecies1_%s_%s'%(self.label, sp.name),
-                        'FunctionNodeCompareFloats')
-            CompareSpecies1.operation = 'EQUAL'
-            CompareSpecies1.inputs[1].default_value = string2Number(sp.name)
-            CompareSpecies2 = get_nodes_by_name(gn.node_group.nodes, 
-                        'CompareSpecies2_%s_%s'%(self.label, sp.name),
-                        'FunctionNodeCompareFloats')
-            CompareSpecies2.operation = 'EQUAL'
-            CompareSpecies2.inputs[1].default_value = string2Number(sp.name)
-            gn.node_group.links.new(GroupInput.outputs[5], CompareSpecies1.inputs[0])
-            gn.node_group.links.new(GroupInput.outputs[6], CompareSpecies2.inputs[0])
+            # we need two compares for one species,
+            # because we have two sockets: species_index1 and species_index2
+            CompareSpecies = []
+            for i in range(2):
+                tmp = get_nodes_by_name(gn.node_group.nodes, 
+                            '%s_CompareSpecies_%s_%s'%(self.label, sp.name, i),
+                            'FunctionNodeCompareFloats')
+                tmp.operation = 'EQUAL'
+                tmp.inputs[1].default_value = string2Number(sp.name)
+                CompareSpecies.append(tmp)
+            gn.node_group.links.new(GroupInput.outputs[5], CompareSpecies[0].inputs[0])
+            gn.node_group.links.new(GroupInput.outputs[6], CompareSpecies[1].inputs[0])
         # order 
         for order in [1, 2, 3]:
             CompareOrder = get_nodes_by_name(gn.node_group.nodes, 
@@ -472,26 +442,9 @@ class Bonds(BaseObject):
         gn = self.gnodes
         GroupInput = gn.node_group.nodes.get('Group Input')
         SetPosition = get_nodes_by_name(gn.node_group.nodes,
-                        'SetPosition_%s'%self.label, 
-                        'GeometryNodeSetPosition')
+                        '%s_SetPosition'%self.label)
         JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
-                        'JoinGeometry_%s'%self.label, 
-                        'GeometryNodeJoinGeometry')
-        #
-        # ObjectRotation = get_nodes_by_name(gn.node_group.nodes, 
-                        # 'ObjectInfo_%s_Rotation'%(self.label),
-                        # 'GeometryNodeObjectInfo')
-        # ObjectRotation.inputs['Object'].default_value = self.obj_r
-        # PositionRotation = get_nodes_by_name(gn.node_group.nodes, 
-                        # 'Position%s_Rotation'%(self.label),
-                        # 'GeometryNodeInputPosition')
-        # ObjectScale = get_nodes_by_name(gn.node_group.nodes, 
-        #             'ObjectInfo_%s_Scale'%(self.label),
-        #             'GeometryNodeObjectInfo')
-        # ObjectScale.inputs['Object'].default_value = self.obj_s
-        # PositionScale = get_nodes_by_name(gn.node_group.nodes, 
-        #                 'Position%s_Scale'%(self.label),
-        #                 'GeometryNodeInputPosition')
+                        '%s_JoinGeometry'%self.label)
         #
         order = sp['order']
         style = int(sp['style'])
@@ -502,47 +455,40 @@ class Bonds(BaseObject):
         ObjectInstancer = get_nodes_by_name(gn.node_group.nodes, 
                     'ObjectInfo_%s'%name,
                     'GeometryNodeObjectInfo')
-        ObjectInstancer.inputs['Object'].default_value = self.setting.instancers[sp["name"]]['%s_%s'%(order, style)]
+        ObjectInstancer.inputs['Object'].default_value = \
+                        self.setting.instancers[sp["name"]]['%s_%s'%(order, style)]
         #
         BoolSpecies = get_nodes_by_name(gn.node_group.nodes, 
-                        'BooleanMath_%s_species'%name,
+                        '%s_BooleanMath_species'%name,
                         'FunctionNodeBooleanMath')
         BoolOrder = get_nodes_by_name(gn.node_group.nodes, 
-                        'BooleanMath_%s_order'%name,
+                        '%s_BooleanMath_order'%name,
                         'FunctionNodeBooleanMath')
         BoolStyle = get_nodes_by_name(gn.node_group.nodes, 
-                        'BooleanMath_%s_style'%name,
+                        '%s_BooleanMath_style'%name,
                         'FunctionNodeBooleanMath')
         BoolModelStyle = get_nodes_by_name(gn.node_group.nodes, 
-                        'BooleanMath_%s_modelstyle'%name,
+                        '%s_BooleanMath_modelstyle'%name,
                         'FunctionNodeBooleanMath')
         BoolShow = get_nodes_by_name(gn.node_group.nodes, 
-                    'BooleanMath_%s_show'%name,
+                    '%s_BooleanMath_show'%name,
                     'FunctionNodeBooleanMath')
         BoolBondLength = get_nodes_by_name(gn.node_group.nodes, 
                     '%s_BoolBondLength'%name,
                     'FunctionNodeBooleanMath')
+        #bondlength larger than max will not show
         LessBondLength = get_nodes_by_name(gn.node_group.nodes,
                         '%s_LessBondLength'%name, 
                         'ShaderNodeMath')
         LessBondLength.operation = 'LESS_THAN'
         LessBondLength.inputs[1].default_value = sp['max']
         VectorLength = get_nodes_by_name(gn.node_group.nodes, 
-                    'VectorLength_%s'%self.label,
-                    'ShaderNodeVectorMath')
+                    '%s_VectorLength'%self.label)
         #
-        # AttributeTransferRotation = get_nodes_by_name(gn.node_group.nodes, 
-                    # 'AttributeTransfer_%s_Rotation'%self.label,
-                    # 'GeometryNodeAttributeTransfer')
-        #
-        # AttributeTransferScale = get_nodes_by_name(gn.node_group.nodes, 
-        #             'AttributeTransfer_%s_Scale'%self.label,
-        #             'GeometryNodeAttributeTransfer')
-        # BooleanMath.inputs[1].default_value = True
+        CompareSpecies0 = get_nodes_by_name(gn.node_group.nodes, 
+                    '%s_CompareSpecies_%s_0'%(self.label, sp["species1"]))
         CompareSpecies1 = get_nodes_by_name(gn.node_group.nodes, 
-                    'CompareSpecies1_%s_%s'%(self.label, sp["species1"]))
-        CompareSpecies2 = get_nodes_by_name(gn.node_group.nodes, 
-                    'CompareSpecies2_%s_%s'%(self.label, sp["species2"]))
+                    '%s_CompareSpecies_%s_1'%(self.label, sp["species2"]))
         CompareOrder = get_nodes_by_name(gn.node_group.nodes, 
                 'CompareFloats_%s_%s_order'%(self.label, order))
         CompareStyle = get_nodes_by_name(gn.node_group.nodes, 
@@ -551,17 +497,14 @@ class Bonds(BaseObject):
         CombineXYZ = get_nodes_by_name(gn.node_group.nodes,
                         '%s_CombineXYZ'%self.label, 
                         'ShaderNodeCombineXYZ')
-        AlignEuler0 = get_nodes_by_name(gn.node_group.nodes, 
-                    '%s_AlignEuler0'%self.label,
-                    'FunctionNodeAlignEulerToVector')
         AlignEuler1 = get_nodes_by_name(gn.node_group.nodes, 
                     '%s_AlignEuler1'%self.label,
                     'FunctionNodeAlignEulerToVector')
         gn.node_group.links.new(SetPosition.outputs['Geometry'], InstanceOnPoint.inputs['Points'])
         gn.node_group.links.new(GroupInput.outputs[9], BoolShow.inputs[0])
         gn.node_group.links.new(GroupInput.outputs[10], BoolModelStyle.inputs[0])
-        gn.node_group.links.new(CompareSpecies1.outputs[0], BoolSpecies.inputs[0])
-        gn.node_group.links.new(CompareSpecies2.outputs[0], BoolSpecies.inputs[1])
+        gn.node_group.links.new(CompareSpecies0.outputs[0], BoolSpecies.inputs[0])
+        gn.node_group.links.new(CompareSpecies1.outputs[0], BoolSpecies.inputs[1])
         gn.node_group.links.new(BoolSpecies.outputs[0], BoolOrder.inputs[0])
         gn.node_group.links.new(CompareOrder.outputs[0], BoolOrder.inputs[1])
         gn.node_group.links.new(BoolOrder.outputs[0], BoolStyle.inputs[0])
@@ -572,12 +515,8 @@ class Bonds(BaseObject):
         gn.node_group.links.new(BoolShow.outputs['Boolean'], BoolBondLength.inputs[0])
         gn.node_group.links.new(LessBondLength.outputs[0], BoolBondLength.inputs[1])
         gn.node_group.links.new(BoolBondLength.outputs['Boolean'], InstanceOnPoint.inputs['Selection'])
-        # gn.node_group.links.new(ObjectScale.outputs['Geometry'], AttributeTransferScale.inputs['Target'])
-        # gn.node_group.links.new(PositionScale.outputs[0], AttributeTransferScale.inputs[1])
         gn.node_group.links.new(CombineXYZ.outputs[0], InstanceOnPoint.inputs['Scale'])
         #
-        # gn.node_group.links.new(ObjectRotation.outputs['Geometry'], AttributeTransferRotation.inputs['Target'])
-        # gn.node_group.links.new(PositionRotation.outputs['Position'], AttributeTransferRotation.inputs['Attribute'])
         gn.node_group.links.new(AlignEuler1.outputs[0], InstanceOnPoint.inputs['Rotation'])
         #
         gn.node_group.links.new(ObjectInstancer.outputs['Geometry'], InstanceOnPoint.inputs['Instance'])
@@ -710,9 +649,9 @@ class Bonds(BaseObject):
         tstart = time()
         arrays = self.attributes
         arrays.update({'positions': self.positions[0],
-                        'vectors': self.positions[1],
+                        # 'vectors': self.positions[1],
                         'offsets': self.positions[2],
-                        'scales': self.positions[3],
+                        # 'scales': self.positions[3],
                         })
         # print('get_arrays: %s'%(time() - tstart))
         return arrays
@@ -749,7 +688,7 @@ class Bonds(BaseObject):
         if len(bond_datas['centers']) == len(attributes['show']):
             self.set_positions(bond_datas['centers'],
                                 # bond_datas['vectors'],
-                                # bond_datas['offsets'],
+                                bond_datas['offsets'],
                                 # bond_datas['eulers'],
                                 # bond_datas['lengths'],
                                 )
@@ -775,7 +714,7 @@ class Bonds(BaseObject):
         """
         n = len(self)
         local_positions = []
-        for obj in [self.obj]:
+        for obj in [self.obj, self.obj_o]:
             co = np.empty(n*3, dtype=np.float64)
             obj.data.vertices.foreach_get('co', co)  
             local_positions.append(co.reshape((n, 3)))
@@ -795,14 +734,14 @@ class Bonds(BaseObject):
         """
         from batoms.tools import local2global
         positions = []
-        objs = [self.obj]
-        for i in range(1):
+        objs = [self.obj, self.obj_o]
+        for i in range(2):
             obj = objs[i]
             positions.append(local2global(self.local_positions[i], 
                 np.array(obj.matrix_world)))
         return positions
     
-    def set_positions(self, centers):
+    def set_positions(self, centers, offsets):
         """
         Set global positions to local vertices
         """
@@ -812,8 +751,8 @@ class Bonds(BaseObject):
         # scales = np.concatenate((np.ones((n, 1)), 
                         # np.ones((n, 1)),
                         # lengths.reshape(-1, 1)), axis = 1)
-        for obj, positions in zip([self.obj], 
-                    [centers]):
+        for obj, positions in zip([self.obj, self.obj_o], 
+                    [centers, offsets]):
             if len(positions) != n:
                 raise ValueError('positions has wrong shape %s != %s.' %
                                     (len(positions), n))
@@ -1273,22 +1212,8 @@ def calc_bond_data(speciesarray, positions, cell, radii,
     # offsets
     offsets = np.dot(bondlists[:, 2:5], cell)
     # bond vectors and lengths
-    # vecs = positions[bondlists[:, 0]] - (positions[bondlists[:, 1]] + offsets)
-    # lengths = np.linalg.norm(vecs, axis = 1) + 1e-8
-    # nvecs = vecs/lengths[:, None]
-    # pos = [positions[bondlists[:, 0]] - nvecs*radii[bondlists[:, 0]][:, None]*0.5,
-            # positions[bondlists[:, 1]] + offsets + nvecs*radii[bondlists[:, 1]][:, None]*0.5]
-    pos = [positions[bondlists[:, 0]],
-            positions[bondlists[:, 1]] + offsets]
-    vecs = pos[0] - pos[1]
-    lengths = np.linalg.norm(vecs, axis = 1) + 1e-8
-    nvecs = vecs/lengths[:, None]
-    centers = (pos[0] + pos[1])/2.0
-    offsets = np.zeros((nb, 3))
-    offsets[:, 2] = 1
-    offsets = np.cross(offsets, nvecs, axis = 1) + np.array([1e-8, 0, 0])
-    offsets = offsets/np.linalg.norm(offsets, axis = 1)[:, None]
-    # print(nvecs, offsets)
+    centers = (positions[bondlists[:, 0]] + 
+            positions[bondlists[:, 1]] + offsets)/2.0
     #---------------------------------------------
     for b in bondsetting:
         spi = b.species1
@@ -1314,7 +1239,7 @@ def calc_bond_data(speciesarray, positions, cell, radii,
         'species_index2': species_index2,
         'centers':centers,
         # 'vectors':nvecs,
-        # 'offsets':offsets,
+        'offsets':offsets,
         # 'eulers':eulers,
         # 'lengths':lengths,
         'widths':widths,
