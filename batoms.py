@@ -7,6 +7,7 @@ import bpy
 import bmesh
 from batoms.batom import Batom
 from batoms.bonds import Bonds, default_bond_datas
+from batoms.polyhedras import Polyhedras, default_polyhedra_datas
 from batoms.boundary import Boundary, default_boundary_datas
 from batoms.bspecies import Bspecies
 from batoms.cell import Bcell
@@ -14,7 +15,6 @@ from batoms.render.render import Render
 from batoms.bselect import Selects
 from batoms.tools import get_default_species_data, number2String, string2Number, read_from_ase, read_from_pymatgen
 from batoms.base import BaseCollection
-from batoms.polyhedrasetting import PolyhedraSetting
 from batoms.isosurfacesetting import IsosurfaceSetting
 from batoms.planesetting import PlaneSetting
 from batoms.mssetting import MSsetting
@@ -133,7 +133,6 @@ class Batoms(BaseCollection):
         else:
             self.set_collection(label, boundary)
             self._cell = Bcell(label, cell, batoms = self)
-            natom = len(positions)
             positions = np.array(positions)
             if len(positions.shape) == 3:
                 self._frames = positions
@@ -141,6 +140,7 @@ class Batoms(BaseCollection):
             else:
                 self._frames = np.array([positions])
             #
+            natom = len(positions)
             self.build_object(label, positions, location)
             self.selects = Selects(label, self)
             if not species_props:
@@ -165,13 +165,13 @@ class Batoms(BaseCollection):
             # self.label = label
             if movie:
                 self.set_frames()
-        self.polyhedrasetting = PolyhedraSetting(self.label, batoms = self)
         self.isosurfacesetting = IsosurfaceSetting(self.label, batoms = self)
         self.planesetting = PlaneSetting(self.label, batoms = self)
         self.mssetting = MSsetting(self.label, probe = 1.4, batoms = self)
         self.ribbon = Ribbon(self.label, batoms = self, datas = info, update = True)
         self._render = None
         self._bonds = None
+        self._polyhedras = None
         self._boundary = None
         show_index()
     
@@ -257,7 +257,9 @@ class Batoms(BaseCollection):
         # gn.node_group.links.new(VectorAdd.outputs[0], SetPosition.inputs['Position'])
         # todo: use cell object directly.
         cell = self.cell.array
-        icell = np.linalg.inv(self.cell.array)
+        if np.isclose(np.linalg.det(self.cell.array), 0):
+            cell = np.eye(3)
+        icell = np.linalg.inv(cell)
         scaledPositionsNode = self.vectorDotMatrix(gn, PositionBatoms, icell, 'scaled')
         VectorWrap = get_nodes_by_name(gn.node_group.nodes, 
                         '%s_VectorWrap'%(self.label),
@@ -268,7 +270,7 @@ class Batoms(BaseCollection):
         gn.node_group.links.new(scaledPositionsNode.outputs[0], VectorWrap.inputs['Vector'])
         PositionsNode = self.vectorDotMatrix(gn, VectorWrap, cell, '')
         gn.node_group.links.new(PositionsNode.outputs[0], SetPosition.inputs['Position'])
-
+        self.wrap = self.pbc
     def vectorDotMatrix(self, gn, vectorNode, matrix, name):
         """
         """
@@ -500,7 +502,7 @@ class Batoms(BaseCollection):
     def set_model_style(self, model_style):
         model_style = {'model_style': np.ones(len(self))*int(model_style)}
         self.set_attributes(model_style)
-        self.draw(draw_isosurface = False)
+        self.draw(model_style, draw_isosurface = False)
     
     @property
     def polyhedra_style(self):
@@ -1483,6 +1485,20 @@ class Batoms(BaseCollection):
         self._bonds = bonds
     
     @property
+    def polyhedras(self):
+        """polyhedras object."""
+        if self._polyhedras is not None:
+            return self._polyhedras
+        polyhedras = Polyhedras(self.label, polyhedra_datas = default_polyhedra_datas, 
+                    batoms = self)
+        self.polyhedras = polyhedras
+        return polyhedras
+
+    @polyhedras.setter
+    def polyhedras(self, polyhedras):
+        self._polyhedras = polyhedras
+    
+    @property
     def boundary(self):
         """boundary object."""
         if self._boundary is not None:
@@ -1556,7 +1572,7 @@ class Batoms(BaseCollection):
         self.select = True
         bpy.ops.object.duplicates_make_real()
 
-    def draw(self, draw_isosurface = True):
+    def draw(self, model_style = None, draw_isosurface = True):
         """
         Draw atoms, bonds, polyhedra, .
 
@@ -1571,7 +1587,8 @@ class Batoms(BaseCollection):
         # self.draw_cell()
         self.draw_space_filling()
         self.draw_ball_and_stick()
-        self.draw_polyhedra()
+        if 2 in model_style:
+            self.draw_polyhedra()
         self.draw_wireframe()
         """
         if model_style == 2:
@@ -1592,7 +1609,7 @@ class Batoms(BaseCollection):
     
     def draw_polyhedra(self, scale = 0.4):
         mask = np.where(self.model_style == 2, True, False)
-        self.polyhedrasetting.draw_polyhedra(mask)
+        self.polyhedras.update_polyhedras()
         self.set_attribute_with_indices('show', mask, True)
         if self.polyhedra_style == 0:
             self.set_attribute_with_indices('scale', mask, scale)

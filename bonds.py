@@ -110,19 +110,14 @@ class Bonds(BaseObject):
         from scipy.spatial.transform import Rotation as R
         tstart = time()
         if len(bond_datas['centers'].shape) == 2:
-            self._frames = (np.array([bond_datas['centers']]), 
-                            np.array([bond_datas['offsets']]),
-                            )
+            self._frames = np.array([bond_datas['centers']])
             centers = bond_datas['centers']
-            offsets = bond_datas['offsets']
         elif len(bond_datas['centers'].shape) == 3:
-            self._frames = (bond_datas['centers'], 
-                            bond_datas['offsets'], 
-                            )
+            self._frames = bond_datas['centers']
             centers = bond_datas['centers'][0]
-            offsets = bond_datas['offsets'][0]
         else:
             raise Exception('Shape of centers is wrong!')
+        offsets = bond_datas['offsets']
         nbond = len(bond_datas['centers'])
         show = np.ones(nbond, dtype = int)
         attributes.update({
@@ -162,7 +157,7 @@ class Bonds(BaseObject):
         bpy.context.view_layer.update()
         self.set_attributes(attributes)
         self.build_geometry_node()
-        self.set_frames(self._frames, only_basis = True)
+        self.set_frames(self._frames, only_basis = False)
         print('bonds: build_object: {0:10.2f} s'.format(time() - tstart))
     
     def load(self):
@@ -490,7 +485,7 @@ class Bonds(BaseObject):
         bond_datas = {}
         tstart = time()
         for f in range(nframe):
-            print('update bond: ', f)
+            # print('update bond: ', f)
             positions = frames[f]
             # if len(frames_boundary) > 0:
             #     positions_boundary = frames_boundary[f]
@@ -505,9 +500,9 @@ class Bonds(BaseObject):
             else:
                 bondlists = np.append(bondlists, bondlist, axis = 0)
         bondlists = np.unique(bondlists, axis = 0)
-        bond_datas = calc_bond_data(species, positions, 
-                        self.batoms.cell, bondlist, self.setting,
-                        arrays['model_style'])
+        bond_datas = calc_bond_data(species, frames, 
+                    self.batoms.cell, bondlist, self.setting,
+                    arrays['model_style'])
 
         if len(bond_datas) == 0:
             return
@@ -540,9 +535,7 @@ class Bonds(BaseObject):
         tstart = time()
         arrays = self.attributes
         arrays.update({'positions': self.positions[0],
-                        # 'vectors': self.positions[1],
                         'offsets': self.positions[1],
-                        # 'scales': self.positions[3],
                         })
         # print('get_arrays: %s'%(time() - tstart))
         return arrays
@@ -578,10 +571,7 @@ class Bonds(BaseObject):
         # same length
         if len(bond_datas['centers']) == len(attributes['show']):
             self.set_positions(bond_datas['centers'],
-                                # bond_datas['vectors'],
                                 bond_datas['offsets'],
-                                # bond_datas['eulers'],
-                                # bond_datas['lengths'],
                                 )
             self.set_attributes({'atoms_index1': bond_datas['atoms_index1']})
             self.set_attributes({'atoms_index2': bond_datas['atoms_index2']})
@@ -639,9 +629,6 @@ class Bonds(BaseObject):
         object_mode()
         from batoms.tools import local2global
         n = len(self.obj.data.vertices)
-        # scales = np.concatenate((np.ones((n, 1)), 
-                        # np.ones((n, 1)),
-                        # lengths.reshape(-1, 1)), axis = 1)
         for obj, positions in zip([self.obj, self.obj_o], 
                     [centers, offsets]):
             if len(positions) != n:
@@ -811,26 +798,6 @@ class Bonds(BaseObject):
         for key, value in node.items():
             self.material.node_tree.nodes['Principled BSDF'].inputs[key].default_value = value
     
-    @property    
-    def subdivisions(self):
-        return self.get_subdivisions()
-    
-    @subdivisions.setter    
-    def subdivisions(self, subdivisions):
-        self.set_subdivisions(subdivisions)
-    
-    def get_subdivisions(self):
-        nverts = len(self.mesh.data.vertices)
-        return nverts
-    
-    def set_subdivisions(self, subdivisions):
-        if not isinstance(subdivisions, int):
-            raise Exception('subdivisions should be int!')
-        self.clean_bbonds_objects('mesh_bond_%s_%s'%(self.label, self.species))
-        mesh = self.set_mesh(subdivisions = subdivisions, shape='ICO_SPHERE')
-        mesh.parent = self.obj
-    
-    
     def clean_bbonds_objects(self, obj):
         obj = bpy.data.objects[obj]
         bpy.data.objects.remove(obj, do_unlink = True)
@@ -853,50 +820,37 @@ class Bonds(BaseObject):
         use shape_keys (faster)
         """
         from batoms.butils import add_keyframe_to_shape_key
-        from batoms.source_data import bond_source
-        from batoms.bdraw import cylinder_mesh_from_vec
         if frames is None:
             frames = self._frames
-        centers, offsets = frames
+        centers = frames
         nframe = len(centers)
         if nframe == 0 : return
-        nbond = len(centers[0])
-        # scales = np.concatenate((np.ones((nframe, nbond, 1)), 
-                        # np.ones((nframe, nbond, 1)),
-                        # lengths.reshape(nframe, nbond, 1)), axis = 2)
-        for sp, frames in zip(['center', 'offset'],
-                                [centers, offsets]):
-            name = '%s_bond_%s'%(self.label, sp)
-            obj = bpy.data.objects.get(name)
-            base_name = 'Basis_%s_bond_%s'%(self.label, sp)
-            if obj.data.shape_keys is None:
-                obj.shape_key_add(name = base_name)
-            elif base_name not in obj.data.shape_keys.key_blocks:
-                obj.shape_key_add(name = base_name)
+        sp = 'center'
+        name = '%s_bond_%s'%(self.label, sp)
+        obj = bpy.data.objects.get(name)
+        base_name = 'Basis_%s_bond_%s'%(self.label, sp)
+        if obj.data.shape_keys is None:
+            obj.shape_key_add(name = base_name)
+        elif base_name not in obj.data.shape_keys.key_blocks:
+            obj.shape_key_add(name = base_name)
         if only_basis:
             return
-            """
-            nvert = len(obj.data.vertices)
-            mesh_data = bond_source[self.segments]
-            for i in range(1, nframe):
-                sk = obj.shape_key_add(name = str(i))
-                # Use the local position here
-                positions = frames[i][:, 0:3]
-                vertices, faces = cylinder_mesh_from_vec(positions[:, 0:3], 
-                                    positions[:, 3:6], positions[:, 6:7], 
-                                    self.width, mesh_data)
-                vertices = vertices.reshape((nvert*3, 1))
-                sk.data.foreach_set('co', vertices)
-                # Add Keyframes, the last one is different
-                if i != nframe - 1:
-                    add_keyframe_to_shape_key(sk, 'value', 
-                        [0, 1, 0], [frame_start + i - 1, 
-                        frame_start + i, frame_start + i + 1])
-                else:
-                    add_keyframe_to_shape_key(sk, 'value', 
-                        [0, 1], [frame_start + i - 1, frame_start + i])
+        nvert = len(obj.data.vertices)
+        for i in range(1, nframe):
+            sk = obj.shape_key_add(name = str(i))
+            # Use the local position here
+            positions = frames[i][:, 0:3]
+            positions = positions.reshape((nvert*3, 1))
+            sk.data.foreach_set('co', positions)
+            # Add Keyframes, the last one is different
+            if i != nframe - 1:
+                add_keyframe_to_shape_key(sk, 'value', 
+                    [0, 1, 0], [frame_start + i - 1, 
+                    frame_start + i, frame_start + i + 1])
+            else:
+                add_keyframe_to_shape_key(sk, 'value', 
+                    [0, 1], [frame_start + i - 1, frame_start + i])
 
-            """
     
     def __len__(self):
         return len(self.obj.data.vertices)
@@ -1061,6 +1015,7 @@ def calc_bond_data(speciesarray, positions, cell,
             bondlists, bondsetting,
             model_styles):
     """
+    todo: support frame for positions and offsets.
     """
     tstart = time()
     # properties
@@ -1081,8 +1036,10 @@ def calc_bond_data(speciesarray, positions, cell,
     # offsets
     offsets = np.dot(bondlists[:, 2:5], cell)
     # bond center
-    centers = (positions[bondlists[:, 0]] + 
-            positions[bondlists[:, 1]] + offsets)/2.0
+    if len(positions.shape) == 2:
+        positions = np.array([positions])
+    centers = (positions[:, bondlists[:, 0]] + 
+            positions[:, bondlists[:, 1]] + offsets)/2.0
     #---------------------------------------------
     for b in bondsetting:
         spi = b.species1
