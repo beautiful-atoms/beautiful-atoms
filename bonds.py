@@ -5,6 +5,7 @@ This module defines the Bonds object in the Batoms package.
 """
 
 from pandas import offsets
+from sympy import false
 import bpy
 import bmesh
 from time import time
@@ -97,10 +98,9 @@ class Bonds(BaseObject):
         bobj_name = 'bbond'
         BaseObject.__init__(self, obj_name = obj_name, bobj_name = bobj_name)
         self.setting = BondSettings(self.label, batoms = batoms, bonds = self)
-        if bond_datas is not None:
+        flag = self.load()
+        if not flag and bond_datas is not None:
             self.build_object(bond_datas)
-        else:
-            self.load(label)
     
     def build_object(self, bond_datas, attributes = {}):
         object_mode()
@@ -111,28 +111,16 @@ class Bonds(BaseObject):
         tstart = time()
         if len(bond_datas['centers'].shape) == 2:
             self._frames = (np.array([bond_datas['centers']]), 
-                            # np.array([bond_datas['vectors']]),
                             np.array([bond_datas['offsets']]),
-                            # np.array([bond_datas['eulers']]),
-                            # np.array([bond_datas['lengths']]),
                             )
             centers = bond_datas['centers']
-            # vectors = bond_datas['vectors']
             offsets = bond_datas['offsets']
-            # eulers = bond_datas['eulers']
-            # lengths = bond_datas['lengths']
         elif len(bond_datas['centers'].shape) == 3:
             self._frames = (bond_datas['centers'], 
-                            # bond_datas['vectors'], 
                             bond_datas['offsets'], 
-                            # bond_datas['eulers'], 
-                            # bond_datas['lengths'],
                             )
             centers = bond_datas['centers'][0]
-            # vectors = bond_datas['vectors'][0]
             offsets = bond_datas['offsets'][0]
-            # eulers = bond_datas['eulers'][0]
-            # lengths = bond_datas['lengths'][0]
         else:
             raise Exception('Shape of centers is wrong!')
         nbond = len(bond_datas['centers'])
@@ -161,17 +149,6 @@ class Bonds(BaseObject):
             mesh.attributes.new(name = attribute[0], type = attribute[1], domain = 'POINT')
         self.setting.coll.objects.link(obj)
         #
-        # name = '%s_bond_vector'%self.label
-        # if name in bpy.data.objects:
-        #     obj = bpy.data.objects.get(name)
-        #     bpy.data.objects.remove(obj, do_unlink = True)
-        # mesh = bpy.data.meshes.new(name)
-        # mesh.from_pydata(vectors, [], [])
-        # mesh.update()
-        # obj = bpy.data.objects.new(name, mesh)
-        # self.setting.coll.objects.link(obj)
-        # obj.hide_set(True)
-        #
         name = '%s_bond_offset'%self.label
         if name in bpy.data.objects:
             obj = bpy.data.objects.get(name)
@@ -182,50 +159,18 @@ class Bonds(BaseObject):
         obj = bpy.data.objects.new(name, mesh)
         self.setting.coll.objects.link(obj)
         obj.hide_set(True)
-        # # calc euler angles
-        # name = '%s_bond_rotation'%self.label
-        # if name in bpy.data.objects:
-        #     obj = bpy.data.objects.get(name)
-        #     bpy.data.objects.remove(obj, do_unlink = True)
-        # mesh = bpy.data.meshes.new(name)
-        # mesh.from_pydata(eulers, [], [])
-        # mesh.update()
-        # obj = bpy.data.objects.new(name, mesh)
-        # self.setting.coll.objects.link(obj)
-        # obj.hide_set(True)
-        #
-        # scales = np.concatenate((np.ones((nbond, 1)), 
-        #                 np.ones((nbond, 1)),
-        #                 lengths.reshape(-1, 1)), axis = 1)
-        # name = '%s_bond_scale'%self.label
-        # if name in bpy.data.objects:
-        #     obj = bpy.data.objects.get(name)
-        #     bpy.data.objects.remove(obj, do_unlink = True)
-        # mesh = bpy.data.meshes.new(name)
-        # mesh.from_pydata(scales, [], [])
-        # mesh.update()
-        # obj = bpy.data.objects.new(name, mesh)
-        # self.setting.coll.objects.link(obj)
-        # obj.hide_set(True)
         bpy.context.view_layer.update()
         self.set_attributes(attributes)
         self.build_geometry_node()
         self.set_frames(self._frames, only_basis = True)
         print('bonds: build_object: {0:10.2f} s'.format(time() - tstart))
     
-    def load(self, label):
-        if label not in bpy.data.objects:
-            raise Exception("%s is not a object!"%label)
-        elif not bpy.data.objects[label].batoms.bbond.flag:
-            raise Exception("%s is not Bbond object!"%label)
-        obj = bpy.data.objects[label]
-        self.species = obj.batoms.bbond.species
-        self.label = obj.batoms.bbond.label
-        self.element = obj.batoms.bbond.element
-        self.species_data = {
-            'radius':obj.batoms.bbond.radius,
-            'scale':obj.scale,
-        } 
+    def load(self):
+        flag = True
+        obj = bpy.data.objects.get(self.obj_name)
+        if obj is None:
+            flag = False
+        return flag
     
     @property
     def gnodes(self):
@@ -438,7 +383,11 @@ class Bonds(BaseObject):
         print('Build geometry nodes for bonds: %s'%(time() - tstart))
 
     def add_geometry_node(self, sp):
+        """
+        add geometry node for each bond pair
+        """
         from batoms.butils import get_nodes_by_name
+        tstart = time()
         gn = self.gnodes
         GroupInput = gn.node_group.nodes.get('Group Input')
         SetPosition = get_nodes_by_name(gn.node_group.nodes,
@@ -521,23 +470,19 @@ class Bonds(BaseObject):
         #
         gn.node_group.links.new(ObjectInstancer.outputs['Geometry'], InstanceOnPoint.inputs['Instance'])
         gn.node_group.links.new(InstanceOnPoint.outputs['Instances'], JoinGeometry.inputs['Geometry'])
+        # print('Add geometry nodes for bonds: %s'%(time() - tstart))
 
     def update_bonds(self, ):
-        """Draw bonds.
-        calculate bond in all farmes, and save
-        get the max number of bonds for each pair
-        draw the bonds
-        add shape key
-        the extra bonds use the find bond data.
+        """
+        Draw bonds.
+        calculate bond in all farmes, and merge all bondlists
         """
         
         from batoms.butils import clean_coll_objects
-        # if not self.bondlist:
         object_mode()
         # clean_coll_objects(self.coll, 'bond')
         frames = self.batoms.get_frames()
         arrays = self.batoms.arrays
-        size = arrays['radius']*arrays['scale']
         species = arrays['species']
         # frames_boundary = self.batoms.get_frames(self.batoms.batoms_boundary)
         # frames_search = self.batoms.get_frames(self.batoms.batoms_search)
@@ -555,50 +500,19 @@ class Bonds(BaseObject):
             #     positions = positions + positions_search
             bondlist = build_bondlists(species, positions, 
                         self.batoms.cell, self.batoms.pbc, self.setting.cutoff_dict)
-            bond_kinds = calc_bond_data(species, positions, 
-                        self.batoms.cell, size, bondlist, self.setting,
-                        arrays['model_style'])
             if f == 0:
-                bond_datas = bond_kinds
+                bondlists = bondlist
             else:
-                for kind, bond_data in bond_kinds.items():
-                    if kind not in bond_datas:
-                        bond_datas[kind] = bond_kinds[kind]
-                    else:
-                        bond_datas[kind]['positions'].extend(bond_data['positions'])
-                        if len(bond_data['positions']) > 0:
-                            if bond_datas[kind]['nposition'] < len(bond_data['positions'][0]):
-                                bond_datas[kind]['nposition'] = len(bond_data['positions'][0])
-        # print('calc bond: {0:10.2f} s'.format(time() - tstart))
-            # nframe = len(bond_datas['positions'])
-            # if nframe == 0: continue
-            # change to same length
-            # find max
-            # nbs = [bond_data['positions'][i].shape[0] for i in range(nframe)]
-            # nb_max = max(nbs)
-            # frames_bond = np.zeros((nframe, nb_max, 7))
-            # for i in range(nframe):
-            #     frames_bond[i, 0:nbs[i], :] = bond_data['positions'][i]
-            #     frames_bond[i, nbs[i]:, 0:3] = frames[i][0]
+                bondlists = np.append(bondlists, bondlist, axis = 0)
+        bondlists = np.unique(bondlists, axis = 0)
+        bond_datas = calc_bond_data(species, positions, 
+                        self.batoms.cell, bondlist, self.setting,
+                        arrays['model_style'])
+
         if len(bond_datas) == 0:
             return
         self.set_bond_datas(bond_datas)
-        # self.coll.objects.link(bb.obj)
-        # bpy.data.collections['Collection'].objects.unlink(bb.obj)
-        # bb.set_frames()
-        # bpy.context.scene.frame_set(self.batoms.nframe)
         print('draw bond: {0:10.2f} s'.format(time() - tstart))
-
-    @property
-    def obj_v(self):
-        return self.get_obj_v()
-    
-    def get_obj_v(self):
-        name = '%s_bond_vector'%self.label
-        obj_v = bpy.data.objects.get(name)
-        if obj_v is None:
-            raise KeyError('%s object is not exist.'%name)
-        return obj_v
 
     @property
     def obj_o(self):
@@ -610,29 +524,6 @@ class Bonds(BaseObject):
         if obj_o is None:
             raise KeyError('%s object is not exist.'%name)
         return obj_o
-
-    @property
-    def obj_r(self):
-        return self.get_obj_r()
-    
-    def get_obj_r(self):
-        name = '%s_bond_rotation'%self.label
-        obj_r = bpy.data.objects.get(name)
-        if obj_r is None:
-            raise KeyError('%s object is not exist.'%name)
-        return obj_r
-    
-    @property
-    def obj_s(self):
-        return self.get_obj_s()
-    
-    def get_obj_s(self):
-        name = '%s_bond_scale'%self.label
-        obj_s = bpy.data.objects.get(name)
-        if obj_s is None:
-            raise KeyError('%s object is not exist.'%name)
-        return obj_s
-
 
     @property
     def arrays(self):
@@ -650,7 +541,7 @@ class Bonds(BaseObject):
         arrays = self.attributes
         arrays.update({'positions': self.positions[0],
                         # 'vectors': self.positions[1],
-                        'offsets': self.positions[2],
+                        'offsets': self.positions[1],
                         # 'scales': self.positions[3],
                         })
         # print('get_arrays: %s'%(time() - tstart))
@@ -761,9 +652,9 @@ class Bonds(BaseObject):
             positions = positions.reshape((n*3, 1))
             obj.data.shape_keys.key_blocks[0].data.foreach_set('co', positions)
             obj.data.update()
-            bpy.context.view_layer.objects.active = obj
-            bpy.ops.object.mode_set(mode = 'EDIT')
-            bpy.ops.object.mode_set(mode = 'OBJECT')
+        bpy.context.view_layer.objects.active = self.obj
+        bpy.ops.object.mode_set(mode = 'EDIT')
+        bpy.ops.object.mode_set(mode = 'OBJECT')
     
     @property
     def attributes(self):
@@ -833,24 +724,6 @@ class Bonds(BaseObject):
         data0[indices] = data
         self.set_attributes({name: data0})
     
-    @property
-    def arrays(self):
-        return self.get_arrays()
-    
-    @arrays.setter
-    def arrays(self, arrays):
-        self.set_arrays(arrays)
-
-    def get_arrays(self, batoms = None, local = False, X = False, sort = True):
-        """
-        """
-        object_mode()
-        tstart = time()
-        arrays = self.attributes
-        arrays.update({'positions': self.positions[0],
-                        })
-        print('get_arrays: %s'%(time() - tstart))
-        return arrays
     
     @property    
     def nframe(self):
@@ -984,15 +857,15 @@ class Bonds(BaseObject):
         from batoms.bdraw import cylinder_mesh_from_vec
         if frames is None:
             frames = self._frames
-        centers = frames
+        centers, offsets = frames
         nframe = len(centers)
         if nframe == 0 : return
         nbond = len(centers[0])
         # scales = np.concatenate((np.ones((nframe, nbond, 1)), 
                         # np.ones((nframe, nbond, 1)),
                         # lengths.reshape(nframe, nbond, 1)), axis = 2)
-        for sp, frames in zip(['center'],
-                                [centers]):
+        for sp, frames in zip(['center', 'offset'],
+                                [centers, offsets]):
             name = '%s_bond_%s'%(self.label, sp)
             obj = bpy.data.objects.get(name)
             base_name = 'Basis_%s_bond_%s'%(self.label, sp)
@@ -1184,16 +1057,12 @@ def build_bondlists(species, positions, cell, pbc, cutoff):
     np.unique(bondlists2)
     return bondlists
 
-def calc_bond_data(speciesarray, positions, cell, radii, 
+def calc_bond_data(speciesarray, positions, cell, 
             bondlists, bondsetting,
             model_styles):
     """
     """
-    from ase.data import chemical_symbols
-    from batoms.tools import calc_euler_angle
-
     tstart = time()
-    chemical_symbols = np.array(chemical_symbols)
     # properties
     atoms_index1 = np.array(bondlists[:, 0])
     atoms_index2 = np.array(bondlists[:, 1])
@@ -1211,7 +1080,7 @@ def calc_bond_data(speciesarray, positions, cell, radii,
     #------------------------------------
     # offsets
     offsets = np.dot(bondlists[:, 2:5], cell)
-    # bond vectors and lengths
+    # bond center
     centers = (positions[bondlists[:, 0]] + 
             positions[bondlists[:, 1]] + offsets)/2.0
     #---------------------------------------------
@@ -1228,8 +1097,6 @@ def calc_bond_data(speciesarray, positions, cell, radii,
         species_index2[ind] = string2Number(spj)
         if b.order >1:
             atoms_index3, atoms_index4 = secondBond(b, speciesarray, atoms_index3, atoms_index4, bondlists)
-            # offsets = high_order_bond_plane(b, speciesarray, positions, nvecs, offsets, bondlists)
-    # eulers = calc_euler_angle(offsets, nvecs)
     datas = {
         'atoms_index1': atoms_index1,
         'atoms_index2': atoms_index2,
@@ -1238,10 +1105,7 @@ def calc_bond_data(speciesarray, positions, cell, radii,
         'species_index1': species_index1,
         'species_index2': species_index2,
         'centers':centers,
-        # 'vectors':nvecs,
         'offsets':offsets,
-        # 'eulers':eulers,
-        # 'lengths':lengths,
         'widths':widths,
         'orders':orders,
         'styles':styles,
