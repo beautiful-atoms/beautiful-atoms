@@ -3,9 +3,10 @@
 import bpy
 import numpy as np
 from ase.cell import Cell
-from batoms.butils import object_mode, clean_objects_by_name
+from batoms.butils import object_mode, clean_coll_objects
 from batoms.base import BaseObject
 from batoms.bdraw import draw_cylinder
+from time import time
 
 class Bcell(BaseObject):
     """
@@ -29,9 +30,9 @@ class Bcell(BaseObject):
         bobj_name = 'bcell'
         self.batoms = batoms
         BaseObject.__init__(self, obj_name = obj_name, bobj_name = bobj_name)
-        self.edges = [[3, 0], [3, 1], [4, 0], [4, 1],
-                    [2, 5], [2, 6], [7, 5], [7, 6], 
-                    [3, 2], [0, 6], [1, 5], [4, 7]
+        self.edges = [[0, 3], [0, 1], [4, 2], [4, 1],
+                    [3, 5], [2, 6], [7, 5], [7, 6], 
+                    [0, 2], [3, 6], [1, 5], [4, 7]
             ]
         self.width = 0.02
         self.color = color
@@ -47,30 +48,131 @@ class Bcell(BaseObject):
             cell = Cell.new(array)
             verts = self.array2verts(cell.array)
         else:
-            verts = array - array[3]
-            location = array[3]
+            verts = array - array[0]
+            location = array[0]
         if self.obj_name not in bpy.data.objects:
             mesh = bpy.data.meshes.new(self.obj_name)
             mesh.from_pydata(verts, self.edges, [])  
             mesh.update()
             for f in mesh.polygons:
                 f.use_smooth = True
-            obj_edge = bpy.data.objects.new(self.obj_name, mesh)
-            obj_edge.data = mesh
-            obj_edge.location = location
-            obj_edge.batoms.bcell.flag = True
-            if self.batoms:
-                self.batoms.coll.objects.link(obj_edge)
+            obj = bpy.data.objects.new(self.obj_name, mesh)
+            obj.data = mesh
+            obj.location = location
+            obj.batoms.bcell.flag = True
+            if self.batoms is not None:
+                self.batoms.coll.objects.link(obj)
             else:
-                bpy.data.collections['Collection'].objects.link(obj_edge)
+                bpy.data.collections['Collection'].objects.link(obj)
         elif bpy.data.objects[self.obj_name].batoms.bcell.flag:
             # print('%s exist and is bcell, use it.'%self.obj_name)
             pass
         else:
             raise Exception("Failed, the name %s already \
                 in use and is not Bcell object!"%self.obj_name)
+        self.build_geometry_node()
         bpy.context.view_layer.update()
     
+    def build_geometry_node(self):
+        """
+        """
+        from batoms.butils import get_nodes_by_name
+        name = 'GeometryNodes_%s_cell'%self.label
+        modifier = self.obj.modifiers.new(name = name, type = 'NODES')
+        modifier.node_group.name = name
+        #------------------------------------------------------------------
+        # select attributes
+        gn = modifier
+        GroupInput = modifier.node_group.nodes.get('Group Input')
+        GroupOutput = gn.node_group.nodes.get('Group Output')
+        JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
+                        '%s_JoinGeometry'%self.label, 
+                        'GeometryNodeJoinGeometry')
+        gn.node_group.links.new(JoinGeometry.outputs['Geometry'], GroupOutput.inputs['Geometry'])
+        #------------------------------------------------------------------
+        # calculate bond vector, length, rotation based on the index
+        # Get four positions from batoms, bond and the second bond for high order bond plane
+        PositionCell = get_nodes_by_name(gn.node_group.nodes, 
+                        '%s_PositionCell'%(self.label),
+                        'GeometryNodeInputPosition')
+        TransferCells = []
+        for i in range(4):
+            TransferCell = get_nodes_by_name(gn.node_group.nodes, 
+                        '%s_TransferCell_%s'%(self.label, i),
+                        'GeometryNodeAttributeTransfer')
+            TransferCell.mapping = 'INDEX'
+            TransferCell.data_type = 'FLOAT_VECTOR'
+            InputInt = get_nodes_by_name(gn.node_group.nodes, 
+                    '%s_InputInt_%s'%(self.label, i),
+                    'FunctionNodeInputInt')
+            InputInt.integer = i
+            gn.node_group.links.new(GroupInput.outputs['Geometry'], TransferCell.inputs['Target'])
+            gn.node_group.links.new(PositionCell.outputs['Position'], TransferCell.inputs['Attribute'])
+            gn.node_group.links.new(InputInt.outputs[0], TransferCell.inputs['Index'])
+            TransferCells.append(TransferCell)
+        #------------------------------------------------------------------
+        VectorAdds = []
+        for i in range(4):
+            VectorAdd = get_nodes_by_name(gn.node_group.nodes, 
+                        '%s_VectorAdd_%s'%(self.label, i),
+                        'ShaderNodeVectorMath')
+            VectorAdd.operation = 'ADD'
+            VectorAdds.append(VectorAdd)
+        gn.node_group.links.new(TransferCells[1].outputs[0], VectorAdds[0].inputs[0])
+        gn.node_group.links.new(TransferCells[2].outputs[0], VectorAdds[0].inputs[1])
+        gn.node_group.links.new(TransferCells[1].outputs[0], VectorAdds[1].inputs[0])
+        gn.node_group.links.new(TransferCells[3].outputs[0], VectorAdds[1].inputs[1])
+        gn.node_group.links.new(TransferCells[2].outputs[0], VectorAdds[2].inputs[0])
+        gn.node_group.links.new(TransferCells[3].outputs[0], VectorAdds[2].inputs[1])
+        gn.node_group.links.new(TransferCells[3].outputs[0], VectorAdds[3].inputs[0])
+        gn.node_group.links.new(VectorAdds[0].outputs[0], VectorAdds[3].inputs[1])
+        # calculate unit cell vector
+        VectorSubtracts = []
+        for i in range(4):
+            VectorSubtract = get_nodes_by_name(gn.node_group.nodes, 
+                        '%s_VectorSubtract_%s'%(self.label, i),
+                        'ShaderNodeVectorMath')
+            VectorSubtract.operation = 'SUBTRACT'
+            gn.node_group.links.new(VectorAdds[i].outputs[0], VectorSubtract.inputs[0])
+            gn.node_group.links.new(TransferCells[0].outputs[0], VectorSubtract.inputs[1])
+            VectorSubtracts.append(VectorSubtract)
+        # for 7
+        VectorSubtract = get_nodes_by_name(gn.node_group.nodes, 
+                        '%s_VectorSubtract_%s'%(self.label, 4),
+                        'ShaderNodeVectorMath')
+        VectorSubtract.operation = 'SUBTRACT'
+        gn.node_group.links.new(VectorSubtracts[3].outputs[0], VectorSubtract.inputs[0])
+        gn.node_group.links.new(TransferCells[0].outputs[0], VectorSubtract.inputs[1])
+        VectorSubtracts.append(VectorSubtract)
+        # set positions
+        SetPositions = []
+        IndexCell = get_nodes_by_name(gn.node_group.nodes, 
+                        '%s_IndexCell'%(self.label),
+                        'GeometryNodeInputIndex')
+        for i in range(4):
+            SetPosition = get_nodes_by_name(gn.node_group.nodes,
+                            '%s_SetPosition_%s'%(self.label, i),
+                            'GeometryNodeSetPosition')
+            CompareSelect = get_nodes_by_name(gn.node_group.nodes, 
+                    'select_%s_%s'%(self.label, i),
+                    'FunctionNodeCompareFloats')
+            CompareSelect.operation = 'EQUAL'
+            CompareSelect.inputs[1].default_value = i + 4
+            gn.node_group.links.new(IndexCell.outputs[0], CompareSelect.inputs[0])
+            gn.node_group.links.new(CompareSelect.outputs[0], SetPosition.inputs['Selection'])
+            SetPositions.append(SetPosition)
+        gn.node_group.links.new(GroupInput.outputs['Geometry'], SetPositions[0].inputs['Geometry'])
+        gn.node_group.links.new(SetPositions[0].outputs['Geometry'], SetPositions[1].inputs['Geometry'])
+        gn.node_group.links.new(SetPositions[1].outputs['Geometry'], SetPositions[2].inputs['Geometry'])
+        gn.node_group.links.new(SetPositions[2].outputs['Geometry'], SetPositions[3].inputs['Geometry'])
+        gn.node_group.links.new(SetPositions[3].outputs['Geometry'], GroupOutput.inputs['Geometry'])
+        gn.node_group.links.new(VectorSubtracts[0].outputs[0], SetPositions[0].inputs['Position'])
+        gn.node_group.links.new(VectorSubtracts[1].outputs[0], SetPositions[1].inputs['Position'])
+        gn.node_group.links.new(VectorSubtracts[2].outputs[0], SetPositions[2].inputs['Position'])
+        gn.node_group.links.new(VectorSubtracts[4].outputs[0], SetPositions[3].inputs['Position'])
+        
+        
+
     def build_cell_cylinder(self):
          #
         cell_cylinder = {'lengths': [], 
@@ -130,9 +232,9 @@ class Bcell(BaseObject):
         return self.get_array()
     
     def get_array(self):
-        cell = np.array([self.verts[0] - self.verts[3],
-                         self.verts[1] - self.verts[3],
-                         self.verts[2] - self.verts[3]])
+        cell = np.array([self.verts[1] - self.verts[0],
+                         self.verts[2] - self.verts[0],
+                         self.verts[3] - self.verts[0]])
         return cell
     
     @property    
@@ -153,18 +255,18 @@ class Bcell(BaseObject):
     
     @property    
     def origin(self):
-        return self.verts[3]
+        return self.verts[0]
     
     def array2verts(self, array):
         """
         """
-        verts = np.array([[1, 0, 0],
+        verts = np.array([[0, 0, 0],
+            [1, 0, 0],
             [0, 1, 0],
             [0, 0, 1],
-            [0, 0, 0],
             [1, 1, 0],
-            [0, 1, 1],
             [1, 0, 1],
+            [0, 1, 1],
             [1, 1, 1],
             ])
         verts = np.dot(verts, array)
@@ -255,3 +357,117 @@ class Bcell(BaseObject):
     def bevel_object(self):
         name = '%s_cell_bevel_object'%(self.label)
         return bpy.data.objects.get(name)
+    
+    def draw_cell(self):
+        """Draw unit cell
+        """
+        object_mode()
+        name = '%s_%s_%s'%(self.label, 'cell', 'cylinder')
+        clean_coll_objects(self.coll, 'cylinder')
+        cell_cylinder = self.build_cell_cylinder()
+        draw_cylinder(name = name, 
+                        datas = cell_cylinder, 
+                        coll = self.batoms.coll
+                    )
+    
+    @property
+    def attributes(self):
+        return self.get_attributes()
+    
+    @attributes.setter
+    def attributes(self, attributes):
+        self.set_attributes(attributes)
+
+    def get_attributes(self):
+        """
+        using foreach_get and foreach_set to improve performance.
+        """
+        # attributes
+        me = self.obj.data
+        nvert = len(me.vertices)
+        attributes = {}
+        for key in me.attributes.keys():
+            att = me.attributes.get(key)
+            dtype = att.data_type
+            if dtype == 'STRING':
+                attributes[key] = np.zeros(nvert, dtype = 'U20')
+                for i in range(nvert):
+                    attributes[key][i] = att.data[i].value
+            elif dtype == 'INT':
+                attributes[key] = np.zeros(nvert, dtype = int)
+                att.data.foreach_get("value", attributes[key])
+            elif dtype == 'FLOAT':
+                attributes[key] = np.zeros(nvert, dtype = float)
+                att.data.foreach_get("value", attributes[key])
+            elif dtype == 'BOOLEAN':
+                attributes[key] = np.zeros(nvert, dtype = bool)
+                att.data.foreach_get("value", attributes[key])
+            else:
+                raise KeyError('%s is not support.'%dtype)
+            attributes[key] = np.array(attributes[key])
+        return attributes
+        
+    def set_attributes(self, attributes):
+        tstart = time()
+        me = self.obj.data
+        for key, data in attributes.items():
+            # print(key)
+            if len(attributes[key]) == 0:
+                continue
+            att = me.attributes.get(key)
+            if att is None:
+                dtype = type(attributes[key][0])
+                if np.issubdtype(dtype, int):
+                    dtype = 'INT'
+                elif np.issubdtype(dtype, float):
+                    dtype = 'FLOAT'
+                elif np.issubdtype(dtype, str):
+                    dtype = 'STRING'
+                else:
+                    raise KeyError('%s is not supported.'%dtype)
+                att = me.attributes.new(name = key, type = dtype, domain = 'POINT')
+            if att.data_type == 'STRING':
+                nvert = len(me.vertices)
+                for i in range(nvert):
+                    att.data[i].value = data[i]
+            else:
+                att.data.foreach_set("value", data)
+        me.update()
+        # print('set_attributes: %s'%(time() - tstart))
+
+    
+    def set_attribute_with_indices(self, name, indices, data):
+        data0 = self.attributes[name]
+        data0[indices] = data
+        self.set_attributes({name: data0})
+    
+    @property
+    def arrays(self):
+        return self.get_arrays()
+    
+    @arrays.setter
+    def arrays(self, arrays):
+        self.set_arrays(arrays)
+
+    def get_arrays(self, batoms = None, local = False, X = False, sort = True):
+        """
+        """
+        object_mode()
+        tstart = time()
+        arrays = self.attributes
+        arrays.update({'positions': self.positions})
+        # radius
+        radius = self.radius
+        arrays.update({'radius': np.zeros(len(self))})
+        for sel, data in radius.items():
+            for sp, value in data.items():
+                mask = np.where((arrays['species'] == sp) & (arrays['select'] == string2Number(sel)))
+                arrays['radius'][mask] = value
+        # size
+        arrays['size'] = arrays['radius']*arrays['scale']
+        # main elements
+        main_elements = self.batoms.species.main_elements
+        elements = [main_elements[sp] for sp in arrays['species']]
+        arrays.update({'elements': np.array(elements, dtype='U20')})
+        # print('get_arrays: %s'%(time() - tstart))
+        return arrays
