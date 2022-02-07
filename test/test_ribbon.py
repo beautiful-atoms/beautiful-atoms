@@ -5,6 +5,20 @@ from batoms.bio import read
 import numpy as np
 from time import time
 
+def test_select():
+from batoms.batoms import Batoms
+from batoms.pdbparser import read_pdb
+from batoms.butils import removeAll
+removeAll()
+atoms = read_pdb('test/datas/1tim.pdb')  # 1ema, 1tim, 4hhb
+batoms = Batoms('protein', from_ase = atoms)
+batoms.ribbon.draw()
+sel1 = batoms.selects.add('sel1', 'sheet A-160-A-170')
+# sel1 = batoms.selects.add('sel1', 'sheet A-148-A-152')
+# sel1 = batoms.selects.add('sel1', 'helix A-94-A-112')
+sel1.show = True
+sel1.model_style = 1
+
 def test_sheet():
 from batoms.batoms import Batoms
 from batoms.pdbparser import read_pdb
@@ -14,7 +28,8 @@ atoms = read_pdb('test/datas/1ema.pdb')  # 1ema, 1tim
 batoms = Batoms('protein', from_ase = atoms)
 batoms.ribbon.draw_sheet()
 batoms.ribbon.draw_helix()
-batoms.ribbon.draw()
+batoms.ribbon.draw_turn()
+# batoms.ribbon.draw()
 
 def test_helix():
 from batoms.batoms import Batoms

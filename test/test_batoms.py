@@ -19,34 +19,62 @@ from batoms.batoms import Batoms
 import numpy as np
 removeAll()
 h2o = Batoms('h2o', species = ['O', 'H', 'H'], 
+            positions= [[0, 0, 0.40], [0, -0.76, -0.2], [0, 0.76, -0.2]])
+
+def test_batoms_show():
+from ase.build import molecule
+from batoms.batoms import Batoms
+from batoms.butils import removeAll
+removeAll()
+c2h6so = molecule('C2H6SO')
+c2h6so = Batoms('c2h6so', from_ase = c2h6so)
+c2h6so.show = [0, 0 ,0, 0, 0, 1, 1, 1, 1 ,1]
+
+def test_batom():
+from batoms.butils import removeAll
+from batoms.batoms import Batoms
+import numpy as np
+removeAll()
+h2o = Batoms('h2o', species = ['O', 'H', 'H'], 
+            positions= [[0, 0, 0.40], [0, -0.76, -0.2], [0, 0.76, -0.2]])
+h2o[1].scale = 1
+h2o[1].show = 0
+h2o[1].show = 1
+h2o[1].species = 'Cl'
+
+def test_batoms_occupy():
+from batoms.butils import removeAll
+from batoms.batoms import Batoms
+import numpy as np
+removeAll()
+h2o = Batoms('h2o', species = ['O', 'H', 'H'], 
             species_props={'O':{'elements': {'O':0.8, 'N': 0.2}}, 
                            'H':{'elements': {'H': 0.8}}}, 
             positions= [[0, 0, 0.40], [0, -0.76, -0.2], [0, 0.76, -0.2]])
 
+
+def test_batoms_species():
 h2o.species['O'] = {'elements': {'O':0.3, 'Cl':0.3}}
-    
-h2o.obj.data.attributes['scale'].data[1].value = 3
-h2o[1].scale = 1
-h2o[1].show = 0
 
-assert isinstance(h2o, Batoms)
-assert len(h2o.species) == 2
-assert len(h2o) == 3
-h2o[0]
-h2o['H']
-
-
+def test_batoms():
+    """
+    """
+from batoms.butils import removeAll
+from batoms.batoms import Batoms
+import numpy as np
+removeAll()
+h2o = Batoms('h2o', species = ['O', 'H', 'H'], 
+            positions= [[0, 0, 0.40], [0, -0.76, -0.2], [0, 0.76, -0.2]])
 # properties
-h2o.cell = [3, 3, 3]
 h2o.pbc = True
 assert h2o.pbc
 h2o.cell = [3, 3, 3]
 h2o.repeat([2, 2, 2])
 h2o.scale = 0.5
 h2o.model_style = 1
-assert h2o.model_style == 1
+assert (h2o.model_style == 1).any()
 h2o.translate([0, 0, 2])
-assert np.allclose(h2o[0].positions, np.array([[0, 0, 2.4]]))
+assert np.allclose(h2o[0].position, np.array([[0, 0, 2.4]]))
 # h2o.rotate(math.pi/2.0, 'Z')
 #
 def test_batoms_copy():
@@ -65,12 +93,31 @@ h2o_2 = Batom('h2o_2')
 # delete
 del h2o_2['h2o_2_atom_H'][[0]]
 assert len(h2o_2['h2o_2_atom_H']) == 1
+
 #
-h2o_2.replace('O', 'C', [0])
-#
-h2o['atom_O'][0] = [0, 0, 2.0]
-index = [0, 1]
-h2o['atom_H'][index, 0] += 2
+def test_replace():
+from batoms.butils import removeAll
+from batoms.batoms import Batoms
+import numpy as np
+removeAll()
+h2o = Batoms('h2o', species = ['O', 'H', 'H'], 
+            positions= [[0, 0, 0.40], [0, -0.76, -0.2], [0, 0.76, -0.2]])
+h2o.translate([2, 2, 2])
+h2o.cell = [5, 5, 5]
+h2o.pbc = True
+h2o.replace(0, 'C')
+h2o.model_style = 1
+
+def test_pbc():
+from batoms.batoms import Batoms
+from ase.build import molecule
+from batoms.butils import removeAll
+removeAll()
+h2o = molecule('H2O')
+h2o.pbc = True
+h2o.center(3)
+# h2o = h2o*[20, 20, 20]
+h2o = Batoms('h2o', from_ase=h2o)
 
 def test_batoms():
     """
@@ -267,6 +314,7 @@ from batoms.bio import read
 removeAll()
 tio2 = read('test/datas/tio2_10.xyz', index = ':')
 tio2.set_frames()
+tio2.model_style = 1
 tio2.repeat([2, 2, 2])
 tio2.model_style = 1
 assert len(tio2) == 48

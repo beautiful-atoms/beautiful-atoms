@@ -5,13 +5,48 @@ from batoms.bio import read
 import numpy as np
 
 
+def test_polyhedra():
+from ase.build import molecule
+from batoms.batoms import Batoms
+from batoms.butils import removeAll
+removeAll()
+ch4 = molecule('CH4')
+mh4 = ch4.copy()
+mh4.translate([2, 2, 0])
+mh4[0].symbol = 'N'
+ch4 = ch4 + mh4
+ch4 = Batoms('ch4', from_ase = ch4)
+ch4.model_style = 2
+ch4.bonds.setting[('C', 'H')].polyhedra = True
+ch4.model_style = 1
+
+def test_polyhedra():
+from batoms.bio import read
+from batoms.butils import removeAll
+removeAll()
+tio2 = read('test/datas/tio2.cif')
+tio2.model_style = 2
+tio2 = tio2*[3, 3, 3]
+tio2.pbc = False
+tio2.model_style = 2
+
+
+from batoms.bio import read
+from batoms.butils import removeAll
+removeAll()
+pk = read('test/datas/perovskite.cif')
+pk.model_style = 2
+pk = pk*[3, 3, 3]
+pk.pbc = False
+# pk.model_style = 2
+
 
 def test_polyhedra():
 from ase.build import molecule
 from batoms.batoms import Batoms
 from batoms.butils import removeAll
 removeAll()
-ch4 = Batoms('ch4', aseAtoms = molecule('CH4'))
+ch4 = Batoms('ch4', from_ase = molecule('CH4'))
 ch4.bondsetting[('C', 'H')].polyhedra = True
 ch4.model_style = 2
 ch4.pbc = True

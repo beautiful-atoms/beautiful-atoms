@@ -339,7 +339,6 @@ class Boundary(BaseObject):
         obj.hide_set(True)
         bpy.context.view_layer.update()
         self.set_attributes(attributes)
-        self.set_attributes(attributes)
         self.build_geometry_node()
         self.set_frames(self._frames, only_basis = True)
         print('bonds: build_object: {0:10.2f} s'.format(time() - tstart))

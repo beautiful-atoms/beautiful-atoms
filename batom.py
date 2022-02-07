@@ -1,5 +1,6 @@
-
+import bpy
 import numpy as np
+from batoms.butils import update_object, object_mode
 
 class Batom():
     """Batom Class
@@ -10,14 +11,19 @@ class Batom():
         self.index = index
 
     def __repr__(self):
-        s = "Batom(species = '%s', elements = %s, \
-                    positions = %s" % (self.species,  \
-                    str(self.elements), self.positions)
+        bpy.context.view_layer.objects.active = self.batoms.obj
+        mode = self.batoms.obj.mode
+        bpy.ops.object.mode_set(mode='OBJECT')
+        s = "Batom(species = '%s', elements = %s, positions = %s" % (self.species,  \
+                    str(self.elements), self.position)
+        bpy.ops.object.mode_set(mode=mode)
         return s
     
     @property
     def vertice(self):
-        return self.batoms.obj.data.vertices[self.index]
+        # vertice = self.batoms.obj.data.vertices[self.index]
+        vertice = self.batoms.obj.data.shape_keys.key_blocks[0].data[self.index]
+        return vertice
     
     @property
     def attribute(self):
@@ -25,64 +31,54 @@ class Batom():
     
     @property
     def species(self):
-        return self.batoms.obj.data.attributes['species'].data[0].value
+        return self.batoms.obj.data.attributes['species'].data[self.index].value
     
     @species.setter
     def species(self, species):
         self.set_species(species)
     
     def set_species(self, species):
-        self.batoms.obj.data.attributes['species'].data[0].value = species
+        # self.batoms.obj.data.attributes['species'].data[self.index].value = species
+        self.batoms.replace([self.index], species)
     
     @property
     def elements(self):
         return self.batoms.species[self.species]['elements']
     
     @property
-    def local_positions(self):
+    def local_position(self):
         return self.vertice.co
 
     @property
-    def positions(self):
-        return self.get_positions()
+    def position(self):
+        return self.get_position()
     
-    @positions.setter
-    def positions(self, positions):
-        self.set_positions(positions)
+    @position.setter
+    def position(self, position):
+        self.set_position(position)
     
-    def get_positions(self):
+    def get_position(self):
         """
-        Get global positions.
+        Get global position.
         """
         from batoms.tools import local2global
-        positions = local2global(np.array([self.local_positions]), 
+        position = local2global(np.array([self.local_position]), 
                 np.array(self.batoms.obj.matrix_world))
-        return positions[0]
+        return position[0]
     
-    def set_positions(self, positions):
+    def set_position(self, position):
         """
-        Set global positions to local vertices
+        Set global position to local vertices
         """
         object_mode()
         from batoms.tools import local2global
-        natom = len(self)
-        if len(positions) != natom:
-            raise ValueError('positions has wrong shape %s != %s.' %
-                                (len(positions), natom))
-        positions = local2global(positions, 
-                np.array(self.obj.matrix_world), reversed = True)
+        position = np.array([position])
+        position = local2global(position, 
+                np.array(self.batoms.obj.matrix_world), reversed = True)
         # rashpe to (natoms*3, 1) and use forseach_set
-        positions = positions.reshape((natom*3, 1))
-        # I don't know why 'Basis' shape keys is not updated when editing mesh,
-        # so we edit the 'Basis' shape keys directly.
-        # self.obj.data.vertices.foreach_set('co', positions)
-        self.obj.data.shape_keys.key_blocks[0].data.foreach_set('co', positions)
-        self.obj.data.update()
-        # bpy.context.view_layer.update()
-        # I don't why this is need to update the mesh positions
-        bpy.context.view_layer.objects.active = self.obj
-        bpy.ops.object.mode_set(mode = 'EDIT')
-        bpy.ops.object.mode_set(mode = 'OBJECT')
+        self.vertice.co = position[0]
+        self.batoms.obj.data.update()
+        update_object(self.batoms.obj)
 
     @property
     def scale(self):
@@ -99,3 +95,5 @@ class Batom():
     @show.setter
     def show(self, show):
         self.batoms.obj.data.attributes['show'].data[self.index].value = show
+        update_object(self.batoms.obj)
+

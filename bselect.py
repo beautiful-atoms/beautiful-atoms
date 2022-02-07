@@ -4,16 +4,8 @@
 
 from math import exp
 import bpy
-from batoms.base import Setting, BaseCollection
-from batoms.bspecies import Bspecies
-from batoms.bondsetting import BondSetting, build_bondlists, calc_bond_data
-from batoms.polyhedrasetting import PolyhedraSetting, build_polyhedralists
-from batoms.isosurfacesetting import IsosurfaceSetting
-from batoms.planesetting import PlaneSetting
-from batoms.mssetting import MSsetting
-from batoms.ribbon import Ribbon
+from batoms.base import Setting
 import numpy as np
-from batoms.butils import object_mode, show_index
 from time import time
 
 from batoms.tools import string2Number
@@ -278,7 +270,7 @@ class Selects(Setting):
         self.batoms.species.build_instancers()
         sel = Select(self.label, name = name, batoms = self.batoms)
         for sp in self.batoms.species:
-            self.batoms.add_geometry_node(sp, sel)
+            self.batoms.add_geometry_node(sp.name, sel.name)
         return sel
     
 
@@ -314,6 +306,14 @@ metals
             chainid = expre.split()[1]
             print('chain %s'%chainid)
             indices = np.where(batoms.attributes['chainids'] == chainid)[0]
+        if 'sheet' in expre:
+            sheet = expre.split()[1]
+            print('sheet %s'%sheet)
+            indices = batoms.ribbon.sheets[sheet].indices
+        if 'helix' in expre:
+            helix = expre.split()[1]
+            print('helix %s'%helix)
+            indices = batoms.ribbon.helixs[helix].indices
         if 'species' in expre:
             species = expre.split()[1]
             print('species %s'%species)

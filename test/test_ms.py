@@ -8,7 +8,7 @@ def test_voronoi_bulk():
     from batoms.butils import removeAll
     removeAll()
     au = bulk('Au', cubic = True)
-    au = Batoms('au', atoms = au)
+    au = Batoms('au', from_ase = au)
     au = au*[4, 4, 4]
     au.scale = 0.1
     au.draw_voronoi()
@@ -20,7 +20,7 @@ def test_voronoi_molecule():
     removeAll()
     c2h6 = molecule('C2H6')
     c2h6.center(3.0)
-    c2h6 = Batoms('c2h6', atoms = c2h6)
+    c2h6 = Batoms('c2h6', from_ase = c2h6)
     c2h6.scale = 0.1
     c2h6.draw_voronoi()
 
@@ -31,7 +31,7 @@ from batoms.butils import removeAll
 import numpy as np
 removeAll()
 kras = read('test/datas/1jj2.pdb')
-kras = Batoms('kras', atoms = kras)
+kras = Batoms('kras', from_ase = kras)
 kras.mssetting.draw_SAS(resolution = 2)
 kras.mssetting.build_SAS_Shrake_Rupley(subdivisions = 2)
 kras.mssetting.draw_SAS_Shrake_Rupley()
@@ -48,7 +48,7 @@ from batoms.batoms import Batoms
 from batoms.butils import removeAll
 removeAll()
 h2o = molecule('H2O')
-h2o = Batoms('h2o', aseAtoms = h2o)
+h2o = Batoms('h2o', asefrom_ase = h2o)
 h2o.mssetting.draw_SAS(probe = 1.4)
 area = h2o.mssetting.get_psasa()
 
@@ -64,7 +64,7 @@ from batoms.batoms import Batoms
 from batoms.butils import removeAll
 removeAll()
 h2o = molecule('H2O')
-h2o = Batoms('h2o', atoms = h2o)
+h2o = Batoms('h2o', from_ase = h2o)
 h2o.mssetting.draw_SES(resolution=0.4, probe=1.4)
 area = h2o.mssetting.get_sasa(partial = True)[0]
 
@@ -95,8 +95,8 @@ from batoms.batoms import Batoms
 from batoms.butils import removeAll
 removeAll()
 kras = read('test/datas/kras.pdb')
-kras = Batoms('kras', atoms = kras)
-kras.mssetting.draw_SAS(parallel=6)
+kras = Batoms('kras', from_ase = kras)
+kras.mssetting.draw_SAS(parallel=1)
 area = kras.mssetting.get_sasa()
 
 
@@ -112,7 +112,7 @@ from batoms.batoms import Batoms
 from batoms.butils import removeAll
 removeAll()
 h2o = molecule('H2O')
-h2o = Batoms('h2o', atoms = h2o)
+h2o = Batoms('h2o', from_ase = h2o)
 h2o.draw_SAS(probe = 0.01, resolution = 0.4, threshold = 1e-6, area = True)
 area = h2o.mssetting.get_sasa(partial = True)[0]
 
@@ -132,7 +132,7 @@ from batoms.batoms import Batoms
 from batoms.butils import removeAll
 removeAll()
 atp = read('test/datas/ATP.pdb')
-atp = Batoms('atp', aseAtoms = atp)
+atp = Batoms('atp', asefrom_ase = atp)
 sel1 = atp.selects.add('sel1', np.arange(20))
 atp.mssetting.add('2', {'select':'sel1', 'color': [0.8, 0.1, 0.1, 1.0]})
 atp.mssetting.draw_SAS()
@@ -204,7 +204,7 @@ from batoms.batoms import Batoms
 from batoms.butils import removeAll
 removeAll()
 kras = read('test/datas/kras.pdb')
-kras = Batoms('kras', atoms = kras)
+kras = Batoms('kras', from_ase = kras)
 kras.draw_SAS(probe = 1.4, resolution = 0.4, area = True)
 area = kras.mssetting.get_sasa()
 area = kras.mssetting.get_psasa()
@@ -219,7 +219,7 @@ from batoms.batoms import Batoms
 from batoms.butils import removeAll
 removeAll()
 mol = read('test/datas/deca_ala_md-pos-1.xyz', index = ':')
-mol = Batoms('mol', atoms = mol, movie=True)
+mol = Batoms('mol', from_ase = mol, movie=True)
 mol.draw_SAS(probe = 1.4, resolution = 0.4)
     areas = mol.mssetting.get_sasa()
     assert len(areas) == 10
@@ -234,7 +234,7 @@ def test_SAS_performance():
     atp.center(5.0)
     atp = atp*[3, 3, 3]
     print(len(atp))
-    atp = Batoms('atp', atoms = atp)
+    atp = Batoms('atp', from_ase = atp)
     tstart = time()
     atp.draw_SAS(probe = 1.4, resolution = 0.4, threshold = 1e-6, area = True)
     t = time() - tstart
@@ -252,7 +252,7 @@ from batoms.batoms import Batoms
 from batoms.butils import removeAll
 removeAll()
 o2 = Atoms('O2', [[-0.5, 0, 0], [0.5, 0, 0]])
-o2 = Batoms('o2', atoms = o2)
+o2 = Batoms('o2', from_ase = o2)
 o2.draw_SES(probe = 1.4, resolution = 0.4, subdivide=0)
 
 def test_SES_3():
@@ -262,7 +262,7 @@ from batoms.batoms import Batoms
 from batoms.butils import removeAll
 removeAll()
 o3 = Atoms('O3', [[-2.5, 0, 0], [2.5, 0, 0], [0, 2.5, 0]])
-o3 = Batoms('o3', atoms = o3)
+o3 = Batoms('o3', from_ase = o3)
 o3.draw_SES(probe = 1.4, resolution = 0.4, subdivide=1)
 
 
@@ -271,7 +271,7 @@ from batoms.batoms import Batoms
 from batoms.butils import removeAll
 removeAll()
 ho = Atoms('HO', [[0.5, 0, 0], [-0.5, 0, 0]])
-ho = Batoms('ho', atoms = ho)
+ho = Batoms('ho', from_ase = ho)
 # ho.draw_SAS(probe = 1.4, resolution = 0.2, threshold = 1e-6)
 ho.draw_SES(probe = 1.4, resolution = 0.4, subdivide=1)
 
@@ -288,7 +288,7 @@ from batoms.butils import removeAll
 removeAll()
 h2o = molecule('CH3CH2OH')
 print(h2o.positions)
-h2o = Batoms('h2o', atoms = h2o)
+h2o = Batoms('h2o', from_ase = h2o)
 # h2o.draw_SAS(probe = 1.4, resolution = 0.2, threshold = 1e-6)
 h2o.draw_SES(resolution = 0.2, subdivide=0, steps = 10, probe = 1.4)
 
@@ -305,7 +305,7 @@ from batoms.batoms import Batoms
 from batoms.butils import removeAll
 removeAll()
 atp = read('test/datas/ATP.pdb')
-atp = Batoms('atp', atoms = atp)
+atp = Batoms('atp', from_ase = atp)
 atp.draw_SES(resolution = 0.4, steps = 10, subdivide = 0)
 area = atp.mssetting.get_sesa()
     assert abs(area - 368.1) < 10

@@ -10,7 +10,7 @@ import bpy
 import bmesh
 from time import time
 from batoms.butils import object_mode
-from batoms.tools import string2Number
+from batoms.tools import string2Number, number2String
 import numpy as np
 from batoms.base import BaseObject
 from batoms.bondsetting import BondSettings
@@ -118,7 +118,7 @@ class Bonds(BaseObject):
         else:
             raise Exception('Shape of centers is wrong!')
         offsets = bond_datas['offsets']
-        nbond = len(bond_datas['centers'])
+        nbond = len(centers)
         show = np.ones(nbond, dtype = int)
         attributes.update({
                             'atoms_index1': bond_datas['atoms_index1'], 
@@ -143,6 +143,7 @@ class Bonds(BaseObject):
         for attribute in default_attributes:
             mesh.attributes.new(name = attribute[0], type = attribute[1], domain = 'POINT')
         self.setting.coll.objects.link(obj)
+        obj.parent = self.batoms.obj
         #
         name = '%s_bond_offset'%self.label
         if name in bpy.data.objects:
@@ -158,6 +159,8 @@ class Bonds(BaseObject):
         self.set_attributes(attributes)
         self.build_geometry_node()
         self.set_frames(self._frames, only_basis = False)
+        #
+        obj.parent = self.batoms.obj
         print('bonds: build_object: {0:10.2f} s'.format(time() - tstart))
     
     def load(self):
@@ -206,7 +209,7 @@ class Bonds(BaseObject):
         for i in range(1, 11):
             test = get_nodes_by_name(modifier.node_group.nodes, 
                             'BooleanMath_%s'%i,
-                            'FunctionNodeCompareFloats')
+                            'ShaderNodeMath')
             modifier.node_group.links.new(GroupInput.outputs[i], test.inputs[0])
         #
         i = 2
@@ -372,7 +375,20 @@ class Bonds(BaseObject):
             CompareStyle.inputs[1].default_value = style
             gn.node_group.links.new(GroupInput.outputs[8], CompareStyle.inputs[0])
         #
-        for sp in self.setting:
+        # for sp in self.setting:
+            # self.add_geometry_node(sp.as_dict())
+        # only build pair in bondlists
+        bondlists = self.bondlists
+        if len(bondlists['atoms_index1']) == 0:
+            return
+        pairs = np.concatenate((bondlists['species_index1'].reshape(-1, 1), 
+                    bondlists['species_index2'].reshape(-1, 1)), axis = 1)
+        pairs = np.unique(pairs, axis = 0)
+        pairs = pairs.reshape(-1, 2)
+        for pair in pairs:
+            sp1 = number2String(pair[0])
+            sp2 = number2String(pair[1])
+            sp = self.setting['%s-%s'%(sp1, sp2)]
             self.add_geometry_node(sp.as_dict())
         
         print('Build geometry nodes for bonds: %s'%(time() - tstart))
@@ -478,7 +494,8 @@ class Bonds(BaseObject):
         # clean_coll_objects(self.coll, 'bond')
         frames = self.batoms.get_frames()
         arrays = self.batoms.arrays
-        species = arrays['species']
+        show = arrays['show']
+        species = arrays['species'][show]
         # frames_boundary = self.batoms.get_frames(self.batoms.batoms_boundary)
         # frames_search = self.batoms.get_frames(self.batoms.batoms_search)
         nframe = len(frames)
@@ -486,7 +503,7 @@ class Bonds(BaseObject):
         tstart = time()
         for f in range(nframe):
             # print('update bond: ', f)
-            positions = frames[f]
+            positions = frames[f, show, :]
             # if len(frames_boundary) > 0:
             #     positions_boundary = frames_boundary[f]
             #     positions = positions + positions_boundary
@@ -500,9 +517,9 @@ class Bonds(BaseObject):
             else:
                 bondlists = np.append(bondlists, bondlist, axis = 0)
         bondlists = np.unique(bondlists, axis = 0)
-        bond_datas = calc_bond_data(species, frames, 
+        bond_datas = calc_bond_data(species, frames[:, show, :], 
                     self.batoms.cell, bondlist, self.setting,
-                    arrays['model_style'])
+                    arrays['model_style'][show])
 
         if len(bond_datas) == 0:
             return
@@ -1023,7 +1040,7 @@ def calc_bond_data(speciesarray, positions, cell,
     atoms_index2 = np.array(bondlists[:, 1])
     atoms_index3 = np.roll(bondlists[:, 0], 1)
     atoms_index4 = np.roll(bondlists[:, 1], 1)
-    nb =len(bondlists)
+    nb =len(atoms_index1)
     orders = np.zeros(nb, dtype = int) # 1, 2, 3
     styles = np.zeros(nb, dtype = int) # 0, 1, 2
     widths = np.ones(nb, dtype = float) 

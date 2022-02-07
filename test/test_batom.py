@@ -10,7 +10,8 @@ from batoms.butils import removeAll
 from batoms import Batom
 import numpy as np
 removeAll()
-h2o = Batom('h2o', species = ['O', 'H', 'H'], elements={'O':{'O':0.8, 'N': 0.2}, 'H':{'H': 0.8}}, positions= [[0, 0, 0.40], [0, -0.76, -0.2], [0, 0.76, -0.2]])
+h2o = Batom('h2o', species = ['O', 'H', 'H'], 
+        positions= [[0, 0, 0.40], [0, -0.76, -0.2], [0, 0.76, -0.2]])
 h2o.pbc = True
 h2o.cell = [3, 3, 3]
 h2o.attributes

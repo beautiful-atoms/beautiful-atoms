@@ -39,6 +39,7 @@ class Bspecies(bpy.types.PropertyGroup):
                ('1',"VESTA", "VESTA"),
                ('2',"CPK","CPK")),
         default='0')
+    segments: IntVectorProperty(name="segments", size = 2, default = (24, 16))
 
 class Batom(bpy.types.PropertyGroup):
     """
@@ -87,7 +88,7 @@ class Bbond(bpy.types.PropertyGroup):
     search: IntProperty(name="search", default=0)
     polyhedra: BoolProperty(name="polyhedra", default=False)
     color1: FloatVectorProperty(name="color1", size = 4, default = (0, 0.2, 0.8, 1))
-    color2: FloatVectorProperty(name="color1", size = 4, default = (0.6, 0.2, 0, 1))
+    color2: FloatVectorProperty(name="color2", size = 4, default = (0.6, 0.2, 0, 1))
     width: FloatProperty(name="width", default = 0.10)
     order: IntProperty(name="order", default = 1)
     segments: IntProperty(name="segments", default = 16)
@@ -117,8 +118,8 @@ class Bbond(bpy.types.PropertyGroup):
                   'max': self.max, 
                   'search': self.search,
                   'polyhedra': self.polyhedra,
-                  'color1': self.color1,
-                  'color2': self.color2,
+                  'color1': self.color1[:],
+                  'color2': self.color2[:],
                   'width': self.width,
                   'order': self.order,
                   'order_offset': self.order_offset,
@@ -143,6 +144,14 @@ class Bpolyhedra(bpy.types.PropertyGroup):
     color: FloatVectorProperty(name="color", size = 4)
     width: FloatProperty(name="width", default = 0.01)
     show_edge: BoolProperty(name="show_edge", default=True)
+    style: EnumProperty(
+        name="style",
+        description="Polhhedra models",
+        items=(('0',"atoms, bonds and polyhedra", "atoms, bonds and polyhedra"),
+               ('1',"atoms, polyhedra", "atoms, polyhedra"),
+               ('2',"central atoms, polyhedra","central atoms, polyhedra"),
+               ('3',"polyhedra", "polyhedra")),
+               default='0')
     
     @property
     def name(self) -> str:
@@ -217,12 +226,6 @@ class Bplane(bpy.types.PropertyGroup):
     @property
     def name(self) -> str:
         return '%s-%s-%s'%(self.indices[0], self.indices[1], self.indices[2])
-    
-    def copy(self):
-        bplane = self.__class__()
-        for key, value in self.as_dict():
-            setattr(bplane, key, value)
-        return bplane
 
     def as_dict(self) -> dict:
         setdict = {
@@ -306,9 +309,9 @@ class Bsheet(bpy.types.PropertyGroup):
     startResi: IntProperty(name="startResi", default=0)
     endChain: StringProperty(name="endChain")
     endResi: IntProperty(name="endResi", default=0)
-    color: FloatVectorProperty(name="color1", size = 4, default = (0.0, 0.0, 1.0, 1))
-    extrude: FloatProperty(name="extrude", default = 1.0)
-    depth: FloatProperty(name="depth", default = 0.25)
+    color: FloatVectorProperty(name="color1", size = 4, default = (0.0, 0.0, 1.0, 1.0))
+    extrude: FloatProperty(name="extrude", default = 0.8)
+    depth: FloatProperty(name="depth", default = 0.1)
     
     @property
     def name(self) -> str:
@@ -352,7 +355,7 @@ class Bhelix(bpy.types.PropertyGroup):
     endResi: IntProperty(name="endResi", default=0)
     color: FloatVectorProperty(name="color1", size = 4, default = (1.0, 0.0, 0.0, 1))
     extrude: FloatProperty(name="extrude", default = 1.0)
-    depth: FloatProperty(name="depth", default = 0.25)
+    depth: FloatProperty(name="depth", default = 0.1)
     
     @property
     def name(self) -> str:
@@ -395,7 +398,7 @@ class Bturn(bpy.types.PropertyGroup):
     endChain: StringProperty(name="endChain")
     endResi: IntProperty(name="endResi", default=0)
     color: FloatVectorProperty(name="color1", size = 4, default = (0.0, 1.0, 0.0, 1))
-    radius: FloatProperty(name="radius", default = 0.25)
+    radius: FloatProperty(name="radius", default = 0.2)
     
     @property
     def name(self) -> str:

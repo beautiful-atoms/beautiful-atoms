@@ -5,23 +5,66 @@ from batoms.bio import read
 import numpy as np
 
 
+def test_bonds():
+from ase.build import molecule
+from batoms.batoms import Batoms
+from batoms.butils import removeAll
+removeAll()
+c2h6so = molecule('C2H6SO')
+c2h6so = Batoms('c2h6so', from_ase = c2h6so)
+c2h6so.show = [0, 0 ,1, 1, 1, 1, 1, 1, 1 ,1]
+c2h6so.model_style = 1
 
-def test_bondsetting():
+c2h6so.bonds[0].order = 2
+c2h6so.bonds.setting['C-H'].color1 = [0, 1, 0, 1]
+c2h6so.bonds.setting['C-H'].color2 = [0, 1, 1, 1]
+c2h6so.bonds.setting['C-H'].order = 2
+c2h6so.model_style = 1
+c2h6so.bonds[0].order = 2
+
+
+def test_bonds():
 from ase.io import read
 from ase.build import molecule
 from batoms.batoms import Batoms
 from batoms.butils import removeAll
 removeAll()
-mof = read('test/datas/mof-5.cif')
-h2o = molecule('CH3CH2OH')
+atoms = read('test/datas/mof-5.cif')
+# atoms = molecule('CH3CH2OH')
+atoms.pbc = True
+atoms.center(3)
+atoms = Batoms('atoms', from_ase = atoms)
+# atoms.bonds.setting['C-C'].order = 2
+atoms.model_style = 1
+
+def test_high_order():
+from ase.build import molecule
+from batoms.batoms import Batoms
+from batoms.butils import removeAll
+removeAll()
+c6h6 = molecule('C6H6')
+c6h6 = Batoms('c6h6', from_ase = c6h6)
+c6h6.model_style = 1
+c6h6.bonds[0].order = 2
+c6h6.bonds[2].order = 2
+c6h6.bonds[5].order = 2
+#
+c6h6.bonds.setting['C-C'].order = 2
+
+def test_bonds_performance():
+from ase.build import molecule
+from batoms.batoms import Batoms
+from batoms.butils import removeAll
+removeAll()
+h2o = molecule('H2O')
+# h2o.center(3)
+h2o.cell = [3, 3, 3]
 h2o.pbc = True
-h2o.center(3)
-h2o = Batoms('h2o', from_ase = mof)
-# h2o.bondsetting.remove('C-C')
-# h2o.bondsetting.remove('O-O')
+h2o = Batoms('h2o', from_ase = h2o)
+h2o = h2o*[10, 10 ,10]
 h2o.model_style = 1
-bpy.data.objects['h2o_bond_center'].data.attributes['order'].data[0].value = 2
-bpy.data.objects['h2o_bond_center'].data.attributes['style'].data[0].value = 2
+h2o[0].order = 2
+h2o.bondsetting.bonds[0]
 
 def test_model_style():
 
@@ -62,26 +105,29 @@ def test_add():
     print('Pass add!')
 
 def test_polyhedra():
-    from batoms.bio import read
-    from batoms.butils import removeAll
-    removeAll()
-    tio2 = read('datas/tio2.cif')
-    tio2.boundary = 0.01
-    tio2.bondsetting.remove(('Ti', 'O'))
-    assert len(tio2.bondsetting) == 1
-    tio2.bondsetting.add(('Ti', 'O'))
-    assert len(tio2.bondsetting) == 2
+from batoms.bio import read
+from batoms.butils import removeAll
+removeAll()
+tio2 = read('test/datas/tio2.cif')
+# tio2 = tio2*[10, 10, 10]
+# tio2 = read('test/datas/tio2-20-20-20.in')
+tio2.model_style = 2
+# tio2.boundary = 0.01
+# tio2.bondsetting.remove(('Ti', 'O'))
+# assert len(tio2.bondsetting) == 1
+# tio2.bondsetting.add(('Ti', 'O'))
+# assert len(tio2.bondsetting) == 2
 
 def test_search_bond():
-    from batoms.bio import read
-    from batoms.butils import removeAll
-    removeAll()
-    pk = read('datas/perovskite.cif')
-    pk.repeat([2, 2, 2])
-    pk.boundary = 0.01
-    pk.model_style = 2
-    pk.draw_cell()
-    pk.get_image([0, 1, 0], engine = 'eevee', output = 'perovskite.png')
+from batoms.bio import read
+from batoms.butils import removeAll
+removeAll()
+pk = read('test/datas/perovskite.cif')
+# pk.repeat([2, 2, 2])
+# pk.boundary = 0.01
+pk.model_style = 1
+pk.draw_cell()
+pk.get_image([0, 1, 0], engine = 'eevee', output = 'perovskite.png')
 
 def test_search_bond_2():
     from batoms.bio import read

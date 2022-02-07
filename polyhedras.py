@@ -140,6 +140,7 @@ class Polyhedras(BaseObject):
         for attribute in default_attributes:
             mesh.attributes.new(name = attribute[0], type = attribute[1], domain = attribute[2])
         self.setting.coll.objects.link(obj)
+        obj.parent = self.batoms.obj
         #
         name = '%s_polyhedra_offset'%self.label
         if name in bpy.data.objects:
@@ -156,6 +157,7 @@ class Polyhedras(BaseObject):
         self.build_geometry_node()
         self.set_frames(self._frames, only_basis = True)
         self.assign_materials()
+        obj.parent = self.batoms.obj
         print('polyhedras: build_object: {0:10.2f} s'.format(time() - tstart))
     
     def assign_materials(self):
@@ -322,8 +324,7 @@ class Polyhedras(BaseObject):
         # clean_coll_objects(self.coll, 'bond')
         frames = self.batoms.get_frames()
         arrays = self.batoms.arrays
-        size = arrays['radius']*arrays['scale']
-        species = arrays['species']
+        show = arrays['show']
         # frames_boundary = self.batoms.get_frames(self.batoms.batoms_boundary)
         # frames_search = self.batoms.get_frames(self.batoms.batoms_search)
         nframe = len(frames)
@@ -331,7 +332,7 @@ class Polyhedras(BaseObject):
         tstart = time()
         for f in range(nframe):
             print('update polyhedra: ', f)
-            positions = frames[f]
+            positions = frames[f, show, :]
             # if len(frames_boundary) > 0:
             #     positions_boundary = frames_boundary[f]
             #     positions = positions + positions_boundary
@@ -951,6 +952,6 @@ class Polyhedras(BaseObject):
             'faces':faces,
             'styles':styles[0:n],
         }
-        print('datas: ', datas)
+        # print('datas: ', datas)
         print('calc_polyhedra_data: {0:10.2f} s'.format(time() - tstart))
         return datas

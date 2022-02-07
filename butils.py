@@ -249,3 +249,10 @@ def get_volume(me):
     bm.from_mesh(me)
     volume = bm.calc_volume()
     return volume
+
+def update_object(obj):
+    mode = obj.mode
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.mode_set(mode = 'EDIT')
+    bpy.ops.object.mode_set(mode = 'OBJECT')
+    bpy.ops.object.mode_set(mode = mode)

@@ -5,8 +5,7 @@ from batoms.base import Setting, tuple2string
 import numpy as np
 from time import time
 from batoms.butils import object_mode, clean_coll_objects
-from batoms.bdraw import draw_surface_from_vertices, draw_cylinder
-from batoms.bonds import build_bondlists
+from batoms.data import default_polyhedras
 
 
 class PolyhedraSettings(Setting):
@@ -72,6 +71,7 @@ class PolyhedraSettings(Setting):
         """
         for sel, data in species_props.items():
             for sp, data in data.items():
+                if sp not in default_polyhedras: continue
                 self[sp] = {
                     'flag': True,
                     'label': self.label,

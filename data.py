@@ -1038,3 +1038,15 @@ default_bonds = {
 ('Zr', 'As'):  [1,  1],
 ('Zr', 'H' ):  [1,  1],
 }
+
+default_polyhedras = {
+'Ac', 'Zr', 'Pr', 'Mo', 'Li', 'Ba', 'Cd', 
+'Es', 'Al', 'Os', 'V', 'Sm', 'Dy', 'Ti', 'Pb', 'Ni', 'Sr', 'Na', 
+'Lu', 'Y', 'Tb', 'Au', 'Be', 'Sn', 'Xe', 'As', 'Cr', 
+'Ru', 'Re', 'Yb', 'I', 'Ag', 'H', 'Se', 'Th', 'In', 'Pu', 'Te',
+ 'W', 'Ca', 'Co', 'Pd', 'Tl', 'B', 'Br', 'Rh', 'Pa', 'Tc', 'Zn', 
+ 'Eu', 'Ta', 'Cm', 'Nb', 'Hf', 'La', 'Ce', 'Cf', 'D', 'U', 'Mn', 
+ 'Si', 'Hg', 'Cu', 'Rb', 'K', 'Er', 'NH', 'Fe', 'Ge', 'Am', 'P', 
+ 'Tm', 'Gd', 'Ga', 'Pm', 'Bi', 'Mg', 'Sc', 'Kr', 'Sb', 'Ir', 'Po', 
+ 'Bk', 'F', 'Ho', 'Nd', 'Cs', 'Np', 'Pt',
+ }

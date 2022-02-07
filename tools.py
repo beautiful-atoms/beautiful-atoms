@@ -1,6 +1,6 @@
 import numpy as np
 import math
-
+from time import time
 
 def read_from_ase(atoms):
     """
@@ -51,9 +51,11 @@ def read_from_pymatgen(structure):
     return symbols, positions, attributes, cell, pbc, info
          
 def string2Number (s):
+    s = str(s)
     return int.from_bytes(s.encode(), 'little')
 
 def number2String (n):
+    n = int(n)
     return n.to_bytes(math.ceil(n.bit_length() / 8), 'little').decode()
 
 def default_element_prop(element, radius_style = 'covalent', color_style = "JMOL"):
@@ -392,6 +394,30 @@ def calc_origin_3(p, p0, p1, p2, r0, r1, r2, r):
     # print('x, y, h: ', V, A, x, y, h)
     # print(xaxis[0], zaxis[0])
     return origin
+
+def calc_euler_angle(x, z, seq = 'xyz'):
+    """
+    """
+    from scipy.spatial.transform import Rotation as R
+    tstart = time()
+    if len(x.shape) == 1:
+        x = x.reshape(-1, 3)
+    if len(z.shape) == 1:
+        z = z.reshape(-1, 3)
+    y = np.cross(z, x, axis = 1)
+    n = len(z)
+    if n == 0:
+        eulers = np.zeros((0, 3))
+    else:
+        x = x.reshape(n, 1, 3)
+        y = y.reshape(n, 1, 3)
+        z = z.reshape(n, 1, 3)
+        mat = np.concatenate((x, y, z), axis = 1)
+        mat = np.linalg.inv(mat)
+        r = R.from_matrix(mat)
+        eulers = r.as_euler(seq = seq)#, degrees = True)
+    print('calc_euler_angle: {0:10.2f} s'.format(time() - tstart))
+    return eulers
 
 if __name__ == '__main__':
     # V = heron4(6, 7, 8, 9, 10, 11)

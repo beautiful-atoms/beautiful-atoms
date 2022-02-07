@@ -4,7 +4,7 @@ from ase.io import read, write
 from batoms import Batoms
 from batoms.butils import removeAll
 removeAll()
-atoms = read('test/datas/c2h6so_10.xyz', index = ':')
+atoms = read('test/datas/deca_ala_md-pos-1.xyz', index = ':')
 batoms = Batoms('c2h6so', from_ase = atoms, movie = True)
 batoms.model_style = 1
 

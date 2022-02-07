@@ -6,22 +6,49 @@ from batoms.tools import get_default_species_data, string2Number, number2String
 
 
 class species():
-    def __init__(self, name, species, elements, radius_style, color_style
+    def __init__(self, name, species, elements, 
+                radius_style = 'colvent', 
+                color_style = 'ASE',
+                
                 ) -> None:
         self.species = species
         self.elements = elements
         self.name = name
+    
+    @property
+    def segments(self):
+        return self.get_segments()
+    
+    @segments.setter
+    def segments(self, segments):
+        self.set_segments(segments)
+    
+    def get_segments(self):
+        nverts = len(self.instancer.data.vertices)
+        return nverts
+    
+    def set_segments(self, segments):
+        if not isinstance(segments, int):
+            raise Exception('Segments should be int!')
+        self._species.build_instancers(segments = segments)
+        self.build_geometry_node()
+        
 
 class Bspecies(Setting):
     """Bspecies Class
     """
-    def __init__(self, label, coll_name, species = {}, batoms = None,
+    def __init__(self, label, coll_name, species = {}, 
+                batoms = None,
                 material_style = 'default',
+                segments = [16, 16],
+                subdivisions = 2,
                 ) -> None:
         Setting.__init__(self, label, coll_name=coll_name)
         self.label = label
         self.name = 'bspecies'
         self.batoms = batoms
+        self.segments = segments
+        self.subdivisions = subdivisions
         for sp, data in species.items():
             self[sp] = data
     
@@ -63,11 +90,9 @@ class Bspecies(Setting):
             eledata.name = ele
             eledata.occupancy = occupancy
             eledata.color = props['color'][ele]
-        if hasattr(self.batoms, 'selects'):
-            for sel in self.batoms.selects:
-                self.build_instancer(sp, select = sel.name)
-        else:
-            self.batoms.build_instancer(sp)
+        for sel in self.batoms.selects:
+            self.build_instancer(sp, select = sel.name)
+            self.batoms.add_geometry_node(sp.name, sel.name)
 
     def keys(self):
         return self.species.keys()
@@ -181,7 +206,7 @@ class Bspecies(Setting):
                 bpy.data.collections['Collection'].objects.link(instancer)
                 instancer.hide_set(True)
                 instancer.name = '%s_%s_instancer'%(name, sp)
-        bspecies = self.__class__(name)
+        bspecies = self.__class__(name, name)
         return bspecies
         
     def extend(self, other):
@@ -244,10 +269,12 @@ class Bspecies(Setting):
                             material_style = material_style,
                             backface_culling = True)
     
-    def build_instancer(self, sp, select = 'sel0', segments = [32, 16], subdivisions = 2, 
-                        shape = 'UV_SPHERE', shade_smooth = True):
+    def build_instancer(self, sp, select = 'sel0', 
+                        shape = 'UV_SPHERE', 
+                        shade_smooth = True):
         name = '%s_%s_%s'%(self.label, sp.name, select)
         radius = sp.radius
+        segments = sp.segments
         natom = len(self.batoms)
         if natom >= 1e3:
             segments = [16, 16]
@@ -257,6 +284,8 @@ class Bspecies(Setting):
             segments = [8, 8]
         if natom >= 1e6:
             segments = [6, 6]
+        if self.segments:
+            segments = self.segments
         if name in bpy.data.objects:
             obj = bpy.data.objects.get(name)
             bpy.data.objects.remove(obj, do_unlink = True)
@@ -266,7 +295,7 @@ class Bspecies(Setting):
                                 radius = radius)
         if shape.upper() == 'ICO_SPHERE':
             shade_smooth = False
-            bpy.ops.mesh.primitive_ico_sphere_add(subdivisions = subdivisions, 
+            bpy.ops.mesh.primitive_ico_sphere_add(subdivisions = self.subdivisions, 
                         radius = radius)
         if shape.upper() == 'CUBE':
             bpy.ops.mesh.primitive_cube_add(size = radius)
@@ -283,6 +312,7 @@ class Bspecies(Setting):
             bpy.ops.object.shade_smooth()
         if shape.upper() != 'METABALL':
             obj.hide_set(True)
+            obj.hide_render = True
         #
         self.build_materials(sp, select)
         self.assign_materials(sp, select)
@@ -319,7 +349,9 @@ class Bspecies(Setting):
                 tos = toe
             mesh.polygons.foreach_set('material_index', material_indexs)
 
-    def build_instancers(self):
+    def build_instancers(self, segments = None):
+        if segments:
+            self.segments = segments
         for sel in self.batoms.selects:
             for sp in self:
                 self.build_instancer(sp, select = sel.name)

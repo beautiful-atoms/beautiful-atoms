@@ -18,8 +18,7 @@ from batoms.base import BaseCollection
 from batoms.isosurfacesetting import IsosurfaceSetting
 from batoms.planesetting import PlaneSetting
 from batoms.mssetting import MSsetting
-from batoms.ribbon import Ribbon
-from batoms.bdraw import draw_cylinder
+from batoms.ribbon.ribbon import Ribbon
 from batoms.butils import object_mode, show_index, get_nodes_by_name
 import numpy as np
 from time import time
@@ -43,7 +42,7 @@ default_GroupInput = [
         ['scale', 'FLOAT'], 
         ]
 
-subcollections = ['instancer', 'bond', 'polyhedra', 'surface', 'ribbon', 'plane']
+subcollections = ['instancer', 'surface', 'ribbon', 'plane']
 
 class Batoms(BaseCollection):
     """Batom Class
@@ -123,6 +122,7 @@ class Batoms(BaseCollection):
                 segments = None,
                  ):
         #
+        self.obj_name = label
         BaseCollection.__init__(self, coll_name = label)
         if from_ase is not None:
             species, positions, attributes, cell, pbc, info = read_from_ase(from_ase)
@@ -194,7 +194,6 @@ class Batoms(BaseCollection):
         """
         build child object and add it to main objects.
         """
-        self.obj_name = label
         if label not in bpy.data.objects:
             mesh = bpy.data.meshes.new(label)
             # Add attributes
@@ -212,6 +211,8 @@ class Batoms(BaseCollection):
             print("Object %s already exists, Load it!"%label)
         else:
             raise Exception("Failed, the name %s already in use and is not Batom object!"%label)
+        # 
+        self.cell.obj.parent = self.obj
 
     def build_geometry_node(self):
         """
@@ -229,7 +230,7 @@ class Batoms(BaseCollection):
         for i in range(1, 5):
             test = get_nodes_by_name(modifier.node_group.nodes, 
                             'BooleanMath_%s'%i,
-                            'FunctionNodeCompareFloats')
+                            'ShaderNodeMath')
             modifier.node_group.links.new(GroupInput.outputs[i], test.inputs[0])
         #
         i = 2
@@ -244,7 +245,12 @@ class Batoms(BaseCollection):
         JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
                         '%s_JoinGeometry'%self.label, 
                         'GeometryNodeJoinGeometry')
-        gn.node_group.links.new(GroupInput.outputs['Geometry'], JoinGeometry.inputs['Geometry'])
+        SeparateGeometry = get_nodes_by_name(gn.node_group.nodes,
+                        '%s_SeparateGeometry'%self.label, 
+                        'GeometryNodeSeparateGeometry')
+        gn.node_group.links.new(GroupInput.outputs['Geometry'], SeparateGeometry.inputs['Geometry'])
+        gn.node_group.links.new(GroupInput.outputs[3], SeparateGeometry.inputs['Selection'])
+        gn.node_group.links.new(SeparateGeometry.outputs[0], JoinGeometry.inputs['Geometry'])
         gn.node_group.links.new(JoinGeometry.outputs['Geometry'], GroupOutput.inputs['Geometry'])
         # set positions
         PositionBatoms = get_nodes_by_name(gn.node_group.nodes, 
@@ -307,6 +313,11 @@ class Batoms(BaseCollection):
         # CompareSelect.data_type = 'INT'
         CompareSelect.inputs[1].default_value = string2Number(selname)
         gn.node_group.links.new(GroupInput.outputs[1], CompareSelect.inputs[0])
+        if '3.1.0' in bpy.app.version_string:
+                CompareSpecies = get_nodes_by_name(gn.node_group.nodes, 
+                    'CompareFloats_%s_%s'%(self.label, spname),
+                    'FunctionNodeCompare')
+        # else:
         CompareSpecies = get_nodes_by_name(gn.node_group.nodes, 
                     'CompareFloats_%s_%s'%(self.label, spname),
                     'FunctionNodeCompareFloats')
@@ -500,9 +511,9 @@ class Batoms(BaseCollection):
         return self.attributes['model_style']
     
     def set_model_style(self, model_style):
-        model_style = {'model_style': np.ones(len(self))*int(model_style)}
+        model_style = {'model_style': np.ones(len(self), dtype = int)*int(model_style)}
         self.set_attributes(model_style)
-        self.draw(model_style, draw_isosurface = False)
+        self.draw(model_style['model_style'], draw_isosurface = False)
     
     @property
     def polyhedra_style(self):
@@ -1583,12 +1594,12 @@ class Batoms(BaseCollection):
         """
         from batoms.butils import clean_coll_objects
         # clean_coll_objects(self.coll.children['%s_bond'%self.label], 'bond')
-        clean_coll_objects(self.coll.children['%s_polyhedra'%self.label], 'polyhedra')
         # self.draw_cell()
         self.draw_space_filling()
         self.draw_ball_and_stick()
-        if 2 in model_style:
-            self.draw_polyhedra()
+        if model_style is not None:
+            if 2 in model_style:
+                self.draw_polyhedra()
         self.draw_wireframe()
         """
         if model_style == 2:
