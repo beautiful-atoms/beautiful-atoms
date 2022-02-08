@@ -6,6 +6,8 @@ import bpy
 material_styles_dict = {
             'default' : {'type': 'Principled BSDF', 
                          'inputs': {'Metallic': 0.10, 'Roughness': 0.20, 'Specular': 0.2}},
+            'metallic' : {'type': 'Principled BSDF', 
+                         'inputs': {'Metallic': 1.0, 'Roughness': 0.2, 'Specular': 0.2, 'Subsurface': 0.1}},
             'ceramic' : {'type': 'Principled BSDF', 
                          'inputs': {'Metallic': 0.02, 'Roughness': 0.00, 'Specular': 0.5, 'Subsurface': 0.1}},
             'plastic' : {'type': 'Principled BSDF', 
