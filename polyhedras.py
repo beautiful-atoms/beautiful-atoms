@@ -4,15 +4,13 @@ This module defines the polyhedras object in the Batoms package.
 
 """
 
-from pandas import offsets
-from sympy import false, im
 import bpy
 import bmesh
 from time import time
 from batoms.butils import object_mode
 from batoms.tools import string2Number
 import numpy as np
-from batoms.base import BaseObject
+from batoms.base import ObjectGN
 from batoms.polyhedrasetting import PolyhedraSettings
 
 default_attributes = [
@@ -42,7 +40,7 @@ default_polyhedra_datas = {
         # 'model_styles':np.ones(0, dtype = int),
         }
 
-class Polyhedras(BaseObject):
+class Polyhedras(ObjectGN):
     """Polyhedras Class
     
     A Polyhedras object is linked to this main collection in Blender. 
@@ -90,9 +88,8 @@ class Polyhedras(BaseObject):
         #
         self.batoms = batoms
         self.label = label
-        obj_name = '%s_polyhedra_center'%(self.label)
-        bobj_name = 'bbond'
-        BaseObject.__init__(self, obj_name = obj_name, bobj_name = bobj_name)
+        name = 'polyhedra'
+        ObjectGN.__init__(self, label, name)
         self.setting = PolyhedraSettings(self.label, batoms = batoms, polyhedras = self)
         flag = self.load()
         if not flag and polyhedra_datas is not None:
@@ -129,10 +126,8 @@ class Polyhedras(BaseObject):
                             # 'model_style': polyhedra_datas['model_styles'],
                             'style': polyhedra_datas['styles'],
                             })
-        name = '%s_polyhedra_center'%self.label
-        if name in bpy.data.objects:
-            obj = bpy.data.objects.get(name)
-            bpy.data.objects.remove(obj, do_unlink = True)
+        name = self.obj_name
+        self.delete_obj(name)
         mesh = bpy.data.meshes.new(name)
         mesh.from_pydata(vertices, polyhedra_datas['edges'], polyhedra_datas['faces'])
         mesh.update()
@@ -143,9 +138,7 @@ class Polyhedras(BaseObject):
         obj.parent = self.batoms.obj
         #
         name = '%s_polyhedra_offset'%self.label
-        if name in bpy.data.objects:
-            obj = bpy.data.objects.get(name)
-            bpy.data.objects.remove(obj, do_unlink = True)
+        self.delete_obj(name)
         mesh = bpy.data.meshes.new(name)
         mesh.from_pydata(offsets, [], [])
         mesh.update()
@@ -166,32 +159,7 @@ class Polyhedras(BaseObject):
         me.materials.clear()
         for sp in self.setting:
             me.materials.append(self.setting.materials[sp.species][0])
-       
-    def load(self):
-        flag = True
-        obj = bpy.data.objects.get(self.obj_name)
-        if obj is None:
-            flag = False
-        return flag
     
-    @property
-    def gnodes(self):
-        return self.get_gnodes()
-    
-    @gnodes.setter
-    def gnodes(self, gnodes):
-        self.set_gnodes(gnodes)
-    
-    def get_gnodes(self):
-        name = 'GeometryNodes_%s_polyhedra'%self.label
-        modifier = self.obj.modifiers.get(name)
-        if modifier is None:
-            self.build_geometry_node()
-        return modifier
-    
-    def set_gnodes(self, gnodes):
-        pass
-
     def build_geometry_node(self):
         """
         Geometry node for everything!
@@ -309,7 +277,7 @@ class Polyhedras(BaseObject):
         gn.node_group.links.new(CompareSpeciesFace.outputs[0], setMaterialIndex.inputs['Selection'])        
         gn.node_group.links.new(setMaterialIndex.outputs['Geometry'], GroupOutput.inputs['Geometry'])
 
-    def update_polyhedras(self, ):
+    def update(self, ):
         """Draw polyhedras.
         calculate bond in all farmes, and save
         get the max number of polyhedras for each pair
@@ -360,7 +328,7 @@ class Polyhedras(BaseObject):
             #     frames_polyhedra[i, nbs[i]:, 0:3] = frames[i][0]
         if len(polyhedra_datas) == 0:
             return
-        self.set_polyhedra_datas(polyhedra_datas)
+        self.set_arrays(polyhedra_datas)
         # self.coll.objects.link(bb.obj)
         # bpy.data.collections['Collection'].objects.unlink(bb.obj)
         # bb.set_frames()
@@ -377,14 +345,6 @@ class Polyhedras(BaseObject):
         if obj_o is None:
             raise KeyError('%s object is not exist.'%name)
         return obj_o
-
-    @property
-    def arrays(self):
-        return self.get_arrays()
-    
-    @arrays.setter
-    def arrays(self, arrays):
-        self.set_arrays(arrays)
 
     def get_arrays(self):
         """
@@ -409,180 +369,58 @@ class Polyhedras(BaseObject):
             bondlists = None
         return bondlists
         
-    @property
-    def polyhedra_datas(self):
-        return self.get_polyhedra_datas()
-    
-    @polyhedra_datas.setter    
-    def polyhedra_datas(self, polyhedra_datas):
-        self.set_polyhedra_datas(polyhedra_datas)
-    
-    def get_polyhedra_datas(self):
-        return np.array(self.mesh.polyhedra_datas)
-    
-    def set_polyhedra_datas(self, polyhedra_datas):
+    def set_arrays(self, arrays):
         """
         """
-        if len(polyhedra_datas['vertices']) == 0:
+        if len(arrays['vertices']) == 0:
             return
         attributes = self.attributes
         # same length
-        if len(polyhedra_datas['vertices']) == len(attributes['show']):
-            self.set_positions(polyhedra_datas['vertices'],
-                                polyhedra_datas['offsets'],
-                                )
-            self.set_attributes({'atoms_index1': polyhedra_datas['atoms_index1']})
-            self.set_attributes({'atoms_index2': polyhedra_datas['atoms_index2']})
-            self.set_attributes({'species_index': polyhedra_datas['species_index']})
-            self.set_attributes({'face_species_index': polyhedra_datas['face_species_index']})
-            # self.set_attributes({'order': polyhedra_datas['orders']})
-            self.set_attributes({'style': polyhedra_datas['styles']})
+        if len(arrays['vertices']) == len(attributes['show']):
+            self.positions = arrays['centers']
+            self.offsets = arrays['offsets']
+            self.set_attributes({'atoms_index1': arrays['atoms_index1']})
+            self.set_attributes({'atoms_index2': arrays['atoms_index2']})
+            self.set_attributes({'species_index': arrays['species_index']})
+            self.set_attributes({'face_species_index': arrays['face_species_index']})
+            self.set_attributes({'style': arrays['styles']})
         else:
-            # add or remove vertices
-            self.build_object(polyhedra_datas)
+            # add or remove vertices, rebuild the object
+            self.build_object(arrays)
 
     @property
-    def local_positions(self):
-        return self.get_local_positions()
+    def offsets(self):
+        return self.get_offsets()
     
-    def get_local_positions(self):
+    def get_offsets(self):
         """
         using foreach_get and foreach_set to improve performance.
         """
         n = len(self)
-        local_positions = []
-        for obj in [self.obj, self.obj_o]:
-            co = np.empty(n*3, dtype=np.float64)
-            obj.data.vertices.foreach_get('co', co)  
-            local_positions.append(co.reshape((n, 3)))
-        return local_positions
+        offsets = np.empty(n*3, dtype=np.float64)
+        self.obj_o.data.vertices.foreach_get('co', offsets)  
+        return offsets.reshape((n, 3))
     
-    @property
-    def positions(self):
-        return self.get_positions()
+    @offsets.setter
+    def offsets(self, offsets):
+        self.set_offsets(offsets)
     
-    @positions.setter
-    def positions(self, positions):
-        self.set_positions(positions)
-    
-    def get_positions(self):
+    def set_offsets(self, offsets):
         """
-        Get global positions.
-        """
-        from batoms.tools import local2global
-        positions = []
-        objs = [self.obj, self.obj_o]
-        for i in range(2):
-            obj = objs[i]
-            positions.append(local2global(self.local_positions[i], 
-                np.array(obj.matrix_world)))
-        return positions
-    
-    def set_positions(self, vertices, offsets):
-        """
-        Set global positions to local vertices
+        Set global offsets to local vertices
         """
         object_mode()
         from batoms.tools import local2global
-        n = len(self.obj.data.vertices)
-        # scales = np.concatenate((np.ones((n, 1)), 
-                        # np.ones((n, 1)),
-                        # lengths.reshape(-1, 1)), axis = 1)
-        for obj, positions in zip([self.obj, self.obj_o], 
-                    [vertices, offsets]):
-            if len(positions) != n:
-                raise ValueError('positions has wrong shape %s != %s.' %
-                                    (len(positions), n))
-            positions = local2global(positions, 
-                    np.array(obj.matrix_world), reversed = True)
-            positions = positions.reshape((n*3, 1))
-            obj.data.shape_keys.key_blocks[0].data.foreach_set('co', positions)
-            obj.data.update()
-        bpy.context.view_layer.objects.active = self.obj
+        n = len(self.obj_o.data.vertices)
+        if len(offsets) != n:
+            raise ValueError('offsets has wrong shape %s != %s.' %
+                                (len(offsets), n))
+        offsets = offsets.reshape((n*3, 1))
+        self.obj_o.data.shape_keys.key_blocks[0].data.foreach_set('co', offsets)
+        self.obj_o.data.update()
+        bpy.context.view_layer.objects.active = self.obj_o
         bpy.ops.object.mode_set(mode = 'EDIT')
         bpy.ops.object.mode_set(mode = 'OBJECT')
-    
-    @property
-    def attributes(self):
-        return self.get_attributes()
-    
-    @attributes.setter
-    def attributes(self, attributes):
-        self.set_attributes(attributes)
-
-    def get_attributes(self):
-        """
-        using foreach_get and foreach_set to improve performance.
-        """
-        # attributes
-        me = self.obj.data
-        nvert = len(me.vertices)
-        npoly = len(me.polygons)
-        attributes = {}
-        for key in me.attributes.keys():
-            att = me.attributes.get(key)
-            dtype = att.data_type
-            domain = att.domain
-            n = nvert if domain == 'POINT' else npoly
-            if dtype == 'STRING':
-                attributes[key] = np.zeros(n, dtype = 'U20')
-                for i in range(n):
-                    attributes[key][i] = att.data[i].value
-            elif dtype == 'INT':
-                attributes[key] = np.zeros(n, dtype = int)
-                att.data.foreach_get("value", attributes[key])
-            elif dtype == 'FLOAT':
-                attributes[key] = np.zeros(n, dtype = float)
-                att.data.foreach_get("value", attributes[key])
-            elif dtype == 'BOOLEAN':
-                attributes[key] = np.zeros(n, dtype = bool)
-                att.data.foreach_get("value", attributes[key])
-            else:
-                raise KeyError('%s is not support.'%dtype)
-            attributes[key] = np.array(attributes[key])
-        return attributes
-    
-    def set_attributes(self, attributes):
-        tstart = time()
-        me = self.obj.data
-        for key, data in attributes.items():
-            # print(key)
-            att = me.attributes.get(key)
-            if att is None:
-                dtype = type(attributes[key][0])
-                if np.issubdtype(dtype, int):
-                    dtype = 'INT'
-                elif np.issubdtype(dtype, float):
-                    dtype = 'FLOAT'
-                elif np.issubdtype(dtype, str):
-                    dtype = 'STRING'
-                else:
-                    raise KeyError('%s is not supported.'%dtype)
-                att = me.attributes.new(name = key, type = dtype, domain = 'POINT')
-            if att.data_type == 'STRING':
-                nvert = len(me.vertices)
-                for i in range(nvert):
-                    att.data[i].value = data[i]
-            else:
-                att.data.foreach_set("value", data)
-        me.update()
-        # print('set_attributes: %s'%(time() - tstart))
-
-    def set_attribute_with_indices(self, name, indices, data):
-        data0 = self.attributes[name]
-        data0[indices] = data
-        self.set_attributes({name: data0})
-    
-    
-    @property    
-    def nframe(self):
-        return self.get_nframe()
-    
-    def get_nframe(self):
-        if self.obj.data.shape_keys is None:
-            return 0
-        nframe = len(self.obj.data.shape_keys.key_blocks)
-        return nframe
     
     @property    
     def frames(self):
@@ -610,59 +448,6 @@ class Polyhedras(BaseObject):
                             np.array(self.obj.matrix_world))
             frames[i] = local_positions
         return frames
-    
-    @property    
-    def color(self):
-        return self.get_color()
-    
-    @color.setter    
-    def color(self, color):
-        """
-        >>> h.color = [0.8, 0.1, 0.3, 1.0]
-        """
-        self.set_color(color)
-    
-    def get_color(self):
-        """
-
-        """
-        Viewpoint_color = self.material.diffuse_color
-        for node in self.material.node_tree.nodes:
-            if 'Base Color' in node.inputs:
-                node_color = node.inputs['Base Color'].default_value[:]
-            if 'Alpha' in node.inputs:
-                Alpha = node.inputs['Alpha'].default_value
-        color = [node_color[0], node_color[1], node_color[2], Alpha]
-        return color
-    
-    def set_color(self, color):
-        if len(color) == 3:
-            color = [color[0], color[1], color[2], 1]
-        self.material.diffuse_color = color
-        for node in self.material.node_tree.nodes:
-            if 'Base Color' in node.inputs:
-                node.inputs['Base Color'].default_value = color
-            if 'Alpha' in node.inputs:
-                node.inputs['Alpha'].default_value = color[3]
-    
-    @property    
-    def node(self):
-        return self.get_node()
-    
-    @node.setter    
-    def node(self, node):
-        self.set_node(node)
-    
-    def get_node(self):
-        return self.material.node_tree.nodes
-    
-    def set_node(self, node):
-        for key, value in node.items():
-            self.material.node_tree.nodes['Principled BSDF'].inputs[key].default_value = value
-    
-    def clean_bpolyhedras_objects(self, obj):
-        obj = bpy.data.objects[obj]
-        bpy.data.objects.remove(obj, do_unlink = True)
     
     def set_frames(self, frames = None, frame_start = 0, only_basis = False):
         """
@@ -693,11 +478,11 @@ class Polyhedras(BaseObject):
         # scales = np.concatenate((np.ones((nframe, nbond, 1)), 
                         # np.ones((nframe, nbond, 1)),
                         # lengths.reshape(nframe, nbond, 1)), axis = 2)
-        for sp, frames in zip(['center', 'offset'],
+        for sp, frames in zip(['', '_offset'],
                                 [vertices, offsets]):
-            name = '%s_polyhedra_%s'%(self.label, sp)
+            name = '%s_polyhedra%s'%(self.label, sp)
             obj = bpy.data.objects.get(name)
-            base_name = 'Basis_%s_polyhedra_%s'%(self.label, sp)
+            base_name = 'Basis_%s_polyhedra%s'%(self.label, sp)
             if obj.data.shape_keys is None:
                 obj.shape_key_add(name = base_name)
             elif base_name not in obj.data.shape_keys.key_blocks:
@@ -727,10 +512,6 @@ class Polyhedras(BaseObject):
 
             """
     
-    def __len__(self):
-        return len(self.obj.data.vertices)
-    
-    
     def __getitem__(self, index):
         """Return a subset of the Bbond.
 
@@ -759,105 +540,6 @@ class Polyhedras(BaseObject):
         positions = self.positions
         positions[index] = value
         self.set_positions(positions)
-
-    
-    def repeat(self, m, cell):
-        """
-        In-place repeat of atoms.
-
-        >>> from batoms.bond import Bbond
-        >>> c = Bbond('co', 'C', [[0, 0, 0], [1.2, 0, 0]])
-        >>> c.repeat([3, 3, 3], np.array([[5, 0, 0], [0, 5, 0], [0, 0, 5]]))
-        """
-        if isinstance(m, int):
-            m = (m, m, m)
-        for x, vec in zip(m, cell):
-            if x != 1 and not vec.any():
-                raise ValueError('Cannot repeat along undefined lattice '
-                                 'vector')
-        M = np.product(m)
-        n = len(self)
-        positions = np.tile(self.positions, (M,) + (1,) * (len(self.positions.shape) - 1))
-        i0 = 0
-        for m0 in range(m[0]):
-            for m1 in range(m[1]):
-                for m2 in range(m[2]):
-                    i1 = i0 + n
-                    positions[i0:i1] += np.dot((m0, m1, m2), cell)
-                    i0 = i1
-        self.add_vertices(positions[n:])
-    
-    def copy(self, label, species):
-        """
-        Return a copy.
-
-        name: str
-            The name of the copy.
-
-        For example, copy H species:
-        
-        >>> h_new = h.copy(label = 'h_new', species = 'H')
-
-        """
-        object_mode()
-        bbond = Bbond(label, species, self.local_positions, 
-                    location = self.obj.location, 
-                    scale = self.scale, material=self.material)
-        return bbond
-    
-    def extend(self, other):
-        """
-        Extend bbond object by appending bbond from *other*.
-        
-        >>> from batoms.polyhedras import Bbond
-        >>> h1 = Bbond('h2o', 'H_1', [[0, 0, 0], [2, 0, 0]])
-        >>> h2 = Bbond('h2o', 'H_2', [[0, 0, 2], [2, 0, 2]])
-        >>> h = h1 + h2
-        """
-        # could also use self.add_vertices(other.positions)
-        object_mode()
-        bpy.ops.object.select_all(action='DESELECT')
-        self.obj.select_set(True)
-        other.obj.select_set(True)
-        bpy.context.view_layer.objects.active = self.obj
-        bpy.ops.object.join()
-    
-    def __iadd__(self, other):
-        """
-        >>> h1 += h2
-        """
-        self.extend(other)
-        return self
-    
-    def __add__(self, other):
-        """
-        >>> h1 = h1 + h2
-        """
-        self += other
-        return self
-    
-    def __iter__(self):
-        bbond = self.obj
-        for i in range(len(self)):
-            yield bbond.matrix_world @ bbond.data.vertices[i].co
-    
-    def __repr__(self):
-        s = "polyhedras(Total: {:6d}, {}" .format(len(self), self.arrays)
-        return s
-    
-    def add_vertices(self, positions):
-        """
-        Todo: find a fast way.
-        """
-        object_mode()
-        positions = positions - self.location
-        bm = bmesh.new()
-        bm.from_mesh(self.obj.data)
-        bm.verts.ensure_lookup_table()
-        verts = []
-        for pos in positions:
-            bm.verts.new(pos)
-        bm.to_mesh(self.obj.data)
 
     def calc_polyhedra_data(self, bondlists, positions, cell):
         """

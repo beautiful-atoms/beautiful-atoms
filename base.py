@@ -1,7 +1,242 @@
-from ase import data
 import bpy
 import numpy as np
+from time import time
 from batoms.butils import object_mode, set_look_at
+
+default_object_attributes = [
+        ]
+
+default_object_datas = {
+        }
+
+class ObjectGN():
+    """
+    Object with Geometry Node
+
+    """
+    def __init__(self, label, name = None):
+        if name:
+            self.name = name
+            self.obj_name = '%s_%s'%(label, name)
+        else:
+            self.obj_name = label
+    
+    def build_object(self, arrays, attributes = {}):
+        self.set_attributes(attributes)
+        self.build_geometry_node()
+        self.set_frames(self._frames, only_basis = False)
+        #
+    
+    def load(self):
+        flag = True
+        obj = bpy.data.objects.get(self.obj_name)
+        if obj is None:
+            flag = False
+        return flag
+    
+    @property
+    def obj(self):
+        return self.get_obj()
+    
+    def get_obj(self):
+        obj = bpy.data.objects.get(self.obj_name)
+        if obj is None:
+            raise KeyError('%s object is not exist.'%self.obj_name)
+        return obj
+
+    @property
+    def gnodes(self):
+        return self.get_gnodes()
+    
+    def get_gnodes(self):
+        name = 'GeometryNodes_%s'%self.obj_name
+        modifier = self.obj.modifiers.get(name)
+        if modifier is None:
+            self.build_geometry_node()
+        return modifier
+
+    def build_geometry_node(self):
+        """
+        Geometry node for everything!
+        """
+        name = 'GeometryNodes_%s'%self.obj_name
+        modifier = self.obj.modifiers.new(name = name, type = 'NODES')
+        modifier.node_group.name = name
+    
+    def add_geometry_node(self, sp):
+        """
+        add geometry node for each bond pair
+        """
+        gn = self.gnodes
+    
+    def update(self, ):
+        """
+        update object'data.
+        calculate data in all farmes
+        """
+        pass
+
+    @property
+    def arrays(self):
+        return self.get_arrays()
+    
+    @arrays.setter
+    def arrays(self, arrays):
+        self.set_arrays(arrays)
+
+    def get_arrays(self):
+        """
+        """
+        object_mode()
+        arrays = self.attributes
+        arrays.update({'positions': self.positions[0],
+                        })
+        return arrays
+    
+    @property
+    def attributes(self):
+        return self.get_attributes()
+    
+    @attributes.setter
+    def attributes(self, attributes):
+        self.set_attributes(attributes)
+
+    def get_attributes(self):
+        """
+        using foreach_get and foreach_set to improve performance.
+        """
+        # attributes
+        me = self.obj.data
+        nvert = len(me.vertices)
+        attributes = {}
+        for key in me.attributes.keys():
+            att = me.attributes.get(key)
+            dtype = att.data_type
+            if dtype == 'STRING':
+                attributes[key] = np.zeros(nvert, dtype = 'U20')
+                for i in range(nvert):
+                    attributes[key][i] = att.data[i].value
+            elif dtype == 'INT':
+                attributes[key] = np.zeros(nvert, dtype = int)
+                att.data.foreach_get("value", attributes[key])
+            elif dtype == 'FLOAT':
+                attributes[key] = np.zeros(nvert, dtype = float)
+                att.data.foreach_get("value", attributes[key])
+            elif dtype == 'BOOLEAN':
+                attributes[key] = np.zeros(nvert, dtype = bool)
+                att.data.foreach_get("value", attributes[key])
+            else:
+                raise KeyError('%s is not support.'%dtype)
+            attributes[key] = np.array(attributes[key])
+        return attributes
+    
+    def set_attributes(self, attributes):
+        tstart = time()
+        me = self.obj.data
+        for key, data in attributes.items():
+            # print(key)
+            att = me.attributes.get(key)
+            if att is None:
+                dtype = type(attributes[key][0])
+                if np.issubdtype(dtype, int):
+                    dtype = 'INT'
+                elif np.issubdtype(dtype, float):
+                    dtype = 'FLOAT'
+                elif np.issubdtype(dtype, str):
+                    dtype = 'STRING'
+                else:
+                    raise KeyError('%s is not supported.'%dtype)
+                att = me.attributes.new(name = key, type = dtype, domain = 'POINT')
+            if att.data_type == 'STRING':
+                nvert = len(me.vertices)
+                for i in range(nvert):
+                    att.data[i].value = data[i]
+            else:
+                att.data.foreach_set("value", data)
+        me.update()
+        # print('set_attributes: %s'%(time() - tstart))
+
+    def set_attribute_with_indices(self, name, indices, data):
+        data0 = self.attributes[name]
+        data0[indices] = data
+        self.set_attributes({name: data0})
+    
+    @property
+    def local_positions(self):
+        return self.get_local_positions()
+    
+    def get_local_positions(self):
+        """
+        using foreach_get and foreach_set to improve performance.
+        """
+        n = len(self)
+        local_positions = np.empty(n*3, dtype=np.float64)
+        self.obj.data.vertices.foreach_get('co', local_positions)  
+        local_positions = local_positions.reshape((n, 3))
+        return local_positions
+    
+    @property
+    def positions(self):
+        return self.get_positions()
+    
+    @positions.setter
+    def positions(self, positions):
+        self.set_positions(positions)
+    
+    def get_positions(self):
+        """
+        Get global positions.
+        """
+        from batoms.tools import local2global
+        positions = local2global(self.local_positions, 
+                np.array(self.obj.matrix_world))
+        return positions
+    
+    def set_positions(self, positions):
+        """
+        Set global positions to local vertices
+        """
+        object_mode()
+        from batoms.tools import local2global
+        natom = len(self)
+        if len(positions) != natom:
+            raise ValueError('positions has wrong shape %s != %s.' %
+                                (len(positions), natom))
+        positions = local2global(positions, 
+                np.array(self.obj.matrix_world), reversed = True)
+        # rashpe to (natoms*3, 1) and use forseach_set
+        positions = positions.reshape((natom*3, 1))
+        # I don't know why 'Basis' shape keys is not updated when editing mesh,
+        # so we edit the 'Basis' shape keys directly.
+        # self.obj.data.vertices.foreach_set('co', positions)
+        self.obj.data.shape_keys.key_blocks[0].data.foreach_set('co', positions)
+        self.obj.data.update()
+        # bpy.context.view_layer.update()
+        # I don't why this is need to update the mesh positions
+        bpy.context.view_layer.objects.active = self.obj
+        bpy.ops.object.mode_set(mode = 'EDIT')
+        bpy.ops.object.mode_set(mode = 'OBJECT')
+        
+    @property    
+    def nframe(self):
+        return self.get_nframe()
+    
+    def get_nframe(self):
+        if self.obj.data.shape_keys is None:
+            return 0
+        nframe = len(self.obj.data.shape_keys.key_blocks)
+        return nframe
+
+    def __len__(self):
+        return len(self.obj.data.vertices)
+    
+    def delete_obj(self, name):
+        if name in bpy.data.objects:
+            obj = bpy.data.objects.get(name)
+            bpy.data.objects.remove(obj, do_unlink = True)
+    
+    
+    
 
 class BaseObject():
     

@@ -4,11 +4,11 @@ import bpy
 import numpy as np
 from ase.cell import Cell
 from batoms.butils import object_mode, clean_coll_objects
-from batoms.base import BaseObject
+from batoms.base import ObjectGN
 from batoms.bdraw import draw_cylinder
 from time import time
 
-class Bcell(BaseObject):
+class Bcell(ObjectGN):
     """
     Unit cell of three dimensions.
 
@@ -25,11 +25,9 @@ class Bcell(BaseObject):
           The three cell vectors: cell[0], cell[1], and cell[2].
         """
         self.label = label
-        self.name = 'edge'
-        obj_name = '%s_cell'%(self.label)
-        bobj_name = 'bcell'
+        name = 'cell'
         self.batoms = batoms
-        BaseObject.__init__(self, obj_name = obj_name, bobj_name = bobj_name)
+        ObjectGN.__init__(self, label, name)
         self.edges = [[0, 3], [0, 1], [4, 2], [4, 1],
                     [3, 5], [2, 6], [7, 5], [7, 6], 
                     [0, 2], [3, 6], [1, 5], [4, 7]
@@ -171,8 +169,6 @@ class Bcell(BaseObject):
         gn.node_group.links.new(VectorSubtracts[2].outputs[0], SetPositions[2].inputs['Position'])
         gn.node_group.links.new(VectorSubtracts[4].outputs[0], SetPositions[3].inputs['Position'])
         
-        
-
     def build_cell_cylinder(self):
          #
         cell_cylinder = {'lengths': [], 
@@ -370,104 +366,3 @@ class Bcell(BaseObject):
                         coll = self.batoms.coll
                     )
     
-    @property
-    def attributes(self):
-        return self.get_attributes()
-    
-    @attributes.setter
-    def attributes(self, attributes):
-        self.set_attributes(attributes)
-
-    def get_attributes(self):
-        """
-        using foreach_get and foreach_set to improve performance.
-        """
-        # attributes
-        me = self.obj.data
-        nvert = len(me.vertices)
-        attributes = {}
-        for key in me.attributes.keys():
-            att = me.attributes.get(key)
-            dtype = att.data_type
-            if dtype == 'STRING':
-                attributes[key] = np.zeros(nvert, dtype = 'U20')
-                for i in range(nvert):
-                    attributes[key][i] = att.data[i].value
-            elif dtype == 'INT':
-                attributes[key] = np.zeros(nvert, dtype = int)
-                att.data.foreach_get("value", attributes[key])
-            elif dtype == 'FLOAT':
-                attributes[key] = np.zeros(nvert, dtype = float)
-                att.data.foreach_get("value", attributes[key])
-            elif dtype == 'BOOLEAN':
-                attributes[key] = np.zeros(nvert, dtype = bool)
-                att.data.foreach_get("value", attributes[key])
-            else:
-                raise KeyError('%s is not support.'%dtype)
-            attributes[key] = np.array(attributes[key])
-        return attributes
-        
-    def set_attributes(self, attributes):
-        tstart = time()
-        me = self.obj.data
-        for key, data in attributes.items():
-            # print(key)
-            if len(attributes[key]) == 0:
-                continue
-            att = me.attributes.get(key)
-            if att is None:
-                dtype = type(attributes[key][0])
-                if np.issubdtype(dtype, int):
-                    dtype = 'INT'
-                elif np.issubdtype(dtype, float):
-                    dtype = 'FLOAT'
-                elif np.issubdtype(dtype, str):
-                    dtype = 'STRING'
-                else:
-                    raise KeyError('%s is not supported.'%dtype)
-                att = me.attributes.new(name = key, type = dtype, domain = 'POINT')
-            if att.data_type == 'STRING':
-                nvert = len(me.vertices)
-                for i in range(nvert):
-                    att.data[i].value = data[i]
-            else:
-                att.data.foreach_set("value", data)
-        me.update()
-        # print('set_attributes: %s'%(time() - tstart))
-
-    
-    def set_attribute_with_indices(self, name, indices, data):
-        data0 = self.attributes[name]
-        data0[indices] = data
-        self.set_attributes({name: data0})
-    
-    @property
-    def arrays(self):
-        return self.get_arrays()
-    
-    @arrays.setter
-    def arrays(self, arrays):
-        self.set_arrays(arrays)
-
-    def get_arrays(self, batoms = None, local = False, X = False, sort = True):
-        """
-        """
-        object_mode()
-        tstart = time()
-        arrays = self.attributes
-        arrays.update({'positions': self.positions})
-        # radius
-        radius = self.radius
-        arrays.update({'radius': np.zeros(len(self))})
-        for sel, data in radius.items():
-            for sp, value in data.items():
-                mask = np.where((arrays['species'] == sp) & (arrays['select'] == string2Number(sel)))
-                arrays['radius'][mask] = value
-        # size
-        arrays['size'] = arrays['radius']*arrays['scale']
-        # main elements
-        main_elements = self.batoms.species.main_elements
-        elements = [main_elements[sp] for sp in arrays['species']]
-        arrays.update({'elements': np.array(elements, dtype='U20')})
-        # print('get_arrays: %s'%(time() - tstart))
-        return arrays

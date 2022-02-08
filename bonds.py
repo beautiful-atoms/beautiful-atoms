@@ -4,15 +4,13 @@ This module defines the Bonds object in the Batoms package.
 
 """
 
-from pandas import offsets
-from sympy import false
 import bpy
 import bmesh
 from time import time
 from batoms.butils import object_mode
 from batoms.tools import string2Number, number2String
 import numpy as np
-from batoms.base import BaseObject
+from batoms.base import ObjectGN
 from batoms.bondsetting import BondSettings
 
 default_attributes = [
@@ -46,7 +44,7 @@ default_bond_datas = {
         'model_styles':np.ones(0, dtype = int),
         }
 
-class Bonds(BaseObject):
+class Bonds(ObjectGN):
     """Bbond Class
     
     A Bbond object is linked to this main collection in Blender. 
@@ -94,9 +92,8 @@ class Bonds(BaseObject):
         #
         self.batoms = batoms
         self.label = label
-        obj_name = '%s_bond_center'%(self.label)
-        bobj_name = 'bbond'
-        BaseObject.__init__(self, obj_name = obj_name, bobj_name = bobj_name)
+        name = 'bond'
+        ObjectGN.__init__(self, label, name)
         self.setting = BondSettings(self.label, batoms = batoms, bonds = self)
         flag = self.load()
         if not flag and bond_datas is not None:
@@ -132,10 +129,8 @@ class Bonds(BaseObject):
                             'style': bond_datas['styles'],
                             'order': bond_datas['orders'],
                             })
-        name = '%s_bond_center'%self.label
-        if name in bpy.data.objects:
-            obj = bpy.data.objects.get(name)
-            bpy.data.objects.remove(obj, do_unlink = True)
+        name = self.obj_name
+        self.delete_obj(name)
         mesh = bpy.data.meshes.new(name)
         mesh.from_pydata(centers, [], [])
         mesh.update()
@@ -146,9 +141,7 @@ class Bonds(BaseObject):
         obj.parent = self.batoms.obj
         #
         name = '%s_bond_offset'%self.label
-        if name in bpy.data.objects:
-            obj = bpy.data.objects.get(name)
-            bpy.data.objects.remove(obj, do_unlink = True)
+        self.delete_obj(name)
         mesh = bpy.data.meshes.new(name)
         mesh.from_pydata(offsets, [], [])
         mesh.update()
@@ -163,31 +156,6 @@ class Bonds(BaseObject):
         obj.parent = self.batoms.obj
         print('bonds: build_object: {0:10.2f} s'.format(time() - tstart))
     
-    def load(self):
-        flag = True
-        obj = bpy.data.objects.get(self.obj_name)
-        if obj is None:
-            flag = False
-        return flag
-    
-    @property
-    def gnodes(self):
-        return self.get_gnodes()
-    
-    @gnodes.setter
-    def gnodes(self, gnodes):
-        self.set_gnodes(gnodes)
-    
-    def get_gnodes(self):
-        name = 'GeometryNodes_%s_bond'%self.label
-        modifier = self.obj.modifiers.get(name)
-        if modifier is None:
-            self.build_geometry_node()
-        return modifier
-    
-    def set_gnodes(self, gnodes):
-        pass
-
     def build_geometry_node(self):
         """
         Geometry node for everything!
@@ -378,7 +346,7 @@ class Bonds(BaseObject):
         # for sp in self.setting:
             # self.add_geometry_node(sp.as_dict())
         # only build pair in bondlists
-        bondlists = self.bondlists
+        bondlists = self.arrays
         if len(bondlists['atoms_index1']) == 0:
             return
         pairs = np.concatenate((bondlists['species_index1'].reshape(-1, 1), 
@@ -483,7 +451,7 @@ class Bonds(BaseObject):
         gn.node_group.links.new(InstanceOnPoint.outputs['Instances'], JoinGeometry.inputs['Geometry'])
         # print('Add geometry nodes for bonds: %s'%(time() - tstart))
 
-    def update_bonds(self, ):
+    def update(self, ):
         """
         Draw bonds.
         calculate bond in all farmes, and merge all bondlists
@@ -523,7 +491,7 @@ class Bonds(BaseObject):
 
         if len(bond_datas) == 0:
             return
-        self.set_bond_datas(bond_datas)
+        self.set_arrays(bond_datas)
         print('draw bond: {0:10.2f} s'.format(time() - tstart))
 
     @property
@@ -537,209 +505,75 @@ class Bonds(BaseObject):
             raise KeyError('%s object is not exist.'%name)
         return obj_o
 
-    @property
-    def arrays(self):
-        return self.get_arrays()
-    
-    @arrays.setter
-    def arrays(self, arrays):
-        self.set_arrays(arrays)
-
     def get_arrays(self):
         """
         """
         object_mode()
         tstart = time()
         arrays = self.attributes
-        arrays.update({'positions': self.positions[0],
-                        'offsets': self.positions[1],
+        arrays.update({'positions': self.positions,
+                        'offsets': self.offsets,
                         })
         # print('get_arrays: %s'%(time() - tstart))
         return arrays
     
-    @property
-    def bondlists(self):
-        return self.get_bondlists()
-    
-    def get_bondlists(self):
+    def set_arrays(self, arrays):
         """
         """
-        object_mode()
-        bondlists = self.arrays
-        return bondlists
-
-    @property
-    def bond_datas(self):
-        return self.get_bond_datas()
-    
-    @bond_datas.setter    
-    def bond_datas(self, bond_datas):
-        self.set_bond_datas(bond_datas)
-    
-    def get_bond_datas(self):
-        return np.array(self.mesh.bond_datas)
-    
-    def set_bond_datas(self, bond_datas):
-        """
-        """
-        if len(bond_datas['centers']) == 0:
+        if len(arrays['centers']) == 0:
             return
         attributes = self.attributes
         # same length
-        if len(bond_datas['centers']) == len(attributes['show']):
-            self.set_positions(bond_datas['centers'],
-                                bond_datas['offsets'],
-                                )
-            self.set_attributes({'atoms_index1': bond_datas['atoms_index1']})
-            self.set_attributes({'atoms_index2': bond_datas['atoms_index2']})
-            self.set_attributes({'atoms_index3': bond_datas['atoms_index3']})
-            self.set_attributes({'atoms_index4': bond_datas['atoms_index4']})
-            self.set_attributes({'species_index1': bond_datas['species_index1']})
-            self.set_attributes({'species_index2': bond_datas['species_index2']})
-            self.set_attributes({'order': bond_datas['orders']})
-            self.set_attributes({'style': bond_datas['styles']})
+        if len(arrays['centers']) == len(attributes['show']):
+            self.positions = arrays['centers']
+            self.offsets = arrays['offsets']
+            self.set_attributes({'atoms_index1': arrays['atoms_index1']})
+            self.set_attributes({'atoms_index2': arrays['atoms_index2']})
+            self.set_attributes({'atoms_index3': arrays['atoms_index3']})
+            self.set_attributes({'atoms_index4': arrays['atoms_index4']})
+            self.set_attributes({'species_index1': arrays['species_index1']})
+            self.set_attributes({'species_index2': arrays['species_index2']})
+            self.set_attributes({'order': arrays['orders']})
+            self.set_attributes({'style': arrays['styles']})
         else:
             # add or remove vertices
-            self.build_object(bond_datas)
+            self.build_object(arrays)
 
     @property
-    def local_positions(self):
-        return self.get_local_positions()
+    def offsets(self):
+        return self.get_offsets()
     
-    def get_local_positions(self):
+    def get_offsets(self):
         """
         using foreach_get and foreach_set to improve performance.
         """
         n = len(self)
-        local_positions = []
-        for obj in [self.obj, self.obj_o]:
-            co = np.empty(n*3, dtype=np.float64)
-            obj.data.vertices.foreach_get('co', co)  
-            local_positions.append(co.reshape((n, 3)))
-        return local_positions
+        offsets = np.empty(n*3, dtype=np.float64)
+        self.obj_o.data.vertices.foreach_get('co', offsets)  
+        return offsets.reshape((n, 3))
     
-    @property
-    def positions(self):
-        return self.get_positions()
+    @offsets.setter
+    def offsets(self, offsets):
+        self.set_offsets(offsets)
     
-    @positions.setter
-    def positions(self, positions):
-        self.set_positions(positions)
-    
-    def get_positions(self):
+    def set_offsets(self, offsets):
         """
-        Get global positions.
-        """
-        from batoms.tools import local2global
-        positions = []
-        objs = [self.obj, self.obj_o]
-        for i in range(2):
-            obj = objs[i]
-            positions.append(local2global(self.local_positions[i], 
-                np.array(obj.matrix_world)))
-        return positions
-    
-    def set_positions(self, centers, offsets):
-        """
-        Set global positions to local vertices
+        Set global offsets to local vertices
         """
         object_mode()
         from batoms.tools import local2global
-        n = len(self.obj.data.vertices)
-        for obj, positions in zip([self.obj, self.obj_o], 
-                    [centers, offsets]):
-            if len(positions) != n:
-                raise ValueError('positions has wrong shape %s != %s.' %
-                                    (len(positions), n))
-            positions = local2global(positions, 
-                    np.array(obj.matrix_world), reversed = True)
-            positions = positions.reshape((n*3, 1))
-            obj.data.shape_keys.key_blocks[0].data.foreach_set('co', positions)
-            obj.data.update()
-        bpy.context.view_layer.objects.active = self.obj
+        n = len(self.obj_o.data.vertices)
+        if len(offsets) != n:
+            raise ValueError('offsets has wrong shape %s != %s.' %
+                                (len(offsets), n))
+        offsets = offsets.reshape((n*3, 1))
+        self.obj_o.data.shape_keys.key_blocks[0].data.foreach_set('co', offsets)
+        self.obj_o.data.update()
+        bpy.context.view_layer.objects.active = self.obj_o
         bpy.ops.object.mode_set(mode = 'EDIT')
         bpy.ops.object.mode_set(mode = 'OBJECT')
     
     @property
-    def attributes(self):
-        return self.get_attributes()
-    
-    @attributes.setter
-    def attributes(self, attributes):
-        self.set_attributes(attributes)
-
-    def get_attributes(self):
-        """
-        using foreach_get and foreach_set to improve performance.
-        """
-        # attributes
-        me = self.obj.data
-        nvert = len(me.vertices)
-        attributes = {}
-        for key in me.attributes.keys():
-            att = me.attributes.get(key)
-            dtype = att.data_type
-            if dtype == 'STRING':
-                attributes[key] = np.zeros(nvert, dtype = 'U20')
-                for i in range(nvert):
-                    attributes[key][i] = att.data[i].value
-            elif dtype == 'INT':
-                attributes[key] = np.zeros(nvert, dtype = int)
-                att.data.foreach_get("value", attributes[key])
-            elif dtype == 'FLOAT':
-                attributes[key] = np.zeros(nvert, dtype = float)
-                att.data.foreach_get("value", attributes[key])
-            elif dtype == 'BOOLEAN':
-                attributes[key] = np.zeros(nvert, dtype = bool)
-                att.data.foreach_get("value", attributes[key])
-            else:
-                raise KeyError('%s is not support.'%dtype)
-            attributes[key] = np.array(attributes[key])
-        return attributes
-    
-    def set_attributes(self, attributes):
-        tstart = time()
-        me = self.obj.data
-        for key, data in attributes.items():
-            # print(key)
-            att = me.attributes.get(key)
-            if att is None:
-                dtype = type(attributes[key][0])
-                if np.issubdtype(dtype, int):
-                    dtype = 'INT'
-                elif np.issubdtype(dtype, float):
-                    dtype = 'FLOAT'
-                elif np.issubdtype(dtype, str):
-                    dtype = 'STRING'
-                else:
-                    raise KeyError('%s is not supported.'%dtype)
-                att = me.attributes.new(name = key, type = dtype, domain = 'POINT')
-            if att.data_type == 'STRING':
-                nvert = len(me.vertices)
-                for i in range(nvert):
-                    att.data[i].value = data[i]
-            else:
-                att.data.foreach_set("value", data)
-        me.update()
-        # print('set_attributes: %s'%(time() - tstart))
-
-    def set_attribute_with_indices(self, name, indices, data):
-        data0 = self.attributes[name]
-        data0[indices] = data
-        self.set_attributes({name: data0})
-    
-    
-    @property    
-    def nframe(self):
-        return self.get_nframe()
-    
-    def get_nframe(self):
-        if self.obj.data.shape_keys is None:
-            return 0
-        nframe = len(self.obj.data.shape_keys.key_blocks)
-        return nframe
-    
-    @property    
     def frames(self):
         return self.get_frames()
     
@@ -766,59 +600,6 @@ class Bonds(BaseObject):
             frames[i] = local_positions
         return frames
     
-    @property    
-    def color(self):
-        return self.get_color()
-    
-    @color.setter    
-    def color(self, color):
-        """
-        >>> h.color = [0.8, 0.1, 0.3, 1.0]
-        """
-        self.set_color(color)
-    
-    def get_color(self):
-        """
-
-        """
-        Viewpoint_color = self.material.diffuse_color
-        for node in self.material.node_tree.nodes:
-            if 'Base Color' in node.inputs:
-                node_color = node.inputs['Base Color'].default_value[:]
-            if 'Alpha' in node.inputs:
-                Alpha = node.inputs['Alpha'].default_value
-        color = [node_color[0], node_color[1], node_color[2], Alpha]
-        return color
-    
-    def set_color(self, color):
-        if len(color) == 3:
-            color = [color[0], color[1], color[2], 1]
-        self.material.diffuse_color = color
-        for node in self.material.node_tree.nodes:
-            if 'Base Color' in node.inputs:
-                node.inputs['Base Color'].default_value = color
-            if 'Alpha' in node.inputs:
-                node.inputs['Alpha'].default_value = color[3]
-    
-    @property    
-    def node(self):
-        return self.get_node()
-    
-    @node.setter    
-    def node(self, node):
-        self.set_node(node)
-    
-    def get_node(self):
-        return self.material.node_tree.nodes
-    
-    def set_node(self, node):
-        for key, value in node.items():
-            self.material.node_tree.nodes['Principled BSDF'].inputs[key].default_value = value
-    
-    def clean_bbonds_objects(self, obj):
-        obj = bpy.data.objects[obj]
-        bpy.data.objects.remove(obj, do_unlink = True)
-    
     def set_frames(self, frames = None, frame_start = 0, only_basis = False):
         """
 
@@ -842,10 +623,10 @@ class Bonds(BaseObject):
         centers = frames
         nframe = len(centers)
         if nframe == 0 : return
-        sp = 'center'
-        name = '%s_bond_%s'%(self.label, sp)
+        sp = ''
+        name = '%s_bond%s'%(self.label, sp)
         obj = bpy.data.objects.get(name)
-        base_name = 'Basis_%s_bond_%s'%(self.label, sp)
+        base_name = 'Basis_%s_bond%s'%(self.label, sp)
         if obj.data.shape_keys is None:
             obj.shape_key_add(name = base_name)
         elif base_name not in obj.data.shape_keys.key_blocks:
@@ -868,11 +649,6 @@ class Bonds(BaseObject):
                 add_keyframe_to_shape_key(sk, 'value', 
                     [0, 1], [frame_start + i - 1, frame_start + i])
 
-    
-    def __len__(self):
-        return len(self.obj.data.vertices)
-    
-    
     def __getitem__(self, index):
         """Return a subset of the Bbond.
 
@@ -901,7 +677,6 @@ class Bonds(BaseObject):
         positions = self.positions
         positions[index] = value
         self.set_positions(positions)
-
     
     def repeat(self, m, cell):
         """
@@ -1000,7 +775,6 @@ class Bonds(BaseObject):
         for pos in positions:
             bm.verts.new(pos)
         bm.to_mesh(self.obj.data)
-
 
 def build_bondlists(species, positions, cell, pbc, cutoff):
     """

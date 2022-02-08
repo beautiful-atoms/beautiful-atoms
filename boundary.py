@@ -2,7 +2,7 @@ import bpy
 from ase import Atoms
 import numpy as np
 from time import time
-from batoms.base import BaseObject
+from batoms.base import ObjectGN
 # from batoms.tools import build_boundary
 from batoms.butils import object_mode
 from batoms.tools import string2Number
@@ -229,7 +229,7 @@ def search_bond(positions0, offsets_skin, bondlists, boundary, recursive = False
     return offset_new
 
 
-class Boundary(BaseObject):
+class Boundary(ObjectGN):
     """Bbond Class
     
     A Bbond object is linked to this main collection in Blender. 
@@ -277,10 +277,9 @@ class Boundary(BaseObject):
         #
         self.batoms = batoms
         self.label = label
-        obj_name = '%s_boundary_center'%(self.label)
-        bobj_name = 'bboundary'
+        name = 'boundary'
         self.boundary = boundary
-        BaseObject.__init__(self, obj_name = obj_name, bobj_name = bobj_name)
+        ObjectGN.__init__(self, label, name)
         if boundary_datas is not None:
             self.build_object(boundary_datas)
         else:
@@ -315,10 +314,8 @@ class Boundary(BaseObject):
                             'scale': boundary_datas['scales'],
                             'radius_style': boundary_datas['radius_styles'],
                             })
-        name = '%s_boundary_center'%self.label
-        if name in bpy.data.objects:
-            obj = bpy.data.objects.get(name)
-            bpy.data.objects.remove(obj, do_unlink = True)
+        name = '%s_boundary'%self.label
+        self.delete_obj(name)
         mesh = bpy.data.meshes.new(name)
         mesh.from_pydata(centers, [], [])
         mesh.update()
@@ -328,9 +325,7 @@ class Boundary(BaseObject):
         self.batoms.coll.objects.link(obj)
         #
         name = '%s_boundary_offset'%self.label
-        if name in bpy.data.objects:
-            obj = bpy.data.objects.get(name)
-            bpy.data.objects.remove(obj, do_unlink = True)
+        self.delete_obj(name)
         mesh = bpy.data.meshes.new(name)
         mesh.from_pydata(offsets, [], [])
         mesh.update()
@@ -476,7 +471,7 @@ class Boundary(BaseObject):
         gn.node_group.links.new(ObjectInfo.outputs['Geometry'], InstanceOnPoint.inputs['Instance'])
         gn.node_group.links.new(InstanceOnPoint.outputs['Instances'], JoinGeometry.inputs['Geometry'])        
     
-    def update_boundary(self):
+    def update(self):
         from batoms.butils import clean_coll_objects
         # if not self.bondlist:
         object_mode()
@@ -508,7 +503,7 @@ class Boundary(BaseObject):
             #     frames_bond[i, nbs[i]:, 0:3] = frames[i][0]
         if len(boundary_datas) == 0:
             return
-        self.set_boundary_datas(boundary_datas)
+        self.set_arrays(boundary_datas)
         # self.coll.objects.link(bb.obj)
         # bpy.data.collections['Collection'].objects.unlink(bb.obj)
         # bb.set_frames()
@@ -526,115 +521,25 @@ class Boundary(BaseObject):
             raise KeyError('%s object is not exist.'%name)
         return obj_o
 
-    @property
-    def boundary_datas(self):
-        return self.get_boundary_datas()
-    
-    @boundary_datas.setter    
-    def boundary_datas(self, boundary_datas):
-        self.set_boundary_datas(boundary_datas)
-    
-    def get_boundary_datas(self):
-        return np.array(self.mesh.boundary_datas)
-    
-    def set_boundary_datas(self, boundary_datas):
+    def set_arrays(self, arrays):
         """
         """
-        if len(boundary_datas['centers']) == 0:
+        if len(arrays['centers']) == 0:
             return
         attributes = self.attributes
         # same length
-        if len(boundary_datas['centers']) == len(attributes['show']):
-            self.set_positions(boundary_datas['centers'],
-                               boundary_datas['offsets'],
+        if len(arrays['centers']) == len(attributes['show']):
+            self.set_positions(arrays['centers'],
+                               arrays['offsets'],
                                 )
-            species_index = [string2Number(sp) for sp in boundary_datas['species']]
+            species_index = [string2Number(sp) for sp in arrays['species']]
             self.set_attributes({'species_index': species_index})
         else:
             # add or remove vertices
-            self.build_object(boundary_datas)
-            species = np.unique(boundary_datas['species'])
+            self.build_object(arrays)
+            species = np.unique(arrays['species'])
             for sp in species:
                 self.add_geometry_node(sp, 'sel0')
-
-    @property
-    def attributes(self):
-        return self.get_attributes()
-    
-    @attributes.setter
-    def attributes(self, attributes):
-        self.set_attributes(attributes)
-
-    def get_attributes(self):
-        """
-        using foreach_get and foreach_set to improve performance.
-        """
-        # attributes
-        me = self.obj.data
-        nvert = len(me.vertices)
-        attributes = {}
-        for key in me.attributes.keys():
-            att = me.attributes.get(key)
-            dtype = att.data_type
-            if dtype == 'STRING':
-                attributes[key] = np.zeros(nvert, dtype = 'U20')
-                for i in range(nvert):
-                    attributes[key][i] = att.data[i].value
-            elif dtype == 'INT':
-                attributes[key] = np.zeros(nvert, dtype = int)
-                att.data.foreach_get("value", attributes[key])
-            elif dtype == 'FLOAT':
-                attributes[key] = np.zeros(nvert, dtype = float)
-                att.data.foreach_get("value", attributes[key])
-            elif dtype == 'BOOLEAN':
-                attributes[key] = np.zeros(nvert, dtype = bool)
-                att.data.foreach_get("value", attributes[key])
-            else:
-                raise KeyError('%s is not support.'%dtype)
-            attributes[key] = np.array(attributes[key])
-        return attributes
-        
-    def set_attributes(self, attributes):
-        tstart = time()
-        me = self.obj.data
-        for key, data in attributes.items():
-            # print(key)
-            if len(attributes[key]) == 0:
-                continue
-            att = me.attributes.get(key)
-            if att is None:
-                dtype = type(attributes[key][0])
-                if np.issubdtype(dtype, int):
-                    dtype = 'INT'
-                elif np.issubdtype(dtype, float):
-                    dtype = 'FLOAT'
-                elif np.issubdtype(dtype, str):
-                    dtype = 'STRING'
-                else:
-                    raise KeyError('%s is not supported.'%dtype)
-                att = me.attributes.new(name = key, type = dtype, domain = 'POINT')
-            if att.data_type == 'STRING':
-                nvert = len(me.vertices)
-                for i in range(nvert):
-                    att.data[i].value = data[i]
-            else:
-                att.data.foreach_set("value", data)
-        me.update()
-        # print('set_attributes: %s'%(time() - tstart))
-
-    
-    def set_attribute_with_indices(self, name, indices, data):
-        data0 = self.attributes[name]
-        data0[indices] = data
-        self.set_attributes({name: data0})
-    
-    @property
-    def arrays(self):
-        return self.get_arrays()
-    
-    @arrays.setter
-    def arrays(self, arrays):
-        self.set_arrays(arrays)
 
     def get_arrays(self, batoms = None, local = False, X = False, sort = True):
         """
@@ -686,22 +591,6 @@ class Boundary(BaseObject):
             frames[i] = local_positions
         return frames
     
-    @property
-    def gnodes(self):
-        return self.get_gnodes()
-    
-    @gnodes.setter
-    def gnodes(self, gnodes):
-        self.set_gnodes(gnodes)
-    
-    def get_gnodes(self):
-        name = 'GeometryNodes_%s_boundary'%self.label
-        gnodes = self.obj.modifiers.get(name)
-        return gnodes
-    
-    def set_gnodes(self, gnodes):
-        pass
-
     def set_frames(self, frames = None, frame_start = 0, only_basis = False):
         """
 
@@ -782,7 +671,3 @@ class Boundary(BaseObject):
         # print('datas: ', datas)
         # print('calc_boundary_data: {0:10.2f} s'.format(time() - tstart))
         return datas
-
-
-if __name__ == "__main__":
-    pass

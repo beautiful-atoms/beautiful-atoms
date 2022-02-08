@@ -14,7 +14,7 @@ from batoms.cell import Bcell
 from batoms.render.render import Render
 from batoms.bselect import Selects
 from batoms.tools import get_default_species_data, number2String, string2Number, read_from_ase, read_from_pymatgen
-from batoms.base import BaseCollection
+from batoms.base import BaseCollection, ObjectGN
 from batoms.isosurfacesetting import IsosurfaceSetting
 from batoms.planesetting import PlaneSetting
 from batoms.mssetting import MSsetting
@@ -44,7 +44,7 @@ default_GroupInput = [
 
 subcollections = ['instancer', 'surface', 'ribbon', 'plane']
 
-class Batoms(BaseCollection):
+class Batoms(BaseCollection, ObjectGN):
     """Batom Class
     
     The Batoms object is a interface to a batoms object in Blender.
@@ -123,6 +123,7 @@ class Batoms(BaseCollection):
                  ):
         #
         self.obj_name = label
+        ObjectGN.__init__(self, label)
         BaseCollection.__init__(self, coll_name = label)
         if from_ase is not None:
             species, positions, attributes, cell, pbc, info = read_from_ase(from_ase)
@@ -399,16 +400,6 @@ class Batoms(BaseCollection):
         self._cell = Bcell(label = label)
         self._species = Bspecies(label, label, {}, self)
         self.selects = Selects(label, self)
-    
-    @property
-    def obj(self):
-        return self.get_obj()
-    
-    def get_obj(self):
-        obj = bpy.data.objects.get(self.obj_name)
-        if obj is None:
-            raise KeyError('%s object is not exist.'%self.obj_name)
-        return obj
 
     @property    
     def volume(self):
@@ -595,62 +586,6 @@ class Batoms(BaseCollection):
             scale[sp] = [size[sp]/radius[sp]]*3
         self.scale = scale
     
-    @property
-    def local_positions(self):
-        return self.get_local_positions()
-    
-    def get_local_positions(self):
-        """
-        using foreach_get and foreach_set to improve performance.
-        """
-        n = len(self)
-        local_positions = np.empty(n*3, dtype=np.float64)
-        self.obj.data.vertices.foreach_get('co', local_positions)  
-        local_positions = local_positions.reshape((n, 3))
-        return local_positions
-    
-    @property
-    def positions(self):
-        return self.get_positions()
-    
-    @positions.setter
-    def positions(self, positions):
-        self.set_positions(positions)
-    
-    def get_positions(self):
-        """
-        Get global positions.
-        """
-        from batoms.tools import local2global
-        positions = local2global(self.local_positions, 
-                np.array(self.obj.matrix_world))
-        return positions
-    
-    def set_positions(self, positions):
-        """
-        Set global positions to local vertices
-        """
-        object_mode()
-        from batoms.tools import local2global
-        natom = len(self)
-        if len(positions) != natom:
-            raise ValueError('positions has wrong shape %s != %s.' %
-                                (len(positions), natom))
-        positions = local2global(positions, 
-                np.array(self.obj.matrix_world), reversed = True)
-        # rashpe to (natoms*3, 1) and use forseach_set
-        positions = positions.reshape((natom*3, 1))
-        # I don't know why 'Basis' shape keys is not updated when editing mesh,
-        # so we edit the 'Basis' shape keys directly.
-        # self.obj.data.vertices.foreach_set('co', positions)
-        self.obj.data.shape_keys.key_blocks[0].data.foreach_set('co', positions)
-        self.obj.data.update()
-        # bpy.context.view_layer.update()
-        # I don't why this is need to update the mesh positions
-        bpy.context.view_layer.objects.active = self.obj
-        bpy.ops.object.mode_set(mode = 'EDIT')
-        bpy.ops.object.mode_set(mode = 'OBJECT')
-    
     def get_scaled_positions(self, cell = None):
         """
         Get array of scaled_positions.
@@ -662,83 +597,6 @@ class Batoms(BaseCollection):
         scaled_positions = cell.scaled_positions(self.local_positions)
         return scaled_positions
     
-    @property
-    def attributes(self):
-        return self.get_attributes()
-    
-    @attributes.setter
-    def attributes(self, attributes):
-        self.set_attributes(attributes)
-
-    def get_attributes(self):
-        """
-        using foreach_get and foreach_set to improve performance.
-        """
-        # attributes
-        me = self.obj.data
-        nvert = len(me.vertices)
-        attributes = {}
-        for key in me.attributes.keys():
-            att = me.attributes.get(key)
-            dtype = att.data_type
-            if dtype == 'STRING':
-                attributes[key] = np.zeros(nvert, dtype = 'U20')
-                for i in range(nvert):
-                    attributes[key][i] = att.data[i].value
-            elif dtype == 'INT':
-                attributes[key] = np.zeros(nvert, dtype = int)
-                att.data.foreach_get("value", attributes[key])
-            elif dtype == 'FLOAT':
-                attributes[key] = np.zeros(nvert, dtype = float)
-                att.data.foreach_get("value", attributes[key])
-            elif dtype == 'BOOLEAN':
-                attributes[key] = np.zeros(nvert, dtype = bool)
-                att.data.foreach_get("value", attributes[key])
-            else:
-                raise KeyError('%s is not support.'%dtype)
-            attributes[key] = np.array(attributes[key])
-        return attributes
-    
-    def set_attributes(self, attributes):
-        tstart = time()
-        me = self.obj.data
-        for key, data in attributes.items():
-            # print(key)
-            att = me.attributes.get(key)
-            if att is None:
-                dtype = type(attributes[key][0])
-                if np.issubdtype(dtype, int):
-                    dtype = 'INT'
-                elif np.issubdtype(dtype, float):
-                    dtype = 'FLOAT'
-                elif np.issubdtype(dtype, str):
-                    dtype = 'STRING'
-                else:
-                    raise KeyError('%s is not supported.'%dtype)
-                att = me.attributes.new(name = key, type = dtype, domain = 'POINT')
-            if att.data_type == 'STRING':
-                nvert = len(me.vertices)
-                for i in range(nvert):
-                    att.data[i].value = data[i]
-            else:
-                att.data.foreach_set("value", data)
-        me.update()
-        # print('set_attributes: %s'%(time() - tstart))
-
-    
-    def set_attribute_with_indices(self, name, indices, data):
-        data0 = self.attributes[name]
-        data0[indices] = data
-        self.set_attributes({name: data0})
-    
-    @property
-    def arrays(self):
-        return self.get_arrays()
-    
-    @arrays.setter
-    def arrays(self, arrays):
-        self.set_arrays(arrays)
-
     def get_arrays(self, batoms = None, local = False, X = False, sort = True):
         """
         """
@@ -824,16 +682,6 @@ class Batoms(BaseCollection):
         return index
 
     @property
-    def nframe(self):
-        return self.get_nframe()
-    
-    def get_nframe(self):
-        if self.obj.data.shape_keys is None:
-            return 0
-        nframe = len(self.obj.data.shape_keys.key_blocks)
-        return nframe
-    
-    @property
     def frames(self):
         return self.get_frames()
     
@@ -859,37 +707,6 @@ class Batoms(BaseCollection):
                             np.array(self.obj.matrix_world))
             frames[i] = local_positions
         return frames
-    
-    @property
-    def gnodes(self):
-        return self.get_gnodes()
-    
-    @gnodes.setter
-    def gnodes(self, gnodes):
-        self.set_gnodes(gnodes)
-    
-    def get_gnodes(self):
-        name = 'GeometryNodes_%s'%self.label
-        gnodes = self.obj.modifiers.get(name)
-        return gnodes
-    
-    def set_gnodes(self, gnodes):
-        pass
-    
-    @property
-    def mnode(self):
-        return self.get_mnode()
-    
-    @mnode.setter
-    def mnode(self, mnode):
-        self.set_mnode(mnode)
-    
-    def get_mnode(self):
-        return self.materials[self.main_elements].node_tree.nodes
-    
-    def set_mnode(self, mnode):
-        for key, value in mnode.items():
-            self.materials[self.main_elements].node_tree.nodes['Principled BSDF'].inputs[key].default_value = value
     
     @property
     def subdivisions(self):
@@ -942,10 +759,6 @@ class Batoms(BaseCollection):
                                 scale = scale, 
                                 shape = shapes[shape])
         instancer.parent = self.obj
-    
-    def clean_batom_objects(self, obj):
-        obj = bpy.data.objects[obj]
-        bpy.data.objects.remove(obj, do_unlink = True)
     
     def delete_verts(self, index = []):
         """
@@ -1048,9 +861,6 @@ class Batoms(BaseCollection):
                 add_keyframe_to_shape_key(sk, 'value', 
                     [0, 1], [frame_start + i - 1, frame_start + i])
 
-    def __len__(self):
-        return len(self.obj.data.vertices)
-    
     def __getitem__(self, index):
         """Return a subset of the Batom.
 
@@ -1606,7 +1416,7 @@ class Batoms(BaseCollection):
 
         elif model_style == 3:
             self.scale = 0.01
-            self.update_bonds()
+            self.update()
         """
     
     def draw_space_filling(self, scale = 1.0):
@@ -1616,15 +1426,15 @@ class Batoms(BaseCollection):
     def draw_ball_and_stick(self, scale = 0.4):
         mask = np.where(self.model_style == 1, True, False)
         self.set_attribute_with_indices('scale', mask, scale)
-        self.bonds.update_bonds()
+        self.bonds.update()
     
     def draw_polyhedra(self, scale = 0.4):
         mask = np.where(self.model_style == 2, True, False)
-        self.polyhedras.update_polyhedras()
+        self.polyhedras.update()
         self.set_attribute_with_indices('show', mask, True)
         if self.polyhedra_style == 0:
             self.set_attribute_with_indices('scale', mask, scale)
-            # self.bonds.update_bonds()
+            # self.bonds.update()
         if self.polyhedra_style == 1:
             self.set_attribute_with_indices('scale', mask, scale)
         elif self.polyhedra_style == 2:
@@ -1641,6 +1451,6 @@ class Batoms(BaseCollection):
         mask = np.where(self.model_style == 3, True, False)
         self.set_attribute_with_indices('show', mask, 0)
         self.set_attribute_with_indices('scale', mask, 0.0001)
-        # self.update_bonds(mask)
+        # self.update(mask)
 
 
