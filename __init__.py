@@ -49,6 +49,7 @@ from .gui import (
         ops_add_molecule,
         gui_pymatgen,
         gui_pubchem,
+        gui_rscb,
         )
 
 from .modal import (
@@ -119,6 +120,9 @@ classes = [
         gui_pubchem.Pubchem_PT_prepare,
         gui_pubchem.PubchemProperties,
         gui_pubchem.Search,
+        gui_rscb.RSCB_PT_prepare,
+        gui_rscb.RSCBProperties,
+        gui_rscb.RSCB_Import,
         record_selection.EDIT_MESH_OT_record_selection,
         rigid_body.Rigid_Body_Operator,
         rigid_body.Rigid_Body_Modal_Panel,
