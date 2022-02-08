@@ -1,7 +1,6 @@
 import numpy as np
-from math import pi, cos, sin
+from math import pi
 import matplotlib.pyplot as plt
-from sympy import rotations
 from time import time
 
 
@@ -9,18 +8,16 @@ def ellipse(n, w, h):
     profile = np.zeros((n, 3))
     t = np.linspace(0, 1, n, endpoint = False)
     a = t*2*pi + pi/4
-    profile[:, 0] = np.cos(a)*w/2
-    profile[:, 2] = np.sin(a)*h/2
+    profile[:, 0] = np.cos(a)*w
+    profile[:, 2] = np.sin(a)*h
     return profile
 
 def rectangle(w, h):
-    w2 = w/2
-    h2 = h/2
     profile = np.array([
-            [-1*w2,  0, -1*h2],
-            [-1*w2,  0, 1*h2],
-            [1*w2,  0, 1*h2],
-            [1*w2,  0, -1*h2],
+            [-1*w,  0, -1*h],
+            [-1*w,  0, 1*h],
+            [1*w,  0, 1*h],
+            [1*w,  0, -1*h],
             ])
 
     return profile
