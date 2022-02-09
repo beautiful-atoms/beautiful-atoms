@@ -133,5 +133,8 @@ dmypy.json
 *.png
 # atomic structures
 *.in
+*.xyz
+*.pdb
 
-.vscode/*
+test/
+#.vscode/

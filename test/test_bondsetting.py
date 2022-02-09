@@ -12,6 +12,8 @@ from batoms.butils import removeAll
 removeAll()
 c2h6so = molecule('C2H6SO')
 c2h6so = Batoms('c2h6so', from_ase = c2h6so)
+c2h6so.model_style = 1
+
 c2h6so.show = [0, 0 ,1, 1, 1, 1, 1, 1, 1 ,1]
 c2h6so.model_style = 1
 

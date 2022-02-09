@@ -9,14 +9,14 @@ batoms = Batoms('c2h6so', from_ase = atoms, movie = True)
 batoms.model_style = 1
 
 def test_animation_2():
-    from ase.io import read, write
-    from batoms import Batoms
-    from batoms.butils import removeAll
-    removeAll()
-    atoms = read('datas/tio2_10.xyz', index = ':')
-    tio2 = Batoms('tio2', atoms = atoms, movie = True)
+from ase.io import read, write
+from batoms import Batoms
+from batoms.butils import removeAll
+removeAll()
+atoms = read('test/datas/tio2_10.xyz', index = ':')
+tio2 = Batoms('tio2', from_ase = atoms, movie = True)
+tio2.model_style = 1
     tio2.boundary = 0.01
-    tio2.model_style = 1
 
 def test_animation_metaball():
 from ase.io import read

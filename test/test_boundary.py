@@ -17,7 +17,7 @@ pt = Batoms('pt', ['Pt']*4,
             pbc = True, 
             cell = (a, a, a))
 pt.boundary
-pt.boundary.update_boundary()
+pt.boundary.update()
 
 atoms = pt.get_atoms_with_boundary()
     assert len(atoms) == 14

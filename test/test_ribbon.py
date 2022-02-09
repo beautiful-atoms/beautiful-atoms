@@ -10,14 +10,17 @@ from batoms.batoms import Batoms
 from batoms.pdbparser import read_pdb
 from batoms.butils import removeAll
 removeAll()
-atoms = read_pdb('test/datas/1tim.pdb')  # 1ema, 1tim, 4hhb
-batoms = Batoms('protein', from_ase = atoms)
-batoms.ribbon.draw()
-sel1 = batoms.selects.add('sel1', 'sheet A-160-A-170')
+atoms = read_pdb('test/datas/1ema.pdb')  # 1ema, 1tim, 4hhb
+protein = Batoms('protein', from_ase = atoms)
+protein.ribbon.draw()
+sel1 = protein.selects.add('sel1', 'sheet A-160-A-170')
 # sel1 = batoms.selects.add('sel1', 'sheet A-148-A-152')
 # sel1 = batoms.selects.add('sel1', 'helix A-94-A-112')
 sel1.show = True
 sel1.model_style = 1
+# sel2 = protein.selects.add('sel2', 'hetatm')
+# sel2.show = True
+
 
 def test_sheet():
 from batoms.batoms import Batoms

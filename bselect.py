@@ -314,6 +314,9 @@ metals
             helix = expre.split()[1]
             print('helix %s'%helix)
             indices = batoms.ribbon.helixs[helix].indices
+        if 'hetatm' in expre:
+            print('hetatm')
+            indices = np.where(batoms.attributes['types'] == 'HETATM')[0]
         if 'species' in expre:
             species = expre.split()[1]
             print('species %s'%species)
