@@ -3,6 +3,8 @@
 This module defines the Batoms object in the batoms package.
 
 """
+from turtle import position
+from pandas import array
 import bpy
 import bmesh
 from batoms.batom import Batom
@@ -175,6 +177,7 @@ class Batoms(BaseCollection, ObjectGN):
         self._polyhedras = None
         self._boundary = None
         show_index()
+        self.hideOneLevel()
     
     def set_collection(self, label, boundary = [0, 0, 0]):
         """
@@ -190,7 +193,11 @@ class Batoms(BaseCollection, ObjectGN):
         coll.batoms.flag = True
         coll.batoms.label = label
         coll.batoms.boundary = boundary
-        
+    
+    def hideOneLevel(self):
+        from batoms.butils import hideOneLevel
+        hideOneLevel()
+
     def build_object(self, label, positions, location = [0, 0, 0]):
         """
         build child object and add it to main objects.
@@ -1453,4 +1460,28 @@ class Batoms(BaseCollection, ObjectGN):
         self.set_attribute_with_indices('scale', mask, 0.0001)
         # self.update(mask)
 
+    def as_ase(self, local = True):
+        """
+        local: bool
+            if True, use the origin of uint cell as the origin
+        """
+        from ase import Atoms
+        arrays = self.arrays
+        positions = arrays['positions']
+        if local:
+            positions -= self.cell.origin
+        atoms = Atoms(symbols = arrays['elements'], 
+                    positions = positions, 
+                    cell = self.cell, pbc = self.pbc)
+        for name, array in arrays.items():
+            if name in ['elements', 'positions']: continue
+            atoms.set_array(name, np.array(array))
+        
+        return atoms
 
+    def write(self, filename, local = True):
+        """
+        Save batoms to structure file.
+        >>> h2o.write('h2o.xyz')
+        """
+        self.as_ase(local).write(filename)
