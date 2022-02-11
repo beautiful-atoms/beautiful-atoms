@@ -1470,3 +1470,21 @@ class Batoms(BaseCollection, ObjectGN):
         >>> h2o.write('h2o.xyz')
         """
         self.as_ase(local).write(filename)
+    
+    def transform(self, matrix = None):
+        """
+        Transformation matrix
+        """
+        from ase.build.supercells import make_supercell
+        if matrix is not None:
+            rotation = np.array([matrix[0][:3], matrix[1][:3], matrix[2][:3]])
+            translation = np.array([matrix[0][3], matrix[1][3], matrix[2][3]])
+            atoms = self.as_ase()
+            atoms = make_supercell(atoms, rotation)
+            batoms = self.__class__(label = '%s_transform'%self.label, from_ase = atoms,
+                                    model_style = self.model_style)
+        else:
+            return
+        batoms.translate(translation)
+        # self.hide = True
+        return batoms
