@@ -4,7 +4,7 @@ from ase.io import read, write
 from batoms import Batoms
 from batoms.butils import removeAll
 removeAll()
-atoms = read('test/datas/deca_ala_md-pos-1.xyz', index = ':')
+atoms = read('/home/xing/batoms/datas/deca_ala_md-pos-1.xyz', index = ':')
 batoms = Batoms('c2h6so', from_ase = atoms, movie = True)
 batoms.model_style = 1
 
@@ -13,7 +13,7 @@ from ase.io import read, write
 from batoms import Batoms
 from batoms.butils import removeAll
 removeAll()
-atoms = read('test/datas/tio2_10.xyz', index = ':')
+atoms = read('/home/xing/batoms/datas/tio2_10.xyz', index = ':')
 tio2 = Batoms('tio2', from_ase = atoms, movie = True)
 tio2.model_style = 1
     tio2.boundary = 0.01
@@ -23,7 +23,7 @@ from ase.io import read
 from batoms import Batoms
 from batoms.butils import removeAll
 removeAll()
-atoms = read('test/datas/tio2_10.xyz', index = ':')
+atoms = read('/home/xing/batoms/datas/tio2_10.xyz', index = ':')
 batoms = Batoms('c2h6so', atoms = atoms, movie = True, shape = 3)
     # batoms.model_style = 1
 

@@ -525,6 +525,7 @@ class Batoms_coll(bpy.types.PropertyGroup):
                ('3',"polyhedra", "polyhedra")),
                default='0')
     show_unit_cell: BoolProperty(name="show_unit_cell", default = True)
+    wrap: BoolVectorProperty(name="wrap", default = [False, False, False], size = 3)
     boundary: FloatVectorProperty(name="boundary", default = [0.0, 1.0, 0.0, 1.0, 0.0, 1.0], size = 6)
     bbond: CollectionProperty(name = 'Bbond', 
                             type = Bbond)

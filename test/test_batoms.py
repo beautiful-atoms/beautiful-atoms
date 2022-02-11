@@ -30,6 +30,42 @@ c2h6so = molecule('C2H6SO')
 c2h6so = Batoms('c2h6so', from_ase = c2h6so)
 c2h6so.show = [0, 0 ,0, 0, 0, 1, 1, 1, 1 ,1]
 
+
+def test_batoms_write():
+from ase.build import molecule
+from batoms.batoms import Batoms
+from batoms.butils import removeAll
+removeAll()
+h2o = molecule('H2O')
+h2o = Batoms('h2o', from_ase = h2o)
+h2o1 = h2o.as_ase()
+h2o.write('h2o.in')
+
+def test_batoms_transform():
+from ase.build import molecule
+from batoms.batoms import Batoms
+from batoms.butils import removeAll
+removeAll()
+h2o = molecule('H2O')
+h2o = Batoms('h2o', from_ase = h2o)
+h2o.translate([0, 0, 2])
+h2o.rotate(60, 'Z')
+h2o.mirror('X')
+
+
+def test_batoms_wrap():
+from ase.build import fcc111
+from batoms.batoms import Batoms
+from batoms.butils import removeAll
+import numpy as np
+removeAll()
+au = fcc111('Au', (1, 1, 1), vacuum = 3)
+au = Batoms('au', from_ase = au)
+au = au*[4, 4, 1]
+au.wrap = True
+icell = np.linalg.inv(au.cell)
+np.dot(au.positions, icell)
+
 def test_batom():
 from batoms.butils import removeAll
 from batoms.batoms import Batoms

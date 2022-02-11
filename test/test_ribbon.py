@@ -10,7 +10,7 @@ from batoms.batoms import Batoms
 from batoms.pdbparser import read_pdb
 from batoms.butils import removeAll
 removeAll()
-atoms = read_pdb('test/datas/1ema.pdb')  # 1ema, 1tim, 4hhb
+atoms = read_pdb('/home/xing/batoms/datas/1ema.pdb')  # 1ema, 1tim, 4hhb
 protein = Batoms('protein', from_ase = atoms)
 protein.ribbon.draw()
 sel1 = protein.selects.add('sel1', 'sheet A-160-A-170')

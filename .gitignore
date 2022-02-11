@@ -135,6 +135,8 @@ dmypy.json
 *.in
 *.xyz
 *.pdb
+*.cif
+*.poscar
 
-test/*
+test/
 .vscode/*
