@@ -107,10 +107,15 @@ class Bonds(ObjectGN):
         from scipy.spatial.transform import Rotation as R
         tstart = time()
         if len(bond_datas['centers'].shape) == 2:
-            self._frames = np.array([bond_datas['centers']])
+            self._frames = {'centers': np.array([bond_datas['centers']]),
+                            'offsets': np.array([bond_datas['offsets']]),
+                        }
             centers = bond_datas['centers']
+            offsets = bond_datas['offsets']
         elif len(bond_datas['centers'].shape) == 3:
-            self._frames = bond_datas['centers']
+            self._frames = {'centers': bond_datas['centers'],
+                            'offsets': bond_datas['offsets'],
+                            }
             centers = bond_datas['centers'][0]
         else:
             raise Exception('Shape of centers is wrong!')
@@ -601,53 +606,18 @@ class Bonds(ObjectGN):
         return frames
     
     def set_frames(self, frames = None, frame_start = 0, only_basis = False):
-        """
-
-        frames: list
-            list of positions
-        
-        >>> from bbonds import Bbond
-        >>> import numpy as np
-        >>> positions = np.array([[0, 0 ,0], [1.52, 0, 0]])
-        >>> h = Bbond('h2o', 'H', positions)
-        >>> frames = []
-        >>> for i in range(10):
-                frames.append(positions + [0, 0, i])
-        >>> h.set_frames(frames)
-        
-        use shape_keys (faster)
-        """
-        from batoms.butils import add_keyframe_to_shape_key
         if frames is None:
             frames = self._frames
-        centers = frames
-        nframe = len(centers)
+        nframe = len(frames)
         if nframe == 0 : return
-        sp = ''
-        name = '%s_bond%s'%(self.label, sp)
-        obj = bpy.data.objects.get(name)
-        base_name = 'Basis_%s_bond%s'%(self.label, sp)
-        if obj.data.shape_keys is None:
-            obj.shape_key_add(name = base_name)
-        elif base_name not in obj.data.shape_keys.key_blocks:
-            obj.shape_key_add(name = base_name)
-        if only_basis:
-            return
-        nvert = len(obj.data.vertices)
-        for i in range(1, nframe):
-            sk = obj.shape_key_add(name = str(i))
-            # Use the local position here
-            positions = frames[i][:, 0:3]
-            positions = positions.reshape((nvert*3, 1))
-            sk.data.foreach_set('co', positions)
-            # Add Keyframes, the last one is different
-            if i != nframe - 1:
-                add_keyframe_to_shape_key(sk, 'value', 
-                    [0, 1, 0], [frame_start + i - 1, 
-                    frame_start + i, frame_start + i + 1])
-            else:
-                add_keyframe_to_shape_key(sk, 'value', 
-                    [0, 1], [frame_start + i - 1, frame_start + i])
+        name = '%s_bond'%(self.label)
+        obj = self.obj
+        self.set_obj_frames(name, obj, frames['centers'])
+        #
+        # name = '%s_bond_offset'%(self.label)
+        # obj = self.obj_o
+        # self.set_obj_frames(name, obj, frames['offsets'])
+        
 
     def __getitem__(self, index):
         """Return a subset of the Bbond.
