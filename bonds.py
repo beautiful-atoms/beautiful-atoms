@@ -4,6 +4,7 @@ This module defines the Bonds object in the Batoms package.
 
 """
 
+from sympy import re
 import bpy
 import bmesh
 from time import time
@@ -196,7 +197,7 @@ class Bonds(ObjectGN):
         JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
                         '%s_JoinGeometry'%self.label, 
                         'GeometryNodeJoinGeometry')
-        gn.node_group.links.new(GroupInput.outputs['Geometry'], JoinGeometry.inputs['Geometry'])
+        # gn.node_group.links.new(GroupInput.outputs['Geometry'], JoinGeometry.inputs['Geometry'])
         gn.node_group.links.new(JoinGeometry.outputs['Geometry'], GroupOutput.inputs['Geometry'])
         #------------------------------------------------------------------
         # calculate bond vector, length, rotation based on the index
@@ -462,10 +463,10 @@ class Bonds(ObjectGN):
         calculate bond in all farmes, and merge all bondlists
         """
         
-        from batoms.butils import clean_coll_objects
         object_mode()
         # clean_coll_objects(self.coll, 'bond')
         frames = self.batoms.get_frames()
+        boundary_data = None
         arrays = self.batoms.arrays
         show = arrays['show']
         species = arrays['species'][show]
@@ -484,7 +485,8 @@ class Bonds(ObjectGN):
             #     positions_search = frames_search[f]
             #     positions = positions + positions_search
             bondlist = build_bondlists(species, positions, 
-                        self.batoms.cell, self.batoms.pbc, self.setting.cutoff_dict)
+                        self.batoms.cell, self.batoms.pbc, self.setting.cutoff_dict, 
+                        boundary_data)
             if f == 0:
                 bondlists = bondlist
             else:
@@ -578,33 +580,14 @@ class Bonds(ObjectGN):
         bpy.ops.object.mode_set(mode = 'EDIT')
         bpy.ops.object.mode_set(mode = 'OBJECT')
     
-    @property
-    def frames(self):
-        return self.get_frames()
-    
-    @frames.setter    
-    def frames(self, frames):
-        self.set_frames(frames)
-    
     def get_frames(self):
         """
-        read shape key
         """
-        from batoms.tools import local2global
-        obj = self.obj
-        n = len(self)
-        nframe = self.nframe
-        frames = np.empty((nframe, n, 3), dtype=np.float64)
-        for i in range(nframe):
-            positions = np.empty(n*3, dtype=np.float64)
-            sk = obj.data.shape_keys.key_blocks[i]
-            sk.data.foreach_get('co', positions)
-            local_positions = positions.reshape((n, 3))
-            local_positions = local2global(local_positions, 
-                            np.array(self.obj.matrix_world))
-            frames[i] = local_positions
+        frames = {}
+        frames['centers'] = self.get_obj_frames(self.obj)
+        # frames['offsets'] = self.get_obj_frames(self.obj_o)
         return frames
-    
+
     def set_frames(self, frames = None, frame_start = 0, only_basis = False):
         if frames is None:
             frames = self._frames
@@ -746,7 +729,8 @@ class Bonds(ObjectGN):
             bm.verts.new(pos)
         bm.to_mesh(self.obj.data)
 
-def build_bondlists(species, positions, cell, pbc, cutoff):
+def build_bondlists(species, positions, cell, pbc, cutoff, 
+            boundary_data = None):
     """
     The default bonds are stored in 'default_bonds'
     Get all pairs of bonding atoms
@@ -763,7 +747,7 @@ def build_bondlists(species, positions, cell, pbc, cutoff):
     #                                max_nbins=1e6)
     nli, nlj, nlS = neighbor_kdtree('ijS', species, 
                 positions, cell, pbc,
-            cutoff)
+                cutoff, boundary_data)
     # print('build_bondlists: {0:10.2f} s'.format(time() - tstart))
     bondlists = np.append(np.array([nli, nlj], dtype=int).T, np.array(nlS, dtype=int), axis = 1)
     bondlists1 = bondlists.copy()

@@ -227,6 +227,32 @@ class ObjectGN():
         nframe = len(self.obj.data.shape_keys.key_blocks)
         return nframe
     
+    @property
+    def frames(self):
+        return self.get_frames()
+    
+    @frames.setter
+    def frames(self, frames):
+        self.set_frames(frames)
+    
+    def get_obj_frames(self, obj):
+        """
+        read shape key
+        """
+        from batoms.tools import local2global
+        n = len(self)
+        nframe = self.nframe
+        frames = np.empty((nframe, n, 3), dtype=np.float64)
+        for i in range(nframe):
+            positions = np.empty(n*3, dtype=np.float64)
+            sk = obj.data.shape_keys.key_blocks[i]
+            sk.data.foreach_get('co', positions)
+            local_positions = positions.reshape((n, 3))
+            local_positions = local2global(local_positions, 
+                            np.array(self.obj.matrix_world))
+            frames[i] = local_positions
+        return frames
+    
     def set_frames_positions(self, frames = None, frame_start = 0, only_basis = False):
         name = ''
         obj = self.obj

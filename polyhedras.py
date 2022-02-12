@@ -102,15 +102,15 @@ class Polyhedras(ObjectGN):
         """
         tstart = time()
         if len(polyhedra_datas['vertices'].shape) == 2:
-            self._frames = (np.array([polyhedra_datas['vertices']]), 
-                            np.array([polyhedra_datas['offsets']]),
-                            )
+            self._frames = {'vertices': np.array([polyhedra_datas['vertices']]),
+                            'offsets': np.array([polyhedra_datas['offsets']]),
+                        }
             vertices = polyhedra_datas['vertices']
             offsets = polyhedra_datas['offsets']
         elif len(polyhedra_datas['vertices'].shape) == 3:
-            self._frames = (polyhedra_datas['vertices'], 
-                            polyhedra_datas['offsets'], 
-                            )
+            self._frames = {'vertices': polyhedra_datas['vertices'],
+                            'offsets': polyhedra_datas['offsets'],
+                            }
             vertices = polyhedra_datas['vertices'][0]
             offsets = polyhedra_datas['offsets'][0]
         else:
@@ -422,95 +422,27 @@ class Polyhedras(ObjectGN):
         bpy.ops.object.mode_set(mode = 'EDIT')
         bpy.ops.object.mode_set(mode = 'OBJECT')
     
-    @property    
-    def frames(self):
-        return self.get_frames()
-    
-    @frames.setter    
-    def frames(self, frames):
-        self.set_frames(frames)
-    
     def get_frames(self):
         """
-        read shape key
         """
-        from batoms.tools import local2global
-        obj = self.obj
-        n = len(self)
-        nframe = self.nframe
-        frames = np.empty((nframe, n, 3), dtype=np.float64)
-        for i in range(nframe):
-            positions = np.empty(n*3, dtype=np.float64)
-            sk = obj.data.shape_keys.key_blocks[i]
-            sk.data.foreach_get('co', positions)
-            local_positions = positions.reshape((n, 3))
-            local_positions = local2global(local_positions, 
-                            np.array(self.obj.matrix_world))
-            frames[i] = local_positions
+        frames = {}
+        frames['vertices'] = self.get_obj_frames(self.obj)
+        frames['offsets'] = self.get_obj_frames(self.obj_o)
         return frames
-    
+        
     def set_frames(self, frames = None, frame_start = 0, only_basis = False):
-        """
-
-        frames: list
-            list of positions
-        
-        >>> from bpolyhedras import Bbond
-        >>> import numpy as np
-        >>> positions = np.array([[0, 0 ,0], [1.52, 0, 0]])
-        >>> h = Bbond('h2o', 'H', positions)
-        >>> frames = []
-        >>> for i in range(10):
-                frames.append(positions + [0, 0, i])
-        >>> h.set_frames(frames)
-        
-        use shape_keys (faster)
-        """
-        from batoms.butils import add_keyframe_to_shape_key
-        from batoms.source_data import bond_source
-        from batoms.bdraw import cylinder_mesh_from_vec
         if frames is None:
             frames = self._frames
-        vertices, offsets = frames
-        nframe = len(vertices)
+        nframe = len(frames)
         if nframe == 0 : return
-        nbond = len(vertices[0])
-        # scales = np.concatenate((np.ones((nframe, nbond, 1)), 
-                        # np.ones((nframe, nbond, 1)),
-                        # lengths.reshape(nframe, nbond, 1)), axis = 2)
-        for sp, frames in zip(['', '_offset'],
-                                [vertices, offsets]):
-            name = '%s_polyhedra%s'%(self.label, sp)
-            obj = bpy.data.objects.get(name)
-            base_name = 'Basis_%s_polyhedra%s'%(self.label, sp)
-            if obj.data.shape_keys is None:
-                obj.shape_key_add(name = base_name)
-            elif base_name not in obj.data.shape_keys.key_blocks:
-                obj.shape_key_add(name = base_name)
-        if only_basis:
-            return
-            """
-            nvert = len(obj.data.vertices)
-            mesh_data = bond_source[self.segments]
-            for i in range(1, nframe):
-                sk = obj.shape_key_add(name = str(i))
-                # Use the local position here
-                positions = frames[i][:, 0:3]
-                vertices, faces = cylinder_mesh_from_vec(positions[:, 0:3], 
-                                    positions[:, 3:6], positions[:, 6:7], 
-                                    self.width, mesh_data)
-                vertices = vertices.reshape((nvert*3, 1))
-                sk.data.foreach_set('co', vertices)
-                # Add Keyframes, the last one is different
-                if i != nframe - 1:
-                    add_keyframe_to_shape_key(sk, 'value', 
-                        [0, 1, 0], [frame_start + i - 1, 
-                        frame_start + i, frame_start + i + 1])
-                else:
-                    add_keyframe_to_shape_key(sk, 'value', 
-                        [0, 1], [frame_start + i - 1, frame_start + i])
-
-            """
+        name = '%s_polyhedra'%(self.label)
+        obj = self.obj
+        self.set_obj_frames(name, obj, frames['vertices'])
+        #
+        name = '%s_polyhedra_offset'%(self.label)
+        obj = self.obj_o
+        self.set_obj_frames(name, obj, frames['offsets'])
+        
     
     def __getitem__(self, index):
         """Return a subset of the Bbond.
@@ -568,7 +500,7 @@ class Polyhedras(ObjectGN):
         species_index = np.zeros(npoly, dtype = int)
         #------------------------------------
         offsets0 = bondlists['offsets']
-        positions0 = positions[bondlists['atoms_index2']] + np.dot(offsets0, cell)
+        positions0 = positions[bondlists['atoms_index2']] + offsets0
         #---------------------------------------------
         vertices = []
         offsets = []

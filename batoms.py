@@ -689,33 +689,6 @@ class Batoms(BaseCollection, ObjectGN):
         return index
 
     @property
-    def frames(self):
-        return self.get_frames()
-    
-    @frames.setter
-    def frames(self, frames):
-        self.set_frames(frames)
-    
-    def get_frames(self):
-        """
-        read shape key
-        """
-        from batoms.tools import local2global
-        obj = self.obj
-        n = len(self)
-        nframe = self.nframe
-        frames = np.empty((nframe, n, 3), dtype=np.float64)
-        for i in range(nframe):
-            positions = np.empty(n*3, dtype=np.float64)
-            sk = obj.data.shape_keys.key_blocks[i]
-            sk.data.foreach_get('co', positions)
-            local_positions = positions.reshape((n, 3))
-            local_positions = local2global(local_positions, 
-                            np.array(self.obj.matrix_world))
-            frames[i] = local_positions
-        return frames
-    
-    @property
     def subdivisions(self):
         return self.get_subdivisions()
     
@@ -820,6 +793,15 @@ class Batoms(BaseCollection, ObjectGN):
                 for n, i in enumerate(c.index):
                     self.constrainatom += [i]
     
+    def get_frames(self, with_boundary = False):
+        """
+        """
+        frames = self.get_obj_frames(self.obj)
+        if with_boundary:
+            frames_boundary = self.boundary.get_frames()
+        # frames['offsets'] = self.get_obj_frames(self.obj_o)
+        return frames
+
     def set_frames(self, frames = None, frame_start = 0, only_basis = False):
         if frames is None:
             frames = self._frames
@@ -1318,12 +1300,21 @@ class Batoms(BaseCollection, ObjectGN):
             return self._boundary
         boundary = Boundary(self.label, boundary_datas = default_boundary_datas, 
                     batoms = self)
-        self.boundary = boundary
+        self._boundary = boundary
         return boundary
 
     @boundary.setter
     def boundary(self, boundary):
-        self._boundary = boundary
+        if isinstance(boundary, (int, float)):
+            boundary = np.array([[-boundary, 1 + boundary]]*3)
+        elif len(boundary) == 3:
+            if isinstance(boundary[0], (int, float)):
+                boundary = np.array([[-boundary[0], 1 + boundary[0]],
+                                    [-boundary[1], 1 + boundary[1]],
+                                    [-boundary[2], 1 + boundary[2]]])
+            elif len(boundary[0]) == 2:
+                boundary = np.array(boundary)
+        self.boundary[:] = boundary
 
     @property
     def render(self):
