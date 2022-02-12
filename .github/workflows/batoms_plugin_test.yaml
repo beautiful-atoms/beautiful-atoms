@@ -31,7 +31,7 @@ jobs:
         blender -b --python-expr "import addon_utils; addon_utils.enable('batoms', default_set=True); print('success')"
     - name: Test import
       run: |
-        blender -b --python-expr "from batoms import Batoms; b = Batoms('o', {'O': [[0, 0, 0]]}); print('success')"
+        blender -b --python-expr --python-exit-code 1 "from batoms import Batoms; b = Batoms('o', {'O': [[0, 0, 0]]}})"
     - name: Install test dependencies
       run: |
         $BLENDERPY -m pip install pytest flake8
