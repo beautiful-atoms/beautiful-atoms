@@ -24,7 +24,11 @@ jobs:
     - uses: actions/checkout@v2
     - name: Copy addons to blender
       run: |
-        ls -al .
+        mkdir -p $BLENDER_PATH/scripts/addons_contrib
+        cp batoms $BLENDER_PATH/scripts/addons_contrib/
+    - name: Test import
+      run: |
+        blender -b --python-expr "import batoms; from batoms import Batoms"
     - name: Install test dependencies
       run: |
         $BLENDERPY -m pip install pytest flake8
