@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'Dockerfiles/Dockerfile.base_*'
+      - '.github/workflows/build_blend_env_image.yml'
   workflow_dispatch:
 
 jobs:
