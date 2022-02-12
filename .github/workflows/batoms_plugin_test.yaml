@@ -28,7 +28,7 @@ jobs:
         cp -r batoms $BLENDER_PATH/scripts/addons_contrib/
     - name: Test import
       run: |
-        blender -b --python-expr "import batoms; from batoms import Batoms"
+        blender -b --python-expr "from batoms import Batoms; b = Batoms('o', {'O': [[0, 0, 0]]}); print('success')"
     - name: Install test dependencies
       run: |
         $BLENDERPY -m pip install pytest flake8
