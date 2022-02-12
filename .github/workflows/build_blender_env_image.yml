@@ -1,4 +1,4 @@
-name: build_blend_env_image
+name: Build blend_env image
 
 env:
   image_name: blender_env
