@@ -1,0 +1,58 @@
+# Dockerfile adapted from https://github.com/nytimes/rd-blender-docker
+# use nvidia cuda image, but also cpu-compatible
+
+FROM nytimes/blender:3.0-gpu-ubuntu18.04
+
+
+# Enviorment variables
+ENV CONDA_DIR="/opt/conda"
+ENV PATH="${CONDA_DIR}/bin:${PATH}"
+
+
+# Install miniconda 4.9.2 with python 3.9
+ENV MINICONDA_VERSION=4.9.2 \
+    MINICONDA_MD5=b4e46fcc8029e2cfa731b788f25b1d36 \
+    CONDA_VERSION=4.9.2
+
+
+WORKDIR /tmp
+RUN wget --quiet https://repo.continuum.io/miniconda/Miniconda3-py39_${MINICONDA_VERSION}-Linux-x86_64.sh && \
+    echo "${MINICONDA_MD5} *Miniconda3-py39_${MINICONDA_VERSION}-Linux-x86_64.sh" | md5sum -c - && \
+    /bin/bash Miniconda3-py39_${MINICONDA_VERSION}-Linux-x86_64.sh -f -b -p $CONDA_DIR && \
+    rm Miniconda3-py39_${MINICONDA_VERSION}-Linux-x86_64.sh && \
+    conda config --system --prepend channels conda-forge && \
+    conda config --system --set show_channel_urls true && \
+    if [ ! $PYTHON_VERSION = 'default' ]; then conda install --yes python=$PYTHON_VERSION; fi && \
+    conda install --quiet --yes conda pip && \
+    conda update --all --quiet --yes && \
+    conda clean --all -f -y
+
+# Install conda dependencies. Consider using env.yaml instead
+RUN conda install python=3.9.7 \
+                  pymatgen>=2020.12 \
+                  ase>=3.21.0 \
+                  scikit-image \
+                  spglib
+
+# Archive as-shipped blender python
+RUN mv ${BLENDER_PATH}/python ${BLENDER_PATH}/_python && \
+        ln -s ${CONDA_DIR} ${BLENDER_PATH}/python
+
+# Set the working directory
+ARG B_USER="blender"
+ARG B_UID="1000"
+ARG B_GID="100"
+ENV HOME=/home/${B_USER}
+
+
+# Add user
+RUN useradd -m -s /bin/bash -N -u $B_UID $B_USER && \
+    mkdir -p /workdir && \
+    chmod g+w /etc/passwd && \
+    chown -R ${B_UID}:${B_GID} ${HOME} &&\
+    chown -R ${B_UID}:${B_GID} /workdir
+
+
+USER ${B_UID}
+SHELL ["/bin/bash", "-c"]
+WORKDIR /workdir
