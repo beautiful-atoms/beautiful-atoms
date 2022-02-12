@@ -1,0 +1,26 @@
+# Build docker image containing blender environment + batoms
+# Please build from the root path, e.g.:
+# docker build . --build-arg BLENDER_VER=3.0  \
+#                -f Dockerfiles/Dockerfile.main -t luciusm/beautiful_atoms:blender3.0
+ARG BLENDER_VER
+FROM luciusm/blender_env:${BLENDER_VER}
+
+USER root
+
+# Copy batoms to the addons_contrib directory
+COPY batoms ${BLENDER_PATH}/scripts/addons_contrib/batoms
+
+# Enable batoms addon and do a simple import test
+RUN blender -b \
+            --python-exit-code 1 \
+            --python-expr  \
+            "import addon_utils; addon_utils.enable('batoms', default_set=True); print('success')" &&\
+    blender -b \
+            --python-exit-code 1 \
+            --python-expr  \
+            "from batoms import Batoms; print('success')"
+
+ 
+RUN chmod 744 -R ${BLENDER_PATH}/scripts/addons_contrib/batoms
+
+USER ${B_UID}
