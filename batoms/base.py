@@ -226,6 +226,51 @@ class ObjectGN():
             return 0
         nframe = len(self.obj.data.shape_keys.key_blocks)
         return nframe
+    
+    def set_frames_positions(self, frames = None, frame_start = 0, only_basis = False):
+        name = ''
+        obj = self.obj
+        self.set_frames(name, obj, frames, frame_start, only_basis)
+
+    def set_obj_frames(self, name, obj, frames = None, frame_start = 0, only_basis = False):
+        """
+
+        frames: list
+            list of positions
+        
+        use shape_keys (faster)
+        """
+        from batoms.butils import add_keyframe_to_shape_key
+        if frames is None:
+            frames = self._frames
+        centers = frames
+        nframe = len(centers)
+        if nframe == 0 : return
+        sp = ''
+        # name = '%s_bond%s'%(self.label, sp)
+        # obj = bpy.data.objects.get(name)
+        base_name = 'Basis_%s'%(name)
+        if obj.data.shape_keys is None:
+            obj.shape_key_add(name = base_name)
+        elif base_name not in obj.data.shape_keys.key_blocks:
+            obj.shape_key_add(name = base_name)
+        if only_basis:
+            return
+        nvert = len(obj.data.vertices)
+        for i in range(1, nframe):
+            sk = obj.shape_key_add(name = str(i))
+            # Use the local position here
+            positions = frames[i]
+            positions = positions.reshape((nvert*3, 1))
+            sk.data.foreach_set('co', positions)
+            # Add Keyframes, the last one is different
+            if i != nframe - 1:
+                add_keyframe_to_shape_key(sk, 'value', 
+                    [0, 1, 0], [frame_start + i - 1, 
+                    frame_start + i, frame_start + i + 1])
+            else:
+                add_keyframe_to_shape_key(sk, 'value', 
+                    [0, 1], [frame_start + i - 1, frame_start + i])
 
     def __len__(self):
         return len(self.obj.data.vertices)
@@ -404,9 +449,9 @@ class BaseCollection():
 
         The displacement argument is an xyz vector.
 
-        For example, move H species molecule by a vector [0, 0, 5]
+        For example, move H2o molecule by a vector [0, 0, 5]
 
-        >>> h.translate([0, 0, 5])
+        >>> h2o.translate([0, 0, 5])
         """
         object_mode()
         bpy.ops.object.select_all(action='DESELECT')
@@ -425,14 +470,38 @@ class BaseCollection():
 
         For example, rotate h2o molecule 90 degree around 'Z' axis:
         
-        >>> h.rotate(90, 'Z')
+        >>> h2o.rotate(90, 'Z')
 
         """
         object_mode()
         bpy.ops.object.select_all(action='DESELECT')
         self.obj.select_set(True)
+        angle = angle/180.0*np.pi
         bpy.ops.transform.rotate(value=angle, orient_axis=axis.upper(), 
                         orient_type = orient_type)    
+    
+    def mirror(self, axis = 'Z', orient_type = 'GLOBAL'):
+        """mirror atomic based on a axis.
+
+        Parameters:
+
+        angle: float
+            Angle that the atoms is mirrord around the axis.
+        axis: str
+            Constraint Axis: 'X', 'Y' or 'Z'.
+
+        For example, mirror h2o using 'YZ' plane:
+        
+        >>> h2o.mirror('X')
+
+        """
+        object_mode()
+        bpy.ops.object.select_all(action='DESELECT')
+        self.obj.select_set(True)
+        constraint_axis = [False, False, False]
+        constraint_axis['XYZ'.index(axis.upper())] = True
+        bpy.ops.transform.mirror(constraint_axis = constraint_axis,
+                        orient_type = orient_type)
 
 
 def tuple2string(index):
@@ -588,3 +657,9 @@ class Setting():
                 b.name)
         s += '-'*60 + '\n'
         return s
+    
+    def delete_obj(self, name):
+        if name in bpy.data.objects:
+            obj = bpy.data.objects.get(name)
+            bpy.data.objects.remove(obj, do_unlink = True)
+    

@@ -3,6 +3,8 @@
 This module defines the Batoms object in the batoms package.
 
 """
+from turtle import position
+from pandas import array
 import bpy
 import bmesh
 from batoms.batom import Batom
@@ -175,6 +177,7 @@ class Batoms(BaseCollection, ObjectGN):
         self._polyhedras = None
         self._boundary = None
         show_index()
+        self.hideOneLevel()
     
     def set_collection(self, label, boundary = [0, 0, 0]):
         """
@@ -190,7 +193,11 @@ class Batoms(BaseCollection, ObjectGN):
         coll.batoms.flag = True
         coll.batoms.label = label
         coll.batoms.boundary = boundary
-        
+    
+    def hideOneLevel(self):
+        from batoms.butils import hideOneLevel
+        hideOneLevel()
+
     def build_object(self, label, positions, location = [0, 0, 0]):
         """
         build child object and add it to main objects.
@@ -292,7 +299,7 @@ class Batoms(BaseCollection, ObjectGN):
                         'ShaderNodeVectorMath')
             tmp.operation = 'DOT_PRODUCT'
             VectorDot.append(tmp)
-            tmp.inputs[1].default_value = matrix[i]
+            tmp.inputs[1].default_value = matrix[:, i]
             gn.node_group.links.new(vectorNode.outputs[0], tmp.inputs[0])
             gn.node_group.links.new(tmp.outputs['Value'], CombineXYZ.inputs[i])
         return CombineXYZ
@@ -814,52 +821,13 @@ class Batoms(BaseCollection, ObjectGN):
                     self.constrainatom += [i]
     
     def set_frames(self, frames = None, frame_start = 0, only_basis = False):
-        """
-
-        frames: list
-            list of positions
-        
-        >>> from batoms import Batom
-        >>> import numpy as np
-        >>> positions = np.array([[0, 0 ,0], [1.52, 0, 0]])
-        >>> h = Batom('h2o', 'H', positions)
-        >>> frames = []
-        >>> for i in range(10):
-                frames.append(positions + [0, 0, i])
-        >>> h.set_frames(frames)
-        
-        use shape_keys (faster)
-        """
-        from batoms.butils import add_keyframe_to_shape_key
-        bpy.context.view_layer.update()
         if frames is None:
             frames = self._frames
         nframe = len(frames)
         if nframe == 0 : return
+        name = self.label
         obj = self.obj
-        base_name = 'Basis_%s'%self.label
-        if obj.data.shape_keys is None:
-            obj.shape_key_add(name = base_name)
-        elif base_name not in obj.data.shape_keys.key_blocks:
-            obj.shape_key_add(name = base_name)
-        if only_basis:
-            return
-        nvert = len(obj.data.vertices)
-        for i in range(1, nframe):
-            sk = obj.data.shape_keys.key_blocks.get(str(i))
-            if sk is None:
-                sk = obj.shape_key_add(name = str(i))
-            # Use the local position here
-            positions = frames[i].reshape((nvert*3, 1))
-            sk.data.foreach_set('co', positions)
-            # Add Keyframes, the last one is different
-            if i != nframe - 1:
-                add_keyframe_to_shape_key(sk, 'value', 
-                    [0, 1, 0], [frame_start + i - 1, 
-                    frame_start + i, frame_start + i + 1])
-            else:
-                add_keyframe_to_shape_key(sk, 'value', 
-                    [0, 1], [frame_start + i - 1, frame_start + i])
+        self.set_obj_frames(name, obj, frames)
 
     def __getitem__(self, index):
         """Return a subset of the Batom.
@@ -927,6 +895,7 @@ class Batoms(BaseCollection, ObjectGN):
         self.add_vertices(positions[n:])
         self.set_attributes(attributes)
         self.cell.repeat(m)
+        self.update_gn_cell()
         # if self.volume is not None:
             # self.volume = np.tile(self.volume, m)
         # repeat frames
@@ -1195,12 +1164,14 @@ class Batoms(BaseCollection, ObjectGN):
         self.set_wrap(state)
     
     def get_wrap(self):
-        return self.attributes['wrap']
+        return list(self.coll.batoms.wrap)
     
     def set_wrap(self, wrap):
-        #
+        # 
+        self.update_gn_cell()
         if isinstance(wrap, bool):
             wrap = [wrap]*3
+        self.coll.batoms.wrap = list(wrap)
         wrap = np.array(wrap)
         if not wrap.any():
             # switch off
@@ -1214,6 +1185,27 @@ class Batoms(BaseCollection, ObjectGN):
         self.gnodes.node_group.update_tag()
         #todo: support selection
         
+    def update_gn_cell(self):
+        # update cell
+        cell = self.cell.array
+        if np.isclose(np.linalg.det(self.cell.array), 0):
+            cell = np.eye(3)
+        icell = np.linalg.inv(cell)
+        # set positions
+        gn = self.gnodes
+        for i in range(3):
+            tmp = get_nodes_by_name(gn.node_group.nodes, 
+                        '%s_VectorDot%s_%s'%(self.label, i, ''),
+                        'ShaderNodeVectorMath')
+            tmp.operation = 'DOT_PRODUCT'
+            tmp.inputs[1].default_value = cell[:, i]
+            # icell
+            tmp = get_nodes_by_name(gn.node_group.nodes, 
+                        '%s_VectorDot%s_%s'%(self.label, i, 'scaled'),
+                        'ShaderNodeVectorMath')
+            tmp.operation = 'DOT_PRODUCT'
+            tmp.inputs[1].default_value = icell[:, i]
+
     def get_spacegroup_number(self, symprec = 1e-5):
         """
         """
@@ -1453,4 +1445,46 @@ class Batoms(BaseCollection, ObjectGN):
         self.set_attribute_with_indices('scale', mask, 0.0001)
         # self.update(mask)
 
+    def as_ase(self, local = True):
+        """
+        local: bool
+            if True, use the origin of uint cell as the origin
+        """
+        from ase import Atoms
+        arrays = self.arrays
+        positions = arrays['positions']
+        if local:
+            positions -= self.cell.origin
+        atoms = Atoms(symbols = arrays['elements'], 
+                    positions = positions, 
+                    cell = self.cell, pbc = self.pbc)
+        for name, array in arrays.items():
+            if name in ['elements', 'positions']: continue
+            atoms.set_array(name, np.array(array))
+        
+        return atoms
 
+    def write(self, filename, local = True):
+        """
+        Save batoms to structure file.
+        >>> h2o.write('h2o.xyz')
+        """
+        self.as_ase(local).write(filename)
+    
+    def transform(self, matrix = None):
+        """
+        Transformation matrix
+        """
+        from ase.build.supercells import make_supercell
+        if matrix is not None:
+            rotation = np.array([matrix[0][:3], matrix[1][:3], matrix[2][:3]])
+            translation = np.array([matrix[0][3], matrix[1][3], matrix[2][3]])
+            atoms = self.as_ase()
+            atoms = make_supercell(atoms, rotation)
+            batoms = self.__class__(label = '%s_transform'%self.label, from_ase = atoms,
+                                    model_style = self.model_style)
+        else:
+            return
+        batoms.translate(translation)
+        # self.hide = True
+        return batoms

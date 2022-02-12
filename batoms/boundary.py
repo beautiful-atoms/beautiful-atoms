@@ -270,7 +270,7 @@ class Boundary(ObjectGN):
     
     def __init__(self, 
                 label = None,
-                boundary = np.array([[-0.4, 1.4], [-0.4, 1.4], [-0.4, 1.4]]),
+                boundary = np.array([[-0.01, 1.01], [-0.01, 1.01], [-0.01, 1.01]]),
                 boundary_datas = None,
                 batoms = None,
                  ):
@@ -278,12 +278,12 @@ class Boundary(ObjectGN):
         self.batoms = batoms
         self.label = label
         name = 'boundary'
-        self.boundary = boundary
         ObjectGN.__init__(self, label, name)
         if boundary_datas is not None:
             self.build_object(boundary_datas)
         else:
             self.load(label)
+        self.boundary = boundary
 
     def build_object(self, boundary_datas, location = (0, 0, 0), attributes = {}):
         """
@@ -291,15 +291,15 @@ class Boundary(ObjectGN):
         """
         tstart = time()
         if len(boundary_datas['centers'].shape) == 2:
-            self._frames = (np.array([boundary_datas['centers']]), 
-                            np.array([boundary_datas['offsets']]),
-                            )
+            self._frames = {'centers': np.array([boundary_datas['centers']]),
+                            'offsets': np.array([boundary_datas['offsets']]),
+                        }
             centers = boundary_datas['centers']
             offsets = boundary_datas['offsets']
         elif len(boundary_datas['centers'].shape) == 3:
-            self._frames = (boundary_datas['centers'], 
-                            boundary_datas['offsets'], 
-                            )
+            self._frames = {'centers': boundary_datas['centers'],
+                            'offsets': boundary_datas['offsets'],
+                            }
             centers = boundary_datas['centers'][0]
             offsets = boundary_datas['offsets'][0]
         else:
@@ -520,6 +520,36 @@ class Boundary(ObjectGN):
         if obj_o is None:
             raise KeyError('%s object is not exist.'%name)
         return obj_o
+    
+    @property    
+    def boundary(self):
+        return self.get_boundary()
+    
+    @boundary.setter    
+    def boundary(self, boundary):
+        if boundary is not None:
+            if isinstance(boundary, (int, float)):
+                boundary = np.array([-boundary, 1 + boundary]*3)
+            elif len(boundary) == 3:
+                if isinstance(boundary[0], (int, float)):
+                    boundary = np.array([[-boundary[0], 1 + boundary[0]],
+                                      [-boundary[1], 1 + boundary[1]],
+                                      [-boundary[2], 1 + boundary[2]]])
+                elif len(boundary[0]) == 2:
+                    boundary = np.array(boundary)
+            else:
+                raise Exception('Wrong boundary setting!')
+            self.batoms.coll.batoms.boundary = boundary[:].flatten()
+        self.update()
+        # if self.model_type == 1:
+        #     self.draw_bonds()
+        # if self.model_type == 2:
+        #     self.draw_bonds()
+        #     self.draw_polyhedras()
+    
+    def get_boundary(self):
+        boundary = np.array(self.batoms.coll.batoms.boundary)
+        return boundary.reshape(3, -1)
 
     def set_arrays(self, arrays):
         """
@@ -529,9 +559,8 @@ class Boundary(ObjectGN):
         attributes = self.attributes
         # same length
         if len(arrays['centers']) == len(attributes['show']):
-            self.set_positions(arrays['centers'],
-                               arrays['offsets'],
-                                )
+            self.positions = arrays['centers']
+            self.offsets = arrays['offsets']
             species_index = [string2Number(sp) for sp in arrays['species']]
             self.set_attributes({'species_index': species_index})
         else:
@@ -565,6 +594,40 @@ class Boundary(ObjectGN):
         return arrays
     
     @property
+    def offsets(self):
+        return self.get_offsets()
+    
+    def get_offsets(self):
+        """
+        using foreach_get and foreach_set to improve performance.
+        """
+        n = len(self)
+        offsets = np.empty(n*3, dtype=np.float64)
+        self.obj_o.data.vertices.foreach_get('co', offsets)  
+        return offsets.reshape((n, 3))
+    
+    @offsets.setter
+    def offsets(self, offsets):
+        self.set_offsets(offsets)
+    
+    def set_offsets(self, offsets):
+        """
+        Set global offsets to local vertices
+        """
+        object_mode()
+        from batoms.tools import local2global
+        n = len(self.obj_o.data.vertices)
+        if len(offsets) != n:
+            raise ValueError('offsets has wrong shape %s != %s.' %
+                                (len(offsets), n))
+        offsets = offsets.reshape((n*3, 1))
+        self.obj_o.data.shape_keys.key_blocks[0].data.foreach_set('co', offsets)
+        self.obj_o.data.update()
+        bpy.context.view_layer.objects.active = self.obj_o
+        bpy.ops.object.mode_set(mode = 'EDIT')
+        bpy.ops.object.mode_set(mode = 'OBJECT')
+
+    @property
     def frames(self):
         return self.get_frames()
     
@@ -592,53 +655,17 @@ class Boundary(ObjectGN):
         return frames
     
     def set_frames(self, frames = None, frame_start = 0, only_basis = False):
-        """
-
-        frames: list
-            list of positions
-        
-        >>> from batoms import Batom
-        >>> import numpy as np
-        >>> positions = np.array([[0, 0 ,0], [1.52, 0, 0]])
-        >>> h = Batom('h2o', 'H', positions)
-        >>> frames = []
-        >>> for i in range(10):
-                frames.append(positions + [0, 0, i])
-        >>> h.set_frames(frames)
-        
-        use shape_keys (faster)
-        """
-        from batoms.butils import add_keyframe_to_shape_key
-        bpy.context.view_layer.update()
         if frames is None:
             frames = self._frames
         nframe = len(frames)
         if nframe == 0 : return
+        name = '%s_bond'%(self.label)
         obj = self.obj
-        base_name = 'Basis_%s'%self.label
-        if obj.data.shape_keys is None:
-            obj.shape_key_add(name = base_name)
-        elif base_name not in obj.data.shape_keys.key_blocks:
-            obj.shape_key_add(name = base_name)
-        if only_basis:
-            return
-        nvert = len(obj.data.vertices)
-        for i in range(1, nframe):
-            sk = obj.data.shape_keys.key_blocks.get(str(i))
-            if sk is None:
-                sk = obj.shape_key_add(name = str(i))
-            # Use the local position here
-            positions = frames[i].reshape((nvert*3, 1))
-            sk.data.foreach_set('co', positions)
-            # Add Keyframes, the last one is different
-            if i != nframe - 1:
-                add_keyframe_to_shape_key(sk, 'value', 
-                    [0, 1, 0], [frame_start + i - 1, 
-                    frame_start + i, frame_start + i + 1])
-            else:
-                add_keyframe_to_shape_key(sk, 'value', 
-                    [0, 1], [frame_start + i - 1, frame_start + i])
-
+        self.set_obj_frames(name, obj, frames['centers'])
+        #
+        name = '%s_bond_offset'%(self.label)
+        obj = self.obj_o
+        self.set_obj_frames(name, obj, frames['offsets'])
 
     def calc_boundary_data(self, boundary_lists, arrays, cell):
         """

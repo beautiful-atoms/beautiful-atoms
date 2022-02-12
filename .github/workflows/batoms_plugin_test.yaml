@@ -1,0 +1,60 @@
+# Test the batoms plugin using test
+name: Test batoms blender plugin
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  basic:
+    defaults:
+      run:
+        shell: bash
+    runs-on: ubuntu-latest
+    container:
+      # Consider change to matrix versions
+      image: luciusm/blender_env:3.0
+      # Will need pytest installation
+      options: --user root
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install test dependencies
+      run: |
+        $BLENDERPY -m pip install pytest flake8
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    - name: Copy addons to blender
+      run: |
+        ls -al .
+    # - name: Get Tag
+    #   uses: olegtarasov/get-tag@v2
+    #   id: tagName
+    #   with:
+    #       tagRegex: "foobar-(.*)"  # Optional. Returns specified group text as tag name. Full tag string is returned if regex is not defined.
+    #       tagRegexGroup: 1 # Optional. Default is 1.
+    # - name: Set Tag # Output usage example
+    #   run: |
+    #       echo "${{ steps.tagName.outputs.tag }}"
+    #       tag="${{ steps.tagName.outputs.tag }}"
+    #       echo "GIT_TAG=$tag" >> $GITHUB_ENV
+    #   shell: bash
+    # - name: Test tag
+    #   run: |
+    #     echo "${{ env.GIT_TAG }}"
+    #   shell: bash
+    # - name: Test encoding
+    #   run: |
+    #     python -c "import sys; print(sys.getdefaultencoding())"
+    # - name: Testing examples
+    #   run: |
+    #     make examples
+    #     pytest examples
+    #   shell: bash

@@ -213,6 +213,7 @@ class Ribbon():
         bevel_control.hide_set(True)
         bevel_control.hide_render = True
         bevel_control.data.name = bevel_control.name = '%s_turn_bevel'%self.label
+        self.coll.objects.link(bevel_control)
         for name, turn in self.protein.turns.items():
             draw_rope_from_vertices_nurbs('turn-%s'%name, turn.as_dict(), 
                     self.coll, bevel_control = bevel_control)
