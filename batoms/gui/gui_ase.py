@@ -104,7 +104,7 @@ class AddSurface(Operator):
         if len(selected_batoms) != 1:
             raise Exception('Please select one structure')
         batoms = Batoms(selected_batoms[0])
-        bulk = batoms.atoms
+        bulk = batoms.as_ase()
         if len(asepanel.termination) == 0:
             atoms = surface(bulk, asepanel.indices, asepanel.nlayer, asepanel.vacuum)
         else:

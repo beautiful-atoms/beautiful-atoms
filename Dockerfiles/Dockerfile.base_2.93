@@ -1,7 +1,8 @@
+# Base image
 # Dockerfile adapted from https://github.com/nytimes/rd-blender-docker
 # use nvidia cuda image, but also cpu-compatible
 
-FROM nytimes/blender:3.0-gpu-ubuntu18.04
+FROM nytimes/blender:2.93-gpu-ubuntu18.04
 
 
 # Enviorment variables
@@ -28,14 +29,14 @@ RUN wget --quiet https://repo.continuum.io/miniconda/Miniconda3-py39_${MINICONDA
     conda clean --all -f -y
 
 # Install conda dependencies. Consider using env.yaml instead
-RUN conda install python=3.9.7 \
+RUN conda install python=3.9.1 \
                   pymatgen>=2020.12 \
                   ase>=3.21.0 \
                   scikit-image \
                   spglib
 
 # Archive as-shipped blender python
-RUN mv ${BLENDER_PATH}/python ${BLENDER_PATH}/_python && \
+RUN rm -rf ${BLENDER_PATH}/python && \
         ln -s ${CONDA_DIR} ${BLENDER_PATH}/python
 
 # Set the working directory

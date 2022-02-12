@@ -286,9 +286,7 @@ class Bspecies(Setting):
             segments = [6, 6]
         if self.segments:
             segments = self.segments
-        if name in bpy.data.objects:
-            obj = bpy.data.objects.get(name)
-            bpy.data.objects.remove(obj, do_unlink = True)
+        self.delete_obj(name)
         if shape.upper() == 'UV_SPHERE':
             bpy.ops.mesh.primitive_uv_sphere_add(segments = segments[0], 
                                 ring_count = segments[1], 
@@ -307,6 +305,7 @@ class Bspecies(Setting):
         obj.data.name = name
         obj.batoms.batom.radius = radius
         #
+        obj.users_collection[0].objects.unlink(obj)
         self.coll.children['%s_instancer'%self.coll_name].objects.link(obj)
         if shade_smooth:
             bpy.ops.object.shade_smooth()

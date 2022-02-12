@@ -218,6 +218,7 @@ class BondSettings(Setting):
         obj.data.name = name
         obj.batoms.batom.radius = radius
         #
+        obj.users_collection[0].objects.unlink(obj)
         self.batoms.coll.children['%s_instancer'%self.label].objects.link(obj)
         # bpy.data.scenes['Scene'].objects.unlink(bb.obj)
         if shade_smooth:

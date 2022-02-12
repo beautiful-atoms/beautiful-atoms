@@ -256,3 +256,14 @@ def update_object(obj):
     bpy.ops.object.mode_set(mode = 'EDIT')
     bpy.ops.object.mode_set(mode = 'OBJECT')
     bpy.ops.object.mode_set(mode = mode)
+
+def hideOneLevel():
+    screen = bpy.context.screen
+    outliners = [a for a in screen.areas if a.type == 'OUTLINER']
+    c = bpy.context.copy()
+    for ol in outliners:
+        c["area"] = ol
+        ol.tag_redraw()
+        bpy.ops.outliner.show_one_level(c, open=False)
+        ol.tag_redraw()
+        print(ol)
