@@ -1,7 +1,7 @@
 # Base image for the blender environment. Used for CD/CI test and debug
 # Dockerfile adapted from https://github.com/nytimes/rd-blender-docker
 # To build the Docker image, create the build from root directory:
-# docker build . -f Dockerfiles/Dockerfile.base_2.93 -t luciusm/blender-env:2.93
+# docker build . -f Dockerfiles/Dockerfile.base_2.93 -t luciusm/blender_env:2.93
 
 FROM nytimes/blender:2.93-gpu-ubuntu18.04
 
