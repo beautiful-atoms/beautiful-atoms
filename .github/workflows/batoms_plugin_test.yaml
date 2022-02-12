@@ -28,7 +28,7 @@ jobs:
         cp -r batoms $BLENDER_PATH/scripts/addons_contrib/
     - name: Enable blender addons
       run: |
-        blender -b --python-expr "import addon_utils; addon_utils.enable('batoms', default_set=True)"
+        blender -b --python-expr "import addon_utils; addon_utils.enable('batoms', default_set=True); print('success')"
     - name: Test import
       run: |
         blender -b --python-expr "from batoms import Batoms; b = Batoms('o', {'O': [[0, 0, 0]]}); print('success')"
