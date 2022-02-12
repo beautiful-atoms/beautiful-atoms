@@ -1,5 +1,8 @@
 name: build_blend_env_image
 
+env:
+  image_name: blender_env
+
 on:
   push:
     paths:
@@ -38,8 +41,8 @@ jobs:
           context: ./
           file: ./Dockerfiles/Dockerfile.base_${{ matrix.blender-version }}
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/blender_env:${{ matrix.blender-version }}
-          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/blender_env:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/blender_env:buildcache,mode=max
-#           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/blender_env:${{ matrix.blender-version }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:${{ matrix.blender-version }}
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:buildcache,mode=max
+#           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:${{ matrix.blender-version }}
 #           cache-to: type=inline
