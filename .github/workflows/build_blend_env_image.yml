@@ -39,5 +39,7 @@ jobs:
           file: ./Dockerfiles/Dockerfile.base_${{ matrix.blender-version }}
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/blender_env:${{ matrix.blender-version }}
-          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/blender_env:${{ matrix.blender-version }}
-          cache-to: type=inline
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/blender_env:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/blender_env:buildcache,mode=max
+#           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/blender_env:${{ matrix.blender-version }}
+#           cache-to: type=inline
