@@ -39,5 +39,5 @@ jobs:
           file: ./Dockerfiles/Dockerfile.base_${{ matrix.blender-version }}
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/blender_env:${{ matrix.blender-version }}
-          #cache-from: type=registry,ref=ulissigroup/vasp:cache
-          #cache-to: type=registry,mode=max,ref=ulissigroup/vasp:cache,push=true
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/blender_env:${{ matrix.blender-version }}
+          cache-to: type=inline
