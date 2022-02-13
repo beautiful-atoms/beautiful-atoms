@@ -40,7 +40,7 @@ jobs:
         with:
           context: ./
           file: ./Dockerfiles/Dockerfile.main
-          build-args: BLENDER_VER=3.0
+          build-args: BLENDER_VER=${{ matrix.blender-version }}
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:blender${{ matrix.blender-version }}
           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:buildcache
