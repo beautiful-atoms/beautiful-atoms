@@ -1,5 +1,6 @@
 """
 """
+from dis import dis
 from turtle import position
 import numpy as np
 from time import time
@@ -16,51 +17,9 @@ def RemovePbc(species0, positions0, cell, pbc, cutoffs):
             cell, pbc, boundary, include_self = True)
     return array
 
-def neighbor_kdtree_boundary(quantities, array1, array2, cell, 
+def bondlist_kdtree(quantities, species0, positions0, cell, pbc,
                     cutoffs, self_interaction=False):
     """
-    wrap to pbc structure with boundary
-
-    """
-    i, j, distances = neighbor_kdtree('ijd', 
-            array1, array2, cell, cutoffs)
-    offsets_i = array1['offsets'][i]
-    offsets_j = array2['offsets'][j]
-    i = array1['indices'][i]
-    j = array2['indices'][j]
-    # Remove all self-interaction.
-    if not self_interaction:
-        mask = np.where((i == j) & \
-                ((offsets_i == offsets_j).all(axis = 1)), 
-                False, True)
-        # print(mask)
-        i = i[mask]
-        j = j[mask]
-        distances = distances[mask]
-        offsets_i = offsets_i[mask]
-        offsets_j = offsets_j[mask]
-    retvals = []
-    for q in quantities:
-        if q == 'i':
-            retvals += [i]
-        elif q == 'j':
-            retvals += [j]
-        elif q == 'd':
-            retvals += [distances]
-        elif q == 'S':
-            retvals += [offsets_i, offsets_j]
-        else:
-            raise ValueError('Unsupported quantity specified.')
-    if len(retvals) == 1:
-        return retvals[0]
-    else:
-        return tuple(retvals)
-
-def neighbor_kdtree_pbc(quantities, species0, positions0, cell, pbc,
-                    cutoffs, self_interaction=False):
-    """
-    wrap to pbc structure
-
     """
     natom = len(positions0)
     # orignal atoms
@@ -72,20 +31,21 @@ def neighbor_kdtree_pbc(quantities, species0, positions0, cell, pbc,
             }
     # atoms added with boundary
     array2 = RemovePbc(species0, positions0, cell, pbc, cutoffs)
-    # i, j, d, offsets_i, offsets_j = neighbor_kdtree('ijdS', 
-            # array1, array2, cell, cutoffs2)
-    i, j, distances = neighbor_kdtree('ijd', 
-            array1, array2, cell, cutoffs)
-    """
-    # remove bothways for same species, e.g. ('C', 'C')
-    mask = np.where((array1['species'][i] == array2['species'][j]) &
-        (i > j) & ((array1['offsets'][i] == array2['offsets'][j]).all(axis = 1)), False, True)
-    i = i[mask]
-    j = j[mask]
-    distances = distances[mask]
-    """
+    bonddatas = primitive_neighbor_kdtree(array1, array2, cutoffs)
+    # build bondlist
+    i = []
+    j = []
+    for pair, data in bonddatas.items():
+        for i1, j1 in data.items():
+            n = len(j1)
+            i.extend([i1]*n)
+            j.extend(j1)
+    # offsets
     offsets_i = array1['offsets'][i]
     offsets_j = array2['offsets'][j]
+    distance_vector = array1['positions'][i] - array2['positions'][j]
+    distances = np.sqrt(np.sum(distance_vector*distance_vector, axis = 1))
+    #
     i = array1['indices'][i]
     j = array2['indices'][j]
     # Remove all self-interaction.
@@ -99,6 +59,7 @@ def neighbor_kdtree_pbc(quantities, species0, positions0, cell, pbc,
         distances = distances[mask]
         offsets_i = offsets_i[mask]
         offsets_j = offsets_j[mask]
+    #
     retvals = []
     for q in quantities:
         if q == 'i':
@@ -116,116 +77,69 @@ def neighbor_kdtree_pbc(quantities, species0, positions0, cell, pbc,
     else:
         return tuple(retvals)
 
-def neighbor_kdtree(quantities, array1, array2, cell,
+def neighbor_kdtree(species0, positions0, cell, pbc,
                     cutoffs, self_interaction=False):
     """
+    wrap to pbc structure
+
+    """
+    natom = len(positions0)
+    # orignal atoms
+    array1 = {
+            'positions': positions0,
+            'species': species0,
+            'indices': np.arange(natom),
+            'offsets': np.zeros((natom, 3)),
+            }
+    # atoms added with boundary
+    array2 = RemovePbc(species0, positions0, cell, pbc, cutoffs)
+    bonddatas = primitive_neighbor_kdtree(array1, array2, cutoffs)
+    # bondlists = neighbor_kdtree(quantities, 
+            # array1, array2, cutoffs, self_interaction)
+    return bonddatas
+
+def primitive_neighbor_kdtree(array1, array2,
+                    cutoffs, parallel = 1):
+    """
+    non pbc
     build bond lists between atoms1 and atoms2. 
     atoms1 and atoms2 could be the same, in this case, non-pbc
     in pbc case, atoms2 is atoms1 + boundary atoms
     """
+    from scipy.spatial import KDTree
     tstart = time()
-    # print('build boundary: {:1.2f}'.format(time() - tstart1))
-    #
-    i = []
-    j = []
-    i_b = []
-    j_b = []
-    # positions_b = np.dot(scaled_positions_b, cell)
+    bonddatas = {}
     for pair, cutoff in cutoffs.items():
+        bonddatas[pair] = {}
         indices_i = np.where(array1['species'] == pair[0])[0]
         indices_j = np.where(array2['species'] == pair[1])[0]
         if len(indices_i) == 0 or len(indices_j) == 0: continue
         indices_min = None
-        # qurey the less one is faster, flip is needed
-        flip = False
-        if len(indices_i) > len(indices_j):
-            flip = True
-            tmp = indices_i
-            indices_i = indices_j
-            indices_j = tmp
+        # qurey the smaller array is faster, flip is needed
         p1 = array1['positions'][indices_i]
         p2 = array2['positions'][indices_j]
         # find max
-        indices_max = primitive_neighbor_kdtree(p1, 
-            p2, cutoff = cutoff[1], parallel = 1)
+        tree = KDTree(p2)
+        indices_max = tree.query_ball_point(p1, r = cutoff[1], workers=parallel)
         # find min
         if cutoff[0] > 1e-6:
-            indices_min = primitive_neighbor_kdtree(p1, 
-                p2, cutoff = cutoff[0], parallel = 1)
+            indices_min = tree.query_ball_point(p1, r = cutoff[0], workers=parallel)
         #
         n = len(p1)
-        j1 = []
-        i1 = []
         if indices_min is not None:
             for k in range(n):
-                indices_mid = set(indices_max[k]) - set(indices_min[k])
-                m = len(indices_mid)
-                if m ==0: continue
-                i1.extend([indices_i[k]]*m)
-                j1.extend(indices_j[indices_mid])
+                indices_max[k] = set(indices_max[k]) - set(indices_min[k])
+                m = len(indices_max[k])
+                if m == 0: continue
+                bonddatas[pair][indices_i[k]] = indices_j[indices_max[k]]
         else:
             for k in range(n):
-                # offsets1 = offsets[indices[k]]
                 m = len(indices_max[k])
-                i1.extend([indices_i[k]]*m)
-                j1.extend(indices_j[indices_max[k]])
-        # map indices to original atoms, and the boudary atoms
-        if flip:
-            tmp = j1
-            j1 = i1
-            i1 = tmp
-        i_b.extend(i1)
-        j_b.extend(j1)
-        """
-        i.extend(indices[i1])
-        j.extend(indices[j1])
-        """
-    # Compute distance vectors.
-    # print(indices3[i1][:, 0])
-    tstart1 = time()
-    distance_vector = array1['positions'][i_b] - array2['positions'][j_b]
-    # distance_vectors.append(distance_vector)
-    distances = np.sqrt(np.sum(distance_vector*distance_vector, axis = 1))
-    """
-    offsets_i = offsets[i_b]
-    offsets_j = offsets[j_b]
-    """
-    # print('Build distances: {:1.2f}'.format(time() - tstart))
-    #=====================================
-    retvals = []
-    for q in quantities:
-        if q == 'i':
-            retvals += [i_b]
-        elif q == 'j':
-            retvals += [j_b]
-        elif q == 'D':
-            retvals += [distance_vector]
-        elif q == 'd':
-            retvals += [distances]
-        
-        else:
-            raise ValueError('Unsupported quantity specified.')
-        """
-        elif q == 'S':
-            retvals += [offsets_i, offsets_j]
-        """
+                if m == 0: continue
+                bonddatas[pair][indices_i[k]] = indices_j[indices_max[k]]
     print('Build bondlist: {:1.2f}'.format(time() - tstart))
-    if len(retvals) == 1:
-        return retvals[0]
-    else:
-        return tuple(retvals)
-
-def primitive_neighbor_kdtree(positions1, positions2, 
-                cutoff = 1.0, parallel = 2):
-    """
-    """
-    from scipy.spatial import KDTree
-    #
-    tstart = time()
-    tree = KDTree(positions2)
-    indices = tree.query_ball_point(positions1, r = cutoff, workers=parallel)
-    # print('KDTree: {:1.2f}'.format(time() - tstart))
-    return indices
+    # print(bonddatas)
+    return bonddatas
 
 def cellPlanes(cell, origin = np.array([0, 0, 0])):
     """
@@ -295,7 +209,7 @@ def build_boundary(species, positions, cell, pbc, boundary, include_self = False
     # init
     # repeat the scaled_positions so that it completely covers the boundary
     positions_b = np.zeros((27*nb, 3))
-    offsets_b = np.zeros((27*nb, 3), dtype=int)
+    offsets_b = np.zeros((27*nb, 3))
     indices_b = np.zeros(27*nb, dtype=int)
     species_b = np.zeros(27*nb, dtype = 'U20')
     # build face
@@ -367,7 +281,8 @@ def test_kdtree(atoms, cutoffs1, cutoffs2):
     cell = atoms.get_cell(complete=True)
     species0 = np.array(atoms.get_chemical_symbols())
     positions0 = atoms.positions
-    i, j, d, offsets_i, offsets_j = neighbor_kdtree_pbc('ijdS', 
+    print(species0)
+    i, j, d, offsets_i, offsets_j = bondlist_kdtree('ijdS', 
             species0, positions0, cell, atoms.pbc, cutoffs2)
     # i, j, d = neighbor_kdtree('ijd', 
             # array1, array2, cell, cutoffs2)
