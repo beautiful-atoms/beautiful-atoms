@@ -285,24 +285,6 @@ class Batoms(BaseCollection, ObjectGN):
         PositionsNode = self.vectorDotMatrix(gn, VectorWrap, cell, '')
         gn.node_group.links.new(PositionsNode.outputs[0], SetPosition.inputs['Position'])
         self.wrap = self.pbc
-    def vectorDotMatrix(self, gn, vectorNode, matrix, name):
-        """
-        """
-        CombineXYZ = get_nodes_by_name(gn.node_group.nodes,
-                        '%s_CombineXYZ_%s'%(self.label, name),
-                        'ShaderNodeCombineXYZ')
-        #
-        VectorDot = []
-        for i in range(3):
-            tmp = get_nodes_by_name(gn.node_group.nodes, 
-                        '%s_VectorDot%s_%s'%(self.label, i, name),
-                        'ShaderNodeVectorMath')
-            tmp.operation = 'DOT_PRODUCT'
-            VectorDot.append(tmp)
-            tmp.inputs[1].default_value = matrix[:, i]
-            gn.node_group.links.new(vectorNode.outputs[0], tmp.inputs[0])
-            gn.node_group.links.new(tmp.outputs['Value'], CombineXYZ.inputs[i])
-        return CombineXYZ
         
     def add_geometry_node(self, spname, selname):
         """
@@ -1315,6 +1297,33 @@ class Batoms(BaseCollection, ObjectGN):
             elif len(boundary[0]) == 2:
                 boundary = np.array(boundary)
         self.boundary[:] = boundary
+
+    def get_arrays_with_boundary(self):
+        """
+        get arrays with boundary atoms
+        """
+        arrays = self.arrays
+        natom = len(arrays['positions'])
+        arrays_b = None
+        if self._boundary is not None:
+            # arrays_b = {
+            #         'indices': np.arange(natom),
+            #         'species': arrays['species'],
+            #         'positions': arrays['positions'],
+            #         'offsets': np.zeros((natom, 3)),
+            #         }
+            arrays_b = self.boundary.boundary_data
+            # arrays_b['positions'] = np.append(arrays_b['positions'], 
+            #             boundary_data['positions'], axis = 0)
+            # arrays_b['indices'] = np.append(arrays_b['indices'], 
+            #             boundary_data['indices'])
+            # arrays_b['species'] = np.append(arrays_b['species'], 
+            #             boundary_data['species'])
+            # arrays_b['offsets'] = np.append(arrays_b['offsets'], 
+            #             boundary_data['offsets'], axis = 0)
+        else:
+            arrays_b = None
+        return arrays_b
 
     @property
     def render(self):
