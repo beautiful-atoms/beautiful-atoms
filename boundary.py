@@ -466,8 +466,8 @@ class Boundary(ObjectGN):
             else:
                 boundary_lists = np.append(boundary_lists, boundary_list, axis = 0)
         boundary_datas = self.calc_boundary_data(boundary_lists, arrays, self.batoms.cell)
-        if len(boundary_datas) == 0:
-            return
+        # if len(boundary_datas) == 0:
+            # return
         self.set_arrays(boundary_datas)
         self.batoms.draw()
         # self.coll.objects.link(bb.obj)
@@ -520,8 +520,8 @@ class Boundary(ObjectGN):
     def set_arrays(self, arrays):
         """
         """
-        if len(arrays['positions']) == 0:
-            return
+        # if len(arrays['positions']) == 0:
+            # return
         attributes = self.attributes
         # same length
         if len(arrays['positions']) == len(attributes['show']):
