@@ -293,6 +293,7 @@ class Polyhedras(ObjectGN):
         frames = self.batoms.get_frames()
         arrays = self.batoms.arrays
         show = arrays['show']
+        species = arrays['species']
         # frames_boundary = self.batoms.get_frames(self.batoms.batoms_boundary)
         # frames_search = self.batoms.get_frames(self.batoms.batoms_search)
         nframe = len(frames)
@@ -307,11 +308,11 @@ class Polyhedras(ObjectGN):
             # if len(frames_search) > 0:
             #     positions_search = frames_search[f]
             #     positions = positions + positions_search
-            bondlist = self.bondlists
-            if len(bondlist['positions']) == 0:
-                self.batoms.bonds.update_bonds()
-                bondlist = self.batoms.bonds.arrays
-            polyhedra_kinds = self.calc_polyhedra_data(bondlist, positions, self.batoms.cell)
+            bondlists = self.bondlists
+            if len(bondlists) == 0:
+                self.batoms.bonds.update()
+                bondlists = self.batoms.bonds.bondlists
+            polyhedra_kinds = self.calc_polyhedra_data(bondlists, species, positions)
             if f == 0:
                 polyhedra_datas = polyhedra_kinds
             
@@ -364,7 +365,7 @@ class Polyhedras(ObjectGN):
     
     def get_bondlists(self):
         try:
-            bondlists = self.batoms.bonds.arrays
+            bondlists = self.batoms.bonds.bondlists
         except:
             bondlists = None
         return bondlists
@@ -377,7 +378,7 @@ class Polyhedras(ObjectGN):
         attributes = self.attributes
         # same length
         if len(arrays['vertices']) == len(attributes['show']):
-            self.positions = arrays['centers']
+            self.positions = arrays['vertices']
             self.offsets = arrays['offsets']
             self.set_attributes({'atoms_index1': arrays['atoms_index1']})
             self.set_attributes({'atoms_index2': arrays['atoms_index2']})
@@ -473,7 +474,7 @@ class Polyhedras(ObjectGN):
         positions[index] = value
         self.set_positions(positions)
 
-    def calc_polyhedra_data(self, bondlists, positions, cell):
+    def calc_polyhedra_data(self, bondlists, species, positions):
         """
         """
         from ase.data import chemical_symbols
@@ -482,12 +483,8 @@ class Polyhedras(ObjectGN):
 
         tstart = time()
         chemical_symbols = np.array(chemical_symbols)
-        # total 
-        npoly = 0
-        for b in self.setting:
-            sp = string2Number(b.species)
-            ind = np.where(bondlists['species_index1'] == sp)[0]
-            npoly += len(ind)
+        # maxinum number of poly 
+        npoly = len(bondlists)
         if npoly == 0:
             return default_polyhedra_datas
         # properties
@@ -499,8 +496,12 @@ class Polyhedras(ObjectGN):
         widths = np.ones(npoly, dtype = float) 
         species_index = np.zeros(npoly, dtype = int)
         #------------------------------------
-        offsets0 = bondlists['offsets']
-        positions0 = positions[bondlists['atoms_index2']] + offsets0
+        offsets10 = bondlists[:, 2:5]
+        offsets20 = bondlists[:, 5:8]
+        indices10 = bondlists[:, 0].astype(int)
+        indices20 = bondlists[:, 1].astype(int)
+        positions10 = positions[indices10] + offsets10
+        positions20 = positions[indices20] + offsets20
         #---------------------------------------------
         vertices = []
         offsets = []
@@ -508,22 +509,23 @@ class Polyhedras(ObjectGN):
         faces = []
         nv = 0
         nf = 0
+        speciesarray = species[indices10]
         for poly in self.setting:
-            sp = string2Number(poly.species)
-            # loop center atoms
-            spis = np.where(bondlists['species_index1'] == sp)[0]
-            indices1 = bondlists['atoms_index1'][spis]
-            argsort = indices1.argsort()
-            indices1 = indices1[argsort]
-            indices2 = bondlists['atoms_index2'][spis][argsort]
-            positions1 = positions0[spis][argsort]
-            offsets1 = offsets0[spis][argsort]
-            u, indices = np.unique(indices1, return_index=True)
+            # find center atoms == species
+            spis = np.where(speciesarray == poly.species)[0]
+            indices1 = indices10[spis]
+            bondlist1 = bondlists[spis]
+            # center atoms is define by i and the offset
+            atom_centers = bondlist1[:, [0, 2, 3, 4]]
+            positions21 = positions20[spis]
+            # find indices of center atoms
+            u, indices = np.unique(atom_centers, axis = 0, return_inverse = True)
             indices = np.append(indices, len(indices1))
             n = len(u)
             # print(n)
             for i in range(n):
-                vertices1 = positions1[indices[i]: indices[i + 1]]
+                mask = np.where(indices == i)[0]
+                vertices1 = positions21[mask]
                 dnv = len(vertices1)
                 if dnv >= 4:
                     # search face for polyhedra
@@ -541,11 +543,11 @@ class Polyhedras(ObjectGN):
                     edges = edges + list(edge)
                     faces = faces + list(face)
                     vertices.extend(vertices1)
-                    offsets.extend(offsets1[indices[i]: indices[i + 1]])
+                    offsets.extend(bondlist1[mask, 5:8])
                     nv1 = nv + dnv
                     nf1 = nf + dnf
-                    atoms_index1[nv:nv1] = indices1[indices[i]: indices[i + 1]]
-                    atoms_index2[nv:nv1] = indices2[indices[i]: indices[i + 1]]
+                    atoms_index1[nv:nv1] = bondlist1[mask, 0]
+                    atoms_index2[nv:nv1] = bondlist1[mask, 1]
                     styles[nv:nv1] = int(poly.style)
                     widths[nv:nv1] = poly.width
                     species_index[nv:nv1] = string2Number(poly.species)
