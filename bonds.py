@@ -36,7 +36,10 @@ default_bond_datas = {
         'species_index2': np.ones(0, dtype = int),
         'centers':np.zeros((0, 3)),
         # 'vectors':np.zeros((0, 3)),
-        'offsets':np.zeros((0, 3)),
+        'offsets1':np.zeros((0, 3)),
+        'offsets2':np.zeros((0, 3)),
+        'offsets3':np.zeros((0, 3)),
+        'offsets4':np.zeros((0, 3)),
         # 'eulers':np.eye(3),
         # 'lengths':np.zeros((0, 3)),
         'widths': np.ones(0, dtype = float),
@@ -109,18 +112,30 @@ class Bonds(ObjectGN):
         tstart = time()
         if len(bond_datas['centers'].shape) == 2:
             self._frames = {'centers': np.array([bond_datas['centers']]),
-                            'offsets': np.array([bond_datas['offsets']]),
+                            'offsets1': np.array([bond_datas['offsets1']]),
+                            'offsets2': np.array([bond_datas['offsets2']]),
+                            'offsets3': np.array([bond_datas['offsets3']]),
+                            'offsets4': np.array([bond_datas['offsets4']]),
                         }
             centers = bond_datas['centers']
-            offsets = bond_datas['offsets']
+            offsets1 = bond_datas['offsets1']
+            offsets2 = bond_datas['offsets2']
+            offsets3 = bond_datas['offsets3']
+            offsets4 = bond_datas['offsets4']
         elif len(bond_datas['centers'].shape) == 3:
             self._frames = {'centers': bond_datas['centers'],
-                            'offsets': bond_datas['offsets'],
+                            'offsets1': bond_datas['offsets1'],
+                            'offsets2': bond_datas['offsets2'],
+                            'offsets3': bond_datas['offsets3'],
+                            'offsets4': bond_datas['offsets4'],
                             }
             centers = bond_datas['centers'][0]
         else:
             raise Exception('Shape of centers is wrong!')
-        offsets = bond_datas['offsets']
+        offsets1 = bond_datas['offsets1']
+        offsets2 = bond_datas['offsets2']
+        offsets3 = bond_datas['offsets3']
+        offsets4 = bond_datas['offsets4']
         nbond = len(centers)
         show = np.ones(nbond, dtype = int)
         attributes.update({
@@ -146,14 +161,17 @@ class Bonds(ObjectGN):
         self.setting.coll.objects.link(obj)
         obj.parent = self.batoms.obj
         #
-        name = '%s_bond_offset'%self.label
-        self.delete_obj(name)
-        mesh = bpy.data.meshes.new(name)
-        mesh.from_pydata(offsets, [], [])
-        mesh.update()
-        obj = bpy.data.objects.new(name, mesh)
-        self.setting.coll.objects.link(obj)
-        obj.hide_set(True)
+        offsets = [offsets1, offsets2, offsets3, offsets4]
+        for i in range(4):
+            name = '%s_bond_offset%s'%(self.label, i)
+            self.delete_obj(name)
+            mesh = bpy.data.meshes.new(name)
+            mesh.from_pydata(offsets[i], [], [])
+            mesh.update()
+            obj = bpy.data.objects.new(name, mesh)
+            self.setting.coll.objects.link(obj)
+            obj.hide_set(True)
+        #
         bpy.context.view_layer.update()
         self.set_attributes(attributes)
         self.build_geometry_node()
@@ -224,34 +242,40 @@ class Bonds(ObjectGN):
         #------------------------------------------------------------------
         # add positions with offsets
         # transfer offsets from object self.obj_o
-        ObjectOffsets = get_nodes_by_name(gn.node_group.nodes, 
-                        '%s_ObjectOffsets'%(self.label),
-                        'GeometryNodeObjectInfo')
-        ObjectOffsets.inputs['Object'].default_value = self.obj_o
-        PositionOffsets = get_nodes_by_name(gn.node_group.nodes, 
-                        '%s_PositionOffsets'%(self.label),
-                        'GeometryNodeInputPosition')
-        TransferOffsets = get_nodes_by_name(gn.node_group.nodes, 
-                    '%s_TransferOffsets'%self.label,
-                    'GeometryNodeAttributeTransfer')
-        TransferOffsets.mapping = 'INDEX'
-        TransferOffsets.data_type = 'FLOAT_VECTOR'
-        gn.node_group.links.new(ObjectOffsets.outputs['Geometry'], TransferOffsets.inputs['Target'])
-        gn.node_group.links.new(PositionOffsets.outputs['Position'], TransferOffsets.inputs['Attribute'])
-        # we need three add operations
-        # two: Get the positions with offset for atoms2, and atom4
+        ObjectOffsets = []
+        PositionOffsets = []
+        TransferOffsets = []
+        for i in range(4):
+            tmp = get_nodes_by_name(gn.node_group.nodes, 
+                            '%s_ObjectOffsets%s'%(self.label, i),
+                            'GeometryNodeObjectInfo')
+            tmp.inputs['Object'].default_value = self.obj_o[i]
+            ObjectOffsets.append(tmp)
+            tmp = get_nodes_by_name(gn.node_group.nodes, 
+                            '%s_PositionOffsets%s'%(self.label, i),
+                            'GeometryNodeInputPosition')
+            PositionOffsets.append(tmp)
+            tmp = get_nodes_by_name(gn.node_group.nodes, 
+                        '%s_TransferOffsets%i'%(self.label, i),
+                        'GeometryNodeAttributeTransfer')
+            tmp.mapping = 'INDEX'
+            tmp.data_type = 'FLOAT_VECTOR'
+            TransferOffsets.append(tmp)
+            gn.node_group.links.new(ObjectOffsets[i].outputs['Geometry'], TransferOffsets[i].inputs['Target'])
+            gn.node_group.links.new(PositionOffsets[i].outputs['Position'], TransferOffsets[i].inputs['Attribute'])
+        # we need five add operations
+        # four: Get the positions with offset for four atoms
         # one: Get center = (positions1 + positions2)/2
         VectorAdd = []
-        for i in range(3):
+        for i in range(5):
             tmp = get_nodes_by_name(gn.node_group.nodes, 
                         '%s_VectorAdd%s'%(self.label, i),
                         'ShaderNodeVectorMath')
             tmp.operation = 'ADD'
             VectorAdd.append(tmp)
-        gn.node_group.links.new(TransferBatoms[1].outputs[0], VectorAdd[0].inputs[0])
-        gn.node_group.links.new(TransferOffsets.outputs[0], VectorAdd[0].inputs[1])
-        gn.node_group.links.new(TransferBatoms[3].outputs[0], VectorAdd[1].inputs[0])
-        gn.node_group.links.new(TransferOffsets.outputs[0], VectorAdd[1].inputs[1])
+        for i in range(4):
+            gn.node_group.links.new(TransferBatoms[i].outputs[0], VectorAdd[i].inputs[0])
+            gn.node_group.links.new(TransferOffsets[i].outputs[0], VectorAdd[i].inputs[1])
         #
         # divide by 2 to get the center
         VectorDivide = get_nodes_by_name(gn.node_group.nodes, 
@@ -259,9 +283,9 @@ class Bonds(ObjectGN):
                     'ShaderNodeVectorMath')
         VectorDivide.operation = 'DIVIDE'
         VectorDivide.inputs[1].default_value = (2, 2, 2)
-        gn.node_group.links.new(TransferBatoms[0].outputs[0], VectorAdd[2].inputs[0])
-        gn.node_group.links.new(VectorAdd[0].outputs[0], VectorAdd[2].inputs[1])
-        gn.node_group.links.new(VectorAdd[2].outputs[0], VectorDivide.inputs[0])
+        gn.node_group.links.new(VectorAdd[0].outputs[0], VectorAdd[4].inputs[0])
+        gn.node_group.links.new(VectorAdd[1].outputs[0], VectorAdd[4].inputs[1])
+        gn.node_group.links.new(VectorAdd[4].outputs[0], VectorDivide.inputs[0])
         # set center of the bond
         SetPosition = get_nodes_by_name(gn.node_group.nodes,
                         '%s_SetPosition'%self.label, 
@@ -285,10 +309,10 @@ class Bonds(ObjectGN):
                     '%s_VectorCross0'%self.label,
                     'ShaderNodeVectorMath')
         VectorCross0.operation = 'CROSS_PRODUCT'
-        gn.node_group.links.new(TransferBatoms[0].outputs[0], VectorSubtract[0].inputs[0])
-        gn.node_group.links.new(VectorAdd[0].outputs[0], VectorSubtract[0].inputs[1])
-        gn.node_group.links.new(TransferBatoms[2].outputs[0], VectorSubtract[1].inputs[0])
-        gn.node_group.links.new(VectorAdd[1].outputs[0], VectorSubtract[1].inputs[1])
+        gn.node_group.links.new(VectorAdd[0].outputs[0], VectorSubtract[0].inputs[0])
+        gn.node_group.links.new(VectorAdd[1].outputs[0], VectorSubtract[0].inputs[1])
+        gn.node_group.links.new(VectorAdd[2].outputs[0], VectorSubtract[1].inputs[0])
+        gn.node_group.links.new(VectorAdd[3].outputs[0], VectorSubtract[1].inputs[1])
         # calc the bond length, use it to build scale
         gn.node_group.links.new(VectorSubtract[0].outputs[0], VectorLength.inputs[0])
         #
@@ -466,8 +490,8 @@ class Bonds(ObjectGN):
         object_mode()
         # clean_coll_objects(self.coll, 'bond')
         frames = self.batoms.get_frames()
-        boundary_data = None
         arrays = self.batoms.arrays
+        array_b = self.batoms.get_arrays_with_boundary()
         show = arrays['show']
         species = arrays['species'][show]
         # frames_boundary = self.batoms.get_frames(self.batoms.batoms_boundary)
@@ -475,18 +499,17 @@ class Bonds(ObjectGN):
         nframe = len(frames)
         bond_datas = {}
         tstart = time()
+        natom = len(species)
         for f in range(nframe):
             # print('update bond: ', f)
             positions = frames[f, show, :]
-            # if len(frames_boundary) > 0:
-            #     positions_boundary = frames_boundary[f]
-            #     positions = positions + positions_boundary
             # if len(frames_search) > 0:
             #     positions_search = frames_search[f]
             #     positions = positions + positions_search
-            bondlist = build_bondlists(species, positions, 
-                        self.batoms.cell, self.batoms.pbc, self.setting.cutoff_dict, 
-                        boundary_data)
+            bondlist = build_bondlists(species, positions, self.batoms.cell, 
+                        self.batoms.pbc, self.setting.cutoff_dict)
+            if array_b is not None:
+                bondlist = build_bondlists_with_boundary(array_b, bondlist)
             if f == 0:
                 bondlists = bondlist
             else:
@@ -506,11 +529,15 @@ class Bonds(ObjectGN):
         return self.get_obj_o()
     
     def get_obj_o(self):
-        name = '%s_bond_offset'%self.label
-        obj_o = bpy.data.objects.get(name)
-        if obj_o is None:
-            raise KeyError('%s object is not exist.'%name)
-        return obj_o
+        objs = []
+        for i in range(4):
+            name = '%s_bond_offset%s'%(self.label, i)
+            obj_o = bpy.data.objects.get(name)  
+            if obj_o is None:   
+                raise KeyError('%s object is not exist.'%name)
+            else:
+                objs.append(obj_o)
+        return objs
 
     def get_arrays(self):
         """
@@ -519,7 +546,10 @@ class Bonds(ObjectGN):
         tstart = time()
         arrays = self.attributes
         arrays.update({'positions': self.positions,
-                        'offsets': self.offsets,
+                        'offsets1': self.offsets[0],
+                        'offsets2': self.offsets[1],
+                        'offsets3': self.offsets[2],
+                        'offsets4': self.offsets[3],
                         })
         # print('get_arrays: %s'%(time() - tstart))
         return arrays
@@ -533,7 +563,8 @@ class Bonds(ObjectGN):
         # same length
         if len(arrays['centers']) == len(attributes['show']):
             self.positions = arrays['centers']
-            self.offsets = arrays['offsets']
+            self.offsets = [arrays['offsets1'], arrays['offsets2'], 
+                        arrays['offsets3'], arrays['offsets4']]
             self.set_attributes({'atoms_index1': arrays['atoms_index1']})
             self.set_attributes({'atoms_index2': arrays['atoms_index2']})
             self.set_attributes({'atoms_index3': arrays['atoms_index3']})
@@ -555,9 +586,13 @@ class Bonds(ObjectGN):
         using foreach_get and foreach_set to improve performance.
         """
         n = len(self)
-        offsets = np.empty(n*3, dtype=np.float64)
-        self.obj_o.data.vertices.foreach_get('co', offsets)  
-        return offsets.reshape((n, 3))
+        offsets = []
+        objs = self.obj_o
+        for obj in objs:
+            positions = np.empty(n*3, dtype=np.float64)
+            obj.data.vertices.foreach_get('co', positions)
+            offsets.append(positions.reshape((n, 3)))
+        return offsets
     
     @offsets.setter
     def offsets(self, offsets):
@@ -570,13 +605,15 @@ class Bonds(ObjectGN):
         object_mode()
         from batoms.tools import local2global
         n = len(self.obj_o.data.vertices)
-        if len(offsets) != n:
+        if len(offsets[0]) != n:
             raise ValueError('offsets has wrong shape %s != %s.' %
-                                (len(offsets), n))
-        offsets = offsets.reshape((n*3, 1))
-        self.obj_o.data.shape_keys.key_blocks[0].data.foreach_set('co', offsets)
-        self.obj_o.data.update()
-        bpy.context.view_layer.objects.active = self.obj_o
+                                (len(offsets[0]), n))
+        objs = self.obj_o
+        for i in range(4):
+            vertices = offsets[i].reshape((n*3, 1))
+            objs[i].data.shape_keys.key_blocks[0].data.foreach_set('co', vertices)
+            objs[i].data.update()
+        bpy.context.view_layer.objects.active = objs[i]
         bpy.ops.object.mode_set(mode = 'EDIT')
         bpy.ops.object.mode_set(mode = 'OBJECT')
     
@@ -601,6 +638,25 @@ class Bonds(ObjectGN):
         # obj = self.obj_o
         # self.set_obj_frames(name, obj, frames['offsets'])
         
+    @property
+    def bondlists(self):
+        return self.get_bondlists()
+        
+    def get_bondlists(self):
+        """
+        """
+        object_mode()
+        tstart = time()
+        arrays = self.arrays
+        i = arrays['atoms_index1'].reshape(-1, 1)
+        j = arrays['atoms_index2'].reshape(-1, 1)
+        offsets1 = arrays['offsets1']
+        offsets2 = arrays['offsets2']
+        bondlists = np.concatenate((i, j, offsets1, offsets2), 
+                    axis = 1)
+        # bondlists = bondlists.astype(int)
+        # print('get_arrays: %s'%(time() - tstart))
+        return bondlists
 
     def __getitem__(self, index):
         """Return a subset of the Bbond.
@@ -729,31 +785,57 @@ class Bonds(ObjectGN):
             bm.verts.new(pos)
         bm.to_mesh(self.obj.data)
 
-def build_bondlists(species, positions, cell, pbc, cutoff, 
-            boundary_data = None):
+def build_bondlists(species, positions, cell, pbc, cutoff):
     """
-    The default bonds are stored in 'default_bonds'
-    Get all pairs of bonding atoms
-    remove_bonds
+    build bondlist for atoms
     """
-    from batoms.neighborlist import neighbor_kdtree
+    from batoms.neighborlist import bondlist_kdtree
     if len(cutoff) == 0: return {}
     #
     tstart = time()
-    # nli, nlj, nlS = primitive_neighbor_list('ijS', pbc,
-    #                                cell,
-    #                                positions, cutoff, species=species,
-    #                                self_interaction=False,
-    #                                max_nbins=1e6)
-    nli, nlj, nlS = neighbor_kdtree('ijS', species, 
-                positions, cell, pbc,
-                cutoff, boundary_data)
+    nli, nlj, nlSj = bondlist_kdtree('ijS', species, 
+            positions, cell, pbc,
+            cutoff)
+    nb = len(nli)
+    nlSi = np.zeros((nb, 3))
     # print('build_bondlists: {0:10.2f} s'.format(time() - tstart))
-    bondlists = np.append(np.array([nli, nlj], dtype=int).T, np.array(nlS, dtype=int), axis = 1)
-    bondlists1 = bondlists.copy()
-    bondlists1[:, [0, 1]] = bondlists1[:, [1, 0]]
-    bondlists2 = np.concatenate((bondlists, bondlists1), axis=0)
-    np.unique(bondlists2)
+    bondlists = np.concatenate((np.array([nli, nlj]).T, 
+                    np.array(nlSi, dtype = int), np.array(nlSj)), axis = 1)
+    # bondlists1 = bondlists.copy()
+    # bondlists1[:, [0, 1]] = bondlists1[:, [1, 0]]
+    # bondlists2 = np.concatenate((bondlists, bondlists1), axis=0)
+    # bondlists = np.unique(bondlists2)
+    bondlists = bondlists.astype(int)
+    return bondlists
+
+def build_bondlists_with_boundary(arrays, bondlists):
+    """
+    build extra bondlists based on boundary atoms
+    """
+    n = len(arrays['positions'])
+    if n == 0:
+        return bondlists
+    # rebuild bondatas
+    argsort = bondlists[:, 0].argsort()
+    bondlists = bondlists[argsort]
+    u, indices = np.unique(bondlists[:, 0], return_index=True)
+    indices = np.append(indices, len(bondlists))
+    #
+    m = len(u)
+    # print(n)
+    bonddatas = {}
+    for i in range(m):
+        bonddatas[i] = bondlists[indices[i]: indices[i + 1]]
+    #
+    for i in range(n):
+        if arrays['indices'][i] not in bonddatas: continue
+        data = bonddatas[arrays['indices'][i]]
+        n = len(data)
+        bondlists = np.append(bondlists,  data, axis = 0)
+        bondlists[-n:, 2:5] += arrays['offsets'][i]
+        bondlists[-n:, 5:8] += arrays['offsets'][i]
+    # print('build_bondlists: {0:10.2f} s'.format(time() - tstart))
+    # np.unique(bondlists)
     return bondlists
 
 def calc_bond_data(speciesarray, positions, cell, 
@@ -766,9 +848,12 @@ def calc_bond_data(speciesarray, positions, cell,
     # properties
     atoms_index1 = np.array(bondlists[:, 0])
     atoms_index2 = np.array(bondlists[:, 1])
+    # second bond for high order bond
+    nb =len(atoms_index1)
+    second_bond = np.roll(np.arange(nb), 1)
+    # atoms_index3 and atoms_index4 will be removed for Blender 3.1
     atoms_index3 = np.roll(bondlists[:, 0], 1)
     atoms_index4 = np.roll(bondlists[:, 1], 1)
-    nb =len(atoms_index1)
     orders = np.zeros(nb, dtype = int) # 1, 2, 3
     styles = np.zeros(nb, dtype = int) # 0, 1, 2
     widths = np.ones(nb, dtype = float) 
@@ -779,12 +864,13 @@ def calc_bond_data(speciesarray, positions, cell,
         return default_bond_datas
     #------------------------------------
     # offsets
-    offsets = np.dot(bondlists[:, 2:5], cell)
+    offsets1 = np.dot(bondlists[:, 2:5], cell)
+    offsets2 = np.dot(bondlists[:, 5:8], cell)
     # bond center
     if len(positions.shape) == 2:
         positions = np.array([positions])
-    centers = (positions[:, bondlists[:, 0]] + 
-            positions[:, bondlists[:, 1]] + offsets)/2.0
+    centers = (positions[:, bondlists[:, 0]] + offsets1 +
+            positions[:, bondlists[:, 1]] + offsets2)/2.0
     #---------------------------------------------
     for b in bondsetting:
         spi = b.species1
@@ -798,16 +884,24 @@ def calc_bond_data(speciesarray, positions, cell,
         species_index1[ind] = string2Number(spi)
         species_index2[ind] = string2Number(spj)
         if b.order >1:
-            atoms_index3, atoms_index4 = secondBond(b, speciesarray, atoms_index3, atoms_index4, bondlists)
+            second_bond, atoms_index3, atoms_index4 = secondBond(b, speciesarray, second_bond, atoms_index3, atoms_index4, bondlists)
+    # offsets for second bond
+    # this will be remove for Blender 3.1
+    offsets3 = np.dot(bondlists[:, 2:5][second_bond], cell)
+    offsets4 = np.dot(bondlists[:, 5:8][second_bond], cell)
     datas = {
         'atoms_index1': atoms_index1,
         'atoms_index2': atoms_index2,
         'atoms_index3': atoms_index3,
         'atoms_index4': atoms_index4,
+        'second_bond': second_bond,
         'species_index1': species_index1,
         'species_index2': species_index2,
         'centers':centers,
-        'offsets':offsets,
+        'offsets1':offsets1,
+        'offsets2':offsets2,
+        'offsets3':offsets3,
+        'offsets4':offsets4,
         'widths':widths,
         'orders':orders,
         'styles':styles,
@@ -818,36 +912,39 @@ def calc_bond_data(speciesarray, positions, cell,
     return datas
 
 
-def secondBond(b, speciesarray, atoms_index3, atoms_index4, bondlists):
+def secondBond(b, speciesarray, second_bond, atoms_index3, atoms_index4, bondlists):
     """
-    determine the plane of high order bond
+    determine the plane of high order bond.
+    v1 = atoms2 - atoms1
+    v2 = atoms4 - atoms3
+    normal = np.cross(v1, v2)
     """
     spi = b.species1
     spj = b.species2
+    # find all bonds belong to this pair spi--spj
+    # here use &
     indi = (speciesarray[bondlists[:, 0]] == spi)
     indj = (speciesarray[bondlists[:, 1]] == spj)
-    bondlists1 = bondlists[indi & indj]
-    nbond = len(bondlists1)
+    indices1 = np.where(indi & indj)[0]
+    # find all bonds connect to this bond pair
+    # here use |
     indi1 = (speciesarray[bondlists[:, 1]] == spi)
     indj2 = (speciesarray[bondlists[:, 0]] == spj)
-    bondlists2 = bondlists[indi | indj | indi1 | indj2]
-    for i in range(nbond):
-        # find another bond
-        mask = np.logical_not(((bondlists2[:, 0] == bondlists1[i, 0]) 
-                & (bondlists2[:, 1] == bondlists1[i, 1]))
-                | ((bondlists2[:, 0] != bondlists1[i, 0])
-                & (bondlists2[:, 0] != bondlists1[i, 1]) 
-                & (bondlists2[:, 1] != bondlists1[i, 0])
-                & (bondlists2[:, 1] != bondlists1[i, 1])))
-        localbondlist = bondlists2[mask]
-        if len(localbondlist) == 0:
-            atoms_index3[i] = 0
-            atoms_index4[i] = 1
-        else:
-            atoms_index3[i] = localbondlist[0, 0]
-            atoms_index4[i] = localbondlist[0, 1]
-
-    return atoms_index3, atoms_index4
+    indices2 = np.where(indi | indj | indi1 | indj2)[0]
+    bondlists2 = bondlists[indices2]
+    for i in indices1:
+        # find another bond for this bond: bondlists[i]
+        indices3 = np.where((bondlists2[:, 0] == bondlists[i, 0]) | \
+                              (bondlists2[:, 1] == bondlists[i, 0]) | \
+                              (bondlists2[:, 0] == bondlists[i, 1]) | \
+                              (bondlists2[:, 1] == bondlists[i, 1]))[0]
+        indices3 = indices2[indices3]
+        if len(indices3) > 1:
+            indices4 = np.where(indices3 != i)[0]
+            second_bond[i] = indices3[indices4[0]]
+            atoms_index3[i] = bondlists[second_bond[i], 0]
+            atoms_index4[i] = bondlists[second_bond[i], 1]
+    return second_bond, atoms_index3, atoms_index4
 
 def high_order_bond_plane(b, speciesarray, positions, nvec, offsets, bondlists):
     """
