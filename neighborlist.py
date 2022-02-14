@@ -36,10 +36,23 @@ def bondlist_kdtree(quantities, species0, positions0, cell, pbc,
     i = []
     j = []
     for pair, data in bonddatas.items():
-        for i1, j1 in data.items():
-            n = len(j1)
-            i.extend([i1]*n)
-            j.extend(j1)
+        i1 = []
+        j1 = []
+        for i2, j2 in data.items():
+            n = len(j2)
+            i1.extend([i2]*n)
+            j1.extend(j2)
+        # remove bothways for same species, e.g. ('C', 'C')
+        if pair[0] == pair[1]:
+            i1 = np.array(i1)
+            j1 = np.array(j1)
+            mask = np.where((i1 > j1) & ((array2['offsets'][j1] == 0).all(axis = 1)), False, True)
+            i1 = i1[mask]
+            j1 = j1[mask]
+            i1 = list(i1)
+            j1 = list(j1)
+        i.extend(i1)
+        j.extend(j1)
     # offsets
     offsets_i = array1['offsets'][i]
     offsets_j = array2['offsets'][j]
