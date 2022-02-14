@@ -1,7 +1,7 @@
 import bpy
 import numpy as np
 from time import time
-from batoms.butils import object_mode, set_look_at
+from batoms.butils import object_mode, set_look_at, get_nodes_by_name
 
 default_object_attributes = [
         ]
@@ -63,6 +63,25 @@ class ObjectGN():
         modifier = self.obj.modifiers.new(name = name, type = 'NODES')
         modifier.node_group.name = name
     
+    def vectorDotMatrix(self, gn, vectorNode, matrix, name):
+        """
+        """
+        CombineXYZ = get_nodes_by_name(gn.node_group.nodes,
+                        '%s_CombineXYZ_%s'%(self.label, name),
+                        'ShaderNodeCombineXYZ')
+        #
+        VectorDot = []
+        for i in range(3):
+            tmp = get_nodes_by_name(gn.node_group.nodes, 
+                        '%s_VectorDot%s_%s'%(self.label, i, name),
+                        'ShaderNodeVectorMath')
+            tmp.operation = 'DOT_PRODUCT'
+            VectorDot.append(tmp)
+            tmp.inputs[1].default_value = matrix[:, i]
+            gn.node_group.links.new(vectorNode.outputs[0], tmp.inputs[0])
+            gn.node_group.links.new(tmp.outputs['Value'], CombineXYZ.inputs[i])
+        return CombineXYZ
+
     def add_geometry_node(self, sp):
         """
         add geometry node for each bond pair
@@ -108,22 +127,25 @@ class ObjectGN():
         # attributes
         me = self.obj.data
         nvert = len(me.vertices)
+        npoly = len(me.polygons)
         attributes = {}
         for key in me.attributes.keys():
             att = me.attributes.get(key)
             dtype = att.data_type
+            domain = att.domain
+            n = nvert if domain == 'POINT' else npoly
             if dtype == 'STRING':
-                attributes[key] = np.zeros(nvert, dtype = 'U20')
-                for i in range(nvert):
+                attributes[key] = np.zeros(n, dtype = 'U20')
+                for i in range(n):
                     attributes[key][i] = att.data[i].value
             elif dtype == 'INT':
-                attributes[key] = np.zeros(nvert, dtype = int)
+                attributes[key] = np.zeros(n, dtype = int)
                 att.data.foreach_get("value", attributes[key])
             elif dtype == 'FLOAT':
-                attributes[key] = np.zeros(nvert, dtype = float)
+                attributes[key] = np.zeros(n, dtype = float)
                 att.data.foreach_get("value", attributes[key])
             elif dtype == 'BOOLEAN':
-                attributes[key] = np.zeros(nvert, dtype = bool)
+                attributes[key] = np.zeros(n, dtype = bool)
                 att.data.foreach_get("value", attributes[key])
             else:
                 raise KeyError('%s is not support.'%dtype)
