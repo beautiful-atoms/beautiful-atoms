@@ -128,7 +128,7 @@ def primitive_neighbor_kdtree(array1, array2,
         n = len(p1)
         if indices_min is not None:
             for k in range(n):
-                indices_max[k] = set(indices_max[k]) - set(indices_min[k])
+                indices_max[k] = list(set(indices_max[k]) - set(indices_min[k]))
                 m = len(indices_max[k])
                 if m == 0: continue
                 bonddatas[pair][indices_i[k]] = indices_j[indices_max[k]]
@@ -282,7 +282,7 @@ def test_kdtree(atoms, cutoffs1, cutoffs2):
     species0 = np.array(atoms.get_chemical_symbols())
     positions0 = atoms.positions
     print(species0)
-    i, j, d, offsets_i, offsets_j = bondlist_kdtree('ijdS', 
+    i, j, d, offsets_j = bondlist_kdtree('ijdS', 
             species0, positions0, cell, atoms.pbc, cutoffs2)
     # i, j, d = neighbor_kdtree('ijd', 
             # array1, array2, cell, cutoffs2)
@@ -313,6 +313,7 @@ def test_buildBoundary(atoms, cutoffs):
     # print(face)
     # view(atoms + face)
 
+
 if __name__ == "__main__":
     from ase.io import read, write
     from ase.build import molecule, bulk
@@ -326,23 +327,30 @@ if __name__ == "__main__":
     # atoms.cell = [4, 7, 5]
     # atoms = read('/home/xing/batoms/datas/mof-5.cif')
     atoms = read('/home/xing/batoms/datas/atp.pdb')
+    atoms = read('/home/xing/batoms/datas/urea.cif')
+    atoms = read('/home/xing/batoms/datas/tio2.cif')
     print(atoms.pbc)
     # atoms = atoms*[4, 4, 4]
     # atoms = read('/home/xing/batoms/datas/1tim.pdb')
-    print(len(atoms))
+    # print(len(atoms))
     # view(atoms)
     cutoffs1 = {
-        ('O', 'H'): 1.261, 
-        ('C', 'H'): 1.261, 
-        ('C', 'C'): 1.261, 
-            ('Au', 'Au'):3.0,
+        # ('O', 'H'): 1.5, 
+        # ('C', 'H'): 1.5, 
+        ('C', 'C'): 1.5, 
+        ('C', 'N'): 1.5, 
+        # ('C', 'O'): 1.5, 
+        # ('N', 'H'): 1.5, 
+            # ('Au', 'Au'):3.0,
                 }
     cutoffs2 = {
-        ('O', 'H')  : [0.000, 1.261],
-        ('C', 'H')  : [0.000, 1.261],
-        ('C', 'C')  : [0.000, 1.261],
-        # (79, 79): [0, 3.0],
-        # (1, 8)  : [1.200, 2.100],
+        # ('O', 'H')  : [0.000, 1.5],
+        # ('C', 'H')  : [0.000, 1.5],
+        ('C', 'C')  : [0.000, 1.8],
+        # ('C', 'O')  : [0.000, 1.5],
+        ('C', 'N')  : [0.000, 1.5],
+        # ('N', 'H')  : [0.000, 1.5],
+        ('Ti', 'O')  : [0.000, 2.5],
         }
     # test_buildBoundary(atoms, cutoffs2)
     test_kdtree(atoms, cutoffs1, cutoffs2)
