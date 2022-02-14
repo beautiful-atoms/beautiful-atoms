@@ -13,6 +13,7 @@ from batoms.tools import string2Number, number2String
 import numpy as np
 from batoms.base import ObjectGN
 from batoms.bondsetting import BondSettings
+from batoms.search_bond import SearchBond, default_search_bond_datas
 
 default_attributes = [
             ['atoms_index1', 'INT'],
@@ -55,33 +56,6 @@ class Bonds(ObjectGN):
 
     Parameters:
 
-    label: str
-        Name of the Bbonds.
-    species: str
-        species of the atoms.
-    positions: array
-        positions
-    locations: array
-        The object’s origin location in global coordinates.
-    element: str or list
-        element of the atoms, list for fractional Occupancy
-    segments: list of 2 Int
-        Number of segments used to draw the UV_Sphere
-        Default: [32, 16]
-    subdivisions: Int
-        Number of subdivision used to draw the ICO_Sphere
-        Default: 2
-    color_style: str
-        "JMOL", "ASE", "VESTA"
-    radii_style: str
-        "covelent", "vdw", "ionic"
-    shape: Int
-        0, 1, or 2. ["UV_SPHERE", "ICO_SPHERE", "CUBE"]
-
-    Examples:
-
-    >>> from batoms.bond import Bbond
-    >>> c = Bbond('C', [[0, 0, 0], [1.2, 0, 0]])
 
     """
     
@@ -102,6 +76,7 @@ class Bonds(ObjectGN):
         flag = self.load()
         if not flag and bond_datas is not None:
             self.build_object(bond_datas)
+        self._search_bond = None
     
     def build_object(self, bond_datas, attributes = {}):
         object_mode()
@@ -500,6 +475,7 @@ class Bonds(ObjectGN):
         bond_datas = {}
         tstart = time()
         natom = len(species)
+        cutoff = self.setting.cutoff_dict
         for f in range(nframe):
             # print('update bond: ', f)
             positions = frames[f, show, :]
@@ -507,9 +483,16 @@ class Bonds(ObjectGN):
             #     positions_search = frames_search[f]
             #     positions = positions + positions_search
             bondlist = build_bondlists(species, positions, self.batoms.cell, 
-                        self.batoms.pbc, self.setting.cutoff_dict)
+                        self.batoms.pbc, cutoff)
             if array_b is not None:
                 bondlist = build_bondlists_with_boundary(array_b, bondlist)
+            # search bond
+            search_bond_data = calc_search_bond_data(bondlist, arrays, self.batoms.cell)
+            if search_bond_data is not None:
+                self.search_bond.set_arrays(search_bond_data)
+            # search molecule
+            # mols = search_molecule(len(positions, bondlists, cutoff))
+            # build_bondlists_with_molecule(mols)
             if f == 0:
                 bondlists = bondlist
             else:
@@ -657,6 +640,16 @@ class Bonds(ObjectGN):
         # bondlists = bondlists.astype(int)
         # print('get_arrays: %s'%(time() - tstart))
         return bondlists
+    
+    @property
+    def search_bond(self):
+        """search_bond object."""
+        if self._search_bond is not None:
+            return self._search_bond
+        search_bond = SearchBond(self.label, search_bond_datas = default_search_bond_datas, 
+                    batoms = self.batoms)
+        self._search_bond = search_bond
+        return search_bond
 
     def __getitem__(self, index):
         """Return a subset of the Bbond.
@@ -799,13 +792,16 @@ def build_bondlists(species, positions, cell, pbc, cutoff):
     nb = len(nli)
     nlSi = np.zeros((nb, 3))
     # print('build_bondlists: {0:10.2f} s'.format(time() - tstart))
+    # atoms search by bond, the one with offset
+    search1 = np.where((nlSj == np.array([0, 0, 0])).all(axis = 1), 0, 1)
     bondlists = np.concatenate((np.array([nli, nlj]).T, 
-                    np.array(nlSi, dtype = int), np.array(nlSj)), axis = 1)
+                    np.array(nlSi, dtype = int), np.array(nlSj), search1.reshape(-1, 1)), axis = 1)
     # bondlists1 = bondlists.copy()
     # bondlists1[:, [0, 1]] = bondlists1[:, [1, 0]]
     # bondlists2 = np.concatenate((bondlists, bondlists1), axis=0)
     # bondlists = np.unique(bondlists2)
     bondlists = bondlists.astype(int)
+    
     return bondlists
 
 def build_bondlists_with_boundary(arrays, bondlists):
@@ -834,9 +830,37 @@ def build_bondlists_with_boundary(arrays, bondlists):
         bondlists = np.append(bondlists,  data, axis = 0)
         bondlists[-n:, 2:5] += arrays['offsets'][i]
         bondlists[-n:, 5:8] += arrays['offsets'][i]
+        # todo: in this case, some of the atoms overlap with original atoms.
+        # since it doesn't influence the 3d view, we just leave it like this
+        bondlists[-n:, 8] = 1
     # print('build_bondlists: {0:10.2f} s'.format(time() - tstart))
     # np.unique(bondlists)
     return bondlists
+
+
+def search_bond(species, positions, bondlists, cutoff):
+    """
+    """
+    from scipy.sparse import csgraph, csr_matrix
+    
+
+def search_molecule(natom, bondlists):
+    """
+    """
+    from scipy.sparse import csgraph, csr_matrix
+    i = bondlists[:, 0]
+    j = bondlists[:, 1]
+    nb = len(bondlists[:, 0])
+    data = np.ones(nb, dtype = int)
+    matrix = csr_matrix((data, (i, j)), shape = (natom, natom))
+    # print(matrix)
+    n_components, component_list = csgraph.connected_components(matrix)
+    # print(n_components)
+    # print(component_list)
+    mols = {}
+    for i in range(n_components):
+        mols[i] = np.where(component_list == i)[0]
+    return mols
 
 def calc_bond_data(speciesarray, positions, cell, 
             bondlists, bondsetting,
@@ -978,3 +1002,43 @@ def high_order_bond_plane(b, speciesarray, positions, nvec, offsets, bondlists):
         # print(offsets[i], offset)
 
     return offsets
+
+def calc_search_bond_data(bondlists, arrays, cell):
+    """
+    """
+    tstart = time()
+    # properties
+    indices = np.where(bondlists[:, 8] == 1)[0]
+    n =len(indices)
+    if n ==0:
+        return None
+    bondlists1 = bondlists[indices]
+    bondlists1 = bondlists1[:, [1, 5, 6, 7]]
+    bondlists1 = np.unique(bondlists1, axis = 0)
+    model_styles = arrays['model_style'][bondlists1[:, 0]]
+    shows = arrays['show'][bondlists1[:, 0]]
+    radius_styles = arrays['radius_style'][bondlists1[:, 0]]
+    selects = arrays['select'][bondlists1[:, 0]]
+    scales = arrays['scale'][bondlists1[:, 0]]
+    species_indexs = arrays['species_index'][bondlists1[:, 0]]
+    species = arrays['species'][bondlists1[:, 0]]
+    #------------------------------------
+    offset_vectors = bondlists1[:, 1:4]
+    offsets = np.dot(offset_vectors, cell)
+    positions = arrays['positions'][bondlists1[:, 0]] + offsets
+    datas = {
+        'atoms_index': np.array(bondlists1[:, 0]),
+        'species_index': species_indexs,
+        'species': species,
+        'positions':positions,
+        # 'offsets':offsets,
+        'offsets':offset_vectors,
+        'model_styles':model_styles,
+        'shows':shows,
+        'selects':selects,
+        'scales':scales,
+        'radius_styles':radius_styles,
+    }
+    # print('datas: ', datas)
+    # print('calc_search_bond_data: {0:10.2f} s'.format(time() - tstart))
+    return datas
