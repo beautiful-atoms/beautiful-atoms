@@ -25,7 +25,7 @@ default_attributes = [
 default_search_bond_datas = {
         'atoms_index': np.ones(0, dtype = int),
         'species_index': np.ones(0, dtype = int),
-        # 'species': np.ones(0, dtype = 'U4'),
+        'species': np.ones(0, dtype = 'U4'),
         'positions':np.zeros((0, 3)),
         'scales':np.zeros(0),
         'offsets':np.zeros((0, 3)),
@@ -259,8 +259,6 @@ class SearchBond(ObjectGN):
     def set_arrays(self, arrays):
         """
         """
-        if len(arrays['positions']) == 0:
-            return
         attributes = self.attributes
         # same length
         if len(arrays['positions']) == len(attributes['show']):

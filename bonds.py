@@ -488,7 +488,7 @@ class Bonds(ObjectGN):
                 bondlist = build_bondlists_with_boundary(array_b, bondlist)
             # search bond
             search_bond_data = calc_search_bond_data(bondlist, arrays, self.batoms.cell)
-            if search_bond_data is not None:
+            if search_bond_data is not None and self.show_search:
                 self.search_bond.set_arrays(search_bond_data)
             # search molecule
             # mols = search_molecule(len(positions, bondlists, cutoff))
@@ -650,6 +650,21 @@ class Bonds(ObjectGN):
                     batoms = self.batoms)
         self._search_bond = search_bond
         return search_bond
+    
+    @property
+    def show_search(self):
+        return self.setting.coll.batoms.show_search
+    
+    @show_search.setter
+    def show_search(self, show_search):
+        self.setting.coll.batoms.show_search = show_search
+        if not show_search:
+            self.search_bond.set_arrays(default_search_bond_datas)
+            self._search_bond = None
+        else:
+            self.update()
+
+
 
     def __getitem__(self, index):
         """Return a subset of the Bbond.
@@ -796,12 +811,7 @@ def build_bondlists(species, positions, cell, pbc, cutoff):
     search1 = np.where((nlSj == np.array([0, 0, 0])).all(axis = 1), 0, 1)
     bondlists = np.concatenate((np.array([nli, nlj]).T, 
                     np.array(nlSi, dtype = int), np.array(nlSj), search1.reshape(-1, 1)), axis = 1)
-    # bondlists1 = bondlists.copy()
-    # bondlists1[:, [0, 1]] = bondlists1[:, [1, 0]]
-    # bondlists2 = np.concatenate((bondlists, bondlists1), axis=0)
-    # bondlists = np.unique(bondlists2)
     bondlists = bondlists.astype(int)
-    
     return bondlists
 
 def build_bondlists_with_boundary(arrays, bondlists):
