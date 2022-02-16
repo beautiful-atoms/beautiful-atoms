@@ -4,6 +4,7 @@ This module defines the Batoms object in the batoms package.
 
 """
 from turtle import position
+from matplotlib.pyplot import sca
 from pandas import array
 import bpy
 import bmesh
@@ -494,6 +495,8 @@ class Batoms(BaseCollection, ObjectGN):
         model_style = {'model_style': np.ones(len(self), dtype = int)*int(model_style)}
         self.set_attributes(model_style)
         self.draw(model_style['model_style'], draw_isosurface = False)
+        if self._boundary is not None:
+            self.boundary.update()
     
     @property
     def polyhedra_style(self):
@@ -876,6 +879,9 @@ class Batoms(BaseCollection, ObjectGN):
                             i0 = i1
                 frames_new.append(positions)
         self.set_frames(frames_new)
+        if self._boundary is not None:
+            self.boundary.update()
+        self.draw()
 
     def repeat(self, m):
         """
@@ -1399,9 +1405,9 @@ class Batoms(BaseCollection, ObjectGN):
         # self.draw_cell()
         self.draw_space_filling()
         self.draw_ball_and_stick()
-        if model_style is not None:
-            if 2 in model_style:
-                self.draw_polyhedra()
+        # if model_style is not None:
+            # if 2 in model_style:
+        self.draw_polyhedra()
         self.draw_wireframe()
         """
         if model_style == 2:
@@ -1430,14 +1436,18 @@ class Batoms(BaseCollection, ObjectGN):
         if self.polyhedra_style == 1:
             self.set_attribute_with_indices('scale', mask, scale)
         elif self.polyhedra_style == 2:
-            for b in self.bondsetting:
+            for b in self.bonds.setting:
                 if b.polyhedra:
                     mask1 = np.where(self.attributes['species'] == b.species1, True, False)
                     self.set_attribute_with_indices('scale', mask1, scale)
                     mask[mask1] = False
-            self.set_attribute_with_indices('show', mask, False)
+            scale = 0
+            self.set_attribute_with_indices('scale', mask, scale)
+            # self.set_attribute_with_indices('show', mask, False)
         elif self.polyhedra_style == 3:
-            self.set_attribute_with_indices('show', mask, False)
+            scale = 0
+            self.set_attribute_with_indices('scale', mask, scale)
+            # self.set_attribute_with_indices('show', mask, False)
 
     def draw_wireframe(self):
         mask = np.where(self.model_style == 3, True, False)

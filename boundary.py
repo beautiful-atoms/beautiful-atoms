@@ -25,7 +25,7 @@ default_attributes = [
 default_boundary_datas = {
         'atoms_index': np.ones(0, dtype = int),
         'species_index': np.ones(0, dtype = int),
-        # 'species': np.ones(0, dtype = 'U4'),
+        'species': np.ones(0, dtype = 'U4'),
         'positions':np.zeros((0, 3)),
         'scales':np.zeros(0),
         'offsets':np.zeros((0, 3)),
@@ -276,6 +276,7 @@ class Boundary(ObjectGN):
         for attribute in default_attributes:
             mesh.attributes.new(name = attribute[0], type = attribute[1], domain = 'POINT')
         self.batoms.coll.objects.link(obj)
+        obj.parent = self.batoms.obj
         #
         name = '%s_boundary_offset'%self.label
         self.delete_obj(name)
@@ -285,6 +286,7 @@ class Boundary(ObjectGN):
         obj = bpy.data.objects.new(name, mesh)
         self.batoms.coll.objects.link(obj)
         obj.hide_set(True)
+        obj.parent = self.batoms.obj
         bpy.context.view_layer.update()
         self.set_attributes(attributes)
         self.build_geometry_node()
