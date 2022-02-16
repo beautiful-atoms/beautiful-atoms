@@ -96,4 +96,19 @@ class Batom():
     def show(self, show):
         self.batoms.obj.data.attributes['show'].data[self.index].value = show
         update_object(self.batoms.obj)
+    
+    @property
+    def polyhedra(self):
+        polyhedra = self.batoms.obj.data.attributes['model_style'].data[self.index].value == 2
+        return polyhedra
+    
+    @polyhedra.setter
+    def polyhedra(self, polyhedra):
+        if polyhedra:
+            self.batoms.obj.data.attributes['model_style'].data[self.index].value = 2
+        else:
+            self.batoms.obj.data.attributes['model_style'].data[self.index].value = 1
+        # update_object(self.batoms.obj)
+        self.batoms.draw_polyhedra()
+
 

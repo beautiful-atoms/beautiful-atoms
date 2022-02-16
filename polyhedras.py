@@ -312,7 +312,8 @@ class Polyhedras(ObjectGN):
             if len(bondlists) == 0:
                 self.batoms.bonds.update()
                 bondlists = self.batoms.bonds.bondlists
-            polyhedra_kinds = self.calc_polyhedra_data(bondlists, species, positions)
+            polyhedra_kinds = self.calc_polyhedra_data(bondlists, species, 
+                        positions, arrays['model_style'][show])
             if f == 0:
                 polyhedra_datas = polyhedra_kinds
             
@@ -373,8 +374,6 @@ class Polyhedras(ObjectGN):
     def set_arrays(self, arrays):
         """
         """
-        if len(arrays['vertices']) == 0:
-            return
         attributes = self.attributes
         # same length
         if len(arrays['vertices']) == len(attributes['show']):
@@ -388,6 +387,16 @@ class Polyhedras(ObjectGN):
         else:
             # add or remove vertices, rebuild the object
             self.build_object(arrays)
+
+    @property
+    def obj(self):
+        return self.get_obj()
+    
+    def get_obj(self):
+        obj = bpy.data.objects.get(self.obj_name)
+        if obj is None:
+            self.build_object(default_polyhedra_datas)
+        return obj
 
     @property
     def offsets(self):
@@ -474,7 +483,8 @@ class Polyhedras(ObjectGN):
         positions[index] = value
         self.set_positions(positions)
 
-    def calc_polyhedra_data(self, bondlists, species, positions):
+    def calc_polyhedra_data(self, bondlists, species, positions,
+                        model_styles):
         """
         """
         from ase.data import chemical_symbols
@@ -524,6 +534,7 @@ class Polyhedras(ObjectGN):
             n = len(u)
             # print(n)
             for i in range(n):
+                if model_styles[int(u[i, 0])] != 2: continue
                 mask = np.where(indices == i)[0]
                 vertices1 = positions21[mask]
                 dnv = len(vertices1)
@@ -555,19 +566,23 @@ class Polyhedras(ObjectGN):
                     nv = nv1
                     nf = nf1
         n = len(vertices)
-        nf = len(faces)
-        datas = {
-            'atoms_index1': atoms_index1[0:n],
-            'atoms_index2': atoms_index2[0:n],
-            'species_index': species_index[0:n],
-            'face_species_index': face_species_index[0:nf],
-            'vertices':np.array(vertices),
-            'offsets':np.array(offsets),
-            'widths':widths[0:n],
-            'edges':edges,
-            'faces':faces,
-            'styles':styles[0:n],
-        }
+        if n == 0:
+            datas = default_polyhedra_datas
+        else:
+            nf = len(faces)
+            datas = {
+                'atoms_index1': atoms_index1[0:n],
+                'atoms_index2': atoms_index2[0:n],
+                'species_index': species_index[0:n],
+                'face_species_index': face_species_index[0:nf],
+                'vertices':np.array(vertices),
+                'offsets':np.array(offsets),
+                'widths':widths[0:n],
+                'edges':edges,
+                'faces':faces,
+                'styles':styles[0:n],
+                'model_styles':model_styles,
+            }
         # print('datas: ', datas)
         print('calc_polyhedra_data: {0:10.2f} s'.format(time() - tstart))
         return datas
