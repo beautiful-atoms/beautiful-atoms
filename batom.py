@@ -111,4 +111,17 @@ class Batom():
         # update_object(self.batoms.obj)
         self.batoms.draw_polyhedra()
 
+    @property
+    def bond(self):
+        bond = self.batoms.obj.data.attributes['model_style'].data[self.index].value > 0
+        return bond
+    
+    @bond.setter
+    def bond(self, bond):
+        if bond:
+            self.batoms.obj.data.attributes['model_style'].data[self.index].value = 1
+        else:
+            self.batoms.obj.data.attributes['model_style'].data[self.index].value = 0
+        # update_object(self.batoms.obj)
+        self.batoms.draw_ball_and_stick()
 
