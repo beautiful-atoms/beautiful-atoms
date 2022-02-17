@@ -2,7 +2,6 @@
 
 """
 
-from math import exp
 import bpy
 from batoms.base import Setting
 import numpy as np
@@ -19,15 +18,16 @@ class Select():
     sel.model_style = 1
 
     """
-    def __init__(self, label, name = 'sel0', 
-                batoms = None,
+    def __init__(self, label, name = 'all', 
+                batoms = None, indices = None,
                 ) -> None:
         self.batoms = batoms
         self.label = label
         self.name = name
         self.coll_name = '%s_%s'%(label, name)
-        # BaseCollection.__init__(self, coll_name = '%s_%s'%(label, name))
-        
+        if indices is not None:
+            self.indices = indices
+
     @property
     def positions(self):
         return self.batoms.positions[self.indices]
@@ -96,6 +96,13 @@ class Select():
         return mask
 
     @property
+    def vg(self):
+        vg = self.batoms.obj.vertex_groups.get(self.name)
+        if vg is None:
+            vg = self.batoms.obj.vertex_groups.new(name = self.name)
+        return vg
+
+    @property
     def indices(self):
         return self.get_indices()
     
@@ -104,13 +111,17 @@ class Select():
         self.set_indices(indices)
     
     def get_indices(self):
-        indices = self.batoms.arrays['select']
-        indices = np.where(indices == string2Number(self.name))[0]
+        vg_idx = self.vg.index
+        obj = self.batoms.obj
+        indices = [ v.index for v in obj.data.vertices if vg_idx in [ vg.group for vg in v.groups ] ]
         return indices
     
     def set_indices(self, indices):
+        if isinstance(indices, np.ndarray):
+            indices = indices.tolist()
+        self.vg.add(indices, 1.0, 'ADD')
         select = self.batoms.attributes['select']
-        select[self.indices] = string2Number('sel0')
+        select[self.indices] = string2Number('all')
         select[indices] = string2Number(self.name)
         select = {'select': select}
         self.batoms.set_attributes(select)
@@ -223,6 +234,11 @@ class Selects(Setting):
         for b in self.collection:
             selects[b.name] = Select(self.label, name = b.name, 
                     batoms = self.batoms)
+        for vg in self.batoms.obj.vertex_groups:
+            if vg.name not in selects:
+                self.add(vg.name)
+            selects[vg.name] = Select(self.label, name = vg.name, 
+                    batoms = self.batoms)
         return selects
 
     def __getitem__(self, key):
@@ -252,13 +268,15 @@ class Selects(Setting):
             i += 1
         return s
     
-    def add(self, name, expre):
-        indices = elect_expression(expre, self.batoms)
-        # print(name, string2Number(name))
-        select = self.batoms.attributes['select']
-        select[indices] = string2Number(name)
-        select = {'select': select}
-        self.batoms.set_attributes(select)
+    def add(self, name, expre = None):
+        if expre is not None:
+            indices = elect_expression(expre, self.batoms)
+        else:
+            indices = None
+        # select = self.batoms.attributes['select']
+        # select[indices] = string2Number(name)
+        # select = {'select': select}
+        # self.batoms.set_attributes(select)
         sel = None
         subset = self.find(name)
         if subset is None:
@@ -267,12 +285,12 @@ class Selects(Setting):
         subset.label = self.label
         subset.flag = True
         # species_props = self.batoms.
-        self.batoms.species.build_instancers()
-        sel = Select(self.label, name = name, batoms = self.batoms)
+        sel = Select(self.label, name = name, 
+                    batoms = self.batoms, indices = indices)
+        self.batoms.species.build_instancers(sel)
         for sp in self.batoms.species:
             self.batoms.add_geometry_node(sp.name, sel.name)
         return sel
-    
 
 def elect_expression(expre, batoms):
     """
@@ -299,6 +317,7 @@ hydrogens:
 metals
 
 """
+    indices = None
     if isinstance(expre, (list, np.ndarray)):
         return expre
     if isinstance(expre, str):
@@ -309,11 +328,11 @@ metals
         if 'sheet' in expre:
             sheet = expre.split()[1]
             print('sheet %s'%sheet)
-            indices = batoms.ribbon.sheets[sheet].indices
+            indices = batoms.ribbon.protein.sheets[sheet].indices
         if 'helix' in expre:
             helix = expre.split()[1]
             print('helix %s'%helix)
-            indices = batoms.ribbon.helixs[helix].indices
+            indices = batoms.ribbon.protein.helixs[helix].indices
         if 'hetatm' in expre:
             print('hetatm')
             indices = np.where(batoms.attributes['types'] == 'HETATM')[0]
