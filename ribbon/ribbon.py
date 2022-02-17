@@ -195,7 +195,7 @@ class Ribbon():
             draw_sheet_from_vertices_spline('sheet-%s'%name, 
                     sheet.as_dict(), self.coll, shade_smooth = False)
         print('draw sheet: %s'%(time() - tstart))
-        self.batoms.selects['sel0'].show = False
+        self.batoms.selects['all'].show = False
     
     def draw_helix(self):
         tstart = time()
@@ -203,7 +203,7 @@ class Ribbon():
             draw_sheet_from_vertices_spline('helix-%s'%name, 
                         helix.as_dict(), self.coll, shade_smooth = True)
         print('draw helix: %s'%(time() - tstart))
-        self.batoms.selects['sel0'].show = False
+        self.batoms.selects['all'].show = False
     
     def draw_turn(self):
         # Create bevel control curve.
@@ -218,7 +218,7 @@ class Ribbon():
             draw_rope_from_vertices_nurbs('turn-%s'%name, turn.as_dict(), 
                     self.coll, bevel_control = bevel_control)
         print('draw turn: %s'%(time() - tstart))
-        self.batoms.selects['sel0'].show = False
+        self.batoms.selects['all'].show = False
     
     def draw(self):
         tstart = time()

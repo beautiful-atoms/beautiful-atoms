@@ -165,7 +165,7 @@ class Protein():
         self.sheets = sheets
         self.helixs = helixs
         self.turns = turns
-        self.batoms.selects['sel0'].show = False
+        self.batoms.selects['all'].show = False
         # HETATM    
         indices = np.where(arrays['types'] == 'HETATM')[0]
         self.batoms.selects.add('heta', indices)

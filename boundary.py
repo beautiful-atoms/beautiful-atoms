@@ -539,7 +539,7 @@ class Boundary(ObjectGN):
             self.build_object(arrays)
             species = np.unique(arrays['species'])
             for sp in species:
-                self.add_geometry_node(sp, 'sel0')
+                self.add_geometry_node(sp, 'all')
 
     def get_arrays(self):
         """

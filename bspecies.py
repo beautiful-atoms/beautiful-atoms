@@ -255,7 +255,7 @@ class Bspecies(Setting):
                 raise ValueError("Total occumpancy should be smaller than 1!")
         return elements
     
-    def build_materials(self, sp, select = 'sel0', node_inputs = None, 
+    def build_materials(self, sp, select = 'all', node_inputs = None, 
                 material_style = 'default'):
         """
         """
@@ -269,7 +269,7 @@ class Bspecies(Setting):
                             material_style = material_style,
                             backface_culling = True)
     
-    def build_instancer(self, sp, select = 'sel0', 
+    def build_instancer(self, sp, select = 'all', 
                         shape = 'UV_SPHERE', 
                         shade_smooth = True):
         name = '%s_%s_%s'%(self.label, sp.name, select)
@@ -348,12 +348,16 @@ class Bspecies(Setting):
                 tos = toe
             mesh.polygons.foreach_set('material_index', material_indexs)
 
-    def build_instancers(self, segments = None):
+    def build_instancers(self, sel = None, segments = None):
         if segments:
             self.segments = segments
-        for sel in self.batoms.selects:
+        if select is not None:
             for sp in self:
                 self.build_instancer(sp, select = sel.name)
+        else:
+            for sel in self.batoms.selects:
+                for sp in self:
+                    self.build_instancer(sp, select = sel.name)
             
     @property
     def radius_style(self):

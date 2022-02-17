@@ -40,7 +40,7 @@ class MSsetting(Setting):
         self.ses_name = '%s_ses'%self.label
         self.resolution = resolution
         if len(self) == 0:
-            self['1'] = {'select': 'sel0'}
+            self['1'] = {'select': 'all'}
     
 
     def add(self, name, datas = {}):

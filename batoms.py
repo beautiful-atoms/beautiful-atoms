@@ -151,7 +151,7 @@ class Batoms(BaseCollection, ObjectGN):
                 species_props = {sp: {'elements':{sp.split('_')[0]:1.0}} for sp in species}
             self._species = Bspecies(label, label, species_props, self, segments = segments)
             self.build_geometry_node()
-            self.selects.add('sel0', np.arange(len(self)))
+            self.selects.add('all', np.arange(len(self)))
             if isinstance(scale, (int, float)):
                 scale = np.ones(natom)*scale
             show = np.ones(natom, dtype = int)
