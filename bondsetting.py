@@ -58,14 +58,14 @@ class BondSetting():
     def search(self):
         return self.collection[self.name].search
     
+    @property
+    def polyhedra(self):
+        return self.collection[self.name].polyhedra
+    
     @search.setter
     def search(self, search):
-        self.bonds.obj.data.attributes['search'].data[self.index].value = search
+        self.collection[self.name].search = search
         # if search not exist, add one
-        sp = self.species
-        sp['search'] = search
-        self.bonds.setting.build_instancer(sp)
-        self.bonds.add_geometry_node(sp)
 
     @property
     def order(self):
@@ -316,11 +316,19 @@ class BondSettings(Setting):
     def get_instancers(self):
         instancers = {}
         for sp in self:
-            instancers[sp.name] = {}
+            data = sp.as_dict()
+            instancers[data['name']] = {}
             for order in [1, 2, 3]:
                 for style in [0, 1, 2]:
-                    name = 'bond_%s_%s_%s_%s'%(self.label, sp.name, order, style)
-                    instancers[sp.name]['%s_%s'%(order, style)] = bpy.data.objects.get(name)
+                    name = 'bond_%s_%s_%s_%s'%(self.label, data['name'], order, style)
+                    instancers[data['name']]['%s_%s'%(order, style)] = bpy.data.objects.get(name)
+            data = sp.as_dict(reversed = True)
+            if sp.search == 2:
+                instancers[data['name']] = {}
+                for order in [1, 2, 3]:
+                    for style in [0, 1, 2]:
+                        name = 'bond_%s_%s_%s_%s'%(self.label, data['name'], order, style)
+                        instancers[data['name']]['%s_%s'%(order, style)] = bpy.data.objects.get(name)
         return instancers
     
     @property
@@ -330,13 +338,23 @@ class BondSettings(Setting):
     def get_materials(self):
         materials = {}
         for sp in self:
-            materials[sp.name] = {}
+            data = sp.as_dict()
+            materials[data['name']] = {}
             for order in [1, 2, 3]:
                 for style in [0, 1, 2]:
                     for i in range(2):
-                        name = '%s_%s_%s_%s_%s'%(self.label, sp.name, order, style, i)
+                        name = '%s_%s_%s_%s_%s'%(self.label, data['name'], order, style, i)
                         mat = bpy.data.materials.get(name)
-                        materials[sp.name]['%s_%s_%s'%(order, style, i)] = mat
+                        materials[data['name']]['%s_%s_%s'%(order, style, i)] = mat
+            data = sp.as_dict(reversed = True)
+            if sp.search == 2:
+                materials[data['name']] = {}
+                for order in [1, 2, 3]:
+                    for style in [0, 1, 2]:
+                        for i in range(2):
+                            name = '%s_%s_%s_%s_%s'%(self.label, data['name'], order, style, i)
+                            mat = bpy.data.materials.get(name)
+                            materials[data['name']]['%s_%s_%s'%(order, style, i)] = mat
         return materials
 
     def __setitem__(self, index, setdict):
@@ -357,7 +375,9 @@ class BondSettings(Setting):
             setattr(subset, key, value)
         subset.label = self.label
         subset.flag = True
-        self.build_instancer(self[name].as_dict())
+        self.build_instancer(subset.as_dict())
+        if subset.search == 2 and subset.species1 != subset.species2:
+            self.build_instancer(subset.as_dict(reversed = True))
 
     def __getitem__(self, index):
         name = tuple2string(index)
@@ -420,12 +440,38 @@ class BondSettings(Setting):
         s += '-'*60 + '\n'
         return s
     
+    def as_dict(self) -> dict:
+        bondsetting = {}
+        for b in self.collection:
+            bondsetting[(b.species1, b.species2)] = b.as_dict()
+        return bondsetting
+
     @property    
     def cutoff_dict(self):
         cutoff_dict = {}
         for b in self.collection:
             cutoff_dict[(b.species1, b.species2)] = [b.min, b.max]
+            # if b.search == 2:
+                # cutoff_dict[(b.species2, b.species1)] = [b.min, b.max]
         return cutoff_dict
+    
+    @property    
+    def search_dict(self):
+        search_dict = {}
+        for b in self.collection:
+            search_dict[(b.species1, b.species2)] = b.search
+            # if b.search == 2:
+                # search_dict[(b.species2, b.species1)] = b.search
+        return search_dict
+    
+    @property    
+    def polyhedra_dict(self):
+        polyhedra_dict = {}
+        for b in self.collection:
+            polyhedra_dict[(b.species1, b.species2)] = b.polyhedra
+            # if b.polyhedra == 2:
+                # polyhedra_dict[(b.species2, b.species1)] = b.polyhedra
+        return polyhedra_dict
     
     @property    
     def maxcutoff(self):

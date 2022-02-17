@@ -152,7 +152,7 @@ class Polyhedras(ObjectGN):
         self.assign_materials()
         obj.parent = self.batoms.obj
         print('polyhedras: build_object: {0:10.2f} s'.format(time() - tstart))
-    
+
     def assign_materials(self):
         # sort element by occu
         me = self.obj.data
@@ -493,6 +493,9 @@ class Polyhedras(ObjectGN):
 
         tstart = time()
         chemical_symbols = np.array(chemical_symbols)
+        # find bonds contribute to polyhedra
+        indices = bondlists[:, 8].astype(bool)
+        bondlists = bondlists[indices]
         # maxinum number of poly 
         npoly = len(bondlists)
         if npoly == 0:

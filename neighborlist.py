@@ -18,7 +18,7 @@ def RemovePbc(species0, positions0, cell, pbc, cutoffs):
     return array
 
 def bondlist_kdtree(quantities, species0, positions0, cell, pbc,
-                    cutoffs, search, self_interaction=False):
+                    setting, self_interaction=False):
     """
     return
     
@@ -26,6 +26,9 @@ def bondlist_kdtree(quantities, species0, positions0, cell, pbc,
     j: index2
     k: search bond style
     """
+    cutoffs = {}
+    for pair, b in setting.items():
+        cutoffs[pair] = [b['min'], b['max']]
     natom = len(positions0)
     # orignal atoms
     array1 = {
@@ -41,6 +44,7 @@ def bondlist_kdtree(quantities, species0, positions0, cell, pbc,
     i = []
     j = []
     k = []
+    p = []
     for pair, data in bonddatas.items():
         i1 = []
         j1 = []
@@ -59,10 +63,12 @@ def bondlist_kdtree(quantities, species0, positions0, cell, pbc,
             i1 = list(i1)
             j1 = list(j1)
         n = len(i1)
-        k1 = [search[pair]]*n
+        k1 = [setting[pair]['search']]*n
+        p1 = [setting[pair]['polyhedra']]*n
         i.extend(i1)
         j.extend(j1)
         k.extend(k1)
+        p.extend(p1)
     # offsets
     offsets_i = array1['offsets'][i]
     offsets_j = array2['offsets'][j]
@@ -72,6 +78,7 @@ def bondlist_kdtree(quantities, species0, positions0, cell, pbc,
     i = array1['indices'][i]
     j = array2['indices'][j]
     k = np.array(k)
+    p = np.array(p)
     # Remove all self-interaction.
     if not self_interaction:
         mask = np.where((i == j) & \
@@ -81,6 +88,7 @@ def bondlist_kdtree(quantities, species0, positions0, cell, pbc,
         i = i[mask]
         j = j[mask]
         k = k[mask]
+        p = p[mask]
         distances = distances[mask]
         offsets_i = offsets_i[mask]
         offsets_j = offsets_j[mask]
@@ -93,6 +101,8 @@ def bondlist_kdtree(quantities, species0, positions0, cell, pbc,
             retvals += [j]
         elif q == 'k':
             retvals += [k]
+        elif q == 'p':
+            retvals += [p]
         elif q == 'd':
             retvals += [distances]
         elif q == 'S':
