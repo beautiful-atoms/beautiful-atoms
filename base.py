@@ -306,7 +306,11 @@ class ObjectGN():
             return
         nvert = len(obj.data.vertices)
         for i in range(1, nframe):
-            sk = obj.shape_key_add(name = str(i))
+            name = str(i)
+            if name not in obj.data.shape_keys.key_blocks:
+                sk = obj.shape_key_add(name = name)
+            else:
+                sk = obj.data.shape_keys.key_blocks.get(name)
             # Use the local position here
             positions = frames[i]
             positions = positions.reshape((nvert*3, 1))
