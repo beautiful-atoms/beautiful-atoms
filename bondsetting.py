@@ -415,7 +415,7 @@ class BondSettings(Setting):
         if isinstance(bondpairs[0], (str, int, float)):
             bondpairs = [bondpairs]
         for bondpair in bondpairs:
-            species = {sp: self.batoms.species.species_props['sel0'][sp] for sp in bondpair}
+            species = {sp: self.batoms.species.species_props['all'][sp] for sp in bondpair}
             maxlength = species[bondpair[0]]['radius'] + \
                         species[bondpair[1]]['radius']
             self[bondpair] = {'max': maxlength*self.cutoff, 

@@ -92,6 +92,7 @@ class SearchBond(ObjectGN):
         for attribute in default_attributes:
             mesh.attributes.new(name = attribute[0], type = attribute[1], domain = 'POINT')
         self.batoms.coll.objects.link(obj)
+        obj.parent = self.batoms.obj
         #
         name = '%s_search_bond_offset'%self.label
         self.delete_obj(name)
@@ -101,12 +102,17 @@ class SearchBond(ObjectGN):
         obj = bpy.data.objects.new(name, mesh)
         self.batoms.coll.objects.link(obj)
         obj.hide_set(True)
+        obj.parent = self.batoms.obj
         bpy.context.view_layer.update()
         self.set_attributes(attributes)
         self.build_geometry_node()
         self.set_frames(self._frames, only_basis = True)
         # print('boundary: build_object: {0:10.2f} s'.format(time() - tstart))
     
+    def update(self, bondlist, mollists, moldatas, arrays, cell):
+            search_bond_data = self.calc_search_bond_data(bondlist, mollists, moldatas, arrays, cell)
+            self.set_arrays(search_bond_data)
+
     def build_geometry_node(self):
         """
         """
@@ -274,7 +280,7 @@ class SearchBond(ObjectGN):
             self.build_object(arrays)
             species = np.unique(arrays['species'])
             for sp in species:
-                self.add_geometry_node(sp, 'sel0')
+                self.add_geometry_node(sp, 'all')
 
     def get_arrays(self):
         """
@@ -382,3 +388,81 @@ class SearchBond(ObjectGN):
         name = '%s_search_bond_offset'%(self.label)
         obj = self.obj_o
         self.set_obj_frames(name, obj, frames['offsets'])
+    
+    def calc_search_bond_data(self, bondlists, mollists, moldatas, arrays, cell):
+        """
+        """
+        tstart = time()
+        # 9th column of bondlists is search bond type 1
+        # search type 1: atoms search by bond, the one with offset
+        indices1 = np.where((bondlists[:, 2:5] != np.array([0, 0, 0])).any(axis = 1))[0]
+        indices2 = np.where((bondlists[:, 5:8] != np.array([0, 0, 0])).any(axis = 1))[0]
+        n = len(indices1) + len(indices2)
+        if n ==0:
+            return None
+        bondlists1 = bondlists[indices1]
+        bondlists1 = bondlists1[:, [0, 2, 3, 4]]
+        bondlists1 = np.unique(bondlists1, axis = 0)
+        indices1 = bondlists1[:, 0].astype(int)
+        model_styles1 = arrays['model_style'][indices1]
+        shows1 = arrays['show'][indices1]
+        radius_styles1 = arrays['radius_style'][indices1]
+        selects1 = arrays['select'][indices1]
+        scales1 = arrays['scale'][indices1]
+        species_indexs1 = arrays['species_index'][indices1]
+        species1 = arrays['species'][indices1]
+        offset_vectors1 = bondlists1[:, 1:4]
+        offsets1 = np.dot(offset_vectors1, cell)
+        positions1 = arrays['positions'][indices1] + offsets1
+        #------------------------------------
+        #
+        bondlists2 = bondlists[indices2]
+        bondlists2 = bondlists2[:, [1, 5, 6, 7]]
+        bondlists2 = np.unique(bondlists2, axis = 0)
+        indices2 = bondlists2[:, 0].astype(int)
+        model_styles2 = arrays['model_style'][indices2]
+        shows2 = arrays['show'][indices2]
+        radius_styles2 = arrays['radius_style'][indices2]
+        selects2 = arrays['select'][indices2]
+        scales2 = arrays['scale'][indices2]
+        species_indexs2 = arrays['species_index'][indices2]
+        species2 = arrays['species'][indices2]
+        offset_vectors2 = bondlists2[:, 1:4]
+        offsets2 = np.dot(offset_vectors2, cell)
+        positions2 = arrays['positions'][indices2] + offsets2
+        #
+        indices = np.append(indices1, indices2)
+        species_indexs = np.append(species_indexs1, species_indexs2)
+        species = np.append(species1, species2)
+        positions = np.append(positions1, positions2, axis = 0)
+        offset_vectors = np.append(offset_vectors1, offset_vectors2, axis = 0)
+        model_styles = np.append(model_styles1, model_styles2)
+        selects = np.append(selects1, selects2)
+        shows = np.append(shows1, shows2)
+        scales = np.append(scales1, scales2)
+        radius_styles = np.append(radius_styles1, radius_styles2)
+        datas = {
+            'atoms_index': np.array(indices),
+            'species_index': species_indexs,
+            'species': species,
+            'positions':positions,
+            # 'offsets':offsets,
+            'offsets':offset_vectors,
+            'model_styles':model_styles,
+            'shows':shows,
+            'selects':selects,
+            'scales':scales,
+            'radius_styles':radius_styles,
+        }
+        #=========================
+        # # search molecule
+        # atoms_index = []
+        # for b in mollists:
+        #     indices = moldatas[b[0]]
+        #     datas['atoms_index'] = np.append(datas['atoms_index'], indices)
+        #     datas['offsets'] = np.append(datas['offsets'], b[5:8])
+
+            
+        # print('datas: ', datas)
+        # print('calc_search_bond_data: {0:10.2f} s'.format(time() - tstart))
+        return datas
