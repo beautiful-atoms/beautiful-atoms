@@ -61,7 +61,7 @@ class Bspecies(Setting):
         """
         self.add(name, data)
         
-    def add(self, name, data):
+    def add(self, name, data, instancer = None):
         """
         """
         if 'color_style' not in data: 
@@ -91,7 +91,7 @@ class Bspecies(Setting):
             eledata.occupancy = occupancy
             eledata.color = props['color'][ele]
         for sel in self.batoms.selects:
-            self.build_instancer(sp, select = sel.name)
+            self.build_instancer(sp, select = sel.name, instancer = instancer)
             self.batoms.add_geometry_node(sp.name, sel.name)
 
     def keys(self):
@@ -218,7 +218,7 @@ class Bspecies(Setting):
         species3 = {}
         for key, data in species2.items():
             if key not in species1:
-                instancer = other.instancers[key]
+                instancer = other.instancers['all'][key]
                 name = '%s_%s_instancer'%(self.label, key)
                 instancer.name = name
                 # materials
@@ -226,14 +226,14 @@ class Bspecies(Setting):
                     # mat.name.replace()
                 species3[key] = [data, instancer]
             elif data != species1[key]:
-                instancer = other.instancers[key]
+                instancer = other.instancers['all'][key]
                 spname = '%s_%s'%(key, other.label)
                 name = '%s_%s_instancer'%(self.label, spname)
                 instancer.name = name
                 species3[spname] = [data, instancer]
         #
         for key, data in species3.items():
-            self.add(key, data[0], data[1])
+            self.add(key, data[0], instancer = data[1])
         return self
     
     def __iter__(self):
@@ -269,7 +269,7 @@ class Bspecies(Setting):
                             material_style = material_style,
                             backface_culling = True)
     
-    def build_instancer(self, sp, select = 'all', 
+    def build_instancer(self, sp, instancer = None, select = 'all', 
                         shape = 'UV_SPHERE', 
                         shade_smooth = True):
         name = '%s_%s_%s'%(self.label, sp.name, select)

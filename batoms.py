@@ -925,13 +925,14 @@ class Batoms(BaseCollection, ObjectGN):
         """
         Extend batom object by appending batoms from *other*.
         
-        >>> from batoms.batoms import Batom
-        >>> h2o = Batoms('h2o', species = ['O', 'H', 'H'], positions= [[0, 0, 0.40], [0, -0.76, -0.2], [0, 0.76, -0.2]])
-        >>> co = Batoms('co', species = ['C', 'O'], positions= [[1, 0, 0], [2.3, 0, 0]])
-        >>> h2o = h2o + co
+        >>> slab = au111 + co
         """
         # could also use self.add_vertices(other.positions)
         object_mode()
+        n1 = len(self)
+        n2 = len(other)
+        indices1 = list(range(n1))
+        indices2 = list(range(n1, n1 + n2))
         bpy.ops.object.select_all(action='DESELECT')
         self.obj.select_set(True)
         other.obj.select_set(True)
@@ -939,8 +940,12 @@ class Batoms(BaseCollection, ObjectGN):
         bpy.ops.object.join()
         # update species and species_indextsa
         self._species.extend(other._species)
-        self.build_geometry_node()
-    
+        self.selects.add(self.label[0:min(4, len(self.label))], indices1)
+        self.selects.add(other.label[0:min(4, len(other.label))], indices2)
+        # remove shape key from mol
+        sp = self.obj.data.shape_keys.key_blocks.get('Basis_%s'%other.label)
+        self.obj.shape_key_remove(sp)
+        
     def __iadd__(self, other):
         """
         >>> h1 += h2

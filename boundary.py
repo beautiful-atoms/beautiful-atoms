@@ -538,8 +538,9 @@ class Boundary(ObjectGN):
             # add or remove vertices
             self.build_object(arrays)
             species = np.unique(arrays['species'])
-            for sp in species:
-                self.add_geometry_node(sp, 'all')
+            for sel in self.batoms.selects:
+                for sp in species:
+                    self.add_geometry_node(sp, sel.name)
 
     def get_arrays(self):
         """
