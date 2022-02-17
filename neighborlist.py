@@ -46,6 +46,7 @@ def bondlist_kdtree(quantities, species0, positions0, cell, pbc,
     k = []
     p = []
     for pair, data in bonddatas.items():
+        if len(data) == 0: continue
         i1 = []
         j1 = []
         for i2, j2 in data.items():
@@ -263,7 +264,7 @@ def build_boundary(species, positions, cell, pbc, boundary, include_self = False
             nb1 = nb2
     # build edge
     for c in [[0, 1], [0, 2], [1, 2]]:
-        if not pbc[c[0]] and not pbc[c[1]]: continue
+        if not pbc[c[0]] or not pbc[c[1]]: continue
         for i in range(2):
             for j in range(2):
                 indices_j = np.intersect1d(indices[c[0]][i], indices[c[1]][j])
