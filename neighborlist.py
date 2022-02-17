@@ -18,8 +18,13 @@ def RemovePbc(species0, positions0, cell, pbc, cutoffs):
     return array
 
 def bondlist_kdtree(quantities, species0, positions0, cell, pbc,
-                    cutoffs, self_interaction=False):
+                    cutoffs, search, self_interaction=False):
     """
+    return
+    
+    i: index1
+    j: index2
+    k: search bond style
     """
     natom = len(positions0)
     # orignal atoms
@@ -35,6 +40,7 @@ def bondlist_kdtree(quantities, species0, positions0, cell, pbc,
     # build bondlist
     i = []
     j = []
+    k = []
     for pair, data in bonddatas.items():
         i1 = []
         j1 = []
@@ -46,13 +52,17 @@ def bondlist_kdtree(quantities, species0, positions0, cell, pbc,
         if pair[0] == pair[1]:
             i1 = np.array(i1)
             j1 = np.array(j1)
-            mask = np.where((i1 > j1) & ((array2['offsets'][j1] == 0).all(axis = 1)), False, True)
+            # wrong, offset1 could be non zero
+            mask = np.where((array1['indices'][i1] > array2['indices'][j1]), False, True)
             i1 = i1[mask]
             j1 = j1[mask]
             i1 = list(i1)
             j1 = list(j1)
+        n = len(i1)
+        k1 = [search[pair]]*n
         i.extend(i1)
         j.extend(j1)
+        k.extend(k1)
     # offsets
     offsets_i = array1['offsets'][i]
     offsets_j = array2['offsets'][j]
@@ -61,6 +71,7 @@ def bondlist_kdtree(quantities, species0, positions0, cell, pbc,
     #
     i = array1['indices'][i]
     j = array2['indices'][j]
+    k = np.array(k)
     # Remove all self-interaction.
     if not self_interaction:
         mask = np.where((i == j) & \
@@ -69,6 +80,7 @@ def bondlist_kdtree(quantities, species0, positions0, cell, pbc,
         # print(mask)
         i = i[mask]
         j = j[mask]
+        k = k[mask]
         distances = distances[mask]
         offsets_i = offsets_i[mask]
         offsets_j = offsets_j[mask]
@@ -79,6 +91,8 @@ def bondlist_kdtree(quantities, species0, positions0, cell, pbc,
             retvals += [i]
         elif q == 'j':
             retvals += [j]
+        elif q == 'k':
+            retvals += [k]
         elif q == 'd':
             retvals += [distances]
         elif q == 'S':
@@ -91,7 +105,7 @@ def bondlist_kdtree(quantities, species0, positions0, cell, pbc,
         return tuple(retvals)
 
 def neighbor_kdtree(species0, positions0, cell, pbc,
-                    cutoffs, self_interaction=False):
+                    cutoffs):
     """
     wrap to pbc structure
 
