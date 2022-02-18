@@ -164,7 +164,7 @@ class Bonds(ObjectGN):
     
     def build_geometry_node(self):
         """
-        Geometry node for everything!
+        todo: add width to nodes
         """
         from batoms.butils import get_nodes_by_name
         from batoms.tools import string2Number
@@ -489,17 +489,17 @@ class Bonds(ObjectGN):
             # if len(frames_search) > 0:
             #     positions_search = frames_search[f]
             #     positions = positions + positions_search
-            bondlist, bonddatas, mollists, moldatas = \
+            bondlist, bonddatas, peciesBondDatas, molPeciesDatas = \
                         self.build_bondlists(species, positions, self.batoms.cell, 
                         self.batoms.pbc, setting)
             if array_b is not None:
-                bondlist = self.build_bondlists_with_boundary(array_b, bondlist, bonddatas, mollists, moldatas)
+                bondlist = self.build_bondlists_with_boundary(array_b, bondlist, bonddatas, peciesBondDatas, molPeciesDatas)
             # search molecule
             # if self.show_search:
                 # bondlist = build_bondlists_with_molecule(array_b, bondlist, natom)
             # search bond
             if self.show_search:
-                self.search_bond.update(bondlist, mollists, moldatas, arrays, self.batoms.cell)
+                self.search_bond.update(bondlist, peciesBondDatas, molPeciesDatas, arrays, self.batoms.cell)
             if f == 0:
                 bondlists = bondlist
             else:
@@ -618,9 +618,6 @@ class Bonds(ObjectGN):
             # objs[i].data.shape_keys.key_blocks[0].data.foreach_set('co', vertices)
             objs[i].data.vertices.foreach_set('co', vertices)
             objs[i].data.update()
-        bpy.context.view_layer.objects.active = objs[i]
-        bpy.ops.object.mode_set(mode = 'EDIT')
-        bpy.ops.object.mode_set(mode = 'OBJECT')
     
     def get_frames(self):
         """
@@ -817,6 +814,12 @@ class Bonds(ObjectGN):
     def build_bondlists(self, species, positions, cell, pbc, setting):
         """
         build bondlist for atoms
+        steps:
+        1 build bondlist for atoms with pbc
+        2 search connected_components (molecule),
+          return pecies data and its neighbour
+        3 add bondlist related with molecule
+        
         """
         from batoms.neighborlist import bondlist_kdtree
         bondlists = np.zeros((0, 10), dtype = int)
@@ -825,6 +828,8 @@ class Bonds(ObjectGN):
             return bondlists, bonddatas, {}, {}
         #
         tstart = time()
+        # ==========================================================
+        # step 1 build bondlist for atoms with pbc
         # nli: index1
         # nlj: index2
         # nlk: search bond style
@@ -837,6 +842,7 @@ class Bonds(ObjectGN):
         # print('build_bondlists: {0:10.2f} s'.format(time() - tstart))
         # search type 0, 
         search0 = np.where((nlk == 0) & (nlSj != np.array([0, 0, 0])).any(axis = 1), False, True)
+        # 0  1  2:5       5:8          8     9
         # i, j, offset_i, offset_j, search, search_style
         bondlists = np.concatenate((np.array([nli, nlj]).T, 
                         np.array(nlSi, dtype = int), np.array(nlSj), 
@@ -845,7 +851,7 @@ class Bonds(ObjectGN):
         bondlists = bondlists.astype(int)
         # remove bond outside box for search0
         bondlists = bondlists[search0]
-        # build bondatas
+        # build bondatas, for each atom, save the bonds connect to it.
         argsort = bondlists[:, 0].argsort()
         bondlists = bondlists[argsort]
         u, indices = np.unique(bondlists[:, 0], return_index=True)
@@ -853,14 +859,42 @@ class Bonds(ObjectGN):
         m = len(u)
         for i in range(m):
             bonddatas[u[i]] = bondlists[indices[i]: indices[i + 1]]
-        mollists, moldatas = self.build_mollists(len(positions), bondlists)
-        # print(bonddatas)
-        # print(moldatas)
-        # print(mollists)
-        # search molecule bond
-        
-        for mol in mollists:
-            indices = moldatas[mol[1]]
+        # 
+        # ===================================================
+        # 2 search connected_components (molecule),
+        #   return pecies data and its neighbour
+        peciesBondLists, molPeciesDatas = self.build_peciesBondLists(len(positions), bondlists)
+        # build peciesBondDatas
+        peciesBondDatas = {}
+        for p in molPeciesDatas:
+            peciesBondDatas[p] = []
+        # since this is search bond type 2, bothway, first i
+        argsort = peciesBondLists[:, 0].argsort()
+        peciesBondLists = peciesBondLists[argsort]
+        u, indices = np.unique(peciesBondLists[:, 0], return_index=True)
+        indices = np.append(indices, len(peciesBondLists))
+        m = len(u)
+        # for each pecies, save its neighbour and offset
+        for i in range(m):
+            peciesBondDatas[u[i]] = peciesBondLists[indices[i]: indices[i + 1]]
+        # bothway, then j
+        argsort = peciesBondLists[:, 1].argsort()
+        peciesBondLists = peciesBondLists[argsort]
+        u, indices = np.unique(peciesBondLists[:, 1], return_index=True)
+        indices = np.append(indices, len(peciesBondLists))
+        m = len(u)
+        # for each pecies, save its neighbour and offset
+        for i in range(m):
+            data = peciesBondLists[indices[i]: indices[i + 1]]
+            data = data.reshape(-1, 10)
+            data[:, 5:8] *= -1
+            data[:, [0, 1]] = data[:, [1, 0]]
+            peciesBondDatas[u[i]] = data
+        # ==========================================================
+        # 3 add bondlist related with molecule
+        # add bondlist for molecule
+        for mol in peciesBondLists:
+            indices = molPeciesDatas[mol[1]]
             for i in indices:
                 if i not in bonddatas: 
                     continue
@@ -869,7 +903,7 @@ class Bonds(ObjectGN):
                 bondlists = np.append(bondlists,  data, axis = 0)
                 bondlists[-n:, 2:5] += mol[5:8]
                 bondlists[-n:, 5:8] += mol[5:8]
-            indices = moldatas[mol[0]]
+            indices = molPeciesDatas[mol[0]]
             for i in indices:
                 if i not in bonddatas: 
                     continue
@@ -881,25 +915,34 @@ class Bonds(ObjectGN):
         # print(bondlists)
         bondlists = bondlists.astype(int)
         bondlists = np.unique(bondlists, axis = 0)
-        return bondlists, bonddatas, mollists, moldatas
+        # self.peciesBondLists = peciesBondLists
+        # self.molPeciesDatas = molPeciesDatas
+        # self.peciesBondDatas = peciesBondDatas
+        return bondlists, bonddatas, peciesBondDatas, molPeciesDatas
     
-    def build_mollists(self, natom, bondlists):
+    def build_peciesBondLists(self, natom, bondlists):
         """
-        build bondlist for atoms
+        search type 2: build molecule
+        steps:
+        1 search connected_components (molecules) inside atoms
+        2 construct the molecules by its pecies and the coresponding offsets
+        3 for
+        3 return the molecules
         """
-        # search type 2: build molecule
         from scipy.sparse import csgraph, csr_matrix
-        moldatas = {}
-        mollists = np.zeros((0, 10), dtype = int)
+        molPeciesDatas = {}
+        peciesBondLists = np.zeros((0, 10), dtype = int)
         # search type 2
         k = bondlists[:, 8]
         indices = np.where(k == 2)[0]
         ns2 = len(indices)
         if ns2 == 0:
-            return mollists, moldatas
+            return peciesBondLists, molPeciesDatas
         bondlists1 = bondlists[indices, :]
+        # ========================================================
+        # 1 search connected_components (molecules) inside atoms
         # with crossed bond, entire molecule
-        mols1 = {}
+        molDatas = {}
         ai = bondlists1[:, 0]
         aj = bondlists1[:, 1]
         data = np.ones(ns2, dtype = int)
@@ -909,9 +952,10 @@ class Bonds(ObjectGN):
             indices = np.where(component_list1 == i)[0]
             n = len(indices)
             if n < 2: continue
-            mols1[i] = {'sub': []}
-            mols1[i]['indices'] = indices
-        # without crossed bond, small pecies of mols1
+            molDatas[i] = {'sub': []}
+            molDatas[i]['indices'] = indices
+            molDatas[i]['offsets'] = indices
+        # without crossed bond, small pecies of molDatas
         mask = np.where((bondlists1[:, 2:5] != bondlists1[:, 5:8]).any(axis = 1), False, True)
         data = data[mask]
         ai = ai[mask]
@@ -921,34 +965,32 @@ class Bonds(ObjectGN):
         # 
         for i in range(n_components2):
             indices = np.where(component_list2 == i)[0]
-            if component_list1[indices[0]] in mols1:
-                # this pecies belong to mols1
-                mols1[component_list1[indices[0]]]['sub'].append(i)
-                moldatas[i] = indices
-        # pprint(moldatas)
+            if component_list1[indices[0]] in molDatas:
+                # this pecies belong to molDatas
+                molDatas[component_list1[indices[0]]]['sub'].append(i)
+                molPeciesDatas[i] = indices
+        # pprint(molPeciesDatas)
         # cross box bond, find direct neighbour pecies
         bondlists2 = bondlists1[~mask]
         n = len(bondlists2)
         ai = bondlists2[:, 0].astype(int)
         aj = bondlists2[:, 1].astype(int)
-        mollists = np.zeros((n, 10), dtype = int)
-        moldicts = {}
+        peciesBondLists = np.zeros((n, 10), dtype = int)
+        molBondDicts = {}
         for i in range(n):
-            # mols1Id = component_list1[bondlists2[i, 0]]
+            # molDatasId = component_list1[bondlists2[i, 0]]
             i1 = component_list2[ai[i]]
             j1 = component_list2[aj[i]]
-            mollists[i, 0] = i1
-            mollists[i, 1] = j1
-            mollists[i, 2:] = bondlists2[i, 2:]
-            moldicts[(i1, j1)] = bondlists2[i, 2:]
-        mollists = np.unique(mollists, axis = 0)
-        # print(moldatas)
-        # pprint(mollists)
+            peciesBondLists[i, 0] = i1
+            peciesBondLists[i, 1] = j1
+            peciesBondLists[i, 2:] = bondlists2[i, 2:]
+            molBondDicts[(i1, j1)] = bondlists2[i, 2:]
+        peciesBondLists = np.unique(peciesBondLists, axis = 0)
+        # ========================================================
         # find indirect neighbour pecies inside mol1
         # find connected path between pecies
-        nmp = len(moldatas)
-        ai = mollists[:, 0].astype(int)
-        aj = mollists[:, 1].astype(int)
+        ai = peciesBondLists[:, 0].astype(int)
+        aj = peciesBondLists[:, 1].astype(int)
         nml = len(ai)
         data = np.ones(nml, dtype = int)
         graph = csr_matrix((data, (ai, aj)), shape = (n_components2, n_components2))
@@ -957,7 +999,7 @@ class Bonds(ObjectGN):
         # print('predecessors: ', predecessors)
         dist_matrix = dist_matrix.astype(int)
         mollist = np.zeros(10, dtype = int)
-        for i, data in mols1.items():
+        for i, data in molDatas.items():
             indices = data['sub']
             n = len(indices)
             if n < 2: continue
@@ -972,16 +1014,16 @@ class Bonds(ObjectGN):
                         path = [last] + path
                     offsets = np.zeros(3)
                     for i2 in range(0, len(path) - 1):
-                        offsets += moldicts[(path[i2], path[i2 + 1])][3:6]
+                        offsets += molBondDicts[(path[i2], path[i2 + 1])][3:6]
                     mollist[0] = path[0]
                     mollist[1] = path[-1]
                     mollist[5:8] = offsets
-                    mollists = np.append(mollists, np.array([mollist]), axis = 0)
+                    peciesBondLists = np.append(peciesBondLists, np.array([mollist]), axis = 0)
         
-        return mollists, moldatas
+        return peciesBondLists, molPeciesDatas
 
     def build_bondlists_with_boundary(self, arrays, bondlists, bonddatas,
-                        mollists, moldatas):
+                        peciesBondDatas, molPeciesDatas):
         """
         build extra bondlists based on boundary atoms
         """
@@ -1005,6 +1047,57 @@ class Bonds(ObjectGN):
         bondlists = np.unique(bondlists, axis = 0)
         # search bond type 2
         # divide boudanry atoms by offsets
+        offsets = np.unique(arrays['offsets'], axis = 0)
+        n = len(offsets)*len(molPeciesDatas)
+        peciesArrays = np.zeros((n, 4), dtype = int)
+        n = 0
+        for offset in offsets:
+            indices = np.where((arrays['offsets'] == offset).all(axis = 1))[0]
+            indices = arrays['indices'][indices]
+            for p, indices0 in molPeciesDatas.items():
+                indices1 = np.intersect1d(indices0, indices)
+                if len(indices1) > 0:
+                    peciesArrays[n][0] = p
+                    peciesArrays[n][1:4] = offset
+                    n += 1
+        peciesArrays = peciesArrays[:n]
+        npa = len(peciesArrays)
+        if npa == 0:
+            return bondlists
+        # search bond type 2
+        for i in range(npa):
+            peciesId = peciesArrays[i, 0]
+            p = peciesBondDatas[peciesId]
+            # repeat itself
+            indices = molPeciesDatas[peciesId]
+            for j in indices:
+                if j not in bonddatas: 
+                    continue
+                data = bonddatas[j]
+                n = len(data)
+                bondlists = np.append(bondlists,  data, axis = 0)
+                bondlists[-n:, 2:5] += peciesArrays[i, 1:4]
+                bondlists[-n:, 5:8] += peciesArrays[i, 1:4]
+            # repeat its neighbour pecies
+            for pb in p:
+                peciesId = pb[1]
+                indices = molPeciesDatas[peciesId]
+                for j in indices:
+                    if j not in bonddatas: 
+                        continue
+                    data = bonddatas[j]
+                    n = len(data)
+                    bondlists = np.append(bondlists,  data, axis = 0)
+                    bondlists[-n:, 2:5] += peciesArrays[i, 1:4] + pb[5:8]
+                    bondlists[-n:, 5:8] += peciesArrays[i, 1:4] + pb[5:8]
+            # todo: in this case, some of the atoms overlap with original atoms.
+            # since it doesn't influence the 3d view, we just leave it like this
+            # bondlists[-n:, 8] = 1
+        # print('build_bondlists: {0:10.2f} s'.format(time() - tstart))
+        bondlists = np.unique(bondlists, axis = 0)
+        # search bond type 2
+
+        
 
         return bondlists
 
