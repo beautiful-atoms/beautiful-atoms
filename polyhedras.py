@@ -7,7 +7,7 @@ This module defines the polyhedras object in the Batoms package.
 import bpy
 import bmesh
 from time import time
-from batoms.butils import object_mode
+from batoms.butils import object_mode, compareNodeType
 from batoms.tools import string2Number
 import numpy as np
 from batoms.base import ObjectGN
@@ -20,6 +20,15 @@ default_attributes = [
             ['face_species_index', 'INT', 'FACE'],
             ['show', 'BOOLEAN', 'POINT'],
             ['style', 'INT', 'POINT'],
+        ]
+
+default_GroupInput = [
+            ['atoms_index1', 'NodeSocketInt', 'POINT'],
+            ['atoms_index2', 'NodeSocketInt', 'POINT'],
+            ['species_index', 'NodeSocketInt', 'POINT'],
+            ['face_species_index', 'NodeSocketInt', 'FACE'],
+            ['show', 'NodeSocketBool', 'POINT'],
+            ['style', 'NodeSocketInt', 'POINT'],
         ]
 
 default_polyhedra_datas = {
@@ -170,24 +179,16 @@ class Polyhedras(ObjectGN):
         modifier = self.obj.modifiers.new(name = name, type = 'NODES')
         modifier.node_group.name = name
         #------------------------------------------------------------------
-        # select attributes
+        inputs = modifier.node_group.inputs
         GroupInput = modifier.node_group.nodes.get('Group Input')
+        GroupOutput = modifier.node_group.nodes.get('Group Output')
         # add new output sockets
-        for att in default_attributes:
+        for att in default_GroupInput:
             GroupInput.outputs.new(type = att[1], name = att[0])
-        # the above codes not works. maybe bug in blender, 
-        # we add this, maybe deleted in the future
-        for i in range(1, 6):
-            test = get_nodes_by_name(modifier.node_group.nodes, 
-                            'BooleanMath_%s'%i,
-                            'FunctionNodeCompareFloats')
-            modifier.node_group.links.new(GroupInput.outputs[i], test.inputs[0])
-        #
-        i = 2
-        for att in default_attributes:
-            modifier['Input_%s_use_attribute'%i] = 1
-            modifier['Input_%s_attribute_name'%i] = att[0]
-            i += 1
+            inputs.new(att[1], att[0])
+            id = inputs[att[0]].identifier
+            modifier['%s_use_attribute'%id] = True
+            modifier['%s_attribute_name'%id] = att[0]
         gn = modifier
         #------------------------------------------------------------------
         GroupOutput = gn.node_group.nodes.get('Group Output')
@@ -206,7 +207,7 @@ class Polyhedras(ObjectGN):
                     'GeometryNodeAttributeTransfer')
         TransferBatoms.mapping = 'INDEX'
         TransferBatoms.data_type = 'FLOAT_VECTOR'
-        gn.node_group.links.new(ObjectBatoms.outputs['Geometry'], TransferBatoms.inputs['Target'])
+        gn.node_group.links.new(ObjectBatoms.outputs['Geometry'], TransferBatoms.inputs[0])
         gn.node_group.links.new(PositionBatoms.outputs['Position'], TransferBatoms.inputs['Attribute'])
         gn.node_group.links.new(GroupInput.outputs[2], TransferBatoms.inputs['Index'])
         #------------------------------------------------------------------
@@ -224,7 +225,7 @@ class Polyhedras(ObjectGN):
                     'GeometryNodeAttributeTransfer')
         TransferOffsets.mapping = 'INDEX'
         TransferOffsets.data_type = 'FLOAT_VECTOR'
-        gn.node_group.links.new(ObjectOffsets.outputs['Geometry'], TransferOffsets.inputs['Target'])
+        gn.node_group.links.new(ObjectOffsets.outputs['Geometry'], TransferOffsets.inputs[0])
         gn.node_group.links.new(PositionOffsets.outputs['Position'], TransferOffsets.inputs['Attribute'])
         # we need one add operation to get the positions with offset
         VectorAdd = get_nodes_by_name(gn.node_group.nodes, 
@@ -257,14 +258,14 @@ class Polyhedras(ObjectGN):
             # vertices
         CompareSpecies = get_nodes_by_name(gn.node_group.nodes, 
                     '%s_CompareSpecies_%s_vertex'%(self.label, sp["species"]),
-                    'FunctionNodeCompareFloats')
+                    compareNodeType)
         CompareSpecies.operation = 'EQUAL'
         CompareSpecies.inputs[1].default_value = string2Number(sp["species"])
         gn.node_group.links.new(GroupInput.outputs[3], CompareSpecies.inputs[0])
         # face
         CompareSpeciesFace = get_nodes_by_name(gn.node_group.nodes, 
                     '%s_CompareSpecies_%s_face'%(self.label, sp["species"]),
-                    'FunctionNodeCompareFloats')
+                    compareNodeType)
         CompareSpeciesFace.operation = 'EQUAL'
         CompareSpeciesFace.inputs[1].default_value = string2Number(sp["species"])
         gn.node_group.links.new(GroupInput.outputs[4], CompareSpeciesFace.inputs[0])

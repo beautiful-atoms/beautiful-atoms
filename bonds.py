@@ -4,14 +4,10 @@ This module defines the Bonds object in the Batoms package.
 
 """
 
-import dis
-from matplotlib.pyplot import axis
-from pandas import array
-from sympy import re
 import bpy
 import bmesh
 from time import time
-from batoms.butils import object_mode
+from batoms.butils import object_mode, compareNodeType
 from batoms.tools import string2Number, number2String
 import numpy as np
 from batoms.base import ObjectGN
@@ -31,6 +27,20 @@ default_attributes = [
             ['show', 'BOOLEAN'],
             ['model_style', 'INT'],
             ['polyhedra', 'BOOLEAN'],
+        ]
+
+default_GroupInput = [
+            ['atoms_index1', 'NodeSocketInt'],
+            ['atoms_index2', 'NodeSocketInt'],
+            ['atoms_index3', 'NodeSocketInt'],
+            ['atoms_index4', 'NodeSocketInt'],
+            ['species_index1', 'NodeSocketInt'],
+            ['species_index2', 'NodeSocketInt'],
+            ['order', 'NodeSocketInt'],
+            ['style', 'NodeSocketInt'],
+            ['show', 'NodeSocketBool'],
+            ['model_style', 'NodeSocketInt'],
+            ['polyhedra', 'NodeSocketBool'],
         ]
 
 default_bond_datas = {
@@ -173,27 +183,18 @@ class Bonds(ObjectGN):
         modifier = self.obj.modifiers.new(name = name, type = 'NODES')
         modifier.node_group.name = name
         #------------------------------------------------------------------
-        # select attributes
+        inputs = modifier.node_group.inputs
         GroupInput = modifier.node_group.nodes.get('Group Input')
+        GroupOutput = modifier.node_group.nodes.get('Group Output')
         # add new output sockets
-        for att in default_attributes:
+        for att in default_GroupInput:
             GroupInput.outputs.new(type = att[1], name = att[0])
-        # the above codes not works. maybe bug in blender, 
-        # we add this, maybe deleted in the future
-        for i in range(1, 12):
-            test = get_nodes_by_name(modifier.node_group.nodes, 
-                            'BooleanMath_%s'%i,
-                            'ShaderNodeMath')
-            modifier.node_group.links.new(GroupInput.outputs[i], test.inputs[0])
-        #
-        i = 2
-        for att in default_attributes:
-            modifier['Input_%s_use_attribute'%i] = 1
-            modifier['Input_%s_attribute_name'%i] = att[0]
-            i += 1
+            inputs.new(att[1], att[0])
+            id = inputs[att[0]].identifier
+            modifier['%s_use_attribute'%id] = True
+            modifier['%s_attribute_name'%id] = att[0]
         gn = modifier
         #------------------------------------------------------------------
-        GroupOutput = gn.node_group.nodes.get('Group Output')
         JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
                         '%s_JoinGeometry'%self.label, 
                         'GeometryNodeJoinGeometry')
@@ -218,7 +219,7 @@ class Bonds(ObjectGN):
             tmp.data_type = 'FLOAT_VECTOR'
             TransferBatoms.append(tmp)
         for i in range(4):
-            gn.node_group.links.new(ObjectBatoms.outputs['Geometry'], TransferBatoms[i].inputs['Target'])
+            gn.node_group.links.new(ObjectBatoms.outputs['Geometry'], TransferBatoms[i].inputs[0])
             gn.node_group.links.new(PositionBatoms.outputs['Position'], TransferBatoms[i].inputs['Attribute'])
             gn.node_group.links.new(GroupInput.outputs[i + 1], TransferBatoms[i].inputs['Index'])
         #------------------------------------------------------------------
@@ -243,7 +244,7 @@ class Bonds(ObjectGN):
             tmp.mapping = 'INDEX'
             tmp.data_type = 'FLOAT_VECTOR'
             TransferOffsets.append(tmp)
-            gn.node_group.links.new(ObjectOffsets[i].outputs['Geometry'], TransferOffsets[i].inputs['Target'])
+            gn.node_group.links.new(ObjectOffsets[i].outputs['Geometry'], TransferOffsets[i].inputs[0])
             gn.node_group.links.new(PositionOffsets[i].outputs['Position'], TransferOffsets[i].inputs['Attribute'])
         # we need five add operations
         # four: Get the positions with offset for four atoms
@@ -332,7 +333,7 @@ class Bonds(ObjectGN):
             for i in range(2):
                 tmp = get_nodes_by_name(gn.node_group.nodes, 
                             '%s_CompareSpecies_%s_%s'%(self.label, sp.name, i),
-                            'FunctionNodeCompareFloats')
+                            compareNodeType)
                 tmp.operation = 'EQUAL'
                 tmp.inputs[1].default_value = string2Number(sp.name)
                 CompareSpecies.append(tmp)
@@ -342,7 +343,7 @@ class Bonds(ObjectGN):
         for order in [1, 2, 3]:
             CompareOrder = get_nodes_by_name(gn.node_group.nodes, 
                         'CompareFloats_%s_%s_order'%(self.label, order),
-                        'FunctionNodeCompareFloats')
+                        compareNodeType)
             CompareOrder.operation = 'EQUAL'
             CompareOrder.inputs[1].default_value = order
             gn.node_group.links.new(GroupInput.outputs[7], CompareOrder.inputs[0])
@@ -350,7 +351,7 @@ class Bonds(ObjectGN):
         for style in [0, 1, 2]:
             CompareStyle = get_nodes_by_name(gn.node_group.nodes, 
                         'CompareFloats_%s_%s_style'%(self.label, style),
-                        'FunctionNodeCompareFloats')
+                        compareNodeType)
             CompareStyle.operation = 'EQUAL'
             CompareStyle.inputs[1].default_value = style
             gn.node_group.links.new(GroupInput.outputs[8], CompareStyle.inputs[0])

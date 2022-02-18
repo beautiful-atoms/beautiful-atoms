@@ -3,9 +3,6 @@
 This module defines the Batoms object in the batoms package.
 
 """
-from turtle import position
-from matplotlib.pyplot import sca
-from pandas import array
 import bpy
 import bmesh
 from batoms.batom import Batom
@@ -22,7 +19,7 @@ from batoms.isosurfacesetting import IsosurfaceSetting
 from batoms.planesetting import PlaneSetting
 from batoms.mssetting import MSsetting
 from batoms.ribbon.ribbon import Ribbon
-from batoms.butils import object_mode, show_index, get_nodes_by_name
+from batoms.butils import object_mode, show_index, get_nodes_by_name, compareNodeType
 import numpy as np
 from time import time
 
@@ -39,10 +36,10 @@ default_attributes = [
         ]
     
 default_GroupInput = [
-        ['select', 'INT'],
-        ['species_index', 'INT'], 
-        ['show', 'BOOLEAN'], 
-        ['scale', 'FLOAT'], 
+        ['select', 'NodeSocketInt'],
+        ['species_index', 'NodeSocketInt'], 
+        ['show', 'NodeSocketBool'], 
+        ['scale', 'NodeSocketFloat'], 
         ]
 
 subcollections = ['instancer', 'surface', 'ribbon', 'plane']
@@ -135,7 +132,7 @@ class Batoms(BaseCollection, ObjectGN):
         if len(species) == 0 and self.check_batoms(label):
             self.from_batoms(label)
         else:
-            self.set_collection(label, boundary)
+            self.set_collection(label)
             self._cell = Bcell(label, cell, batoms = self)
             positions = np.array(positions)
             if len(positions.shape) == 3:
@@ -180,7 +177,7 @@ class Batoms(BaseCollection, ObjectGN):
         show_index()
         self.hideOneLevel()
     
-    def set_collection(self, label, boundary = [0, 0, 0]):
+    def set_collection(self, label):
         """
         build main collection and its child collections.
         """
@@ -193,7 +190,6 @@ class Batoms(BaseCollection, ObjectGN):
             coll.children.link(subcoll)
         coll.batoms.flag = True
         coll.batoms.label = label
-        coll.batoms.boundary = boundary
     
     def hideOneLevel(self):
         from batoms.butils import hideOneLevel
@@ -230,27 +226,18 @@ class Batoms(BaseCollection, ObjectGN):
         name = 'GeometryNodes_%s'%self.label
         modifier = self.obj.modifiers.new(name = name, type = 'NODES')
         modifier.node_group.name = name
+        inputs = modifier.node_group.inputs
         GroupInput = modifier.node_group.nodes.get('Group Input')
+        GroupOutput = modifier.node_group.nodes.get('Group Output')
         # add new output sockets
         for att in default_GroupInput:
             GroupInput.outputs.new(type = att[1], name = att[0])
-        # the above codes not works. maybe bug in blender, 
-        # we add this, maybe deleted in the future
-        for i in range(1, 5):
-            test = get_nodes_by_name(modifier.node_group.nodes, 
-                            'BooleanMath_%s'%i,
-                            'ShaderNodeMath')
-            modifier.node_group.links.new(GroupInput.outputs[i], test.inputs[0])
-        #
-        i = 2
-        for att in default_GroupInput:
-            modifier['Input_%s_use_attribute'%i] = 1
-            modifier['Input_%s_attribute_name'%i] = att[0]
-            i += 1
+            inputs.new(att[1], att[0])
+            id = inputs[att[0]].identifier
+            modifier['%s_use_attribute'%id] = True
+            modifier['%s_attribute_name'%id] = att[0]
         gn = modifier
         # print(gn.name)
-        # print(GroupInput.outputs[:])
-        GroupOutput = gn.node_group.nodes.get('Group Output')
         JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
                         '%s_JoinGeometry'%self.label, 
                         'GeometryNodeJoinGeometry')
@@ -297,14 +284,9 @@ class Batoms(BaseCollection, ObjectGN):
                         'GeometryNodeJoinGeometry')
         SetPosition = get_nodes_by_name(gn.node_group.nodes,
                         '%s_SetPosition'%self.label)
-        if '3.1.0' in bpy.app.version_string:
-                CompareSpecies = get_nodes_by_name(gn.node_group.nodes, 
-                    'CompareFloats_%s_%s'%(self.label, spname),
-                    'FunctionNodeCompare')
-        # else:
         CompareSpecies = get_nodes_by_name(gn.node_group.nodes, 
                     'CompareFloats_%s_%s'%(self.label, spname),
-                    'FunctionNodeCompareFloats')
+                    compareNodeType)
         CompareSpecies.operation = 'EQUAL'
         # CompareSpecies.data_type = 'INT'
         CompareSpecies.inputs[1].default_value = string2Number(spname)

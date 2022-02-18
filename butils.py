@@ -267,3 +267,9 @@ def hideOneLevel():
         bpy.ops.outliner.show_one_level(c, open=False)
         ol.tag_redraw()
         print(ol)
+
+# ========================================================
+if '3.1.0' in bpy.app.version_string:
+    compareNodeType = 'FunctionNodeCompare'
+else:
+    compareNodeType = 'FunctionNodeCompareFloats'

@@ -1,6 +1,3 @@
-from os import remove
-from ase import data
-from scipy.spatial.transform import rotation
 import bpy
 from batoms.material import create_material
 import numpy as np

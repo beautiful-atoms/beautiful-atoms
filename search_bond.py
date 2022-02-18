@@ -5,10 +5,9 @@ import numpy as np
 from time import time
 from batoms.base import ObjectGN
 # from batoms.tools import build_search_bond
-from batoms.butils import object_mode
+from batoms.butils import object_mode, compareNodeType
 from batoms.tools import number2String, string2Number
 from ase.geometry import wrap_positions, complete_cell
-
 
 shapes = ["UV_SPHERE", "ICO_SPHERE", "CUBE", "METABALL"]
 
@@ -21,6 +20,17 @@ default_attributes = [
         ['scale', 'FLOAT'], 
         ['radius_style', 'INT'],
         ]
+    
+default_GroupInput = [
+        ['atoms_index', 'NodeSocketInt'], 
+        ['species_index', 'NodeSocketInt'], 
+        ['show', 'NodeSocketBool'], 
+        ['select', 'NodeSocketInt'],
+        ['model_style', 'NodeSocketInt'],
+        ['scale', 'NodeSocketFloat'], 
+        ['radius_style', 'NodeSocketInt'],
+        ]
+    
 
 default_search_bond_datas = {
         'atoms_index': np.ones(0, dtype = int),
@@ -121,24 +131,16 @@ class SearchBond(ObjectGN):
         modifier = self.obj.modifiers.new(name = name, type = 'NODES')
         modifier.node_group.name = name
         #------------------------------------------------------------------
-        # select attributes
+        inputs = modifier.node_group.inputs
         GroupInput = modifier.node_group.nodes.get('Group Input')
+        GroupOutput = modifier.node_group.nodes.get('Group Output')
         # add new output sockets
-        for att in default_attributes:
+        for att in default_GroupInput:
             GroupInput.outputs.new(type = att[1], name = att[0])
-        # the above codes not works. maybe bug in blender, 
-        # we add this, maybe deleted in the future
-        for i in range(1, 7):
-            test = get_nodes_by_name(modifier.node_group.nodes, 
-                            'BooleanMath_%s'%i,
-                            'FunctionNodeCompareFloats')
-            modifier.node_group.links.new(GroupInput.outputs[i], test.inputs[0])
-        #
-        i = 2
-        for att in default_attributes:
-            modifier['Input_%s_use_attribute'%i] = 1
-            modifier['Input_%s_attribute_name'%i] = att[0]
-            i += 1
+            inputs.new(att[1], att[0])
+            id = inputs[att[0]].identifier
+            modifier['%s_use_attribute'%id] = True
+            modifier['%s_attribute_name'%id] = att[0]
         gn = modifier
         #------------------------------------------------------------------
         GroupOutput = gn.node_group.nodes.get('Group Output')
@@ -162,7 +164,7 @@ class SearchBond(ObjectGN):
                     'GeometryNodeAttributeTransfer')
         TransferBatoms.mapping = 'INDEX'
         TransferBatoms.data_type = 'FLOAT_VECTOR'
-        gn.node_group.links.new(ObjectBatoms.outputs['Geometry'], TransferBatoms.inputs['Target'])
+        gn.node_group.links.new(ObjectBatoms.outputs['Geometry'], TransferBatoms.inputs[0])
         gn.node_group.links.new(PositionBatoms.outputs['Position'], TransferBatoms.inputs['Attribute'])
         gn.node_group.links.new(GroupInput.outputs[1], TransferBatoms.inputs['Index'])
         #------------------------------------------------------------------
@@ -180,7 +182,7 @@ class SearchBond(ObjectGN):
                     'GeometryNodeAttributeTransfer')
         TransferOffsets.mapping = 'INDEX'
         TransferOffsets.data_type = 'FLOAT_VECTOR'
-        gn.node_group.links.new(ObjectOffsets.outputs['Geometry'], TransferOffsets.inputs['Target'])
+        gn.node_group.links.new(ObjectOffsets.outputs['Geometry'], TransferOffsets.inputs[0])
         gn.node_group.links.new(PositionOffsets.outputs['Position'], TransferOffsets.inputs['Attribute'])
         OffsetNode = self.vectorDotMatrix(gn, TransferOffsets, self.batoms.cell, '')
         # we need one add operation to get the positions with offset
@@ -210,7 +212,7 @@ class SearchBond(ObjectGN):
                         'GeometryNodeJoinGeometry')
         CompareSpecies = get_nodes_by_name(gn.node_group.nodes, 
                     'CompareFloats_%s_%s'%(self.label, spname),
-                    'FunctionNodeCompareFloats')
+                    compareNodeType)
         CompareSpecies.operation = 'EQUAL'
         # CompareSpecies.data_type = 'INT'
         CompareSpecies.inputs[1].default_value = string2Number(spname)

@@ -479,6 +479,15 @@ class BaseCollection():
     def __init__(self, coll_name):
         self.coll_name = coll_name
     
+    def set_collection(self, label):
+        """
+        build main collection and its child collections.
+        """
+        if bpy.data.collections.get(label):
+                raise Exception("Failed, the name %s already in use!"%label)
+        coll = bpy.data.collections.new(label)
+        return coll
+
     @property
     def coll(self):
         return self.get_coll()
@@ -486,7 +495,7 @@ class BaseCollection():
     def get_coll(self):
         coll = bpy.data.collections.get(self.coll_name)
         if coll is None:
-            coll = bpy.data.collections.new(self.coll_name)
+            raise('No collection: %s'%self.coll_name)
         return coll
     
     @property

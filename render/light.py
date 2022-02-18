@@ -143,14 +143,6 @@ class Lights(BaseCollection):
         self.label = label
         self.name = "%s_light"%label
         BaseCollection.__init__(self, coll_name = self.name)
-        self.set_collection()
-    
-    def set_collection(self):
-        """
-        build main collection and its child collections.
-        """
-        if not self.coll:
-            bpy.data.collections.new(self.name)
 
     @property    
     def lights(self):

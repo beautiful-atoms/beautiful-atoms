@@ -104,7 +104,7 @@ class Bcell(ObjectGN):
                     '%s_InputInt_%s'%(self.label, i),
                     'FunctionNodeInputInt')
             InputInt.integer = i
-            gn.node_group.links.new(GroupInput.outputs['Geometry'], TransferCell.inputs['Target'])
+            gn.node_group.links.new(GroupInput.outputs['Geometry'], TransferCell.inputs[0])
             gn.node_group.links.new(PositionCell.outputs['Position'], TransferCell.inputs['Attribute'])
             gn.node_group.links.new(InputInt.outputs[0], TransferCell.inputs['Index'])
             TransferCells.append(TransferCell)
@@ -151,7 +151,12 @@ class Bcell(ObjectGN):
             SetPosition = get_nodes_by_name(gn.node_group.nodes,
                             '%s_SetPosition_%s'%(self.label, i),
                             'GeometryNodeSetPosition')
-            CompareSelect = get_nodes_by_name(gn.node_group.nodes, 
+            if '3.1.0' in bpy.app.version_string:
+                CompareSelect = get_nodes_by_name(gn.node_group.nodes, 
+                    'select_%s_%s'%(self.label, i),
+                    'FunctionNodeCompare')
+            else:
+                CompareSelect = get_nodes_by_name(gn.node_group.nodes, 
                     'select_%s_%s'%(self.label, i),
                     'FunctionNodeCompareFloats')
             CompareSelect.operation = 'EQUAL'

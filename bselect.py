@@ -6,7 +6,6 @@ import bpy
 from batoms.base import Setting
 import numpy as np
 from time import time
-
 from batoms.tools import string2Number
 
 subcollections = []

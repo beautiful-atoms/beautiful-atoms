@@ -1,6 +1,5 @@
 """
 """
-from re import I
 import bpy
 from batoms.butils import object_mode
 import numpy as np
