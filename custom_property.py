@@ -46,7 +46,7 @@ class Batom(bpy.types.PropertyGroup):
     """
     flag: BoolProperty(name="flag", default=False)
     label: StringProperty(name="label", default = 'X')
-    # select: StringProperty(name="select", default = 'sel0')
+    # select: StringProperty(name="select", default = 'all')
     species: CollectionProperty(name = 'Bspecies', 
                             type = Bspecies)
     radius: FloatProperty(name="radius")
@@ -79,7 +79,7 @@ class Bbond(bpy.types.PropertyGroup):
     """
     flag: BoolProperty(name="flag", default=False)
     label: StringProperty(name="label", default = 'batoms')
-    select: StringProperty(name="select", default = 'sel0')
+    select: StringProperty(name="select", default = 'all')
     species1: StringProperty(name="species1")
     species2: StringProperty(name="species2")
     species: StringProperty(name="species")
@@ -106,7 +106,7 @@ class Bbond(bpy.types.PropertyGroup):
     def name(self) -> str:
         return '%s-%s-%s'%(self.select, self.species1, self.species2)
     
-    def as_dict(self) -> dict:
+    def as_dict(self, reversed = False) -> dict:
         setdict = {
                  'flag': self.flag, 
                   'label': self.label, 
@@ -125,6 +125,12 @@ class Bbond(bpy.types.PropertyGroup):
                   'order_offset': self.order_offset,
                   'style': self.style
         }
+        if reversed:
+            setdict['name'] = '%s-%s'%(self.species2, self.species1)
+            setdict['species1'] = self.species2
+            setdict['species2'] = self.species1
+            setdict['color1'] = self.color2[:]
+            setdict['color2'] = self.color1[:]
         return setdict
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
@@ -434,7 +440,7 @@ class Bmssetting(bpy.types.PropertyGroup):
     label: StringProperty(name="label", default = 'batoms')
     probe: FloatProperty(name="probe", default = 1.4)
     resolution: FloatProperty(name="resolution", default = 0.5)
-    select: StringProperty(name="select", default = 'sel0')
+    select: StringProperty(name="select", default = 'all')
     color: FloatVectorProperty(name="color", size = 4, default = [0, 1, 1, 1.0])
 
     def as_dict(self) -> dict:
@@ -461,7 +467,7 @@ class Bselect(bpy.types.PropertyGroup):
     """
     """
     flag: BoolProperty(name="flag", default=False)
-    name: StringProperty(name="name", default = 'sel0')
+    name: StringProperty(name="name", default = 'all')
     model_style: EnumProperty(
         name="model_style",
         description="Structural models",
@@ -525,6 +531,7 @@ class Batoms_coll(bpy.types.PropertyGroup):
                ('3',"polyhedra", "polyhedra")),
                default='0')
     show_unit_cell: BoolProperty(name="show_unit_cell", default = True)
+    show_search: BoolProperty(name="show_search", default = False)
     wrap: BoolVectorProperty(name="wrap", default = [False, False, False], size = 3)
     boundary: FloatVectorProperty(name="boundary", default = [0.0, 1.0, 0.0, 1.0, 0.0, 1.0], size = 6)
     bbond: CollectionProperty(name = 'Bbond', 

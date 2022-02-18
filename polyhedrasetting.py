@@ -69,16 +69,15 @@ class PolyhedraSettings(Setting):
     def set_default(self, species_props):
         """
         """
-        for sel, data in species_props.items():
-            for sp, data in data.items():
-                if sp not in default_polyhedras: continue
-                self[sp] = {
-                    'flag': True,
-                    'label': self.label,
-                    'species': sp,
-                    'color': np.append(data['color'][:3], 0.8),
-                    'width': 0.005,
-                }
+        for sp, data in species_props.items():
+            if sp not in default_polyhedras: continue
+            self[sp] = {
+                'flag': True,
+                'label': self.label,
+                'species': sp,
+                'color': np.append(data['color'][:3], 0.8),
+                'width': 0.005,
+            }
     
     def add(self, polyhedras):
         if isinstance(polyhedras, str):

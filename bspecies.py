@@ -1,4 +1,3 @@
-from numpy.lib import select
 import bpy
 import numpy as np
 from batoms.base import Setting
@@ -90,9 +89,8 @@ class Bspecies(Setting):
             eledata.name = ele
             eledata.occupancy = occupancy
             eledata.color = props['color'][ele]
-        for sel in self.batoms.selects:
-            self.build_instancer(sp, select = sel.name, instancer = instancer)
-            self.batoms.add_geometry_node(sp.name, sel.name)
+        instancer = self.build_instancer(sp, instancer = instancer)
+        self.batoms.add_geometry_node(sp.name, instancer)
 
     def keys(self):
         return self.species.keys()
@@ -113,11 +111,9 @@ class Bspecies(Setting):
     
     def get_instancers(self):
         instancers = {}
-        for sel in self.batoms.selects:
-            instancers[sel.name] = {}
-            for sp in self.batoms.species:
-                name = '%s_%s_%s'%(self.label, sp.name, sel.name)
-                instancers[sel.name][sp.name] = bpy.data.objects.get(name)
+        for sp in self.species:
+            name = '%s_%s'%(self.label, sp)
+            instancers[sp] = bpy.data.objects.get(name)
         return instancers
     
     @property
@@ -126,14 +122,12 @@ class Bspecies(Setting):
     
     def get_materials(self):
         materials = {}
-        for sel in self.batoms.selects:
-            materials[sel.name] = {}
-            for sp, data in self.batoms.species.items():
-                materials[sel.name][sp] = {}
-                for ele in data['elements']:
-                    name = '%s_%s_%s_%s'%(self.label, sp, ele, sel.name)
-                    mat = bpy.data.materials.get(name)
-                    materials[sel.name][sp][ele] = mat
+        for sp, data in self.species.items():
+            materials[sp] = {}
+            for ele in data['elements']:
+                name = '%s_%s_%s'%(self.label, sp, ele)
+                mat = bpy.data.materials.get(name)
+                materials[sp][ele] = mat
         return materials
 
     @property
@@ -182,13 +176,12 @@ class Bspecies(Setting):
     def get_species_props(self):
         species_props = {}
         instancers = self.instancers
-        for sel in self.batoms.selects:
-            species_props[sel.name] = {}
-            for sp in self.species:
-                radius = instancers[sel.name][sp].batoms.batom.radius
-                matname = instancers[sel.name][sp].material_slots[0].name
-                color = bpy.data.materials[matname].node_tree.nodes[0].inputs[0].default_value[:]
-                species_props[sel.name][sp] = {'radius': radius, 'color': color}
+        species_props = {}
+        for sp in self.species:
+            radius = instancers[sp].batoms.batom.radius
+            matname = instancers[sp].material_slots[0].name
+            color = bpy.data.materials[matname].node_tree.nodes[0].inputs[0].default_value[:]
+            species_props[sp] = {'radius': radius, 'color': color}
         return species_props
     
     def __add__(self, other):
@@ -200,12 +193,11 @@ class Bspecies(Setting):
         return self
     
     def copy(self, name):
-        for sel in self.batoms.selects:
-            for sp, instancer in self.instancers[sel.name].items():
-                instancer = instancer.copy()
-                bpy.data.collections['Collection'].objects.link(instancer)
-                instancer.hide_set(True)
-                instancer.name = '%s_%s_instancer'%(name, sp)
+        for sp, instancer in self.instancers.items():
+            instancer = instancer.copy()
+            bpy.data.collections['Collection'].objects.link(instancer)
+            instancer.hide_set(True)
+            instancer.name = '%s_%s_instancer'%(name, sp)
         bspecies = self.__class__(name, name)
         return bspecies
         
@@ -218,7 +210,7 @@ class Bspecies(Setting):
         species3 = {}
         for key, data in species2.items():
             if key not in species1:
-                instancer = other.instancers['all'][key]
+                instancer = other.instancers[key]
                 name = '%s_%s_instancer'%(self.label, key)
                 instancer.name = name
                 # materials
@@ -226,7 +218,7 @@ class Bspecies(Setting):
                     # mat.name.replace()
                 species3[key] = [data, instancer]
             elif data != species1[key]:
-                instancer = other.instancers['all'][key]
+                instancer = other.instancers[key]
                 spname = '%s_%s'%(key, other.label)
                 name = '%s_%s_instancer'%(self.label, spname)
                 instancer.name = name
@@ -255,13 +247,13 @@ class Bspecies(Setting):
                 raise ValueError("Total occumpancy should be smaller than 1!")
         return elements
     
-    def build_materials(self, sp, select = 'all', node_inputs = None, 
+    def build_materials(self, sp, node_inputs = None, 
                 material_style = 'default'):
         """
         """
         from batoms.material import create_material
         for element in sp.elements:
-            name = '%s_%s_%s_%s'%(self.label, sp.name, element.name, select)
+            name = '%s_%s_%s'%(self.label, sp.name, element.name)
             if name not in bpy.data.materials:
                 create_material(name,
                             color = element.color,
@@ -269,10 +261,10 @@ class Bspecies(Setting):
                             material_style = material_style,
                             backface_culling = True)
     
-    def build_instancer(self, sp, instancer = None, select = 'all', 
+    def build_instancer(self, sp, instancer = None, 
                         shape = 'UV_SPHERE', 
                         shade_smooth = True):
-        name = '%s_%s_%s'%(self.label, sp.name, select)
+        name = '%s_%s'%(self.label, sp.name)
         radius = sp.radius
         segments = sp.segments
         natom = len(self.batoms)
@@ -313,17 +305,17 @@ class Bspecies(Setting):
             obj.hide_set(True)
             obj.hide_render = True
         #
-        self.build_materials(sp, select)
-        self.assign_materials(sp, select)
+        self.build_materials(sp)
+        self.assign_materials(sp)
         bpy.context.view_layer.update()
         return obj
 
-    def assign_materials(self, sp, select):
+    def assign_materials(self, sp):
         # sort element by occu
-        mesh = self.instancers[select][sp.name].data
+        mesh = self.instancers[sp.name].data
         mesh.materials.clear()
-        sorted_ele = sorted(self.batoms.species[sp.name]['elements'].items(), key=lambda x: -x[1])
-        materials = self.materials[select][sp.name]
+        sorted_ele = sorted(self.species[sp.name]['elements'].items(), key=lambda x: -x[1])
+        materials = self.materials[sp.name]
         for data in sorted_ele:
             mesh.materials.append(materials[data[0]])
         # find the face index for ele
@@ -348,16 +340,11 @@ class Bspecies(Setting):
                 tos = toe
             mesh.polygons.foreach_set('material_index', material_indexs)
 
-    def build_instancers(self, sel = None, segments = None):
+    def build_instancers(self, segments = None):
         if segments:
             self.segments = segments
-        if select is not None:
-            for sp in self:
-                self.build_instancer(sp, select = sel.name)
-        else:
-            for sel in self.batoms.selects:
-                for sp in self:
-                    self.build_instancer(sp, select = sel.name)
+        for sp in self:
+            self.build_instancer(sp)
             
     @property
     def radius_style(self):
@@ -372,8 +359,7 @@ class Bspecies(Setting):
     
     def set_radius_style(self, radius_style):
         # print(species_props)
-        for sel in self.batoms.selects:
-            for sp in self:
-                sp.radius_style = str(radius_style)
-                self.build_instancer(sp, select = sel.name)
+        for sp in self:
+            sp.radius_style = str(radius_style)
+            self.build_instancer(sp)
         self.batoms.build_geometry_node()

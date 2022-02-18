@@ -200,9 +200,6 @@ class Bcell(ObjectGN):
         return self.array[index]
     
     def __setitem__(self, index, value):
-        """
-        Add bondpair one by one
-        """
         """Set unit cell vectors.
 
         Parameters:

@@ -287,9 +287,6 @@ class Selects(Setting):
         # species_props = self.batoms.
         sel = Select(self.label, name = name, 
                     batoms = self.batoms, indices = indices)
-        self.batoms.species.build_instancers(sel)
-        for sp in self.batoms.species:
-            self.batoms.add_geometry_node(sp.name, sel.name)
         return sel
 
 def elect_expression(expre, batoms):

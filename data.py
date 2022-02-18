@@ -1040,7 +1040,7 @@ default_bonds = {
 }
 
 default_polyhedras = {
-'Ac', 'Zr', 'Pr', 'Mo', 'Li', 'Ba', 'Cd', 
+'Ac', 'Zr', 'Pr', 'Mo', 'Li', 'Ba', 'Cd', 'C',
 'Es', 'Al', 'Os', 'V', 'Sm', 'Dy', 'Ti', 'Pb', 'Ni', 'Sr', 'Na', 
 'Lu', 'Y', 'Tb', 'Au', 'Be', 'Sn', 'Xe', 'As', 'Cr', 
 'Ru', 'Re', 'Yb', 'I', 'Ag', 'H', 'Se', 'Th', 'In', 'Pu', 'Te',

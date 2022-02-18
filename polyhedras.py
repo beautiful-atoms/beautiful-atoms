@@ -428,9 +428,7 @@ class Polyhedras(ObjectGN):
         offsets = offsets.reshape((n*3, 1))
         self.obj_o.data.shape_keys.key_blocks[0].data.foreach_set('co', offsets)
         self.obj_o.data.update()
-        bpy.context.view_layer.objects.active = self.obj_o
-        bpy.ops.object.mode_set(mode = 'EDIT')
-        bpy.ops.object.mode_set(mode = 'OBJECT')
+        
     
     def get_frames(self):
         """

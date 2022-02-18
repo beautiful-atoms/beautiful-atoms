@@ -390,23 +390,24 @@ class BondSettings(Setting):
     def set_default(self, species_props, cutoff = 1.3, self_interaction = True):
         """
         """
-        for sel, data in species_props.items():
-            bondtable = get_bondtable(self.label, sel, data, cutoff=cutoff, 
-                        self_interaction = self_interaction)
-            for key, value in bondtable.items():
-                self[key] = value
+        bondtable = get_bondtable(self.label, species_props, cutoff=cutoff, 
+                    self_interaction = self_interaction)
+        for key, value in bondtable.items():
+            self[key] = value
     
     def extend(self, other):
         for b in other:
             self[(b.species1, b.species2)] = b.as_dict()
         # new
+        
         species1 = set(self.batoms.species.species_props)
         species2 = set(other.batoms.species.species_props)
         nspecies1 = species1 - species2
         nspecies2 = species2 - species1
         for sp1 in nspecies1:
             for sp2 in nspecies2:
-                species = {sp1: self.batoms.species.species_props[sp1], sp2: other.batoms.species.species_props[sp2]}
+                species = {sp1: self.batoms.species.species_props[sp1], 
+                            sp2: other.batoms.species.species_props[sp2]}
                 self.set_default(species, self.cutoff, self_interaction = False)
     
     def add(self, bondpairs):
@@ -415,7 +416,7 @@ class BondSettings(Setting):
         if isinstance(bondpairs[0], (str, int, float)):
             bondpairs = [bondpairs]
         for bondpair in bondpairs:
-            species = {sp: self.batoms.species.species_props['all'][sp] for sp in bondpair}
+            species = {sp: self.batoms.species.species_props[sp] for sp in bondpair}
             maxlength = species[bondpair[0]]['radius'] + \
                         species[bondpair[1]]['radius']
             self[bondpair] = {'max': maxlength*self.cutoff, 
@@ -509,7 +510,7 @@ class BondSettings(Setting):
                 offsets_skin2.extend(temp)
         return np.array(offsets_skin1), np.array(bondlist1), np.array(offsets_skin2), np.array(bondlist2)
 
-def get_bondtable(label, select, speciesdict, cutoff = 1.3, self_interaction = True):
+def get_bondtable(label, speciesdict, cutoff = 1.3, self_interaction = True):
     """
     """
     from batoms.data import default_bonds
@@ -533,7 +534,6 @@ def get_bondtable(label, select, speciesdict, cutoff = 1.3, self_interaction = T
             bondtable[pair12] = {
                     'flag': True,
                     'label': label,
-                    'select': select,
                     'species1': species1, 
                     'species2': species2, 
                     'min': 0.0, 

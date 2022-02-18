@@ -377,7 +377,7 @@ class Boundary(ObjectGN):
         gn.node_group.links.new(GroupInput.outputs['Geometry'], SetPosition.inputs['Geometry'])
         gn.node_group.links.new(VectorAdd.outputs[0], SetPosition.inputs['Position'])
         
-    def add_geometry_node(self, spname, selname):
+    def add_geometry_node(self, spname):
         """
         """
         from batoms.butils import get_nodes_by_name
@@ -388,13 +388,6 @@ class Boundary(ObjectGN):
         JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
                         '%s_JoinGeometry'%self.label, 
                         'GeometryNodeJoinGeometry')
-        CompareSelect = get_nodes_by_name(gn.node_group.nodes, 
-                    'select_%s_%s'%(self.label, selname),
-                    'FunctionNodeCompareFloats')
-        CompareSelect.operation = 'EQUAL'
-        # CompareSelect.data_type = 'INT'
-        CompareSelect.inputs[1].default_value = string2Number(selname)
-        gn.node_group.links.new(GroupInput.outputs[4], CompareSelect.inputs[0])
         CompareSpecies = get_nodes_by_name(gn.node_group.nodes, 
                     'CompareFloats_%s_%s'%(self.label, spname),
                     'FunctionNodeCompareFloats')
@@ -402,27 +395,21 @@ class Boundary(ObjectGN):
         # CompareSpecies.data_type = 'INT'
         CompareSpecies.inputs[1].default_value = string2Number(spname)
         InstanceOnPoint = get_nodes_by_name(gn.node_group.nodes,
-                    'InstanceOnPoint_%s_%s_%s'%(self.label, selname, spname), 
+                    'InstanceOnPoint_%s_%s'%(self.label, spname), 
                     'GeometryNodeInstanceOnPoints')
         ObjectInfo = get_nodes_by_name(gn.node_group.nodes, 
-                    'ObjectInfo_%s_%s_%s'%(self.label, selname, spname),
+                    'ObjectInfo_%s_%s'%(self.label, spname),
                     'GeometryNodeObjectInfo')
-        ObjectInfo.inputs['Object'].default_value = self.batoms.species.instancers[selname][spname]
-        #
-        BoolSelectSpecies = get_nodes_by_name(gn.node_group.nodes, 
-                        'BooleanMath_%s_%s_%s_0'%(self.label, selname, spname),
-                        'FunctionNodeBooleanMath')
+        ObjectInfo.inputs['Object'].default_value = self.batoms.species.instancers[spname]
         BoolShow = get_nodes_by_name(gn.node_group.nodes, 
-                    'BooleanMath_%s_%s_%s_1'%(self.label, selname, spname),
+                    'BooleanMath_%s_%s_1'%(self.label, spname),
                     'FunctionNodeBooleanMath')
         #
         gn.node_group.links.new(SetPosition.outputs['Geometry'], InstanceOnPoint.inputs['Points'])
         gn.node_group.links.new(GroupInput.outputs[2], CompareSpecies.inputs[0])
         gn.node_group.links.new(GroupInput.outputs[3], BoolShow.inputs[0])
         gn.node_group.links.new(GroupInput.outputs[6], InstanceOnPoint.inputs['Scale'])
-        gn.node_group.links.new(CompareSelect.outputs[0], BoolSelectSpecies.inputs[0])
-        gn.node_group.links.new(CompareSpecies.outputs[0], BoolSelectSpecies.inputs[1])
-        gn.node_group.links.new(BoolSelectSpecies.outputs[0], BoolShow.inputs[1])
+        gn.node_group.links.new(CompareSpecies.outputs[0], BoolShow.inputs[1])
         gn.node_group.links.new(BoolShow.outputs['Boolean'], InstanceOnPoint.inputs['Selection'])
         gn.node_group.links.new(ObjectInfo.outputs['Geometry'], InstanceOnPoint.inputs['Instance'])
         gn.node_group.links.new(InstanceOnPoint.outputs['Instances'], JoinGeometry.inputs['Geometry'])        
@@ -478,6 +465,16 @@ class Boundary(ObjectGN):
         # bpy.context.scene.frame_set(self.batoms.nframe)
         print('draw bond: {0:10.2f} s'.format(time() - tstart))
     
+    @property
+    def obj(self):
+        return self.get_obj()
+    
+    def get_obj(self):
+        obj = bpy.data.objects.get(self.obj_name)
+        if obj is None:
+            self.build_object(default_boundary_datas)
+        return obj
+
     @property
     def obj_o(self):
         return self.get_obj_o()
@@ -538,9 +535,8 @@ class Boundary(ObjectGN):
             # add or remove vertices
             self.build_object(arrays)
             species = np.unique(arrays['species'])
-            for sel in self.batoms.selects:
-                for sp in species:
-                    self.add_geometry_node(sp, sel.name)
+            for sp in species:
+                self.add_geometry_node(sp)
 
     def get_arrays(self):
         """
@@ -555,10 +551,9 @@ class Boundary(ObjectGN):
         arrays.update({'radius': np.zeros(len(self))})
         species = np.array([number2String(i) for i in arrays['species_index']], dtype = 'U20')
         arrays['species'] = species
-        for sel, data in radius.items():
-            for sp, value in data.items():
-                mask = np.where((arrays['species'] == sp) & (arrays['select'] == string2Number(sel)))
-                arrays['radius'][mask] = value
+        for sp, value in radius.items():
+            mask = np.where(arrays['species'] == sp)
+            arrays['radius'][mask] = value
         # size
         arrays['size'] = arrays['radius']*arrays['scale']
         # main elements
