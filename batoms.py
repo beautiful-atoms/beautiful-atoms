@@ -199,6 +199,7 @@ class Batoms(BaseCollection, ObjectGN):
         """
         build child object and add it to main objects.
         """
+        self.delete_obj(label)
         if label not in bpy.data.objects:
             mesh = bpy.data.meshes.new(label)
             # Add attributes
@@ -210,10 +211,6 @@ class Batoms(BaseCollection, ObjectGN):
             obj.batoms.batom.flag = True
             obj.batoms.batom.label = label
             self.coll.objects.link(obj)
-        elif bpy.data.objects[label].batoms.batom.flag:
-            obj = bpy.data.objects[label]
-            self.coll.objects.link(obj)
-            print("Object %s already exists, Load it!"%label)
         else:
             raise Exception("Failed, the name %s already in use and is not Batom object!"%label)
         # 
@@ -969,7 +966,7 @@ class Batoms(BaseCollection, ObjectGN):
         if species[0] not in self.species:
             self.species[species[0]] = species[1]
             # add geometry node
-            self.add_geometry_node(species[0])
+            self.add_geometry_node(species[0], self.species.instancers[species[0]])
             #
         species_index = self.attributes['species_index']
         species_array = self.attributes['species']
