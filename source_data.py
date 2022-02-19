@@ -1,4 +1,3 @@
-from numpy import source
 from batoms.bdraw import bond_source
 
 source = bond_source(8)

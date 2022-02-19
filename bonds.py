@@ -27,6 +27,7 @@ default_attributes = [
             ['show', 'BOOLEAN'],
             ['model_style', 'INT'],
             ['polyhedra', 'BOOLEAN'],
+            ['second_bond', 'INT'],
         ]
 
 default_GroupInput = [
@@ -40,7 +41,7 @@ default_GroupInput = [
             ['style', 'NodeSocketInt'],
             ['show', 'NodeSocketBool'],
             ['model_style', 'NodeSocketInt'],
-            ['polyhedra', 'NodeSocketBool'],
+            ['second_bond', 'NodeSocketInt'],
         ]
 
 default_bond_datas = {
@@ -63,6 +64,7 @@ default_bond_datas = {
         'styles': np.zeros(0, dtype = int),
         'model_styles':np.ones(0, dtype = int),
         'polyhedras': np.ones(0, dtype = float),
+        'second_bond': np.ones(0, dtype = int),
         }
 
 class Bonds(ObjectGN):
@@ -141,6 +143,7 @@ class Bonds(ObjectGN):
                             'style': bond_datas['styles'],
                             'order': bond_datas['orders'],
                             'polyhedra': bond_datas['polyhedras'],
+                            'second_bond': bond_datas['second_bond'],
                             })
         name = self.obj_name
         self.delete_obj(name)

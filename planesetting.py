@@ -4,7 +4,6 @@ Lattice Planes
 
 To insert lattice planes in structural models.
 """
-from numpy.core.records import array
 import bpy
 from batoms.base import Setting, tuple2string
 import numpy as np

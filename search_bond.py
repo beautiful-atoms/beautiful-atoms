@@ -1,13 +1,9 @@
-from pandas import array
 import bpy
-from ase import Atoms
 import numpy as np
 from time import time
 from batoms.base import ObjectGN
-# from batoms.tools import build_search_bond
 from batoms.butils import object_mode, compareNodeType
 from batoms.tools import number2String, string2Number
-from ase.geometry import wrap_positions, complete_cell
 
 shapes = ["UV_SPHERE", "ICO_SPHERE", "CUBE", "METABALL"]
 

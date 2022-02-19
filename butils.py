@@ -1,5 +1,4 @@
 import bpy
-from ase import Atom, Atoms
 from mathutils import Vector, Matrix
 import numpy as np
 

@@ -1,4 +1,3 @@
-from ase.atoms import default
 import bpy
 from bpy.props import (StringProperty,
                        BoolProperty,

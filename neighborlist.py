@@ -1,11 +1,8 @@
 """
 """
-from dis import dis
-from turtle import position
 import numpy as np
 from time import time
 from ase.geometry import wrap_positions
-from pandas import array
 
 def RemovePbc(species0, positions0, cell, pbc, cutoffs):
     """
