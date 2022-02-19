@@ -9,6 +9,7 @@ def rscb_import(name):
     urllib.request.urlretrieve('http://files.rcsb.org/download/%s'%name, name)
     atoms = read_pdb(name)
     batoms = Batoms('pdb_%s'%name[0:-4], from_ase=atoms)
+    batoms.ribbon.draw()
     return batoms
 
 if __name__ == '__main__':

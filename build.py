@@ -10,12 +10,12 @@ from batoms.batoms import Batoms
 
 def molecule(label, symbol, **kwargs):
     atoms = build.molecule(symbol, **kwargs)
-    batoms = Batoms(label = label, atoms = atoms)
+    batoms = Batoms(label = label, from_ase = atoms)
     return batoms
 
 def bulk(label, symbol, **kwargs):
     atoms = build.bulk(symbol, **kwargs)
-    batoms = Batoms(label = label, atoms = atoms)
+    batoms = Batoms(label = label, from_ase = atoms)
     return batoms
 
 def surface(label, lattice, indices, layers, **kwargs):
@@ -23,5 +23,5 @@ def surface(label, lattice, indices, layers, **kwargs):
         lattice = lattice.atoms
     atoms = build.surface(lattice, indices, layers, **kwargs)
     atoms.info.pop('species', None)
-    batoms = Batoms(label = label, atoms = atoms)
+    batoms = Batoms(label = label, from_ase = atoms)
     return batoms

@@ -4,7 +4,6 @@ import bpy
 from batoms.base import Setting, tuple2string
 import numpy as np
 from time import time
-from batoms.butils import object_mode, clean_coll_objects
 from batoms.data import default_polyhedras
 
 
