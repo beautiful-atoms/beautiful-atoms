@@ -387,7 +387,7 @@ class SearchBond(ObjectGN):
         indices2 = np.where((bondlists[:, 5:8] != np.array([0, 0, 0])).any(axis = 1))[0]
         n = len(indices1) + len(indices2)
         if n ==0:
-            return None
+            return default_search_bond_datas
         bondlists1 = bondlists[indices1]
         bondlists1 = bondlists1[:, [0, 2, 3, 4]]
         bondlists1 = np.unique(bondlists1, axis = 0)
