@@ -14,7 +14,6 @@ default_attributes = [
         ['select', 'INT'],
         ['model_style', 'INT'],
         ['scale', 'FLOAT'], 
-        ['radius_style', 'INT'],
         ]
     
 default_GroupInput = [
@@ -24,7 +23,6 @@ default_GroupInput = [
         ['select', 'NodeSocketInt'],
         ['model_style', 'NodeSocketInt'],
         ['scale', 'NodeSocketFloat'], 
-        ['radius_style', 'NodeSocketInt'],
         ]
     
 
@@ -36,7 +34,6 @@ default_search_bond_datas = {
         'scales':np.zeros(0),
         'offsets':np.zeros((0, 3)),
         'model_styles':np.ones(0, dtype = int),
-        'radius_styles':np.ones(0, dtype = int),
         'shows':np.ones(0, dtype = int),
         'selects':np.ones(0, dtype = int),
         }
@@ -87,7 +84,6 @@ class SearchBond(ObjectGN):
                             'model_style': search_bond_datas['model_styles'],
                             'select': search_bond_datas['selects'],
                             'scale': search_bond_datas['scales'],
-                            'radius_style': search_bond_datas['radius_styles'],
                             })
         name = '%s_search_bond'%self.label
         self.delete_obj(name)
@@ -394,7 +390,6 @@ class SearchBond(ObjectGN):
         indices1 = bondlists1[:, 0].astype(int)
         model_styles1 = arrays['model_style'][indices1]
         shows1 = arrays['show'][indices1]
-        radius_styles1 = arrays['radius_style'][indices1]
         selects1 = arrays['select'][indices1]
         scales1 = arrays['scale'][indices1]
         species_indexs1 = arrays['species_index'][indices1]
@@ -410,7 +405,6 @@ class SearchBond(ObjectGN):
         indices2 = bondlists2[:, 0].astype(int)
         model_styles2 = arrays['model_style'][indices2]
         shows2 = arrays['show'][indices2]
-        radius_styles2 = arrays['radius_style'][indices2]
         selects2 = arrays['select'][indices2]
         scales2 = arrays['scale'][indices2]
         species_indexs2 = arrays['species_index'][indices2]
@@ -428,7 +422,6 @@ class SearchBond(ObjectGN):
         selects = np.append(selects1, selects2)
         shows = np.append(shows1, shows2)
         scales = np.append(scales1, scales2)
-        radius_styles = np.append(radius_styles1, radius_styles2)
         datas = {
             'atoms_index': np.array(indices),
             'species_index': species_indexs,
@@ -440,7 +433,6 @@ class SearchBond(ObjectGN):
             'shows':shows,
             'selects':selects,
             'scales':scales,
-            'radius_styles':radius_styles,
         }
         #=========================
         # # search molecule

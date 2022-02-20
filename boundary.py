@@ -36,7 +36,6 @@ default_boundary_datas = {
         'scales':np.zeros(0),
         'offsets':np.zeros((0, 3)),
         'model_styles':np.ones(0, dtype = int),
-        'radius_styles':np.ones(0, dtype = int),
         'shows':np.ones(0, dtype = int),
         'selects':np.ones(0, dtype = int),
         }
@@ -271,7 +270,6 @@ class Boundary(ObjectGN):
                             'model_style': boundary_datas['model_styles'],
                             'select': boundary_datas['selects'],
                             'scale': boundary_datas['scales'],
-                            'radius_style': boundary_datas['radius_styles'],
                             })
         name = '%s_boundary'%self.label
         self.delete_obj(name)
@@ -651,7 +649,6 @@ class Boundary(ObjectGN):
         nb =len(boundary_lists)
         model_styles = arrays['model_style'][boundary_lists[:, 0]]
         shows = arrays['show'][boundary_lists[:, 0]]
-        radius_styles = arrays['radius_style'][boundary_lists[:, 0]]
         selects = arrays['select'][boundary_lists[:, 0]]
         scales = arrays['scale'][boundary_lists[:, 0]]
         species_indexs = arrays['species_index'][boundary_lists[:, 0]]
@@ -671,7 +668,6 @@ class Boundary(ObjectGN):
             'shows':shows,
             'selects':selects,
             'scales':scales,
-            'radius_styles':radius_styles,
         }
         # print('datas: ', datas)
         # print('calc_boundary_data: {0:10.2f} s'.format(time() - tstart))
