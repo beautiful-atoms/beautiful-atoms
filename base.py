@@ -473,6 +473,17 @@ class BaseObject():
         self.obj.select_set(True)
         bpy.ops.transform.rotate(value=angle, orient_axis=axis.upper(), 
                         orient_type = orient_type)    
+    
+    def delete_obj(self, name):
+        if name in bpy.data.objects:
+            obj = bpy.data.objects.get(name)
+            bpy.data.objects.remove(obj, do_unlink = True)
+
+    def delete_material(self, name):
+        if name in bpy.data.materials:
+            obj = bpy.data.materials.get(name)
+            bpy.data.materials.remove(obj, do_unlink = True)
+
 
 class BaseCollection():
     

@@ -40,6 +40,26 @@ class Bspecies(bpy.types.PropertyGroup):
         default='0')
     segments: IntVectorProperty(name="segments", size = 2, default = (24, 16))
 
+    @property
+    def occupancies(self):
+        occupancies = {}
+        data = self.elements
+        for eledata in data:
+            occupancies[eledata.name] = round(eledata.occupancy, 3)
+        return occupancies
+        
+    def as_dict(self) -> dict:
+        setdict = {
+                  'species': self.species, 
+                  'name': self.name, 
+                  'elements': self.occupancies,
+                  'radius_style': self.radius_style,
+                  'color_style': self.color_style,
+            }
+        return setdict
+
+
+
 class Batom(bpy.types.PropertyGroup):
     """
     """

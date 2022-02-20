@@ -32,7 +32,6 @@ default_attributes = [
         ['show', 'BOOLEAN'], 
         ['scale', 'FLOAT'], 
         ['model_style', 'INT'],
-        ['radius_style', 'INT'],
         ]
     
 default_GroupInput = [
@@ -494,22 +493,27 @@ class Batoms(BaseCollection, ObjectGN):
     
     @property
     def radius_style(self):
-        return self.get_radius_style()
+        radius_style = {}
+        for name, sp in self.species.items():
+            radius_style[name] = sp.radius_style
+        return radius_style
     
     @radius_style.setter
     def radius_style(self, radius_style):
-        self.set_radius_style(radius_style)
+        for name, sp in self.species.items():
+            sp.radius_style = radius_style
     
-    def get_radius_style(self):
-        return self.attributes['radius_style']
+    @property
+    def color_style(self):
+        color_style = {}
+        for name, sp in self.species.items():
+            color_style[name] = sp.color_style
+        return color_style
     
-    def set_radius_style(self, radius_style):
-        self.coll.batoms.radius_style = str(radius_style)
-        scale = self.scale
-        species_props = get_default_species_data(self.species,
-                                radius_style = radius_style)
-        # print(species_props)
-        self.species
+    @color_style.setter
+    def color_style(self, color_style):
+        for name, sp in self.species.items():
+            sp.color_style = color_style
 
     @property
     def radii_vdw(self):
@@ -772,7 +776,7 @@ class Batoms(BaseCollection, ObjectGN):
             # bpy.ops.object.mode_set(mode=mode)
             return batom
         if isinstance(index, str):
-            bspecies = Bspecies(self.label, index, batoms=self)
+            bspecies = self.species[index]
             return bspecies
         else:
             return self.positions[index]
@@ -957,6 +961,7 @@ class Batoms(BaseCollection, ObjectGN):
         >>> pt111 = fcc111('Pt', (5, 5, 4), vacuum = 5.0)
         >>> pt111 = Batoms('pt111', from_ase = pt111)
         >>> pt111.replace([0], 'Au')
+        >>> pt111.replace([0], 'Au_1')
         >>> pt111.replace(range(20), 'Au')
         """
         # if kind exists, merger, otherwise build a new kind and add.
