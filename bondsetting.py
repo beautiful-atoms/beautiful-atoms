@@ -49,22 +49,35 @@ class BondSetting():
     def min(self):
         return self.collection[self.name].min
     
+    @min.setter
+    def min(self, min):
+        self.collection[self.name].min = min
+    
     @property
     def max(self):
         return self.collection[self.name].max
+    
+    @max.setter
+    def max(self, max):
+        self.collection[self.name].max = max
+    
     
     @property
     def search(self):
         return self.collection[self.name].search
     
+    @search.setter
+    def search(self, search):
+        self.collection[self.name].search = search
+    
     @property
     def polyhedra(self):
         return self.collection[self.name].polyhedra
     
-    @search.setter
-    def search(self, search):
-        self.collection[self.name].search = search
-        # if search not exist, add one
+    @polyhedra.setter
+    def polyhedra(self, polyhedra):
+        self.collection[self.name].polyhedra = polyhedra
+    
 
     @property
     def order(self):
