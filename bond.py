@@ -15,7 +15,7 @@ class Bond():
         bpy.context.view_layer.objects.active = self.bonds.obj
         mode = self.bonds.obj.mode
         bpy.ops.object.mode_set(mode='OBJECT')
-        s = "Bond(species = '%s', order = %s, style = %s" % (self.species['name'],  \
+        s = "Bond(species = '%s', order = %s, style = %s)" % (self.species['name'],  \
                     str(self.species['order']), str(self.species['style']))
         bpy.ops.object.mode_set(mode=mode)
         return s

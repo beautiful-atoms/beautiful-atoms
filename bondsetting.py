@@ -85,11 +85,9 @@ class BondSetting():
     
     @order.setter
     def order(self, order):
-        order0 = self.bonds.attributes['order']
-        order0[self.indices] = order
-        self.bonds.set_attributes({'order': order0})
-        # if order not exist, add one
         self.collection[self.name].order = order
+        self.bonds.set_attribute_with_indices('order', self.indices, order)
+        # if instancer with this order not exist, add one
         sp = self.as_dict()
         self.bonds.setting.build_instancer(sp)
         self.bonds.add_geometry_node(sp)
@@ -100,10 +98,10 @@ class BondSetting():
     
     @style.setter
     def style(self, style):
-        self.bonds.obj.data.attributes['style'].data[self.indices].value = style
-        # if stule not exist, add one
-        sp = self.species
-        sp['style'] = style
+        self.collection[self.name].style = str(style)
+        self.bonds.set_attribute_with_indices('style', self.indices, style)
+        # if instancer with this style not exist, add one
+        sp = self.as_dict()
         self.bonds.setting.build_instancer(sp)
         self.bonds.add_geometry_node(sp)
     
@@ -126,19 +124,6 @@ class BondSetting():
     def color2(self, color2):
         self.collection[self.name].color2 = color2
         sp = self.as_dict()
-        self.bonds.setting.build_instancer(sp)
-        self.bonds.add_geometry_node(sp)
-    
-    @property
-    def style(self):
-        return self.collection[self.name].style
-    
-    @style.setter
-    def style(self, style):
-        self.bonds.obj.data.attributes['style'].data[self.indices].value = style
-        # if stule not exist, add one
-        sp = self.species
-        sp['style'] = style
         self.bonds.setting.build_instancer(sp)
         self.bonds.add_geometry_node(sp)
 
