@@ -270,6 +270,19 @@ class Species(BaseObject):
         self.update(data)
 
     @property
+    def indices(self):
+        indices = np.where(self.parent.batoms.attributes['species'] == self.name)[0]
+        return indices
+
+    @property
+    def scale(self):
+        return self.parent.batoms.get_attribute_with_indices('scale', self.indices)
+    
+    @scale.setter
+    def scale(self, scale):
+        self.parent.batoms.set_attribute_with_indices('scale', self.indices, scale)
+        
+    @property
     def segments(self):
         return self.get_segments()
     
