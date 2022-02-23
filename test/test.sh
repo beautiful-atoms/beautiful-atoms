@@ -1,4 +1,3 @@
-
 rm *png
 blender -b -P test_animation.py
 blender -b -P test_batom.py
