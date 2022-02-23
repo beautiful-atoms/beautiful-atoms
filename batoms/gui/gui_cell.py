@@ -6,7 +6,7 @@ from bpy.props import (BoolProperty,
                        FloatVectorProperty,
                        )
 
-from batoms.butils import get_selected_batoms
+from batoms.utils.butils import get_selected_batoms
 from batoms import Batoms
 
 class Cell_PT_prepare(Panel):

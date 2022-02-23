@@ -136,7 +136,9 @@ dmypy.json
 *.in
 *.xyz
 *.pdb
+*.cif
+*.poscar
 
-test/*
+test/
 .vscode/*
 Dockerfiles/Dockerfile.base_3.0

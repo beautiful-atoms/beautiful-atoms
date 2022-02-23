@@ -22,15 +22,26 @@ Features:
 
 ### Beautiful Atoms 2.0
 
-Beautiful Atoms 2.0 planned release schedule.
+Beautiful Atoms 2.0.0 planned release schedule.
 
 | Phase | Description              | Start Date   | Branch
 | ------|--------------------------|--------------|--------|
 | Bcon1 | New features and changes | Jan 4, 2022  | main   | 
 | Bcon2 | Improve and stabilize    | Feb 7, 2022  | main   |
-| Bcon3 | Bug fixing only          | Feb 28, 2022 | main   |
-| Bcon4 | Prepare release          | Mar 17, 2022 | main   |
-| Bcon5 | Release                  | Mar 27, 2022 | main   |
+| Bcon3 | Bug fixing only          | Feb 28, 2022 | release/2.0.0   |
+| Bcon4 | Prepare release          | Mar 17, 2022 | release/2.0.0   |
+| Bcon5 | Release                  | Mar 27, 2022 | release/2.0.0   |
+
+Beautiful Atoms 2.1.0 planned release schedule.
+
+| Phase | Description              | Start Date   | Branch
+| ------|--------------------------|--------------|--------|
+| Bcon1 | New features and changes | Feb 28, 2022  | develop   | 
+| Bcon2 | Improve and stabilize    | Apr 1 , 2022  | develop   |
+| Bcon3 | Bug fixing only          | Apr 20, 2022 | release/2.1.0   |
+| Bcon4 | Prepare release          | May 17, 2022 | release/2.1.0   |
+| Bcon5 | Release                  | May 27, 2022 | release/2.1.0   |
+
 
 ### Author
 * Xing Wang  <xingwang1991@gmail.com>

@@ -14,7 +14,7 @@ from bpy.props import (StringProperty,
                        EnumProperty,
                        PointerProperty,
                        )
-from batoms.butils import get_selected_batoms, get_selected_vertices, \
+from batoms.utils.butils import get_selected_batoms, get_selected_vertices, \
                         get_selected_objects
 from batoms import Batoms, Batom
 

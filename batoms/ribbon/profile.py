@@ -6,28 +6,30 @@ from time import time
 
 def ellipse(n, w, h):
     profile = np.zeros((n, 3))
-    t = np.linspace(0, 1, n, endpoint = False)
+    t = np.linspace(0, 1, n, endpoint=False)
     a = t*2*pi + pi/4
     profile[:, 0] = np.cos(a)*w
     profile[:, 2] = np.sin(a)*h
     return profile
 
+
 def rectangle(w, h):
     profile = np.array([
-            [-1*w,  0, -1*h],
-            [-1*w,  0, 1*h],
-            [1*w,  0, 1*h],
-            [1*w,  0, -1*h],
-            ])
+        [-1*w,  0, -1*h],
+        [-1*w,  0, 1*h],
+        [1*w,  0, 1*h],
+        [1*w,  0, -1*h],
+    ])
 
     return profile
 
-def build_mesh(vertices, normals, sides, profile, scales = None):
+
+def build_mesh(vertices, normals, sides, profile, scales=None):
     """
     todo: improve performance
     """
     # calc side interp
-    tstart = time()
+    # tstart = time()
     n = len(vertices)
     m = len(profile)
     forwards = np.cross(normals, sides)
@@ -36,13 +38,13 @@ def build_mesh(vertices, normals, sides, profile, scales = None):
     forwards = forwards.reshape(n, 1, 3)
     normals = normals.reshape(n, 1, 3)
     # build new axis for a given vertices
-    newAxis = np.concatenate((sides, forwards, normals), axis = 1)
+    newAxis = np.concatenate((sides, forwards, normals), axis=1)
     # rotate and scale the profile
     rotations = np.linalg.inv(newAxis)
     if scales is not None:
         rotations = rotations*scales[:, None]
     vertices = np.tile(vertices, (m, 1))
-    # 
+    #
     for i in range(m):
         vertices[i*n:(i + 1)*n] += np.dot(rotations, profile[i])
     #
@@ -63,6 +65,7 @@ def build_mesh(vertices, normals, sides, profile, scales = None):
     faces.append([(i + 1)*n - 1 for i in range(m)])
     # print('build mesh: %s'%(time() - tstart))
     return vertices, faces
+
 
 if __name__ == "__main__":
     # profile = ellipse(16, 1, 1)

@@ -1,48 +1,17 @@
 import pytest
-from batoms.butils import removeAll
-from batoms.batoms import Batoms
-from batoms.bio import read
-import numpy as np
-
+from ase.io import read
+from batoms.utils.butils import removeAll
+from batoms import Batoms
 
 
 def test_boundary():
-from batoms.butils import removeAll
-from batoms.batoms import Batoms
-removeAll()
-a = 3.96
-positions = [[0, 0, 0], [a/2, a/2, 0], [a/2, 0, a/2], [0, a/2, a/2]]
-pt = Batoms('pt', ['Pt']*4, 
-            positions, 
-            pbc = True, 
-            cell = (a, a, a))
-pt.boundary
-pt.boundary.update()
-
-atoms = pt.get_atoms_with_boundary()
-    assert len(atoms) == 14
-    pt.draw_cell()
-    pt.get_image(output='boundary_pt.png')
-
-
-def test_bond_search():
-from batoms.butils import removeAll
-from batoms.batoms import Batoms
-from batoms.bio import read
-removeAll()
-tio2 = read('test/datas/tio2.cif')
-tio2.boundary.update_boundary()
-tio2.boundary = 0.01
-    tio2.model_style = 2
-    atoms = tio2.get_atoms_with_boundary()
-    assert len(atoms) == 55
-    tio2.draw_cell()
-    tio2.get_image(output='boundary_search.png')
-
-
+    removeAll()
+    tio2 = read('datas/tio2.cif')
+    tio2 = Batoms('tio2', from_ase=tio2)
+    tio2.boundary = 0.01
+    assert len(tio2.boundary.obj.data.vertices) == 9
 
 
 if __name__ == '__main__':
     test_boundary()
-    test_bond_search()
     print('\n Bondsetting: All pass! \n')

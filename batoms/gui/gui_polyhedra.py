@@ -7,7 +7,7 @@ from bpy.props import (BoolProperty,
                        EnumProperty,
                        )
 
-from batoms.butils import get_selected_objects, get_selected_batoms
+from batoms.utils.butils import get_selected_objects, get_selected_batoms
 from batoms import Batoms
 from batoms.gui.gui_batoms import modify_batoms_attr
 

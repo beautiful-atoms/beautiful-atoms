@@ -7,7 +7,7 @@ from bpy.props import (FloatProperty,
                        EnumProperty,
                        )
 
-from batoms.butils import get_selected_batoms, get_selected_vertices
+from batoms.utils.butils import get_selected_batoms, get_selected_vertices
 from batoms import Batoms
 
 class Batom_PT_prepare(Panel):

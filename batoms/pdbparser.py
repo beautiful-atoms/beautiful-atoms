@@ -1,5 +1,5 @@
 """
-modified from ASE 
+modified from ASE
 
 Module to read and write atoms in PDB file format.
 
@@ -14,11 +14,10 @@ from ase.cell import Cell
 from ase.io.espresso import label_to_symbol
 
 
-
 def read_atom_line(line):
     """
     Read atom line from pdb format
-ATOM     25  CA  LYS A   5      48.356  17.146  -2.714  1.00  0.00           C  
+ATOM     25  CA  LYS A   5      48.356  17.146  -2.714  1.00  0.00           C
     """
 
     line = line.rstrip('\n')
@@ -32,7 +31,7 @@ ATOM     25  CA  LYS A   5      48.356  17.146  -2.714  1.00  0.00           C
         resseq = 1
     else:
         resseq = int(seq[0])  # sequence identifier
-    icode = line[26]          # insertion code, not used
+    # icode = line[26]          # insertion code, not used
     # atomic coordinates
     try:
         coord = np.array([float(line[30:38]),
@@ -54,23 +53,26 @@ ATOM     25  CA  LYS A   5      48.356  17.146  -2.714  1.00  0.00           C
         bfactor = 0.0
     # segid = line[72:76] # not used
     symbol = line[76:78].strip().upper()
-    return symbol, name, altloc, resname, coord, occupancy, bfactor, resseq, chainid, type_record
+    return symbol, name, altloc, resname, coord,\
+        occupancy, bfactor, resseq, chainid, type_record
+
 
 def read_line_cyrstal(line):
     cellpar = [float(line[6:15]),  # a
-                float(line[15:24]),  # b
-                float(line[24:33]),  # c
-                float(line[33:40]),  # alpha
-                float(line[40:47]),  # beta
-                float(line[47:54])]  # gamma
+               float(line[15:24]),  # b
+               float(line[24:33]),  # c
+               float(line[33:40]),  # alpha
+               float(line[40:47]),  # beta
+               float(line[47:54])]  # gamma
     cell = Cell.new(cellpar)
     pbc = True
     return cell, pbc
 
+
 def read_line_sheet(line):
     """
-SHEET    1   A 9 PHE A   6  TRP A  12  0                                        
-    """
+SHEET    1   A 9 PHE A   6  TRP A  12  0
+"""
     # Chain identifier
     # sheetId = int(line[6:10].strip())
     # chainId = line[11:14].strip()
@@ -80,34 +82,36 @@ SHEET    1   A 9 PHE A   6  TRP A  12  0
     endChain = line[32]
     endResi = int(line[33:37])
     sheet = {
-    'name': '%s-%s-%s-%s'%(startChain, startResi, endChain, endResi),
-    # 'sheetId': sheetId,
-    # 'chainId': chainId,
-    'startChain': startChain,
-    'startResi': startResi,
-    'endChain': endChain,
-    'endResi': endResi,
+        'name': '%s-%s-%s-%s' % (startChain, startResi, endChain, endResi),
+        # 'sheetId': sheetId,
+        # 'chainId': chainId,
+        'startChain': startChain,
+        'startResi': startResi,
+        'endChain': endChain,
+        'endResi': endResi,
     }
     return sheet
 
+
 def read_line_helix(line):
     """
-HELIX    3   3 GLY A  724  LEU A  728  5                                   5    
+HELIX    3   3 GLY A  724  LEU A  728  5   5
     """
     startChain = line[19]
     startResi = int(line[21:25])
     endChain = line[31]
     endResi = int(line[33:37])
     helix = {
-    'name': '%s-%s-%s-%s'%(startChain, startResi, endChain, endResi),
-    # 'sheetId': sheetId,
-    # 'chainId': chainId,
-    'startChain': startChain,
-    'startResi': startResi,
-    'endChain': endChain,
-    'endResi': endResi,
+        'name': '%s-%s-%s-%s' % (startChain, startResi, endChain, endResi),
+        # 'sheetId': sheetId,
+        # 'chainId': chainId,
+        'startChain': startChain,
+        'startResi': startResi,
+        'endChain': endChain,
+        'endResi': endResi,
     }
     return helix
+
 
 def read_pdb(fileobj, index=-1, read_arrays=True):
     """Read PDB files."""
@@ -227,6 +231,7 @@ def read_pdb(fileobj, index=-1, read_arrays=True):
         atoms = build_atoms()
         images.append(atoms)
     return images[index]
+
 
 if __name__ == "__main__":
     images = read_pdb('test/datas/1tim.pdb')

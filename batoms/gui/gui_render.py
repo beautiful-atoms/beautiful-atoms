@@ -7,7 +7,7 @@ from bpy.props import (BoolProperty,
                        FloatProperty,
                        FloatVectorProperty,
                        )
-from batoms.butils import get_selected_batoms
+from batoms.utils.butils import get_selected_batoms
 from batoms.batoms import Batoms
 from batoms.render.render import Render
 
