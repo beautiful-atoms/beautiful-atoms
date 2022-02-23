@@ -1,11 +1,12 @@
 import pytest
 import numpy as np
+from batoms.utils.butils import removeAll
+from batoms.render import Render, Lights, Light
+from batoms.build import molecule
 
 def test_lights():
     """
     """
-    from batoms.butils import removeAll
-    from batoms.render import Render, Lights, Light
     removeAll()
     r = Render(label = 'h2o')
     assert isinstance(r.lights, Lights)
@@ -18,8 +19,6 @@ def test_lights():
     assert len(r.lights) == 2
 
 def test_light_direction():
-    from batoms.build import molecule
-    from batoms.butils import removeAll
     removeAll()
     h2o = molecule('h2o', 'H2O')
     h2o.render.lights['Default'].type = 'POINT'
