@@ -1,75 +1,99 @@
 import bpy
-from batoms.base.object import childObjectGN
 import numpy as np
+from batoms.butils import update_object, object_mode
 
-class Batom(childObjectGN):
-    def __init__(self, label, index=0, batoms=None) -> None:
-        """Batom class
-
-        Args:
-            label (str):
-                Name of the Batoms object
-            index (int, optional):
-                Index of the atom. Defaults to 0.
-            batoms (Batoms, optional):
-                Batoms object. Defaults to None.
-        """
-        childObjectGN.__init__(self, label, index, parent=batoms)
+class Batom():
+    """Batom Class
+    """
+    def __init__(self, label, index = 0, batoms = None) -> None:
+        self.label = label
+        self.batoms = batoms
+        self.index = index
 
     def __repr__(self):
-        bpy.context.view_layer.objects.active = self.parent.obj
-        mode = self.parent.obj.mode
+        bpy.context.view_layer.objects.active = self.batoms.obj
+        mode = self.batoms.obj.mode
         bpy.ops.object.mode_set(mode='OBJECT')
-        s = "Batom(species = '%s', " % self.species
-        s += "elements = %s, " % str(self.elements)
-        s += "positions = %s)" % np.round(self.position, 2)
+        s = "Batom(species = '%s', elements = %s, positions = %s" % (self.species,  \
+                    str(self.elements), self.position)
         bpy.ops.object.mode_set(mode=mode)
         return s
-
+    
+    @property
+    def vertice(self):
+        # vertice = self.batoms.obj.data.vertices[self.index]
+        vertice = self.batoms.obj.data.shape_keys.key_blocks[0].data[self.index]
+        return vertice
+    
+    @property
+    def attribute(self):
+        return self.batoms.obj.data.attributes[self.index]
+    
     @property
     def species(self):
-        return self.attributes['species'].data[self.index].value
-
+        return self.batoms.obj.data.attributes['species'].data[self.index].value
+    
     @species.setter
     def species(self, species):
         self.set_species(species)
-
+    
     def set_species(self, species):
-        # self.attributes['species'].data[self.index].value = species
-        self.parent.replace([self.index], species)
-
+        # self.batoms.obj.data.attributes['species'].data[self.index].value = species
+        self.batoms.replace([self.index], species)
+    
     @property
     def elements(self):
-        elements = self.parent.species[self.species].elements
-        occupancies = {}
-        for name, eledata in elements.items():
-            occupancies[name] = round(eledata.occupancy, 3)
-        return occupancies
+        return self.batoms.species[self.species]['elements']
+    
+    @property
+    def local_position(self):
+        return self.vertice.co
 
     @property
-    def polyhedra(self):
-        polyhedra = self.attributes['model_style'].data[self.index].value == 2
-        return polyhedra
-
-    @polyhedra.setter
-    def polyhedra(self, polyhedra):
-        if polyhedra:
-            self.attributes['model_style'].data[self.index].value = 2
-        else:
-            self.attributes['model_style'].data[self.index].value = 1
-        # update_object(self.parent.obj)
-        self.parent.draw_polyhedra()
+    def position(self):
+        return self.get_position()
+    
+    @position.setter
+    def position(self, position):
+        self.set_position(position)
+    
+    def get_position(self):
+        """
+        Get global position.
+        """
+        from batoms.tools import local2global
+        position = local2global(np.array([self.local_position]), 
+                np.array(self.batoms.obj.matrix_world))
+        return position[0]
+    
+    def set_position(self, position):
+        """
+        Set global position to local vertices
+        """
+        object_mode()
+        from batoms.tools import local2global
+        position = np.array([position])
+        position = local2global(position, 
+                np.array(self.batoms.obj.matrix_world), reversed = True)
+        # rashpe to (natoms*3, 1) and use forseach_set
+        self.vertice.co = position[0]
+        self.batoms.obj.data.update()
+        update_object(self.batoms.obj)
 
     @property
-    def bond(self):
-        bond = self.attributes['model_style'].data[self.index].value > 0
-        return bond
+    def scale(self):
+        return self.batoms.obj.data.attributes['scale'].data[self.index].value
+    
+    @scale.setter
+    def scale(self, scale):
+        self.batoms.obj.data.attributes['scale'].data[self.index].value = scale
+    
+    @property
+    def show(self):
+        return self.batoms.obj.data.attributes['show'].data[self.index].value
+    
+    @show.setter
+    def show(self, show):
+        self.batoms.obj.data.attributes['show'].data[self.index].value = show
+        update_object(self.batoms.obj)
 
-    @bond.setter
-    def bond(self, bond):
-        if bond:
-            self.attributes['model_style'].data[self.index].value = 1
-        else:
-            self.attributes['model_style'].data[self.index].value = 0
-        # update_object(self.parent.obj)
-        self.parent.draw_ball_and_stick()
