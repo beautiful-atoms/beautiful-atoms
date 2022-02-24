@@ -6,8 +6,6 @@ This module defines the Batoms object in the batoms package.
 # TODO: add location for boundary, bonds and all child objects
 # TODO: add feature: cavity
 """
-from turtle import position
-from pandas import array
 import bpy
 from batoms.batom import Batom
 from batoms.bond import Bonds, default_bond_datas
@@ -186,12 +184,6 @@ class Batoms(BaseCollection, ObjectGN):
         self._boundary = None
         show_index()
         self.hideOneLevel()
-<<<<<<< HEAD:batoms/batoms.py
-    
-    def set_collection(self, label, boundary = [0, 0, 0]):
-        """
-        build main collection and its child collections.
-=======
 
     def set_collection(self, label):
         """Build main collection and its child collections.
@@ -201,7 +193,6 @@ class Batoms(BaseCollection, ObjectGN):
 
         Raises:
             Exception: The label is already in use.
->>>>>>> 0e5424a2ced8cc121cfbcc111fa9cea940228ebe:batoms.py
         """
         if bpy.data.collections.get(label):
             raise Exception("Failed, the name %s already in use!" % label)
@@ -212,36 +203,6 @@ class Batoms(BaseCollection, ObjectGN):
             coll.children.link(subcoll)
         coll.batoms.flag = True
         coll.batoms.label = label
-<<<<<<< HEAD:batoms/batoms.py
-        coll.batoms.boundary = boundary
-    
-    def hideOneLevel(self):
-        from batoms.butils import hideOneLevel
-        hideOneLevel()
-
-    def build_object(self, label, positions, location = [0, 0, 0]):
-        """
-        build child object and add it to main objects.
-        """
-        if label not in bpy.data.objects:
-            mesh = bpy.data.meshes.new(label)
-            # Add attributes
-            for attribute in default_attributes:
-                mesh.attributes.new(name = attribute[0], type = attribute[1], domain = 'POINT')
-            obj = bpy.data.objects.new(label, mesh)
-            obj.data.from_pydata(positions, [], [])
-            obj.location = location
-            obj.batoms.batom.flag = True
-            obj.batoms.batom.label = label
-            self.coll.objects.link(obj)
-        elif bpy.data.objects[label].batoms.batom.flag:
-            obj = bpy.data.objects[label]
-            self.coll.objects.link(obj)
-            print("Object %s already exists, Load it!"%label)
-        else:
-            raise Exception("Failed, the name %s already in use and is not Batom object!"%label)
-        # 
-=======
 
     def hideOneLevel(self):
         """Hide one level of collecitons in the outline in Blender
@@ -273,7 +234,6 @@ class Batoms(BaseCollection, ObjectGN):
         obj.batoms.label = label
         self.coll.objects.link(obj)
         # add cell object as its child
->>>>>>> 0e5424a2ced8cc121cfbcc111fa9cea940228ebe:batoms.py
         self.cell.obj.parent = self.obj
 
     def build_geometry_node(self):
@@ -337,29 +297,6 @@ class Batoms(BaseCollection, ObjectGN):
         gn.node_group.links.new(
             PositionsNode.outputs[0], SetPosition.inputs['Position'])
         self.wrap = self.pbc
-<<<<<<< HEAD:batoms/batoms.py
-    def vectorDotMatrix(self, gn, vectorNode, matrix, name):
-        """
-        """
-        CombineXYZ = get_nodes_by_name(gn.node_group.nodes,
-                        '%s_CombineXYZ_%s'%(self.label, name),
-                        'ShaderNodeCombineXYZ')
-        #
-        VectorDot = []
-        for i in range(3):
-            tmp = get_nodes_by_name(gn.node_group.nodes, 
-                        '%s_VectorDot%s_%s'%(self.label, i, name),
-                        'ShaderNodeVectorMath')
-            tmp.operation = 'DOT_PRODUCT'
-            VectorDot.append(tmp)
-            tmp.inputs[1].default_value = matrix[:, i]
-            gn.node_group.links.new(vectorNode.outputs[0], tmp.inputs[0])
-            gn.node_group.links.new(tmp.outputs['Value'], CombineXYZ.inputs[i])
-        return CombineXYZ
-        
-    def add_geometry_node(self, spname, selname):
-        """
-=======
 
     def add_geometry_node(self, spname, instancer):
         """Add geometry node for each species
@@ -369,7 +306,6 @@ class Batoms(BaseCollection, ObjectGN):
                 Name of the species
             instancer (bpy.data.object):
                 Object to be instanced
->>>>>>> 0e5424a2ced8cc121cfbcc111fa9cea940228ebe:batoms.py
         """
         gn = self.gnodes
         GroupInput = gn.node_group.nodes.get('Group Input')
@@ -872,21 +808,6 @@ class Batoms(BaseCollection, ObjectGN):
 
     def get_frames(self):
         """
-<<<<<<< HEAD:batoms/batoms.py
-        #
-        constr = self.atoms.constraints
-        self.constrainatom = []
-        for c in constr:
-            if isinstance(c, FixAtoms):
-                for n, i in enumerate(c.index):
-                    self.constrainatom += [i]
-    
-    def set_frames(self, frames = None, frame_start = 0, only_basis = False):
-        if frames is None:
-            frames = self._frames
-        nframe = len(frames)
-        if nframe == 0 : return
-=======
         """
         frames = self.get_obj_frames(self.obj)
         return frames
@@ -897,7 +818,6 @@ class Batoms(BaseCollection, ObjectGN):
         nframe = len(frames)
         if nframe == 0:
             return
->>>>>>> 0e5424a2ced8cc121cfbcc111fa9cea940228ebe:batoms.py
         name = self.label
         obj = self.obj
         self.set_obj_frames(name, obj, frames)
@@ -1251,16 +1171,10 @@ class Batoms(BaseCollection, ObjectGN):
 
     def get_wrap(self):
         return list(self.coll.batoms.wrap)
-<<<<<<< HEAD:batoms/batoms.py
-    
-    def set_wrap(self, wrap):
-        # 
-=======
 
     def set_wrap(self, wrap):
         #
         nodes = self.gnodes.node_group.nodes
->>>>>>> 0e5424a2ced8cc121cfbcc111fa9cea940228ebe:batoms.py
         self.update_gn_cell()
         if isinstance(wrap, bool):
             wrap = [wrap]*3
@@ -1279,13 +1193,8 @@ class Batoms(BaseCollection, ObjectGN):
                 nodes['%s_CombineXYZ_' % self.label].outputs[0],
                 nodes['%s_SetPosition' % self.label].inputs['Position'])
         self.gnodes.node_group.update_tag()
-<<<<<<< HEAD:batoms/batoms.py
-        #todo: support selection
-        
-=======
         # TODO: support selection
 
->>>>>>> 0e5424a2ced8cc121cfbcc111fa9cea940228ebe:batoms.py
     def update_gn_cell(self):
         # update cell
         cell = self.cell.array
@@ -1295,21 +1204,6 @@ class Batoms(BaseCollection, ObjectGN):
         # set positions
         gn = self.gnodes
         for i in range(3):
-<<<<<<< HEAD:batoms/batoms.py
-            tmp = get_nodes_by_name(gn.node_group.nodes, 
-                        '%s_VectorDot%s_%s'%(self.label, i, ''),
-                        'ShaderNodeVectorMath')
-            tmp.operation = 'DOT_PRODUCT'
-            tmp.inputs[1].default_value = cell[:, i]
-            # icell
-            tmp = get_nodes_by_name(gn.node_group.nodes, 
-                        '%s_VectorDot%s_%s'%(self.label, i, 'scaled'),
-                        'ShaderNodeVectorMath')
-            tmp.operation = 'DOT_PRODUCT'
-            tmp.inputs[1].default_value = icell[:, i]
-
-    def get_spacegroup_number(self, symprec = 1e-5):
-=======
             tmp = get_nodes_by_name(gn.node_group.nodes,
                                     '%s_VectorDot%s_%s' % (self.label, i, ''),
                                     'ShaderNodeVectorMath')
@@ -1324,7 +1218,6 @@ class Batoms(BaseCollection, ObjectGN):
             tmp.inputs[1].default_value = icell[:, i]
 
     def get_spacegroup_number(self, symprec=1e-5):
->>>>>>> 0e5424a2ced8cc121cfbcc111fa9cea940228ebe:batoms.py
         """
         """
         try:
@@ -1596,11 +1489,7 @@ class Batoms(BaseCollection, ObjectGN):
         self.set_attribute_with_indices('scale', mask, 0.0001)
         # self.update(mask)
 
-<<<<<<< HEAD:batoms/batoms.py
-    def as_ase(self, local = True):
-=======
     def as_ase(self, local=True):
->>>>>>> 0e5424a2ced8cc121cfbcc111fa9cea940228ebe:batoms.py
         """
         local: bool
             if True, use the origin of uint cell as the origin
@@ -1610,27 +1499,6 @@ class Batoms(BaseCollection, ObjectGN):
         positions = arrays['positions']
         if local:
             positions -= self.cell.origin
-<<<<<<< HEAD:batoms/batoms.py
-        atoms = Atoms(symbols = arrays['elements'], 
-                    positions = positions, 
-                    cell = self.cell, pbc = self.pbc)
-        for name, array in arrays.items():
-            if name in ['elements', 'positions']: continue
-            atoms.set_array(name, np.array(array))
-        
-        return atoms
-
-    def write(self, filename, local = True):
-        """
-        Save batoms to structure file.
-        >>> h2o.write('h2o.xyz')
-        """
-        self.as_ase(local).write(filename)
-    
-    def transform(self, matrix = None):
-        """
-        Transformation matrix
-=======
         atoms = Atoms(symbols=arrays['elements'],
                       positions=positions,
                       cell=self.cell, pbc=self.pbc)
@@ -1655,7 +1523,6 @@ class Batoms(BaseCollection, ObjectGN):
         a error raised by ASE last column [5, 5, 0] to
         translate new atoms, thus not overlap with old one.
 
->>>>>>> 0e5424a2ced8cc121cfbcc111fa9cea940228ebe:batoms.py
         """
         from ase.build.supercells import make_supercell
         if matrix is not None:
@@ -1663,20 +1530,11 @@ class Batoms(BaseCollection, ObjectGN):
             translation = np.array([matrix[0][3], matrix[1][3], matrix[2][3]])
             atoms = self.as_ase()
             atoms = make_supercell(atoms, rotation)
-<<<<<<< HEAD:batoms/batoms.py
-            batoms = self.__class__(label = '%s_transform'%self.label, from_ase = atoms,
-                                    model_style = self.model_style)
-=======
             batoms = self.__class__(label='%s_transform' % self.label,
                                     from_ase=atoms,
                                     model_style=self.model_style)
->>>>>>> 0e5424a2ced8cc121cfbcc111fa9cea940228ebe:batoms.py
         else:
             return
         batoms.translate(translation)
         # self.hide = True
-<<<<<<< HEAD:batoms/batoms.py
         return batoms
-=======
-        return batoms
->>>>>>> 0e5424a2ced8cc121cfbcc111fa9cea940228ebe:batoms.py

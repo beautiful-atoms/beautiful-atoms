@@ -271,51 +271,6 @@ class ObjectGN():
             return 0
         nframe = len(self.obj.data.shape_keys.key_blocks)
         return nframe
-    
-    def set_frames_positions(self, frames = None, frame_start = 0, only_basis = False):
-        name = ''
-        obj = self.obj
-        self.set_frames(name, obj, frames, frame_start, only_basis)
-
-    def set_obj_frames(self, name, obj, frames = None, frame_start = 0, only_basis = False):
-        """
-
-        frames: list
-            list of positions
-        
-        use shape_keys (faster)
-        """
-        from batoms.butils import add_keyframe_to_shape_key
-        if frames is None:
-            frames = self._frames
-        centers = frames
-        nframe = len(centers)
-        if nframe == 0 : return
-        sp = ''
-        # name = '%s_bond%s'%(self.label, sp)
-        # obj = bpy.data.objects.get(name)
-        base_name = 'Basis_%s'%(name)
-        if obj.data.shape_keys is None:
-            obj.shape_key_add(name = base_name)
-        elif base_name not in obj.data.shape_keys.key_blocks:
-            obj.shape_key_add(name = base_name)
-        if only_basis:
-            return
-        nvert = len(obj.data.vertices)
-        for i in range(1, nframe):
-            sk = obj.shape_key_add(name = str(i))
-            # Use the local position here
-            positions = frames[i]
-            positions = positions.reshape((nvert*3, 1))
-            sk.data.foreach_set('co', positions)
-            # Add Keyframes, the last one is different
-            if i != nframe - 1:
-                add_keyframe_to_shape_key(sk, 'value', 
-                    [0, 1, 0], [frame_start + i - 1, 
-                    frame_start + i, frame_start + i + 1])
-            else:
-                add_keyframe_to_shape_key(sk, 'value', 
-                    [0, 1], [frame_start + i - 1, frame_start + i])
 
     @property
     def frames(self):
@@ -541,48 +496,8 @@ class BaseObject():
 
         For example, rotate h2o molecule 90 degree around 'Z' axis:
 
-<<<<<<< HEAD:batoms/base.py
-        """
-        object_mode()
-        bpy.ops.object.select_all(action='DESELECT')
-        self.obj.select_set(True)
-        bpy.ops.transform.rotate(value=angle, orient_axis=axis.upper(), 
-                        orient_type = orient_type)    
-
-class BaseCollection():
-    
-    def __init__(self, coll_name):
-        self.coll_name = coll_name
-    
-    @property
-    def coll(self):
-        return self.get_coll()
-    
-    def get_coll(self):
-        coll = bpy.data.collections.get(self.coll_name)
-        if coll is None:
-            coll = bpy.data.collections.new(self.coll_name)
-        return coll
-    
-    @property
-    def scene(self):
-        return self.get_scene()
-    
-    def get_scene(self):
-        return bpy.data.scenes['Scene']
-    
-    def translate(self, displacement):
-        """Translate atomic positions.
-
-        The displacement argument is an xyz vector.
-
-        For example, move H2o molecule by a vector [0, 0, 5]
-
-        >>> h2o.translate([0, 0, 5])
-=======
         >>> h.rotate(90, 'Z')
 
->>>>>>> 0e5424a2ced8cc121cfbcc111fa9cea940228ebe:batoms/base/object.py
         """
         object_mode()
         bpy.ops.object.select_all(action='DESELECT')
@@ -590,47 +505,6 @@ class BaseCollection():
         bpy.ops.transform.rotate(value=angle, orient_axis=axis.upper(),
                                  orient_type=orient_type)
 
-<<<<<<< HEAD:batoms/base.py
-        angle: float
-            Angle that the atoms is rotated around the axis.
-        axis: str
-            'X', 'Y' or 'Z'.
-
-        For example, rotate h2o molecule 90 degree around 'Z' axis:
-        
-        >>> h2o.rotate(90, 'Z')
-
-        """
-        object_mode()
-        bpy.ops.object.select_all(action='DESELECT')
-        self.obj.select_set(True)
-        angle = angle/180.0*np.pi
-        bpy.ops.transform.rotate(value=angle, orient_axis=axis.upper(), 
-                        orient_type = orient_type)    
-    
-    def mirror(self, axis = 'Z', orient_type = 'GLOBAL'):
-        """mirror atomic based on a axis.
-
-        Parameters:
-
-        angle: float
-            Angle that the atoms is mirrord around the axis.
-        axis: str
-            Constraint Axis: 'X', 'Y' or 'Z'.
-
-        For example, mirror h2o using 'YZ' plane:
-        
-        >>> h2o.mirror('X')
-
-        """
-        object_mode()
-        bpy.ops.object.select_all(action='DESELECT')
-        self.obj.select_set(True)
-        constraint_axis = [False, False, False]
-        constraint_axis['XYZ'.index(axis.upper())] = True
-        bpy.ops.transform.mirror(constraint_axis = constraint_axis,
-                        orient_type = orient_type)
-=======
     def delete_obj(self, name):
         if name in bpy.data.objects:
             obj = bpy.data.objects.get(name)
@@ -640,7 +514,6 @@ class BaseCollection():
         if name in bpy.data.materials:
             obj = bpy.data.materials.get(name)
             bpy.data.materials.remove(obj, do_unlink=True)
->>>>>>> 0e5424a2ced8cc121cfbcc111fa9cea940228ebe:batoms/base/object.py
 
 
 class childObjectGN():
@@ -687,66 +560,6 @@ class childObjectGN():
         """
         Set global position to local vertices
         """
-<<<<<<< HEAD:batoms/base.py
-        if isinstance(index, (str, int, float)):
-            index = [(index)]
-        if isinstance(index[0], (str, int, float)):
-            index = [index]
-        for key in index:
-            name = tuple2string(key)
-            i = self.collection.find(name)
-            if i != -1:
-                self.collection.remove(i)
-            else:
-                raise Exception('%s is not in %s'%(name, self.name))
-    
-    def __delitem__(self, index):
-        self.remove(index)
-    
-    def __add__(self, other):
-        self += other
-        return self
-    
-    def __iadd__(self, other):
-        self.extend(other)
-        return self
-    
-    def extend(self, other):
-        for key, value in other.data.items():
-            self[key] = value.as_dict()
-        return self
-    
-    def __iter__(self):
-        item = self.collection
-        for i in range(len(item)):
-            yield item[i]
-    
-    def __len__(self):
-        return len(self.collection)
-    
-    def find(self, name):
-        i = self.collection.find(str(name))
-        if i == -1:
-            # print('%s is not in %s'%(name, self.name))
-            return None
-        else:
-            return self.collection[i]
-    
-    def __repr__(self) -> str:
-        s = '-'*60 + '\n'
-        s = 'Name\n'
-        for b in self.collection:
-            s += '{0:10s}  \n'.format(\
-                b.name)
-        s += '-'*60 + '\n'
-        return s
-    
-    def delete_obj(self, name):
-        if name in bpy.data.objects:
-            obj = bpy.data.objects.get(name)
-            bpy.data.objects.remove(obj, do_unlink = True)
-    
-=======
         object_mode()
         from batoms.utils import local2global
         position = np.array([position])
@@ -774,4 +587,3 @@ class childObjectGN():
     def show(self, show):
         self.attributes['show'].data[self.index].value = show
         update_object(self.parent.obj)
->>>>>>> 0e5424a2ced8cc121cfbcc111fa9cea940228ebe:batoms/base/object.py

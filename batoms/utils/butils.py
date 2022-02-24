@@ -280,16 +280,10 @@ def get_volume(me):
 def update_object(obj):
     mode = obj.mode
     bpy.context.view_layer.objects.active = obj
-<<<<<<< HEAD:batoms/butils.py
-    bpy.ops.object.mode_set(mode = 'EDIT')
-    bpy.ops.object.mode_set(mode = 'OBJECT')
-    bpy.ops.object.mode_set(mode = mode)
-=======
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.object.mode_set(mode='OBJECT')
     bpy.ops.object.mode_set(mode=mode)
 
->>>>>>> 0e5424a2ced8cc121cfbcc111fa9cea940228ebe:batoms/utils/butils.py
 
 def hideOneLevel():
     screen = bpy.context.screen
@@ -300,9 +294,6 @@ def hideOneLevel():
         ol.tag_redraw()
         bpy.ops.outliner.show_one_level(c, open=False)
         ol.tag_redraw()
-<<<<<<< HEAD:batoms/butils.py
-        print(ol)
-=======
 
 
 # ========================================================
@@ -310,4 +301,3 @@ if '3.1.0' in bpy.app.version_string:
     compareNodeType = 'FunctionNodeCompare'
 else:
     compareNodeType = 'FunctionNodeCompareFloats'
->>>>>>> 0e5424a2ced8cc121cfbcc111fa9cea940228ebe:batoms/utils/butils.py
