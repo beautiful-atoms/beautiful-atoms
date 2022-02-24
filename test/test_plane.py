@@ -5,6 +5,14 @@ from batoms.utils.butils import removeAll
 from batoms.bio.bio import read
 import numpy as np
 import os
+try:
+    from _common_helpers import has_display, set_cycles_res
+
+    use_cycles = not has_display()
+except ImportError:
+    use_cycles = False
+
+extras = dict(engine="cycles") if use_cycles else {}
 
 skip_test = bool(os.environ.get("NOTEST_CUBE", 0))
 
@@ -17,7 +25,9 @@ def test_lattice_plane():
     au.planesetting[(1, 1, 0)] = {"distance": 3, "color": [0.8, 0.1, 0, 0.8]}
     au.planesetting.draw_lattice_plane()
     # au.draw_cell()
-    au.get_image([0, 0, 1], output="plane-lattice-plane.png")
+    if use_cycles:
+        set_cycles_res(au)
+    au.get_image([0, 0, 1], output="plane-lattice-plane.png", **extras)
 
 
 def test_crystal_shape():
@@ -27,7 +37,9 @@ def test_crystal_shape():
     au.planesetting[(1, 1, 1)] = {"distance": 3, "crystal": True, "symmetry": True}
     # au.planesetting[(0, 0, 1)] = {'distance': 3, 'crystal': True, 'symmetry': True}
     au.planesetting.draw_crystal_shape(origin=au.cell.center)
-    au.get_image([0, 0, 1], output="plane-crystal.png")
+    if use_cycles:
+        set_cycles_res(au)
+    au.get_image([0, 0, 1], output="plane-crystal.png", **extras)
 
 
 def test_boundary():
@@ -39,7 +51,9 @@ def test_boundary():
     h2o.planesetting[(0, 0, 1)] = {"distance": 6, "boundary": True}
     h2o.planesetting[(0, 0, -1)] = {"distance": -5, "boundary": True}
     h2o.planesetting.draw_lattice_plane()
-    h2o.get_image([1, 0, 0], output="plane-boundary.png")
+    if use_cycles:
+        set_cycles_res(h2o)
+    h2o.get_image([1, 0, 0], output="plane-boundary.png", **extras)
 
 
 if __name__ == "__main__":
