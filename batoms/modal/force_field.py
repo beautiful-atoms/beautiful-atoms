@@ -1,8 +1,10 @@
 """
-Manipulate atoms and molecules with mouse interactively based on force field methods.
+Manipulate atoms and molecules with mouse interactively
+based on force field methods.
 
 
-Molecule: Rigid molecules, to constrain all internal degrees of freedom using the RATTLE-type constraints of the The FixBondLengths class to constrain all internal atomic distances.
+Molecule: Rigid molecules, to constrain all internal
+degrees of freedom using the RATTLE-type constraints of the The FixBondLengths class to constrain all internal atomic distances.
 
 Intermolecular: atomic radii.
 
@@ -32,7 +34,8 @@ except:
 from ase.constraints import FixAtoms
 
 
-def translate(selected_vertices, displacement, fmax=0.05, steps=5, frame_start=0):
+def translate(selected_vertices, displacement,
+              fmax=0.05, steps=5, frame_start=0):
     """
     """
     if len(selected_vertices) == 0:
