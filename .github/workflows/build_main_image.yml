@@ -65,6 +65,8 @@ jobs:
           file: ./Dockerfiles/Dockerfile.main
           build-args: BLENDER_VER=${{ matrix.blender-version }}
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:blender${{ matrix.blender-version }}
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:blender${{ matrix.blender-version }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:latest
           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:buildcache
           cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:buildcache,mode=max
