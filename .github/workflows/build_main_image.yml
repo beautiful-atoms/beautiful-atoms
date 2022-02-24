@@ -6,11 +6,11 @@ env:
 
 on:
   push:
-    branches: 
+    branches:
       - main
       - develop
   pull_request:
-    branches: 
+    branches:
       - main
       - develop
   workflow_dispatch:
@@ -50,10 +50,21 @@ jobs:
           # push: true
           # tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:blender${{ matrix.blender-version }}
           tags: ${{ env.TEST_TAG }}
-          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:buildcache,mode=max
-#           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:${{ matrix.blender-version }}
-#           cache-to: type=inline
+          # cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:buildcache
+          # cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:buildcache,mode=max
+      #           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:${{ matrix.blender-version }}
+      #           cache-to: type=inline
       - name: Test local image
         run: |
           docker run --rm -v $(pwd)/test:/workdir -e CI=1 ${{ env.TEST_TAG }} bash test_ci.sh
+
+      - name: Push image
+        uses: docker/build-push-action@v2
+        with:
+          context: ./
+          file: ./Dockerfiles/Dockerfile.main
+          build-args: BLENDER_VER=${{ matrix.blender-version }}
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:blender${{ matrix.blender-version }}
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:buildcache,mode=max
