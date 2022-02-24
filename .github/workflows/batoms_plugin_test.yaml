@@ -31,16 +31,16 @@ jobs:
         blender -b --python-exit-code 1 --python-expr  "import addon_utils; addon_utils.enable('batoms', default_set=True); print('success')"
     - name: Test import
       run: |
-        blender -b --python-exit-code 1 --python-expr  "from batoms import Batoms; b = Batoms('o', {'O': [[0, 0, 0]]})"
+        blender -b --python-exit-code 1 --python-expr  "from batoms import Batoms; b = Batoms('O', ['O'], [[0, 0, 0]])"
     - name: Install test dependencies
       run: |
         $BLENDERPY -m pip install pytest flake8
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --exclude=batoms/gui/,batoms/modal,batoms/__init__.py,batoms/custom_property.py --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        flake8 . --exclude=batoms/gui/,batoms/modal,batoms/__init__.py,batoms/custom_property.py --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     
     # - name: Get Tag
     #   uses: olegtarasov/get-tag@v2
