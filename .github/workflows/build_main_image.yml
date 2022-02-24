@@ -5,9 +5,13 @@ env:
 
 on:
   push:
-    branches: [master]
+    branches: 
+      - main
+      - develop
   pull_request:
-    branches: [master]
+    branches: 
+      - main
+      - develop
   workflow_dispatch:
 
 jobs:
