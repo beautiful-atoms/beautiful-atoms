@@ -56,4 +56,4 @@ jobs:
 #           cache-to: type=inline
       - name: Test local image
         run: |
-          docker run --rm -it -v $(pwd)/test:/workdir -e CI=1 ${{ env.TEST_TAG }} bash test_ci.sh
+          docker run --rm -v $(pwd)/test:/workdir -e CI=1 ${{ env.TEST_TAG }} bash test_ci.sh
