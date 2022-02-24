@@ -1,4 +1,5 @@
 ### Beautiful Atoms
+[![Test batoms blender plugin](https://github.com/alchem0x2A/beautiful-atoms/actions/workflows/batoms_plugin_test.yaml/badge.svg)](https://github.com/alchem0x2A/beautiful-atoms/actions/workflows/batoms_plugin_test.yaml)
 
 Batoms is a Python package for editing and rendering atoms and molecules objects using blender. A Python interface that allows for automating workflows.
 
