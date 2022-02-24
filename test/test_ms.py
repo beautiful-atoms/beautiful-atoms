@@ -90,5 +90,5 @@ if __name__ == '__main__':
     test_SAS()
     test_SAS_protein()
     test_SES()
-    test_SES_area_kras()
+    test_SES_protein()
     print('\n MSsetting: All pass! \n')

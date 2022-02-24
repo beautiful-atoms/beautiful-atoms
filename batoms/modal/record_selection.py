@@ -6,7 +6,8 @@ from ase.geometry.geometry import get_distances, get_angles, get_dihedrals
 
 
 class EDIT_MESH_OT_record_selection(bpy.types.Operator):
-    """Records the selection order while running and when finished with ESC """
+    """Records the selection order while running and
+    when finished with ESC """
     bl_idname = "batoms.record_selection"
     bl_label = "Select atom"
 
