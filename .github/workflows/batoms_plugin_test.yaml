@@ -49,7 +49,7 @@ jobs:
       - name: Run blender unittests
         run: |
           cd test
-          source test.sh
+          PYTHONPATH=$(pwd) bash test_ci.sh
 
 
     # - name: Get Tag
