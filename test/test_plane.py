@@ -4,9 +4,9 @@ from batoms import Batoms
 from batoms.utils.butils import removeAll
 from batoms.bio.bio import read
 import numpy as np
+import os
 
 skip_test = bool(os.environ.get("NOTEST_CUBE", 0))
-
 
 
 def test_lattice_plane():

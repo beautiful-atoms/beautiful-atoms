@@ -18,7 +18,6 @@ import os
 skip_test = bool(os.environ.get("NOTEST_CUBE", 0))
 
 
-
 def test_slice():
     if skip_test:
         pytest.skip("Skip tests on cube files since $NOTEST_CUBE provided.")
