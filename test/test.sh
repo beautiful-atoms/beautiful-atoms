@@ -1,4 +1,5 @@
-rm *png
+#!/bin/bash
+rm -rf *png
 blender -b -P test_animation.py
 blender -b -P test_batom.py
 blender -b -P test_batoms.py
