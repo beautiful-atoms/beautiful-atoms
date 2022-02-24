@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         # Manually change these to match the blender image versions
-        blender-version: ["2.93", "3.0"]
+        blender-version: ["3.0"]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
