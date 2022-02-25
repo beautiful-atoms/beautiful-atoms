@@ -234,7 +234,7 @@ class Species(BaseObject):
         """
         main_element = {}
         occs = self.sorted_occupancies
-        if occs[0][0] == 'X':
+        if occs[0][0] == 'X' and len(occs) > 1:
             main_element = occs[1][0]
         else:
             main_element = occs[0][0]
@@ -383,7 +383,7 @@ class Species(BaseObject):
         return data
 
     def __repr__(self):
-        s = "Bspecies(species = '%s'" % self.name
+        s = "Bspecies(species = '%s', " % self.name
         s += "elements = %s, " % str(self.sorted_occupancies)
         s += "color = %s, " % np.round(np.array(self.color), 2)
         s += "radius_style = %s, " % self.radius_style

@@ -63,6 +63,9 @@ def test_batoms_species():
     # elements
     h2o.species["H"].elements = {"H": 0.5, "O": 0.4}
     assert len(h2o["H"].elements) == 3
+    # species X
+    h2o.replace([0], 'X')
+    h2o['X'].color = [0.8, 0.8, 0.0, 0.3]
 
 
 def test_batoms_write(filename):
