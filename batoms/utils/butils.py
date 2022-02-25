@@ -30,10 +30,11 @@ def get_selected_batoms():
     """
     batoms_list = []
     for obj in bpy.context.selected_objects:
-        for p in ['batom', 'bbond', 'bisosurface', 'bpolyhedra', 'bplane']:
-            if getattr(obj.batoms, p).flag:
-                batoms_list.append(getattr(obj.batoms, p).label)
+        # for p in ['batom', 'bbond', 'bisosurface', 'bpolyhedra', 'bplane']:
+            if obj.batoms.flag:
+                batoms_list.append(obj.batoms.label)
     batoms_list = list(set(batoms_list))
+    # print(batoms_list)
     return batoms_list
 
 
