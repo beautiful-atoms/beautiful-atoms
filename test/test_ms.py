@@ -13,8 +13,8 @@ def test_SAS():
     36.107
     """
     removeAll()
-    h2o = molecule('H2O')
-    h2o = Batoms('h2o', from_ase=h2o)
+    h2o = molecule("H2O")
+    h2o = Batoms("h2o", from_ase=h2o)
     h2o.mssetting.draw_SAS()
     # area = h2o.mssetting.get_psasa()
 
@@ -31,16 +31,17 @@ def test_SAS_protein():
     freesasa: 657.80
     """
     import numpy as np
+
     removeAll()
-    prot = read('datas/1ema.pdb')  # 1tim
-    prot = Batoms('1ema', from_ase=prot)
-    prot.mssetting['1'] = {'resolution': 0.4}
+    prot = read("datas/1ema.pdb")  # 1tim
+    prot = Batoms("1ema", from_ase=prot)
+    prot.mssetting["1"] = {"resolution": 0.4}
     prot.mssetting.draw_SAS()
-    area = prot.mssetting.get_sasa('1')
+    area = prot.mssetting.get_sasa("1")
     # area = prot.mssetting.get_psasa()
     assert abs(area[0] - 14461.704651512408) < 100
-    prot.selects.add('A', 'chain A')
-    prot.mssetting.add('2', {'select': 'A', 'color': [0.8, 0.1, 0.1, 1.0]})
+    prot.selects.add("A", "chain A")
+    prot.mssetting.add("2", {"select": "A", "color": [0.8, 0.1, 0.1, 1.0]})
     prot.mssetting.draw_SAS()
 
 
@@ -51,8 +52,8 @@ def test_SES():
     36.107
     """
     removeAll()
-    h2o = molecule('H2O')
-    h2o = Batoms('h2o', from_ase=h2o)
+    h2o = molecule("H2O")
+    h2o = Batoms("h2o", from_ase=h2o)
     h2o.mssetting.draw_SES()
     # area = h2o.mssetting.get_sasa(partial=True)[0]
 
@@ -76,8 +77,8 @@ def test_SES_protein():
     EDTSurf 7338 (Use slightly different vdw radii)
     """
     removeAll()
-    prot = read('/datas/1ema.pdb')
-    prot = Batoms('prot', from_ase=prot)
+    prot = read("/datas/1ema.pdb")
+    prot = Batoms("prot", from_ase=prot)
     tstart = time()
     prot.mssetting.draw_SES(parallel=2)
     t = time() - tstart
@@ -86,9 +87,9 @@ def test_SES_protein():
     assert abs(area - 20016.1) < 200
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_SAS()
     test_SAS_protein()
     test_SES()
     test_SES_protein()
-    print('\n MSsetting: All pass! \n')
+    print("\n MSsetting: All pass! \n")
