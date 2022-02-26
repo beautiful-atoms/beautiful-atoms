@@ -77,6 +77,15 @@ def _get_conda_variables():
     )
     return results
 
+def _is_empty_dir(p):
+    """Determin if path is empty"""
+    p = Path(p)
+    try:
+        next(p.rglob("*"))
+        stat = False
+    except StopIteration:
+        stat = True
+    return stat
 
 def gitclone(workdir=".", version="main", url=repo_git):
     """Make a git clone to the directory"""
@@ -103,11 +112,30 @@ def gitclone(workdir=".", version="main", url=repo_git):
 
 def install(
     blender_root,
-    plugin_path,
-    original_python_directory="factory_python_directory",
-    target_directory="scripts/addons_contrib/batoms",
+    repo_path,
+    factory_python_target="factory_python_directory",
+    plugin_path_target="scripts/addons_contrib/batoms",
 ):
     """Copy the contents inside plugin_path to the target_directory"""
+    blender_root = Path(blender_root)
+    conda_env_file = blender_root / "env.yml"
+    plugin_path_source = repo_path / "batoms"
+    plugin_path_target = blender_root / plugin_path_target
+    # Shall we overwrite the target path?
+    if not _is_empty_dir(plugin_path_target):
+        print(f"Target plugin installtion directory {plugin_path_target.as_posix()} is not empty.")
+        choice = str(input("Overwrite? [y/N]") or "N").lower().startswith("y")
+        if not choice:
+            print("Abort.")
+            sys.exit(1)
+        else:
+            if plugin_path_target.is_symlink():
+                os.unlink(plugin_path_target)
+            else:
+                shutil.rmtree(plugin_path_target)
+    shutil.copytree(plugin_path_source, plugin_path_target)
+    print(f"Plugin copied to  {plugin_path_target.as_posix()}.")
+
     pass
 
 
@@ -169,8 +197,7 @@ def main():
 
         with tempfile.TemporaryDirectory() as workdir:
             cloned_repo = gitclone(workdir, version=args.plugin_version, url=repo_git)
-            plugin_path = cloned_repo / "batoms"
-            install(true_blender_root, plugin_path)
+            install(true_blender_root, cloned_repo)
             test_plugin()
 
 
