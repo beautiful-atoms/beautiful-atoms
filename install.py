@@ -211,6 +211,7 @@ def install(
 
     # Check conda environment status
     conda_vars = _get_conda_variables()
+    print(conda_vars)
     # Give a warning about conda env
     if conda_vars["CONDA_DEFAULT_ENV"] in ["base"]:
         print(
@@ -229,7 +230,15 @@ def install(
 
     # Install from the env.yaml
     print("Updating conda environment")
-    commands = ["conda", "env", "update", "--file", conda_env_file.as_posix()]
+    commands = [
+        "conda",
+        "env",
+        "update",
+        "-n",
+        conda_vars["CONDA_DEFAULT_ENV"],
+        "--file",
+        conda_env_file.as_posix(),
+    ]
     proc = subprocess.run(commands)
     if proc.returncode != 0:
         raise RuntimeError(f"Error updating conda env. Error is {proc.stderr}")
@@ -373,7 +382,14 @@ def uninstall(
 
 
 def test_plugin(blender_bin):
-    commands = [blender_bin, "-b", "--python-expr", BLENDERPY_TEST_PLUGIN]
+    commands = [
+        blender_bin,
+        "-b",
+        "--python-exit-code",
+        "1",
+        "--python-expr",
+        BLENDERPY_TEST_PLUGIN,
+    ]
     proc = subprocess.run(commands)
     if proc.returncode != 0:
         raise RuntimeError("Plugin test failed with error {proc.stderr}")
@@ -381,7 +397,14 @@ def test_plugin(blender_bin):
 
 
 def test_uninstall(blender_bin):
-    commands = [blender_bin, "-b", "--python-expr", BLENDERPY_TEST_UNINSTALL]
+    commands = [
+        blender_bin,
+        "-b",
+        "--python-exit-code",
+        "1",
+        "--python-expr",
+        BLENDERPY_TEST_UNINSTALL,
+    ]
     proc = subprocess.run(commands)
     if proc.returncode != 0:
         raise RuntimeError("Uninstall test failed with error {proc.stderr}")
@@ -421,7 +444,11 @@ def main():
     print(args)
     os_name = _get_os_name()
     # TODO: version compare!
-    true_blender_root = _get_default_locations(os_name, version=args.version)
+    # Use blender_root supplied to commandline if exists, otherwise try to guess
+    if args.blender_root:
+        true_blender_root = Path(expanduser(expandvars(args.blender_root)))
+    else:
+        true_blender_root = _get_default_locations(os_name, version=args.version)
     true_blender_bin = _get_blender_bin(os_name, true_blender_root)
     print(f"Found blender binary at {true_blender_bin.as_posix()}")
     print(f"Choose blender directory at {true_blender_root.as_posix()}")
