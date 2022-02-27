@@ -71,10 +71,10 @@ def is_conda():
 
 
 def _get_conda_variables():
-    results = dict(
-        os.environ.get(key, "")
+    results = {
+        key: os.environ.get(key, "")
         for key in ("CONDA_PREFIX", "CONDA_PYTHON_EXE", "CONDA_DEFAULT_ENV")
-    )
+    }
     return results
 
 def _is_empty_dir(p):
@@ -113,14 +113,84 @@ def gitclone(workdir=".", version="main", url=repo_git):
 def install(
     blender_root,
     repo_path,
-    factory_python_target="factory_python_directory",
+    factory_python_target=factory_python_directory,
     plugin_path_target="scripts/addons_contrib/batoms",
 ):
     """Copy the contents inside plugin_path to the target_directory"""
     blender_root = Path(blender_root)
-    conda_env_file = blender_root / "env.yml"
+    conda_env_file = repo_path / "env.yml"
     plugin_path_source = repo_path / "batoms"
     plugin_path_target = blender_root / plugin_path_target
+    factory_python_source = blender_root / "python"
+    factory_python_target = blender_root / factory_python_target
+
+    # Check conda environment status
+    conda_vars = _get_conda_variables()
+    # Give a warning about conda env
+    if conda_vars["CONDA_DEFAULT_ENV"] in ["base"]:
+        print(("Seems you're installing into the base environment. "
+        "Installing batoms dependencies may interrupt your base environment. "))
+        choice = str(input("Continue? [y/N]") or "N").lower().startswith("y")
+        if not choice:
+            #TODO: update installation instruction
+            print("Abort. Please check the installation manual about how to activate an additional conda environment.")
+            sys.exit(1)
+
+    # Install from the env.yaml
+    print("Updating conda environment")
+    commands = ["conda", "env" , "update", "--file", conda_env_file.as_posix()]
+    proc = subprocess.run(commands)
+    if proc.returncode != 0:
+        raise RuntimeError(f"Error updating conda env. Error is {proc.stderr}")
+    
+    # Symlink the conda env python --> `blender_root` / "python"
+    # scenarios:
+    # target _python is not empty:
+    #       if _python is symlink --> unlink _python 
+    #       if _python is real path --> choose if overwrite
+    # source python:
+    #       if python is symlink --> link origin to _python if it does not exist (not likely from factory)
+    #       if python is real path --> move to _python
+    # If the "_python" path exists and not empty, only replace it if is symlink
+
+    # Target part
+    overwrite = False
+    if factory_python_target.is_dir():
+        if  _is_empty_dir(factory_python_target):
+            os.rmdir(factory_python_target)
+        else:
+            if factory_python_target.is_symlink():
+                os.unlink(factory_python_target)
+            else:
+                print((f"Target path {factory_python_target.as_posix()} is not empty. "
+                "This means you may have used the installation script already. "
+                ))
+                choice = str(input("Overwrite? [y/N]") or "N").lower().startswith("y")
+                if choice:
+                    shutil.rmtree(factory_python_target)
+                    overwrite = True
+    else:
+        if factory_python_target.is_file():
+            os.unlink(factory_python_target)
+    
+    # Source part
+    if factory_python_target.exists():
+        if overwrite:
+            # Should not happen
+            raise RuntimeError(f"Cannot overwrite {factory_python_target.as_posix()}. Check permission?")
+        else:
+            pass
+    else:
+        if factory_python_source.is_symlink():
+            origin = factory_python_source.readlink()
+            os.unlink(factory_python_source)     
+            os.symlink(origin, factory_python_target)
+        else:
+            shutil.move(factory_python_source, factory_python_target)
+        # finally, link the conda prefix of current environment
+        conda_prefix = Path(conda_vars["CONDA_PREFIX"]).resolve()
+        os.symlink(conda_prefix, factory_python_source)
+    
     # Shall we overwrite the target path?
     if not _is_empty_dir(plugin_path_target):
         print(f"Target plugin installtion directory {plugin_path_target.as_posix()} is not empty.")
@@ -134,7 +204,7 @@ def install(
             else:
                 shutil.rmtree(plugin_path_target)
     shutil.copytree(plugin_path_source, plugin_path_target)
-    print(f"Plugin copied to  {plugin_path_target.as_posix()}.")
+    print(f"Plugin copied to {plugin_path_target.as_posix()}.")
 
     pass
 
@@ -142,7 +212,7 @@ def install(
 def uninstall(
     blender_root,
     plugin_name="batoms",
-    original_python_directory="factory_python_directory",
+    original_python_directory=factory_python_directory,
     target_directory="scripts/addons_contrib/batoms",
 ):
     """Remove the plugin from target_directory"""
@@ -179,6 +249,10 @@ def main():
         help="Plugin version or git hash tag. Default to fetch main",
     )
     parser.add_argument(
+        "-p", "--local-repo-path",
+        help="Path of local path for the repo, such as use git cloned."
+    )
+    parser.add_argument(
         "--uninstall", action="store_true", help="Uninstall plugin in blender_root"
     )
     args = parser.parse_args()
@@ -191,13 +265,17 @@ def main():
         test_uninstall()
     else:
         if not is_conda():
-            raise RuntimeError(
-                "The installation script should be run inside a conda environment."
+            print(
+                "The installation script should be run inside a conda environment. Abort."
             )
+            sys.exit(1)
 
         with tempfile.TemporaryDirectory() as workdir:
-            cloned_repo = gitclone(workdir, version=args.plugin_version, url=repo_git)
-            install(true_blender_root, cloned_repo)
+            if hasattr(args, "local_repo_path"):
+                repo_path = Path(expanduser(expandvars(args.local_repo_path)))
+            else:
+                repo_path = gitclone(workdir, version=args.plugin_version, url=repo_git)
+            install(true_blender_root, repo_path)
             test_plugin()
 
 
