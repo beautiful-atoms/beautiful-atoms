@@ -230,6 +230,7 @@ def install(
 
     # Install from the env.yaml
     print("Updating conda environment")
+    
     commands = [
         conda_vars["CONDA_EXE"],
         "env",
