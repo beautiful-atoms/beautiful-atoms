@@ -1022,7 +1022,9 @@ class Batoms(BaseCollection, ObjectGN):
         # TODO remove species which is completely replaced.
         """
         # if kind exists, merger, otherwise build a new kind and add.
-        object_mode()
+        mode = self.obj.mode
+        bpy.context.view_layer.objects.active = self.obj
+        bpy.ops.object.mode_set(mode='OBJECT')
         if isinstance(species, str):
             species = [species, {'elements': {species.split('_')[0]: 1.0}}]
         if species[0] not in self.species:
@@ -1038,6 +1040,9 @@ class Batoms(BaseCollection, ObjectGN):
         species_array[indices] = species[0]
         self.set_attributes({'species_index': species_index})
         self.set_attributes({'species': species_array})
+        bpy.context.view_layer.objects.active = self.obj
+        print(mode)
+        bpy.ops.object.mode_set(mode=mode)
         # print(self.species)
         # for sp in self.species:
         # self.bonds.setting.add([(species[0], sp.name)])

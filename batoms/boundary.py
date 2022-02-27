@@ -516,9 +516,9 @@ class Boundary(ObjectGN):
         self.obj_o.data.shape_keys.key_blocks[0].data.foreach_set(
             'co', offsets)
         self.obj_o.data.update()
-        bpy.context.view_layer.objects.active = self.obj_o
-        bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.object.mode_set(mode='OBJECT')
+        # bpy.context.view_layer.objects.active = self.obj_o
+        # bpy.ops.object.mode_set(mode='EDIT')
+        # bpy.ops.object.mode_set(mode='OBJECT')
 
     @property
     def bondlists(self):

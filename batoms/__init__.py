@@ -33,7 +33,11 @@ from .gui import (
     gui_pymatgen,
     gui_pubchem,
     gui_rscb,
+    gui_tool,
+    gui_view3d_mt_batoms_add,
 )
+
+from .ops import build_object, build_edit_molecule, transform
 
 from .modal import record_selection, rigid_body, force_field
 
@@ -59,6 +63,15 @@ classes = [
     custom_property.Bmssetting,
     custom_property.Batoms_coll,
     custom_property.Batoms_obj,
+    build_object.AddMolecule,
+    build_object.AddBulk,
+    build_object.AddAtoms,
+    build_object.AddSurface,
+    build_object.deleteBatoms,
+    build_edit_molecule.MolecueReplaceElement,
+    transform.ApplyCell,
+    transform.ApplyTransform,
+    transform.ApplyBoundary,
     gui_io.IMPORT_OT_batoms,
     gui_batoms.Batoms_PT_prepare,
     gui_batoms.BatomsProperties,
@@ -75,9 +88,6 @@ classes = [
     gui_polyhedra.PolyhedraProperties,
     gui_cell.Cell_PT_prepare,
     gui_cell.CellProperties,
-    gui_cell.ApplyCell,
-    gui_cell.ApplyTransform,
-    gui_cell.ApplyBoundary,
     gui_volume.Volume_PT_prepare,
     gui_volume.VolumeProperties,
     gui_volume.AddButton,
@@ -89,10 +99,6 @@ classes = [
     gui_render.AddButton,
     gui_ase.ASE_PT_prepare,
     gui_ase.ASEProperties,
-    gui_ase.AddMolecule,
-    gui_ase.AddBulk,
-    gui_ase.AddAtoms,
-    gui_ase.AddSurface,
     gui_pymatgen.Pymatgen_PT_prepare,
     gui_pymatgen.PymatgenProperties,
     gui_pymatgen.Search,
@@ -109,14 +115,20 @@ classes = [
     force_field.Force_Field_Operator,
     force_field.Force_Field_Modal_Panel,
     force_field.ForceFieldProperties,
-    ops_add_molecule.AddMolecule,
+    gui_view3d_mt_batoms_add.VIEW3D_MT_batoms_add
 ]
 #
 
 
 def register():
     bpy.types.TOPBAR_MT_file_import.append(gui_io.menu_func_import_batoms)
-    bpy.types.VIEW3D_MT_mesh_add.append(ops_add_molecule.menu_func)
+    bpy.types.VIEW3D_MT_add.prepend(gui_view3d_mt_batoms_add.menu_func)
+    bpy.utils.register_tool(gui_tool.AddMolecule, after={"builtin.scale_cage"}, separator=True, group=True)
+    bpy.utils.register_tool(gui_tool.AddBulk, after={gui_tool.AddMolecule.bl_idname})
+    bpy.utils.register_tool(gui_tool.AddSurface, after={gui_tool.AddBulk.bl_idname})
+    bpy.utils.register_tool(gui_tool.AddAtoms, after={gui_tool.AddSurface.bl_idname})
+    bpy.utils.register_tool(gui_tool.MoleculeReplaceElement, after={"builtin.scale_cage"}, separator=True, group=True)
+
 
     for cls in classes:
         bpy.utils.register_class(cls)
@@ -143,7 +155,11 @@ def register():
 def unregister():
 
     bpy.types.TOPBAR_MT_file_import.remove(gui_io.menu_func_import_batoms)
-    bpy.types.VIEW3D_MT_mesh_add.remove(ops_add_molecule.menu_func)
+    bpy.types.VIEW3D_MT_add.remove(gui_view3d_mt_batoms_add.menu_func)
+    bpy.utils.unregister_tool(gui_tool.AddMolecule)
+    bpy.utils.unregister_tool(gui_tool.AddBulk)
+    bpy.utils.unregister_tool(gui_tool.AddSurface)
+    bpy.utils.unregister_tool(gui_tool.AddAtoms)
 
     for cls in classes:
         bpy.utils.unregister_class(cls)

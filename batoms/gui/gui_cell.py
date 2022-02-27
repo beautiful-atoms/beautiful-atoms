@@ -4,9 +4,9 @@ from bpy.types import (Panel,
                        )
 from bpy.props import (BoolProperty,
                        FloatVectorProperty,
+                       IntVectorProperty
                        )
 
-from batoms.utils.butils import get_selected_batoms
 from batoms import Batoms
 
 class Cell_PT_prepare(Panel):
@@ -22,18 +22,27 @@ class Cell_PT_prepare(Panel):
         layout = self.layout
         clpanel = context.scene.clpanel
 
-        layout.operator("batoms.apply_cell")
+        op = layout.operator("batoms.apply_cell")
+        op.cell_a = clpanel.cell_a
+        op.cell_b = clpanel.cell_b
+        op.cell_c = clpanel.cell_c
         layout.prop(clpanel, "cell_a")
         layout.prop(clpanel, "cell_b")
         layout.prop(clpanel, "cell_c")
         layout.prop(clpanel, "pbc")
 
-        layout.operator("batoms.apply_transform")
+        op = layout.operator("batoms.apply_transform")
+        op.transform_a = clpanel.transform_a
+        op.transform_b = clpanel.transform_b
+        op.transform_c = clpanel.transform_c
         layout.prop(clpanel, "transform_a")
         layout.prop(clpanel, "transform_b")
         layout.prop(clpanel, "transform_c")
         #
-        layout.operator("batoms.apply_boundary")
+        op = layout.operator("batoms.apply_boundary")
+        op.boundary_a = clpanel.boundary_a
+        op.boundary_b = clpanel.boundary_b
+        op.boundary_c = clpanel.boundary_c
         layout.prop(clpanel, "boundary_a")
         layout.prop(clpanel, "boundary_b")
         layout.prop(clpanel, "boundary_c")
@@ -41,21 +50,16 @@ class Cell_PT_prepare(Panel):
 
 
 class CellProperties(bpy.types.PropertyGroup):
+
     def selected_batoms(self, context):
         if context.object.batoms.batom.flag:
             return context.object.batoms.batom.label
         return None
-    def Callback_modify_transform(self, context):
-        clpanel = bpy.context.scene.clpanel
-        transform = [clpanel.transform_a, clpanel.transform_b, clpanel.transform_c]
-        modify_transform(self.selected_batoms(context), transform)
+
     def Callback_modify_pbc(self, context):
         clpanel = bpy.context.scene.clpanel
         pbc = clpanel.pbc
         modify_batoms_attr(self.selected_batoms(context), 'pbc', pbc)
-    def Callback_modify_boundary(self, context):
-        clpanel = bpy.context.scene.clpanel
-        modify_batoms_attr(self.selected_batoms(context), 'boundary', clpanel.boundary)
 
     pbc: BoolProperty(
         name = "pbc", default=True,
@@ -72,16 +76,19 @@ class CellProperties(bpy.types.PropertyGroup):
         name="c", default=(0, 0, 1),
         # subtype = "XYZ",
         description = "Cell in c axis")
-    transform_a: FloatVectorProperty(
+    transform_a: IntVectorProperty(
         name="a", default=(1, 0, 0, 0), size = 4,
+        min = -20, max = 20,
         # subtype = "XYZ",
         description = "Transform matrix in a axis")
-    transform_b: FloatVectorProperty(
+    transform_b: IntVectorProperty(
         name="b", default=(0, 1, 0, 0), size = 4,
+        min = -20, max = 20,
         # subtype = "XYZ",
         description = "Transform matrix in b axis")
-    transform_c: FloatVectorProperty(
+    transform_c: IntVectorProperty(
         name="c", default=(0, 0, 1, 0), size = 4,
+        min = -20, max = 20,
         # subtype = "XYZ",
         description = "Transform matrix in c axis")
     
@@ -95,43 +102,6 @@ class CellProperties(bpy.types.PropertyGroup):
         name="c", default=(0, 1), size = 2,
         description = "boundary  in c axis")
 
-class ApplyCell(Operator):
-    bl_idname = "batoms.apply_cell"
-    bl_label = "Apply Cell"
-    bl_description = ("Apply new cell parameters")
-    def execute(self, context):
-        clpanel = bpy.context.scene.clpanel
-        cell = [clpanel.cell_a, clpanel.cell_b, clpanel.cell_c]
-        if not context.object.batoms.batom.flag:
-            return {'FINISHED'}
-        batoms = Batoms(label=context.object.batoms.batom.label)
-        batoms.cell = cell
-        return {'FINISHED'}
-
-class ApplyTransform(Operator):
-    bl_idname = "batoms.apply_transform"
-    bl_label = "Apply Transform"
-    bl_description = ("Apply new transform parameters")
-    def execute(self, context):
-        clpanel = bpy.context.scene.clpanel
-        transform = [clpanel.transform_a, clpanel.transform_b, clpanel.transform_c]
-        if not context.object.batoms.batom.flag:
-            return {'FINISHED'}
-        batoms = Batoms(label=context.object.batoms.batom.label)
-        batoms.transform(transform)
-        return {'FINISHED'}
-class ApplyBoundary(Operator):
-    bl_idname = "batoms.apply_boundary"
-    bl_label = "Apply Boundary"
-    bl_description = ("Apply new boundary parameters")
-    def execute(self, context):
-        clpanel = bpy.context.scene.clpanel
-        boundary = [clpanel.boundary_a, clpanel.boundary_b, clpanel.boundary_c]
-        if not context.object.batoms.batom.flag:
-            return {'FINISHED'}
-        batoms = Batoms(label=context.object.batoms.batom.label)
-        batoms.boundary = boundary
-        return {'FINISHED'}
 
 def modify_batoms_attr(name, key, value):
     if name is None: return
