@@ -30,9 +30,9 @@ print('Successfully enabled plugin {plugin_name}')
 BLENDERPY_DISABLE_PLUGIN = f"""
 import bpy
 import addon_utils
-addon_utils.enable('{plugin_name}', default_set=True)
+addon_utils.disable('{plugin_name}', default_set=True, handle_error=None)
 bpy.ops.wm.save_userpref()
-print('Successfully enabled plugin {plugin_name}')
+print('Disabled plugin {plugin_name}')
 """
 
 
@@ -141,8 +141,19 @@ def _is_empty_dir(p):
 
 def _blender_enable_plugin(blender_bin):
     """Use blender's internal libary to enable plugin (and save as user script)"""
+    commands = [blender_bin, "-b", "--python-expr", BLENDERPY_ENABLE_PLUGIN]
+    proc = subprocess.run(commands)
+    if proc.returncode != 0:
+        raise RuntimeError("Enable plugin failed with error {proc.stderr}")
+    return
 
-    pass
+def _blender_disable_plugin(blender_bin):
+    """Use blender's internal libary to disable plugin (and save as user script)"""
+    commands = [blender_bin, "-b", "--python-expr", BLENDERPY_DISABLE_PLUGIN]
+    proc = subprocess.run(commands)
+    if proc.returncode != 0:
+        raise RuntimeError("Disable plugin failed with error {proc.stderr}")
+    return
 
 
 def gitclone(workdir=".", version="main", url=repo_git):
@@ -173,12 +184,12 @@ def install(
     blender_bin,
     repo_path,
     factory_python_target=factory_python_directory,
-    plugin_path_target="scripts/addons_contrib/batoms",
+    plugin_path_target=f"scripts/addons_contrib/{plugin_name}",
 ):
     """Copy the contents inside plugin_path to the target_directory"""
     blender_root = Path(blender_root)
     conda_env_file = repo_path / "env.yml"
-    plugin_path_source = repo_path / "batoms"
+    plugin_path_source = repo_path / plugin_name
     plugin_path_target = blender_root / plugin_path_target
     factory_python_source = blender_root / "python"
     factory_python_target = blender_root / factory_python_target
@@ -278,19 +289,57 @@ def install(
     shutil.copytree(plugin_path_source, plugin_path_target)
     print(f"Plugin copied to {plugin_path_target.as_posix()}.")
 
-    pass
+    _blender_enable_plugin(blender_bin)
+    return
 
 
 def uninstall(
     blender_root,
     blender_bin,
-    plugin_name="batoms",
-    original_python_directory=factory_python_directory,
-    target_directory="scripts/addons_contrib/batoms",
+    factory_python_target=factory_python_directory,
+    plugin_path_target=f"scripts/addons_contrib/{plugin_name}",
 ):
     """Remove the plugin from target_directory and restore"""
-
-    pass
+    blender_root = Path(blender_root)
+    plugin_path_target = blender_root / plugin_path_target
+    factory_python_source = blender_root / "python"
+    factory_python_target = blender_root / factory_python_target
+    _blender_disable_plugin(blender_bin)
+    if plugin_path_target.is_symlink():
+        os.unlink(plugin_path_target)
+    elif plugin_path_target.is_dir():
+        shutil.rmtree(plugin_path_target)
+    else:
+        print(f"Plugin directory {plugin_path_target.as_posix()} does not exist. Ignore.")
+    
+    # _old_python not found, ignore
+    if not factory_python_target.exists():
+        print(f"Backup of factory blender python path {factory_python_target.as_posix()} does not exist. Ignore")
+        return
+    else:
+        if factory_python_source.is_dir():
+            if not _is_empty_dir(factory_python_source):
+                if factory_python_source.is_symlink():
+                    os.unlink(factory_python_source)
+                elif factory_python_source.is_dir():
+                    print(f"Current blender python path is not a symlink.")
+                    overwrite = str(input("Overwrite? [y/N]") or "N").lower().startswith("y")
+                    if overwrite:
+                        shutil.rmtree(factory_python_source)
+                    else:
+                        print("Ignored.")
+                        return
+                else:
+                    pass
+            else:
+                os.rmdir(factory_python_source)
+        
+        if factory_python_target.is_symlink():
+            origin = factory_python_target.readlink()
+            os.symlink(origin, factory_python_source)
+        else:
+            shutil.move(factory_python_target, factory_python_source)
+    return
 
 
 def test_plugin():
