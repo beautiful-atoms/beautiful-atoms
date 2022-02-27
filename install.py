@@ -35,6 +35,20 @@ bpy.ops.wm.save_userpref()
 print('Disabled plugin {plugin_name}')
 """
 
+BLENDERPY_TEST_PLUGIN = f"""
+from batoms import Batoms
+b = Batoms('O', ['O'], [[0, 0, 0]])
+print('Test plugin import successful.')
+"""
+
+BLENDERPY_TEST_UNINSTALL = f"""
+try:
+    from batoms import Batoms
+    raise Exception('batoms plugin still exists.')
+except ImportError:
+    print('batoms cleanly uninstalled.')
+"""
+
 
 def _get_default_locations(os_name, version=minimal_version):
     os_name = os_name.lower()
@@ -146,6 +160,7 @@ def _blender_enable_plugin(blender_bin):
     if proc.returncode != 0:
         raise RuntimeError("Enable plugin failed with error {proc.stderr}")
     return
+
 
 def _blender_disable_plugin(blender_bin):
     """Use blender's internal libary to disable plugin (and save as user script)"""
@@ -310,11 +325,15 @@ def uninstall(
     elif plugin_path_target.is_dir():
         shutil.rmtree(plugin_path_target)
     else:
-        print(f"Plugin directory {plugin_path_target.as_posix()} does not exist. Ignore.")
-    
+        print(
+            f"Plugin directory {plugin_path_target.as_posix()} does not exist. Ignore."
+        )
+
     # _old_python not found, ignore
     if not factory_python_target.exists():
-        print(f"Backup of factory blender python path {factory_python_target.as_posix()} does not exist. Ignore")
+        print(
+            f"Backup of factory blender python path {factory_python_target.as_posix()} does not exist. Ignore"
+        )
         return
     else:
         if factory_python_source.is_dir():
@@ -323,7 +342,9 @@ def uninstall(
                     os.unlink(factory_python_source)
                 elif factory_python_source.is_dir():
                     print(f"Current blender python path is not a symlink.")
-                    overwrite = str(input("Overwrite? [y/N]") or "N").lower().startswith("y")
+                    overwrite = (
+                        str(input("Overwrite? [y/N]") or "N").lower().startswith("y")
+                    )
                     if overwrite:
                         shutil.rmtree(factory_python_source)
                     else:
@@ -333,7 +354,7 @@ def uninstall(
                     pass
             else:
                 os.rmdir(factory_python_source)
-        
+
         if factory_python_target.is_symlink():
             origin = factory_python_target.readlink()
             os.symlink(origin, factory_python_source)
@@ -342,12 +363,20 @@ def uninstall(
     return
 
 
-def test_plugin():
-    pass
+def test_plugin(blender_bin):
+    commands = [blender_bin, "-b", "--python-expr", BLENDERPY_TEST_PLUGIN]
+    proc = subprocess.run(commands)
+    if proc.returncode != 0:
+        raise RuntimeError("Plugin test failed with error {proc.stderr}")
+    return
 
 
-def test_uninstall():
-    pass
+def test_uninstall(blender_bin):
+    commands = [blender_bin, "-b", "--python-expr", BLENDERPY_TEST_UNINSTALL]
+    proc = subprocess.run(commands)
+    if proc.returncode != 0:
+        raise RuntimeError("Uninstall test failed with error {proc.stderr}")
+    return
 
 
 def main():
@@ -389,7 +418,7 @@ def main():
     print(f"Choose blender directory at {true_blender_root.as_posix()}")
     if args.uninstall:
         uninstall(true_blender_root, true_blender_bin)
-        test_uninstall()
+        test_uninstall(true_blender_bin)
     else:
         if not is_conda():
             print(
@@ -403,7 +432,7 @@ def main():
             else:
                 repo_path = gitclone(workdir, version=args.plugin_version, url=repo_git)
             install(true_blender_root, true_blender_bin, repo_path)
-            test_plugin()
+            test_plugin(true_blender_bin)
 
 
 if __name__ == "__main__":
