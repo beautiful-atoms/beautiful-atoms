@@ -133,5 +133,5 @@ class MoleculeReplaceElement(WorkSpaceTool):
 
     def draw_settings(context, layout, tool):
         props = tool.operator_properties("batoms.molecule_replace_element")
-        layout.prop(props, "formula")
-        layout.prop(props, "label")
+        layout.prop(props, "element")
+        layout.prop(props, "bond_order")

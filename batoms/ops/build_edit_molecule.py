@@ -2,14 +2,9 @@ import bpy
 from bpy.types import Operator
 from bpy.props import (StringProperty,
                        IntProperty,
-                       IntVectorProperty,
-                       FloatProperty,
-                       FloatVectorProperty,
-                       BoolProperty,
                        )
-from ase.build import molecule, bulk
+from ase.build import molecule
 from ase import Atoms
-from batoms.utils.butils import get_selected_batoms, get_selected_vertices
 from batoms import Batoms
 import numpy as np
 

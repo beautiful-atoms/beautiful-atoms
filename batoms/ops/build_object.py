@@ -1,3 +1,7 @@
+"""
+Use ASE's build function 
+https://wiki.fysik.dtu.dk/ase/ase/build/build.html?highlight=nanotube#
+"""
 import bpy
 from bpy.types import Operator
 from bpy.props import (StringProperty,
