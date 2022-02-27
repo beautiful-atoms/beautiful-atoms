@@ -36,7 +36,6 @@ print('Successfully enabled plugin {plugin_name}')
 """
 
 
-
 def _get_default_locations(os_name, version=minimal_version):
     os_name = os_name.lower()
     if os_name not in ["windows", "macos", "linux"]:
@@ -73,10 +72,13 @@ def _get_default_locations(os_name, version=minimal_version):
     else:
         match = None
     if match is None:
-        raise FileNotFoundError((f"No corresponding blender of version {version} on {os_name} found. "
-        "Please specify the full path to the blender installation location."))
+        raise FileNotFoundError(
+            (
+                f"No corresponding blender of version {version} on {os_name} found. "
+                "Please specify the full path to the blender installation location."
+            )
+        )
     return match
-
 
 
 def _get_blender_bin(os_name, blender_root):
@@ -138,9 +140,8 @@ def _is_empty_dir(p):
 
 
 def _blender_enable_plugin(blender_bin):
-    """Use blender's internal libary to enable plugin (and save as user script)
-    """
-    
+    """Use blender's internal libary to enable plugin (and save as user script)"""
+
     pass
 
 
