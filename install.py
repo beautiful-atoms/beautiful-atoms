@@ -259,10 +259,19 @@ def install(
                         "This means you may have used the installation script already. "
                     )
                 )
-                choice = str(input("Overwrite? [y/N]") or "N").lower().startswith("y")
-                if choice:
-                    shutil.rmtree(factory_python_target)
+                try:
+                    old_py = next(factory_python_target.glob("bin/python*"))
+                except StopIteration:
+                    print("Old python binary not found, may be broken.")
+                    old_py = None
                     overwrite = True
+                if old_py:
+                    proc = subprocess.run([old_py, "-V"])
+                    if proc.returncode == 0:
+                        print("Old python binary is working. Will not overwrite.")
+                        overwrite = False
+                    else:
+                        overwrite = True
     else:
         if factory_python_target.is_file():
             os.unlink(factory_python_target)
