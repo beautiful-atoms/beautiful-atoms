@@ -137,7 +137,7 @@ def is_conda():
 def _get_conda_variables():
     results = {
         key: os.environ.get(key, "")
-        for key in ("CONDA_PREFIX", "CONDA_PYTHON_EXE", "CONDA_DEFAULT_ENV")
+        for key in ("CONDA_PREFIX", "CONDA_PYTHON_EXE", "CONDA_DEFAULT_ENV", "CONDA_EXE")
     }
     return results
 
@@ -229,7 +229,7 @@ def install(
 
     # Install from the env.yaml
     print("Updating conda environment")
-    commands = ["conda", "env", "update", "--file", conda_env_file.as_posix()]
+    commands = [conda_vars["CONDA_EXE"], "env", "update", "--file", conda_env_file.as_posix()]
     proc = subprocess.run(commands)
     if proc.returncode != 0:
         raise RuntimeError(f"Error updating conda env. Error is {proc.stderr}")
