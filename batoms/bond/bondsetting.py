@@ -206,17 +206,16 @@ class BondSettings(Setting):
         style = int(sp['style'])
         name = 'bond_%s_%s_%s_%s' % (self.label, sp['name'], order, style)
         radius = sp['width']
-        if name in bpy.data.objects:
-            obj = bpy.data.objects.get(name)
-            bpy.data.objects.remove(obj, do_unlink=True)
-        self.cylinder(order=order, style=style,
-                      vertices=vertices, depth=1, radius=radius)
-        obj = bpy.context.view_layer.objects.active
-        obj.name = name
-        obj.data.name = name
+        self.delete_obj(name)
+        if style == 3:
+            obj = self.build_spring_bond(name, radius=radius)
+        else:
+            obj = self.cylinder(name, order=order, style=style,
+                                vertices=vertices, depth=1, radius=radius)
         obj.batoms.batom.radius = radius
         #
-        obj.users_collection[0].objects.unlink(obj)
+        for coll in obj.users_collection:
+            coll.objects.unlink(obj)
         self.batoms.coll.children['%s_instancer' %
                                   self.label].objects.link(obj)
         # bpy.data.scenes['Scene'].objects.unlink(bb.obj)
@@ -231,7 +230,7 @@ class BondSettings(Setting):
         bpy.context.view_layer.update()
         return obj
 
-    def cylinder(self, order=1, style=1, vertices=32, depth=1.0, radius=1.0):
+    def cylinder(self, name, order=1, style=1, vertices=32, depth=1.0, radius=1.0):
         """
         create cylinder and subdivde to 2 parts
         todo: subdivde by the a ratio = radius1/radius2
@@ -286,14 +285,79 @@ class BondSettings(Setting):
             for i in range(nv):
                 obj.data.vertices[i].co[2] -= (10 - 1)*depth
         bpy.ops.object.modifier_apply(modifier='Array')
+        obj.name = name
+        obj.data.name = name
         return obj
+
+    def build_spring_bond(self, name, radius=1.0, resolution=5, n=10,
+                          bevel_radius=0.02):
+        """Build a spring bond instancer
+
+        Args:
+            name (str): name of bond
+            radius (float, optional):
+                radius of the spiral (bond width). Defaults to 1.0.
+            resolution (int, optional):
+                number of point in one rotation of the spiral.
+                Defaults to 5.
+            n (int, optional):
+                number of rotations. Defaults to 10.
+            bevel_radius (float, optional):
+                radius of the bevel object. Defaults to 0.02.
+
+        Returns:
+            bpy.data.object: the instancer.
+        """
+                        
+        # Prepare arrays x, y, z
+        theta = np.linspace(-n * np.pi, n * np.pi, resolution*n)
+        z = np.linspace(-0.5, 0.5, resolution*n)
+        r = radius*1.5
+        x = r * np.sin(theta)
+        y = r * np.cos(theta)
+        vertices = np.concatenate((x.reshape(-1, 1),
+                                   y.reshape(-1, 1),
+                                   z.reshape(-1, 1)), axis=1)
+        #
+        crv = bpy.data.curves.new('spring', 'CURVE')
+        crv.dimensions = '3D'
+        crv.resolution_u = 3
+        crv.fill_mode = 'FULL'
+        crv.use_fill_caps = True
+        crv.twist_mode = 'Z_UP'  # ''
+        spline = crv.splines.new(type='NURBS')
+        nvert = len(vertices)
+        spline.points.add(nvert-1)
+        vertices = np.append(vertices, np.ones((nvert, 1)), axis=1)
+        vertices = vertices.reshape(-1, 1)
+        spline.points.foreach_set('co', vertices)
+        # bevel
+        bpy.ops.curve.primitive_bezier_circle_add(
+            radius=bevel_radius, enter_editmode=False)
+        bevel_control = bpy.context.active_object
+        bevel_control.data.resolution_u = 2
+        bevel_control.hide_set(True)
+        bevel_control.hide_render = True
+        bevel_control.data.name = bevel_control.name = '%s_bevel' % \
+            name
+        crv.bevel_object = bevel_control
+        crv.bevel_mode = 'OBJECT'
+        obj = bpy.data.objects.new('spring', crv)
+        bpy.data.collections['Collection'].objects.link(obj)
+        depsgraph = bpy.context.evaluated_depsgraph_get()
+        object_eval = obj.evaluated_get(depsgraph)
+        mesh = bpy.data.meshes.new_from_object(object_eval)
+        obj_m = bpy.data.objects.new(name, mesh)
+        self.delete_obj('spring')
+        self.delete_obj('%s_bevel' % name)
+        return obj_m
 
     def assign_materials(self, sp, order, style=0):
         # sort element by occu
         style = int(style)
         me = self.instancers[sp["name"]]['%s_%s' % (order, style)].data
         me.materials.clear()
-        if style in [0, 2]:
+        if style in [0, 2, 3]:
             for i in range(2):
                 me.materials.append(
                     self.materials[sp["name"]]['%s_%s_%s' % (order, style, 0)])
@@ -322,7 +386,7 @@ class BondSettings(Setting):
             data = sp.as_dict()
             instancers[data['name']] = {}
             for order in [1, 2, 3]:
-                for style in [0, 1, 2]:
+                for style in [0, 1, 2, 3]:
                     name = 'bond_%s_%s_%s_%s' % (
                         self.label, data['name'], order, style)
                     instancers[data['name']]['%s_%s' %
@@ -332,7 +396,7 @@ class BondSettings(Setting):
             if sp.search == 2:
                 instancers[data['name']] = {}
                 for order in [1, 2, 3]:
-                    for style in [0, 1, 2]:
+                    for style in [0, 1, 2, 3]:
                         name = 'bond_%s_%s_%s_%s' % (
                             self.label, data['name'], order, style)
                         instancers[data['name']]['%s_%s' %
@@ -350,7 +414,7 @@ class BondSettings(Setting):
             data = sp.as_dict()
             materials[data['name']] = {}
             for order in [1, 2, 3]:
-                for style in [0, 1, 2]:
+                for style in [0, 1, 2, 3]:
                     for i in range(2):
                         name = '%s_%s_%s_%s_%s' % (
                             self.label, data['name'], order, style, i)
@@ -361,7 +425,7 @@ class BondSettings(Setting):
             if sp.search == 2:
                 materials[data['name']] = {}
                 for order in [1, 2, 3]:
-                    for style in [0, 1, 2]:
+                    for style in [0, 1, 2, 3]:
                         for i in range(2):
                             name = '%s_%s_%s_%s_%s' % (
                                 self.label, data['name'], order, style, i)
