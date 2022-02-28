@@ -224,8 +224,8 @@ class Boundary(ObjectGN):
         modifier.node_group.name = name
         # ------------------------------------------------------------------
         inputs = modifier.node_group.inputs
-        GroupInput = modifier.node_group.nodes.get('Group Input')
-        GroupOutput = modifier.node_group.nodes.get('Group Output')
+        GroupInput = modifier.node_group.nodes[0]
+        GroupOutput = modifier.node_group.nodes[1]
         # add new output sockets
         for att in default_GroupInput:
             GroupInput.outputs.new(type=att[1], name=att[0])
@@ -235,7 +235,6 @@ class Boundary(ObjectGN):
             modifier['%s_attribute_name' % id] = att[0]
         gn = modifier
         # ------------------------------------------------------------------
-        GroupOutput = gn.node_group.nodes.get('Group Output')
         JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
                                          '%s_JoinGeometry' % self.label,
                                          'GeometryNodeJoinGeometry')
@@ -308,7 +307,7 @@ class Boundary(ObjectGN):
         """
         from batoms.utils.butils import get_nodes_by_name
         gn = self.gnodes
-        GroupInput = gn.node_group.nodes.get('Group Input')
+        GroupInput = gn.node_group.nodes[0]
         SetPosition = get_nodes_by_name(gn.node_group.nodes,
                                         '%s_SetPosition' % self.label)
         JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
