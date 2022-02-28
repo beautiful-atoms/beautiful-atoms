@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
 import os
 from os.path import expanduser, expandvars
-import platform
-import re
 import shutil
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from xml.dom import NotFoundErr
 
 
 minimal_version = 3.0
@@ -137,7 +134,12 @@ def is_conda():
 def _get_conda_variables():
     results = {
         key: os.environ.get(key, "")
-        for key in ("CONDA_PREFIX", "CONDA_PYTHON_EXE", "CONDA_DEFAULT_ENV", "CONDA_EXE")
+        for key in (
+            "CONDA_PREFIX",
+            "CONDA_PYTHON_EXE",
+            "CONDA_DEFAULT_ENV",
+            "CONDA_EXE",
+        )
     }
     return results
 
@@ -230,7 +232,7 @@ def install(
 
     # Install from the env.yaml
     print("Updating conda environment")
-    
+
     commands = [
         conda_vars["CONDA_EXE"],
         "env",
@@ -272,7 +274,7 @@ def install(
                 try:
                     old_py = next(factory_python_target.glob("bin/python*"))
                 except StopIteration:
-                    print("Old python binary not found, may be broken.")
+                    print("Old python binary not found, may be broken. Will overwrite.")
                     old_py = None
                     overwrite = True
                 if old_py:
@@ -286,25 +288,27 @@ def install(
         if factory_python_target.is_file():
             os.unlink(factory_python_target)
 
-    # Source part
-    if factory_python_target.exists():
-        if overwrite:
-            # Should not happen
-            raise RuntimeError(
-                f"Cannot overwrite {factory_python_target.as_posix()}. Check permission?"
-            )
-        else:
-            pass
+    # At this stage the factory_python_target should be either removed or don't allow overwrite
+    if factory_python_target.exists() and overwrite:
+        # Should not happen
+        raise RuntimeError(
+            f"Cannot overwrite {factory_python_target.as_posix()}. Check permission?"
+        )
+
+    # Move the source --> target and symlink conda prefix to factory source
+    if factory_python_source.is_symlink():
+        origin = factory_python_source.readlink()
+        os.unlink(factory_python_source)
+        os.symlink(origin, factory_python_target)
     else:
-        if factory_python_source.is_symlink():
-            origin = factory_python_source.readlink()
-            os.unlink(factory_python_source)
-            os.symlink(origin, factory_python_target)
-        else:
-            shutil.move(factory_python_source, factory_python_target)
-        # finally, link the conda prefix of current environment
-        conda_prefix = Path(conda_vars["CONDA_PREFIX"]).resolve()
-        os.symlink(conda_prefix, factory_python_source)
+        shutil.move(factory_python_source, factory_python_target)
+    print(
+        f"Old python directory for blender moved to {factory_python_target.as_posix()}"
+    )
+    # finally, link the conda prefix of current environment
+    conda_prefix = Path(conda_vars["CONDA_PREFIX"]).resolve()
+    os.symlink(conda_prefix, factory_python_source)
+    print(f"Created symlink {conda_prefix} --> {factory_python_source.as_posix()}")
 
     # Shall we overwrite the target path?
     if not _is_empty_dir(plugin_path_target):
