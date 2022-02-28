@@ -380,7 +380,7 @@ class Bonds(ObjectGN):
             gn.node_group.links.new(
                 GroupInput.outputs[7], CompareOrder.inputs[0])
         # style
-        for style in [0, 1, 2]:
+        for style in [0, 1, 2, 3]:
             CompareStyle = get_nodes_by_name(gn.node_group.nodes,
                                              'CompareFloats_%s_%s_style' % (
                                                  self.label, style),
