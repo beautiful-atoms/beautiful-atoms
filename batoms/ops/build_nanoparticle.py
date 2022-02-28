@@ -115,7 +115,7 @@ class BuildOctahedron(Operator):
 
     length: IntProperty(
         name="length", default=5,
-        min=1, soft_max=5,
+        min=1, soft_max=10,
         description="Number of atoms on the square edges of the complete octahedron.")
 
     cutoff: IntProperty(

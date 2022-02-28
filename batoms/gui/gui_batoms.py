@@ -6,17 +6,11 @@ from bpy.types import (Panel,
                        )
 from bpy.props import (StringProperty,
                        BoolProperty,
-                       BoolVectorProperty,
-                       IntProperty,
-                       IntVectorProperty,
                        FloatProperty,
-                       FloatVectorProperty,
                        EnumProperty,
-                       PointerProperty,
                        )
-from batoms.utils.butils import get_selected_batoms, get_selected_vertices, \
-    get_selected_objects
-from batoms import Batoms, Batom
+from batoms.utils.butils import get_selected_batoms, get_selected_vertices
+from batoms import Batoms
 
 # The panel.
 

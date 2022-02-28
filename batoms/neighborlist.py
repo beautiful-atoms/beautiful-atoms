@@ -246,7 +246,7 @@ def build_boundary(species, positions,
     distances = pointCellDistance(wraped_positions, cell)
     natom = len(positions)
     # find atoms close to cell face with distance of r
-    indices = [[], [], []]
+    indices = [[[], []], [[], []], [[], []]]
     nb = 0
     for i in range(3):
         if not pbc[i]:

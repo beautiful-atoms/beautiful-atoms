@@ -21,12 +21,12 @@ class AddAtoms(WorkSpaceTool):
     bl_icon = "ops.generic.select_circle"
     # bl_icon = os.path.join("../icons" , "add_atoms")
     bl_widget = None
-    bl_keymap = (
-        ("batoms.add_atoms", {"type": 'LEFTMOUSE', "value": 'PRESS'},
-         {"properties": []}),
-        ("batoms.add_atoms", {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True},
-         {"properties": []}),
-    )
+    # bl_keymap = (
+    #     ("batoms.add_atoms", {"type": 'LEFTMOUSE', "value": 'PRESS'},
+    #      {"properties": []}),
+    #     ("batoms.add_atoms", {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True},
+    #      {"properties": []}),
+    # )
 
     def draw_settings(context, layout, tool):
         props = tool.operator_properties("batoms.add_atoms")
@@ -46,12 +46,12 @@ class AddMolecule(WorkSpaceTool):
     # bl_icon = "ops.generic.select_circle"
     bl_icon = "batoms_add_molecule"
     bl_widget = None
-    bl_keymap = (
-        ("batoms.add_molecule", {"type": 'LEFTMOUSE', "value": 'PRESS'},
-         {"properties": []}),
-        ("batoms.add_molecule", {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True},
-         {"properties": []}),
-    )
+    # bl_keymap = (
+    #     ("batoms.add_molecule", {"type": 'LEFTMOUSE', "value": 'PRESS'},
+    #      {"properties": []}),
+    #     ("batoms.add_molecule", {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True},
+    #      {"properties": []}),
+    # )
 
     def draw_settings(context, layout, tool):
         props = tool.operator_properties("batoms.add_molecule")
@@ -70,11 +70,11 @@ class AddBulk(WorkSpaceTool):
     )
     bl_icon = "ops.generic.select_lasso"
     bl_widget = None
-    bl_keymap = (
-        ("batoms.add_bulk", {"type": 'LEFTMOUSE', "value": 'PRESS'}, None),
-        ("batoms.add_bulk", {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True},
-         {"properties": []}),
-    )
+    # bl_keymap = (
+    #     ("batoms.add_bulk", {"type": 'LEFTMOUSE', "value": 'PRESS'}, None),
+    #     ("batoms.add_bulk", {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True},
+    #      {"properties": []}),
+    # )
 
     def draw_settings(context, layout, tool):
         props = tool.operator_properties("batoms.add_bulk")
@@ -97,9 +97,9 @@ class AddSurface(WorkSpaceTool):
     # ("radius", 75.0),
     # ("backdrop_fill_alpha", 0.0),
     # ]
-    bl_keymap = (
-        ("batoms.add_surface", {"type": 'LEFTMOUSE', "value": 'PRESS'}, None),
-    )
+    # bl_keymap = (
+    #     ("batoms.add_surface", {"type": 'LEFTMOUSE', "value": 'PRESS'}, None),
+    # )
 
     def draw_settings(context, layout, tool):
         props = tool.operator_properties("batoms.add_surface")
@@ -124,12 +124,15 @@ class MoleculeReplaceElement(WorkSpaceTool):
     # bl_icon = "ops.generic.select_circle"
     bl_icon = "batoms_molecule_replace_element"
     bl_widget = None
-    bl_keymap = (
-        ("batoms.molecule_replace_element", {"type": "LEFTMOUSE", "value": "PRESS"},
-         {"properties": []}),
-        ("batoms.molecule_replace_element", {"type": "LEFTMOUSE", "value": "PRESS", "ctrl": True},
-         {"properties": []}),
-    )
+    # TODO: get error using -b -P: 'NoneType' object has no attribute 'keymaps'
+    # We need to register the keymap
+    # look at this: https://github.com/nortikin/sverchok/issues/742
+    # bl_keymap = (
+    #     ("batoms.molecule_replace_element", {"type": "LEFTMOUSE", "value": "PRESS"},
+    #      {"properties": []}),
+    #     ("batoms.molecule_replace_element", {"type": "LEFTMOUSE", "value": "PRESS", "ctrl": True},
+    #      {"properties": []}),
+    # )
 
     def draw_settings(context, layout, tool):
         props = tool.operator_properties("batoms.molecule_replace_element")

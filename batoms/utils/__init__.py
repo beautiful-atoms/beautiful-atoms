@@ -46,7 +46,7 @@ def read_from_pymatgen(structure):
         cell = structure.lattice.matrix
         pbc = True
     else:
-        cell = None
+        cell = np.zeros(3)
         pbc = False
     positions = [structure[i].coords for i in range(natom)]
     info = {}

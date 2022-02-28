@@ -11,7 +11,6 @@ rendering atoms and molecules objects using blender.""",
 }
 
 from batoms.batoms import Batoms
-from batoms.batom import Batom
 
 
 import bpy
@@ -29,15 +28,20 @@ from .gui import (
     gui_ase,
     gui_plane,
     gui_render,
-    ops_add_molecule,
     gui_pymatgen,
     gui_pubchem,
     gui_rscb,
     gui_tool,
-    gui_view3d_mt_batoms_add,
+    view3d_mt_batoms_add,
 )
 
-from .ops import build_object, build_edit_molecule, transform
+from .ops import (build_object, 
+    build_surface, 
+    build_nanotube,
+    build_nanoparticle,
+    build_edit_molecule, 
+    transform
+    )
 
 from .modal import record_selection, rigid_body, force_field
 
@@ -68,6 +72,13 @@ classes = [
     build_object.AddAtoms,
     build_object.AddSurface,
     build_object.deleteBatoms,
+    build_surface.BuildSurfaceFCC100,
+    build_surface.BuildSurfaceFCC110,
+    build_surface.BuildSurfaceFCC111,
+    build_nanotube.BuildNanotube,
+    build_nanoparticle.BuildDecahedron,
+    build_nanoparticle.BuildIcosahedron,
+    build_nanoparticle.BuildOctahedron,
     build_edit_molecule.MolecueReplaceElement,
     transform.ApplyCell,
     transform.ApplyTransform,
@@ -115,14 +126,25 @@ classes = [
     force_field.Force_Field_Operator,
     force_field.Force_Field_Modal_Panel,
     force_field.ForceFieldProperties,
-    gui_view3d_mt_batoms_add.VIEW3D_MT_batoms_add
+    view3d_mt_batoms_add.VIEW3D_MT_batoms_add,
+    view3d_mt_batoms_add.VIEW3D_MT_surface_add,
+    view3d_mt_batoms_add.VIEW3D_MT_nanotube_add,
+    view3d_mt_batoms_add.VIEW3D_MT_nanoparticle_add,
 ]
 #
 
 
 def register():
+
+    # class
+    for cls in classes:
+        bpy.utils.register_class(cls)
+
+    # menu
     bpy.types.TOPBAR_MT_file_import.append(gui_io.menu_func_import_batoms)
-    bpy.types.VIEW3D_MT_add.prepend(gui_view3d_mt_batoms_add.menu_func)
+    bpy.types.VIEW3D_MT_add.prepend(view3d_mt_batoms_add.menu_func)
+
+    # tool
     bpy.utils.register_tool(gui_tool.AddMolecule, after={"builtin.scale_cage"}, separator=True, group=True)
     bpy.utils.register_tool(gui_tool.AddBulk, after={gui_tool.AddMolecule.bl_idname})
     bpy.utils.register_tool(gui_tool.AddSurface, after={gui_tool.AddBulk.bl_idname})
@@ -130,8 +152,6 @@ def register():
     bpy.utils.register_tool(gui_tool.MoleculeReplaceElement, after={"builtin.scale_cage"}, separator=True, group=True)
 
 
-    for cls in classes:
-        bpy.utils.register_class(cls)
     scene = bpy.types.Scene
     scene.bapanel = PointerProperty(type=gui_batoms.BatomsProperties)
     scene.btpanel = PointerProperty(type=gui_batom.BatomProperties)
@@ -153,16 +173,21 @@ def register():
 
 
 def unregister():
+    
+    # class
+    for cls in classes:
+        bpy.utils.unregister_class(cls)
 
+    # menu
     bpy.types.TOPBAR_MT_file_import.remove(gui_io.menu_func_import_batoms)
-    bpy.types.VIEW3D_MT_add.remove(gui_view3d_mt_batoms_add.menu_func)
+    bpy.types.VIEW3D_MT_add.remove(view3d_mt_batoms_add.menu_func)
+
+    # tool
     bpy.utils.unregister_tool(gui_tool.AddMolecule)
     bpy.utils.unregister_tool(gui_tool.AddBulk)
     bpy.utils.unregister_tool(gui_tool.AddSurface)
     bpy.utils.unregister_tool(gui_tool.AddAtoms)
-
-    for cls in classes:
-        bpy.utils.unregister_class(cls)
+    bpy.utils.unregister_tool(gui_tool.MoleculeReplaceElement)
 
 
 if __name__ == "__main__":

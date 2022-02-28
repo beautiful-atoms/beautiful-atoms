@@ -21,6 +21,8 @@ class Protein():
         self.turns = turns
 
     def setting(self, datas):
+        if datas is None:
+            return
         if 'sheet' in datas:
             self.sheetsetting.from_dict(datas['sheet'])
         if 'helix' in datas:
