@@ -557,7 +557,7 @@ class Batoms(BaseCollection, ObjectGN):
         model_style = {'model_style': np.ones(
             len(self), dtype=int)*int(model_style)}
         self.set_attributes(model_style)
-        self.draw(model_style['model_style'], draw_isosurface=False)
+        self.draw()
         if self._boundary is not None:
             self.boundary.update()
 
@@ -1499,7 +1499,7 @@ class Batoms(BaseCollection, ObjectGN):
                                 )
         return image
 
-    def draw(self, model_style=None, draw_isosurface=True):
+    def draw(self, model_style = None, draw_isosurface=True):
         """
         Draw atoms, bonds, polyhedra, .
 
@@ -1508,6 +1508,8 @@ class Batoms(BaseCollection, ObjectGN):
         model_style: str
         draw_isosurface: bool
         """
+        if model_style is not None:
+            self.model_style = model_style
         # self.draw_cell()
         self.draw_space_filling()
         self.draw_ball_and_stick()
@@ -1519,12 +1521,16 @@ class Batoms(BaseCollection, ObjectGN):
         self.set_attribute_with_indices('scale', mask, scale)
 
     def draw_ball_and_stick(self, scale=0.4):
-        mask = np.where(self.model_style == 1, True, False)
+        mask = np.where(self.model_style >= 1, True, False)
+        if not mask.any():
+            return
         self.set_attribute_with_indices('scale', mask, scale)
         self.bonds.update()
 
     def draw_polyhedra(self, scale=0.4):
         mask = np.where(self.model_style == 2, True, False)
+        if not mask.any():
+            return
         self.polyhedras.update()
         self.set_attribute_with_indices('show', mask, True)
         if self.polyhedra_style == 0:
