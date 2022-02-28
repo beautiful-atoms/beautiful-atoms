@@ -79,15 +79,8 @@ class Bcell(ObjectGN):
         gn = modifier
         GroupInput = modifier.node_group.nodes.get('Group Input')
         GroupOutput = gn.node_group.nodes.get('Group Output')
-        JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
-                                         '%s_JoinGeometry' % self.label,
-                                         'GeometryNodeJoinGeometry')
-        gn.node_group.links.new(
-            JoinGeometry.outputs['Geometry'], GroupOutput.inputs['Geometry'])
         # ------------------------------------------------------------------
-        # calculate bond vector, length, rotation based on the index
-        # Get four positions from batoms, bond and the second bond
-        # for high order bond plane
+        # transfer first 4 positions of cell
         PositionCell = get_nodes_by_name(gn.node_group.nodes,
                                          '%s_PositionCell' % (self.label),
                                          'GeometryNodeInputPosition')
