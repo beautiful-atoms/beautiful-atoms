@@ -300,8 +300,11 @@ def install(
         origin = factory_python_source.readlink()
         os.unlink(factory_python_source)
         os.symlink(origin, factory_python_target)
-    else:
+    elif factory_python_source.is_dir():
         shutil.move(factory_python_source, factory_python_target)
+    else:
+        # source may not exist
+        pass
     print(
         f"Old python directory for blender moved to {factory_python_target.as_posix()}"
     )
