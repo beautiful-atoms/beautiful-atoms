@@ -149,7 +149,7 @@ class AddSurface(Operator):
     bl_description = ("Add surface")
 
     label: StringProperty(
-        name="Label", default='h2o',
+        name="Label", default='surf',
         description="Label")
     indices: IntVectorProperty(
         name="Miller indices", size=3, default=(1, 1, 1),
@@ -185,6 +185,41 @@ class AddSurface(Operator):
                                               termination=self.termination)
         batoms.hide = True
         label = batoms.label + ''.join(str(i) for i in self.indices)
+        atoms = atoms*self.size
+        batoms = Batoms(label=label, from_ase=atoms, movie=True)
+        batoms.translate([2, 2, 2])
+        return {'FINISHED'}
+
+
+
+class AddRootSurface(Operator):
+    @property
+    def selected_batoms(self):
+        return get_selected_batoms()
+    bl_idname = "batoms.add_root_surface"
+    bl_label = "Add root surface"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = ("Add root surface")
+
+    label: StringProperty(
+        name="Label", default='rootsurf',
+        description="Label")
+    root: IntProperty(name="root", min=1, soft_max=49, default=3)
+    size: IntVectorProperty(
+        name="Size", size=3, default=(1, 1, 1),
+        min=1, soft_max=10,
+        description="System size in units of the minimal unit cell.")
+
+    def execute(self, context):
+        from ase.build import root_surface
+        selected_batoms = self.selected_batoms
+        if len(selected_batoms) != 1:
+            raise Exception('Please select one structure')
+        batoms = Batoms(selected_batoms[0])
+        surf = batoms.as_ase()
+        atoms = root_surface(surf, self.root)
+        batoms.hide = True
+        label = batoms.label + '_root'
         atoms = atoms*self.size
         batoms = Batoms(label=label, from_ase=atoms, movie=True)
         batoms.translate([2, 2, 2])

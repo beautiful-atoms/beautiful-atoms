@@ -43,7 +43,7 @@ def molecule_replace_element(batoms, indices, element):
     Args:
         element (str): The target element
     """
-    positions = batoms.positions
+    positions = batoms.positions1
     bondlists = batoms.bonds.bondlists
     for i in indices:
         mol = elements[element]

@@ -922,7 +922,7 @@ class Batoms(BaseCollection, ObjectGN):
                     positions[i0:i1] += np.dot((m0, m1, m2), cell)
                     i0 = i1
                     n1 += 1
-        # self.add_vertices(attributes, positions[n:])
+        # self.add_arrays(arrays)
         # self.set_attributes(attributes)
         attributes.update({'positions': positions})
         self.set_arrays(attributes)
@@ -991,7 +991,7 @@ class Batoms(BaseCollection, ObjectGN):
         >>> slab = au111 + co
         todo: merge bonds setting
         """
-        # could also use self.add_vertices(other.positions)
+        # could also use self.add_arrays(other.positions)
         object_mode()
         # merge bondsetting
         self.bonds.setting.extend(other.bonds.setting)
@@ -1085,14 +1085,15 @@ class Batoms(BaseCollection, ObjectGN):
         # self.bonds.setting.add([(species[0], sp.name)])
         # self.polyhedrasetting.add([species[0]])
 
-    def add_vertices(self, positions, attributes):
-        """ Used to add small number of vertices
+    def add_atoms(self, arrays):
+        """ Used to add small number of atoms
         Todo: find a fast way.
         """
         from batoms.utils import local2global
         import bmesh
         object_mode()
         n0 = len(self)
+        positions = arrays.pop('positions')
         n1 = n0 + len(positions)
         # add positions
         positions = local2global(positions,
@@ -1106,18 +1107,18 @@ class Batoms(BaseCollection, ObjectGN):
         bm.to_mesh(self.obj.data)
         bm.clear()
         # add species
-        self.species.add(list(set(attributes['species'])))
-        self.set_attribute_with_indices('species', range(n0, n1), attributes['species'])
-        if 'species_index' not in attributes:
-            species_index = [string2Number(sp) for sp in attributes['species']]
+        self.species.add(list(set(arrays['species'])))
+        self.set_attribute_with_indices('species', range(n0, n1), arrays['species'])
+        if 'species_index' not in arrays:
+            species_index = [string2Number(sp) for sp in arrays['species']]
             self.set_attribute_with_indices('species_index',
                                         range(n0, n1),
                                         species_index)
-        # add attributes
-        if 'show' not in attributes:
+        # add arrays
+        if 'show' not in arrays:
             show = np.ones(n1 - n0)
             self.set_attribute_with_indices('show', range(n0, n1), show)
-        if 'scale' not in attributes:
+        if 'scale' not in arrays:
             scale = np.ones(n1 - n0)
             self.set_attribute_with_indices('scale', range(n0, n1), scale)
         # add bonds setting

@@ -31,6 +31,7 @@ class VIEW3D_MT_batoms_add(Menu):
         layout.operator("batoms.add_molecule", text="Molecule", icon='MESH_CUBE')
         layout.operator("batoms.add_bulk", text="Bulk", icon='MESH_CIRCLE')
         layout.operator("batoms.add_surface", text="Surface", icon='MESH_UVSPHERE')
+        layout.operator("batoms.add_root_surface", text="Root Surface", icon='MESH_UVSPHERE')
         
         layout.separator()
 
@@ -47,9 +48,19 @@ class VIEW3D_MT_surface_add(Menu):
 
         layout.operator_context = 'INVOKE_REGION_WIN'
 
-        layout.operator("surface.fcc100", text="FCC100", icon='MESH_PLANE')
-        layout.operator("surface.fcc110", text="FCC110", icon='MESH_PLANE')
-        layout.operator("surface.fcc111", text="FCC111", icon='MESH_PLANE')
+        layout.operator("surface.fcc100", text="fcc100", icon='MESH_PLANE')
+        layout.operator("surface.fcc110", text="fcc110", icon='MESH_PLANE')
+        layout.operator("surface.fcc111", text="fcc111", icon='MESH_PLANE')
+        layout.operator("surface.fcc111_root", text="fcc111_root", icon='MESH_PLANE')
+        layout.separator()
+        layout.operator("surface.bcc100", text="bcc100", icon='MESH_PLANE')
+        layout.operator("surface.bcc110", text="bcc110", icon='MESH_PLANE')
+        layout.operator("surface.bcc111", text="bcc111", icon='MESH_PLANE')
+        layout.operator("surface.bcc111", text="bcc111_root", icon='MESH_PLANE')
+        layout.separator()
+        layout.operator("surface.hcp0001", text="hcp0001", icon='MESH_PLANE')
+        layout.operator("surface.hcp0001", text="hcp0001_root", icon='MESH_PLANE')
+        
 
 
 
