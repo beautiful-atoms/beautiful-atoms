@@ -186,8 +186,8 @@ class Bonds(ObjectGN):
         modifier.node_group.name = name
         # ------------------------------------------------------------------
         inputs = modifier.node_group.inputs
-        GroupInput = modifier.node_group.nodes.get('Group Input')
-        GroupOutput = modifier.node_group.nodes.get('Group Output')
+        GroupInput = modifier.node_group.nodes[0]
+        GroupOutput = modifier.node_group.nodes[1]
         # add new output sockets
         for att in default_GroupInput:
             GroupInput.outputs.new(type=att[1], name=att[0])
@@ -380,7 +380,7 @@ class Bonds(ObjectGN):
             gn.node_group.links.new(
                 GroupInput.outputs[7], CompareOrder.inputs[0])
         # style
-        for style in [0, 1, 2]:
+        for style in [0, 1, 2, 3]:
             CompareStyle = get_nodes_by_name(gn.node_group.nodes,
                                              'CompareFloats_%s_%s_style' % (
                                                  self.label, style),
@@ -416,7 +416,7 @@ class Bonds(ObjectGN):
         from batoms.utils.butils import get_nodes_by_name
         # tstart = time()
         gn = self.gnodes
-        GroupInput = gn.node_group.nodes.get('Group Input')
+        GroupInput = gn.node_group.nodes[0]
         SetPosition = get_nodes_by_name(gn.node_group.nodes,
                                         '%s_SetPosition' % self.label)
         JoinGeometry = get_nodes_by_name(gn.node_group.nodes,

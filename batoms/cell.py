@@ -82,8 +82,8 @@ class Bcell(ObjectGN):
         # ------------------------------------------------------------------
         # select attributes
         gn = modifier
-        GroupInput = modifier.node_group.nodes.get('Group Input')
-        GroupOutput = gn.node_group.nodes.get('Group Output')
+        GroupInput = modifier.node_group.nodes[0]
+        GroupOutput = gn.node_group.nodes[1]
         JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
                                          '%s_JoinGeometry' % self.label,
                                          'GeometryNodeJoinGeometry')
