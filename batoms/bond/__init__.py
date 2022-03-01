@@ -519,6 +519,20 @@ class Bonds(ObjectGN):
         gn.node_group.links.new(InstanceOnPoint.outputs['Instances'],
                                 JoinGeometry.inputs['Geometry'])
         # print('Add geometry nodes for bonds: %s'%(time() - tstart))
+    
+    def update_geometry_node_instancer(self, sp):
+        #
+        from batoms.utils.butils import get_nodes_by_name
+        gn = self.gnodes
+        order = sp['order']
+        style = int(sp['style'])
+        name = '%s_%s_%s_%s' % (self.label, sp["name"], order, style)
+        ObjectInstancer = get_nodes_by_name(gn.node_group.nodes,
+                                            'ObjectInfo_%s' % name,
+                                            'GeometryNodeObjectInfo')
+        if ObjectInstancer is not None:
+            ObjectInstancer.inputs['Object'].default_value = \
+                self.setting.instancers[sp["name"]]['%s_%s' % (order, style)]
 
     def update(self, ):
         """

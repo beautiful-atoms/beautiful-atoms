@@ -1122,6 +1122,22 @@ class Batoms(BaseCollection, ObjectGN):
             scale = np.ones(n1 - n0)
             self.set_attribute_with_indices('scale', range(n0, n1), scale)
         # add bonds setting
+        bond_dicts = self.bonds.setting.as_dict()
+        species0 = self.species.keys()
+        species1 = np.unique(arrays['species'])
+        for sp1 in species1:
+            for sp0 in species0:
+                pair1 = (sp1, sp0)
+                pair2 = (sp0, sp1)
+                if pair1 not in bond_dicts and pair2 not in bond_dicts:
+                    self.bonds.setting.add(pair1)
+                    sp3 = self.bonds.setting.find(pair1)
+                    sp4 = self.bonds.setting.find(pair2)
+                    if sp3:
+                        self.bonds.update_geometry_node_instancer(sp3.as_dict())
+                    if sp4:
+                        self.bonds.update_geometry_node_instancer(sp4.as_dict())
+
 
     def get_cell(self):
         if self.label not in bpy.data.collections:

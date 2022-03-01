@@ -116,23 +116,23 @@ class MoleculeReplaceElement(WorkSpaceTool):
     bl_space_type = "VIEW_3D"
     bl_context_mode = "EDIT_MESH" # "OBJECT" or "EDIT_MESH"
 
-    bl_idname = "batoms.molecule_replace_element"
-    bl_label = "Add molecule"
+    bl_idname = "batoms.replace_atoms"
+    bl_label = "Replace atoms"
     bl_description = (
         "Create an molecule structure from a database."
     )
     # bl_icon = "ops.generic.select_circle"
-    bl_icon = "batoms_molecule_replace_element"
+    bl_icon = "batoms_add_molecule"
     bl_widget = None
     # TODO: get error using -b -P: 'NoneType' object has no attribute 'keymaps'
     # We need to register the keymap
     # look at this: https://github.com/nortikin/sverchok/issues/742
-    # bl_keymap = (
-    #     ("batoms.molecule_replace_element", {"type": "LEFTMOUSE", "value": "PRESS"},
-    #      {"properties": []}),
-    #     ("batoms.molecule_replace_element", {"type": "LEFTMOUSE", "value": "PRESS", "ctrl": True},
-    #      {"properties": []}),
-    # )
+    bl_keymap = (
+        ("batoms.molecule_replace_element", {"type": "RIGHTMOUSE", "value": "PRESS"},
+         {"properties": []}),
+        # ("batoms.molecule_replace_element", {"type": "LEFTMOUSE", "value": "PRESS", "ctrl": True},
+        #  {"properties": []}),
+    )
 
     def draw_settings(context, layout, tool):
         props = tool.operator_properties("batoms.molecule_replace_element")

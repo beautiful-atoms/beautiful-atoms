@@ -43,7 +43,11 @@ from .ops import (build_object,
     transform
     )
 
-from .modal import record_selection, rigid_body, force_field
+from .modal import (record_selection,
+            rigid_body,
+            force_field,
+            replace_atoms,
+            )
 
 # Register
 
@@ -88,6 +92,7 @@ classes = [
     build_nanoparticle.BuildIcosahedron,
     build_nanoparticle.BuildOctahedron,
     build_edit_molecule.MolecueReplaceElement,
+    replace_atoms.EDIT_MESH_OT_replace_atoms,
     transform.ApplyCell,
     transform.ApplyTransform,
     transform.ApplyBoundary,

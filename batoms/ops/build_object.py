@@ -46,7 +46,7 @@ class AddMolecule(Operator):
     bl_description = ("Add molecule")
 
     formula: StringProperty(
-        name="Formula", default='H2O',
+        name="Formula", default='CH4',
         description="formula")
     label: StringProperty(
         name="Label", default='',

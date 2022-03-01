@@ -433,10 +433,10 @@ class BondSettings(Setting):
                 sp: self.batoms.species.species_props[sp] for sp in bondpair}
             maxlength = species[bondpair[0]]['radius'] + \
                 species[bondpair[1]]['radius']
-            self[bondpair] = {'max': maxlength*self.cutoff,
-                              'color1': species[bondpair[0]]['color'],
-                              'color2': species[bondpair[1]]['color'],
-                              }
+            # self[bondpair] = {'max': maxlength*self.cutoff,
+            #                   'color1': species[bondpair[0]]['color'],
+            #                   'color2': species[bondpair[1]]['color'],
+            #                   }
             self.set_default(species)
 
     def copy(self, label):
@@ -574,11 +574,11 @@ def get_bondtable(label, speciesdict, cutoff=1.3,
                 'style': '1',
             }
     # special for hydrogen bond
-    hbs = [('H', 'O'), ('H', 'N')]
+    hbs = [('H', 'O'), ('H', 'N'), ('H', 'C')]
     for pair in bondtable:
         key = (pair[0].split('_')[0], pair[1].split('_')[0])
         if key in hbs:
-            bondtable[pair]['min'] = 1.2
+            bondtable[pair]['min'] = 1.5
             bondtable[pair]['max'] = 2.1
             bondtable[pair]['search'] = 0
             bondtable[pair]['color1'] = [0.1, 0.1, 0.1, 1.0]
