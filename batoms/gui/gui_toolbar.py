@@ -2,7 +2,6 @@
 Adds an object mode tool to the toolbar.
 """
 
-import bpy
 from bpy.types import WorkSpaceTool
 import os
 
@@ -21,13 +20,7 @@ class AddAtoms(WorkSpaceTool):
     bl_icon = "ops.generic.select_circle"
     # bl_icon = os.path.join("../icons" , "add_atoms")
     bl_widget = None
-    # bl_keymap = (
-    #     ("batoms.add_atoms", {"type": 'LEFTMOUSE', "value": 'PRESS'},
-    #      {"properties": []}),
-    #     ("batoms.add_atoms", {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True},
-    #      {"properties": []}),
-    # )
-
+    
     def draw_settings(context, layout, tool):
         props = tool.operator_properties("batoms.add_atoms")
         layout.prop(props, "formula")
@@ -46,13 +39,7 @@ class AddMolecule(WorkSpaceTool):
     # bl_icon = "ops.generic.select_circle"
     bl_icon = "batoms_add_molecule"
     bl_widget = None
-    # bl_keymap = (
-    #     ("batoms.add_molecule", {"type": 'LEFTMOUSE', "value": 'PRESS'},
-    #      {"properties": []}),
-    #     ("batoms.add_molecule", {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True},
-    #      {"properties": []}),
-    # )
-
+    
     def draw_settings(context, layout, tool):
         props = tool.operator_properties("batoms.add_molecule")
         layout.prop(props, "formula")
@@ -70,11 +57,6 @@ class AddBulk(WorkSpaceTool):
     )
     bl_icon = "ops.generic.select_lasso"
     bl_widget = None
-    # bl_keymap = (
-    #     ("batoms.add_bulk", {"type": 'LEFTMOUSE', "value": 'PRESS'}, None),
-    #     ("batoms.add_bulk", {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True},
-    #      {"properties": []}),
-    # )
 
     def draw_settings(context, layout, tool):
         props = tool.operator_properties("batoms.add_bulk")
@@ -92,14 +74,6 @@ class AddSurface(WorkSpaceTool):
         "Create an surface structure from a bulk."
     )
     bl_icon = "ops.transform.translate"
-    # bl_widget="VIEW3D_GGT_tool_generic_handle_free"
-    # bl_widget_properties=[
-    # ("radius", 75.0),
-    # ("backdrop_fill_alpha", 0.0),
-    # ]
-    # bl_keymap = (
-    #     ("batoms.add_surface", {"type": 'LEFTMOUSE', "value": 'PRESS'}, None),
-    # )
 
     def draw_settings(context, layout, tool):
         props = tool.operator_properties("batoms.add_surface")
@@ -112,29 +86,43 @@ class AddSurface(WorkSpaceTool):
 
 
 
-class MoleculeReplaceElement(WorkSpaceTool):
+class MoleculeEditElement(WorkSpaceTool):
     bl_space_type = "VIEW_3D"
     bl_context_mode = "EDIT_MESH" # "OBJECT" or "EDIT_MESH"
 
-    bl_idname = "batoms.replace_atoms"
-    bl_label = "Replace atoms"
+    bl_idname = "batoms.molecule_edit_atom"
+    bl_label = "Edit atoms"
     bl_description = (
         "Create an molecule structure from a database."
     )
     # bl_icon = "ops.generic.select_circle"
     bl_icon = "batoms_add_molecule"
     bl_widget = None
-    # TODO: get error using -b -P: 'NoneType' object has no attribute 'keymaps'
-    # We need to register the keymap
-    # look at this: https://github.com/nortikin/sverchok/issues/742
-    bl_keymap = (
-        ("batoms.molecule_replace_element", {"type": "RIGHTMOUSE", "value": "PRESS"},
-         {"properties": []}),
-        # ("batoms.molecule_replace_element", {"type": "LEFTMOUSE", "value": "PRESS", "ctrl": True},
-        #  {"properties": []}),
-    )
+    
 
     def draw_settings(context, layout, tool):
-        props = tool.operator_properties("batoms.molecule_replace_element")
+        props = tool.operator_properties("batoms.molecule_edit_atom")
         layout.prop(props, "element")
         layout.prop(props, "bond_order")
+
+
+class MolecueEditBond(WorkSpaceTool):
+    bl_space_type = "VIEW_3D"
+    bl_context_mode = "EDIT_MESH" # "OBJECT" or "EDIT_MESH"
+
+    bl_idname = "batoms.molecule_edit_bond"
+    bl_label = "Edit bond"
+    bl_description = (
+        "Create an molecule structure from a database."
+    )
+    # bl_icon = "ops.generic.select_circle"
+    bl_icon = "batoms_add_molecule"
+    bl_widget = None
+    
+
+    def draw_settings(context, layout, tool):
+        props = tool.operator_properties("batoms.molecule_edit_bond")
+        layout.prop(props, "order")
+        layout.prop(props, "rotate")
+        layout.prop(props, "hydrogen")
+

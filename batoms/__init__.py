@@ -21,6 +21,7 @@ from .gui import (
     gui_io,
     gui_batoms,
     gui_batom,
+    gui_toolbar,
     gui_volume,
     gui_cell,
     gui_bond,
@@ -31,15 +32,16 @@ from .gui import (
     gui_pymatgen,
     gui_pubchem,
     gui_rscb,
-    gui_tool,
     view3d_mt_batoms_add,
 )
 
-from .ops import (build_object, 
-    build_surface, 
-    build_nanotube,
-    build_nanoparticle,
-    build_edit_molecule, 
+from .ops import (add_nanoparticle,
+    add_nanotube,
+    add_nanoribbon,
+    add_object,
+    add_surface,
+    molecule_edit_atom,
+    molecule_edit_bond,
     transform
     )
 
@@ -71,27 +73,29 @@ classes = [
     custom_property.Bmssetting,
     custom_property.Batoms_coll,
     custom_property.Batoms_obj,
-    build_object.AddMolecule,
-    build_object.AddBulk,
-    build_object.AddAtoms,
-    build_object.AddSurface,
-    build_object.AddRootSurface,
-    build_object.deleteBatoms,
-    build_surface.BuildSurfaceFCC100,
-    build_surface.BuildSurfaceFCC110,
-    build_surface.BuildSurfaceFCC111,
-    build_surface.BuildSurfaceFCC111Root,
-    build_surface.BuildSurfaceBCC100,
-    build_surface.BuildSurfaceBCC110,
-    build_surface.BuildSurfaceBCC111,
-    build_surface.BuildSurfaceBCC111Root,
-    build_surface.BuildSurfaceHCP0001,
-    build_surface.BuildSurfaceHCP0001Root,
-    build_nanotube.BuildNanotube,
-    build_nanoparticle.BuildDecahedron,
-    build_nanoparticle.BuildIcosahedron,
-    build_nanoparticle.BuildOctahedron,
-    build_edit_molecule.MolecueReplaceElement,
+    add_object.AddMolecule,
+    add_object.AddBulk,
+    add_object.AddAtoms,
+    add_object.AddSurface,
+    add_object.AddRootSurface,
+    add_object.deleteBatoms,
+    add_surface.BuildSurfaceFCC100,
+    add_surface.BuildSurfaceFCC110,
+    add_surface.BuildSurfaceFCC111,
+    add_surface.BuildSurfaceFCC111Root,
+    add_surface.BuildSurfaceBCC100,
+    add_surface.BuildSurfaceBCC110,
+    add_surface.BuildSurfaceBCC111,
+    add_surface.BuildSurfaceBCC111Root,
+    add_surface.BuildSurfaceHCP0001,
+    add_surface.BuildSurfaceHCP0001Root,
+    add_nanotube.BuildNanotube,
+    add_nanoribbon.BuildNanoribbon,
+    add_nanoparticle.BuildDecahedron,
+    add_nanoparticle.BuildIcosahedron,
+    add_nanoparticle.BuildOctahedron,
+    molecule_edit_atom.MolecueEditElement,
+    molecule_edit_bond.MolecueEditBond,
     replace_atoms.EDIT_MESH_OT_replace_atoms,
     transform.ApplyCell,
     transform.ApplyTransform,
@@ -145,6 +149,7 @@ classes = [
     view3d_mt_batoms_add.VIEW3D_MT_nanoparticle_add,
 ]
 #
+addon_keymaps = []
 
 
 def register():
@@ -158,12 +163,26 @@ def register():
     bpy.types.VIEW3D_MT_add.prepend(view3d_mt_batoms_add.menu_func)
 
     # tool
-    bpy.utils.register_tool(gui_tool.AddMolecule, after={"builtin.scale_cage"}, separator=True, group=True)
-    bpy.utils.register_tool(gui_tool.AddBulk, after={gui_tool.AddMolecule.bl_idname})
-    bpy.utils.register_tool(gui_tool.AddSurface, after={gui_tool.AddBulk.bl_idname})
-    bpy.utils.register_tool(gui_tool.AddAtoms, after={gui_tool.AddSurface.bl_idname})
-    bpy.utils.register_tool(gui_tool.MoleculeReplaceElement, after={"builtin.scale_cage"}, separator=True, group=True)
+    bpy.utils.register_tool(gui_toolbar.AddMolecule, after={"builtin.scale_cage"}, separator=True, group=True)
+    bpy.utils.register_tool(gui_toolbar.AddBulk, after={gui_toolbar.AddMolecule.bl_idname})
+    bpy.utils.register_tool(gui_toolbar.AddSurface, after={gui_toolbar.AddBulk.bl_idname})
+    bpy.utils.register_tool(gui_toolbar.AddAtoms, after={gui_toolbar.AddSurface.bl_idname})
+    bpy.utils.register_tool(gui_toolbar.MoleculeEditElement,
+        after={"builtin.scale_cage"}, separator=True, group=True)
+    bpy.utils.register_tool(gui_toolbar.MolecueEditBond,
+        after={gui_toolbar.MoleculeEditElement.bl_idname}, separator=True, group=True)
 
+    # handle the keymap
+    wm = bpy.context.window_manager
+    # Note that in background mode (no GUI available), keyconfigs are not available either,
+    # so we have to check this to avoid nasty errors in background case.
+    kc = wm.keyconfigs.addon
+    if kc:
+        km = wm.keyconfigs.addon.keymaps.new(name='Object Mode', space_type='EMPTY')
+        kmi = km.keymap_items.new(gui_toolbar.MoleculeEditElement.bl_idname,
+                'RIGHTMOUSE', 'PRESS',
+                )
+        addon_keymaps.append((km, kmi))
 
     scene = bpy.types.Scene
     scene.bapanel = PointerProperty(type=gui_batoms.BatomsProperties)
@@ -196,11 +215,12 @@ def unregister():
     bpy.types.VIEW3D_MT_add.remove(view3d_mt_batoms_add.menu_func)
 
     # tool
-    bpy.utils.unregister_tool(gui_tool.AddMolecule)
-    bpy.utils.unregister_tool(gui_tool.AddBulk)
-    bpy.utils.unregister_tool(gui_tool.AddSurface)
-    bpy.utils.unregister_tool(gui_tool.AddAtoms)
-    bpy.utils.unregister_tool(gui_tool.MoleculeReplaceElement)
+    bpy.utils.unregister_tool(gui_toolbar.AddMolecule)
+    bpy.utils.unregister_tool(gui_toolbar.AddBulk)
+    bpy.utils.unregister_tool(gui_toolbar.AddSurface)
+    bpy.utils.unregister_tool(gui_toolbar.AddAtoms)
+    bpy.utils.unregister_tool(gui_toolbar.MoleculeEditElement)
+    bpy.utils.unregister_tool(gui_toolbar.MolecueEditBond)
 
 
 if __name__ == "__main__":
