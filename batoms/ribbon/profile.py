@@ -1,6 +1,5 @@
 import numpy as np
 from math import pi
-import matplotlib.pyplot as plt
 from time import time
 
 
@@ -68,6 +67,7 @@ def build_mesh(vertices, normals, sides, profile, scales=None):
 
 
 if __name__ == "__main__":
+    import matplotlib.pyplot as plt
     # profile = ellipse(16, 1, 1)
     profile = rectangle(1, 1)
     plt.plot(profile[:, 0], profile[:, 1])
