@@ -5,6 +5,7 @@ https://wiki.fysik.dtu.dk/ase/ase/cluster/cluster.html?highlight=cluster#module-
 
 import bpy
 from bpy.types import Operator
+from bpy_extras.object_utils import AddObjectHelper
 from bpy.props import (StringProperty,
                        IntProperty,
                        IntVectorProperty,
@@ -17,8 +18,8 @@ from ase.cluster.cubic import FaceCenteredCubic, BodyCenteredCubic, SimpleCubic
 from batoms import Batoms
 
 
-class BuildDecahedron(Operator):
-    bl_idname = "nanoparticle.decahedron"
+class BuildDecahedron(Operator, AddObjectHelper):
+    bl_idname = "nano.decahedron_add"
     bl_label = "Add Decahedron"
     bl_options = {'REGISTER', 'UNDO'}
     bl_description = ("Add decahedron")
@@ -66,8 +67,8 @@ class BuildDecahedron(Operator):
         return {'FINISHED'}
 
 
-class BuildIcosahedron(Operator):
-    bl_idname = "nanoparticle.icosahedron"
+class BuildIcosahedron(Operator, AddObjectHelper):
+    bl_idname = "nano.icosahedron_add"
     bl_label = "Add Icosahedron"
     bl_options = {'REGISTER', 'UNDO'}
     bl_description = ("Add Icosahedron")
@@ -103,8 +104,8 @@ class BuildIcosahedron(Operator):
         return {'FINISHED'}
 
 
-class BuildOctahedron(Operator):
-    bl_idname = "nanoparticle.octahedron"
+class BuildOctahedron(Operator, AddObjectHelper):
+    bl_idname = "nano.octahedron_add"
     bl_label = "Add Octahedron"
     bl_options = {'REGISTER', 'UNDO'}
     bl_description = ("Add Octahedron")

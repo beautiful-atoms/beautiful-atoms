@@ -4,6 +4,7 @@ https://wiki.fysik.dtu.dk/ase/ase/build/build.html?highlight=nanotube#
 """
 import bpy
 from bpy.types import Operator
+from bpy_extras.object_utils import AddObjectHelper
 from bpy.props import (StringProperty,
                        IntProperty,
                        IntVectorProperty,
@@ -17,40 +18,19 @@ from batoms.utils.butils import get_selected_batoms
 from batoms import Batoms
 
 
-class deleteBatoms(Operator):
-    bl_idname = "batoms.delete"
-    bl_label = "Delete batoms"
-    bl_description = ("Delete batoms")
-
-    label: StringProperty(
-        name="Label", default='',
-        description="Label")
-
-    def execute(self, context):
-        from batoms.utils.butils import remove_collection, read_batoms_list
-        if self.label != '':
-            coll = bpy.data.collections.get(self.label)
-            remove_collection(self.label)
-        else:
-            batoms_list = read_batoms_list()
-            for label in batoms_list:
-                coll = bpy.data.collections.get(label)
-                remove_collection(label)
-        return {'FINISHED'}
-
-
-class AddMolecule(Operator):
-    bl_idname = "batoms.add_molecule"
+class AddMolecule(Operator, AddObjectHelper):
+    bl_idname = "batoms.molecule_add"
     bl_label = "Add molecule"
     bl_options = {'REGISTER', 'UNDO'}
     bl_description = ("Add molecule")
 
-    formula: StringProperty(
-        name="Formula", default='CH4',
-        description="formula")
     label: StringProperty(
         name="Label", default='',
         description="Label")
+
+    formula: StringProperty(
+        name="Formula", default='CH4',
+        description="formula")
 
     def execute(self, context):
         if self.label == '':
@@ -60,19 +40,19 @@ class AddMolecule(Operator):
         return {'FINISHED'}
 
 
-class AddBulk(Operator):
-    bl_idname = "batoms.add_bulk"
+class AddBulk(Operator, AddObjectHelper):
+    bl_idname = "batoms.bulk_add"
     bl_label = "Add bulk"
     bl_options = {'REGISTER', 'UNDO'}
     bl_description = ("Add bulk")
 
-    formula: StringProperty(
-        name="Formula", default='Au',
-        description="formula")
-
     label: StringProperty(
         name="Label", default='',
         description="Label")
+
+    formula: StringProperty(
+        name="Formula", default='Au',
+        description="formula")
 
     crystalstructure: StringProperty(
         name="Crystalstructure", default='',
@@ -120,30 +100,33 @@ class AddBulk(Operator):
         return {'FINISHED'}
 
 
-class AddAtoms(Operator):
-    bl_idname = "batoms.add_atoms"
+class AddAtoms(Operator, AddObjectHelper):
+    bl_idname = "batoms.atoms_add"
     bl_label = "Add atoms"
     bl_options = {'REGISTER', 'UNDO'}
     bl_description = ("Add atoms")
 
-    formula: StringProperty(
-        name="Formula", default='H',
-        description="formula")
     label: StringProperty(
-        name="Label", default='h',
+        name="Label", default='',
         description="Label")
 
+    formula: StringProperty(
+        name="Formula", default='C',
+        description="formula")
+
     def execute(self, context):
+        if self.label == '':
+            self.label = self.formula
         atoms = Atoms(self.formula)
         Batoms(label=self.label, from_ase=atoms)
         return {'FINISHED'}
 
 
-class AddSurface(Operator):
+class AddSurface(Operator, AddObjectHelper):
     @property
     def selected_batoms(self):
         return get_selected_batoms()
-    bl_idname = "batoms.add_surface"
+    bl_idname = "batoms.surface_add"
     bl_label = "Add surface"
     bl_options = {'REGISTER', 'UNDO'}
     bl_description = ("Add surface")
@@ -151,19 +134,24 @@ class AddSurface(Operator):
     label: StringProperty(
         name="Label", default='surf',
         description="Label")
+
     indices: IntVectorProperty(
         name="Miller indices", size=3, default=(1, 1, 1),
         soft_min=-10, soft_max=10,
         description="Miller indices for the plane")
+
     size: IntVectorProperty(
         name="Size", size=3, default=(1, 1, 1),
         min=1, soft_max=10,
         description="System size in units of the minimal unit cell.")
+
     vacuum: FloatProperty(
         name="vacuum", default=5.0,
         min=0, soft_max=15,
         description="vacuum")
+
     nlayer: IntProperty(name="layers", min=1, soft_max=10, default=4)
+
     termination: StringProperty(
         name="termination", default='',
         description="termination")
@@ -185,18 +173,18 @@ class AddSurface(Operator):
                                               termination=self.termination)
         batoms.hide = True
         label = batoms.label + ''.join(str(i) for i in self.indices)
-        atoms = atoms*self.size
         batoms = Batoms(label=label, from_ase=atoms, movie=True)
+        batoms = batoms*self.size
         batoms.translate([2, 2, 2])
         return {'FINISHED'}
 
 
 
-class AddRootSurface(Operator):
+class AddRootSurface(Operator, AddObjectHelper):
     @property
     def selected_batoms(self):
         return get_selected_batoms()
-    bl_idname = "batoms.add_root_surface"
+    bl_idname = "batoms.root_surface_add"
     bl_label = "Add root surface"
     bl_options = {'REGISTER', 'UNDO'}
     bl_description = ("Add root surface")
@@ -204,7 +192,9 @@ class AddRootSurface(Operator):
     label: StringProperty(
         name="Label", default='rootsurf',
         description="Label")
+        
     root: IntProperty(name="root", min=1, soft_max=49, default=3)
+
     size: IntVectorProperty(
         name="Size", size=3, default=(1, 1, 1),
         min=1, soft_max=10,

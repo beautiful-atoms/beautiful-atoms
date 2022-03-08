@@ -1,8 +1,10 @@
 import bpy
 from bpy.types import Operator
+from bpy_extras.object_utils import AddObjectHelper
 from bpy.props import (StringProperty,
                        IntProperty,
                        )
+import bmesh                    
 from batoms import Batoms
 from ase import Atoms
 from ase.build.rotate import rotation_matrix_from_points
@@ -40,7 +42,7 @@ molecules = {
 }
 
 
-def replace_atoms(batoms, indices, element):
+def edit_atom(batoms, indices, element):
     """Replace by element
 
     Args:
@@ -133,11 +135,11 @@ def replace_atoms(batoms, indices, element):
     batoms.model_style = 1
 
 
-class MolecueReplaceElement(Operator):
-    bl_idname = "batoms.molecule_replace_element"
-    bl_label = "Add Element"
+class MolecueEditElement(Operator, AddObjectHelper):
+    bl_idname = "batoms.molecule_edit_atom"
+    bl_label = "Edit Atoms"
     bl_options = {'REGISTER', 'UNDO'}
-    bl_description = ("Add Element")
+    bl_description = ("Edit Atoms")
 
     element: StringProperty(
         name="Element", default='C',
@@ -146,20 +148,23 @@ class MolecueReplaceElement(Operator):
         name="Bond order", default=1,
         description="bond order")
 
+    @classmethod
+    def poll(cls, context):
+        return context.mode in {'EDIT_MESH'}
+
     def execute(self, context):
         obj = context.object
         if not obj.batoms.flag:
             print('Please select a Batom.')
             return {'FINISHED'}
-        batoms = Batoms(label=obj.batoms.label)
-        batoms.model_style = 1
-        bpy.context.view_layer.objects.active = batoms.obj
-        bpy.ops.object.mode_set(mode='OBJECT')
-        bpy.ops.object.mode_set(mode='EDIT')
-        count = len(obj.data.vertices)
-        sel = np.zeros(count, dtype=np.bool)
-        obj.data.vertices.foreach_get('select', sel)
-        indices = list(np.where(sel)[0])
-        print(indices)
-        replace_atoms(batoms, indices, self.element)
+        data = obj.data
+        if data.total_vert_sel > 0:
+            bm = bmesh.from_edit_mesh(data)
+            indices = [s.index for s in bm.select_history
+                if isinstance(s, bmesh.types.BMVert)]
+            self.report({'INFO'}, '%s atoms were replaced'%len(indices))
+            batoms = Batoms(label=obj.batoms.label)
+            edit_atom(batoms, indices, self.element)
+            bpy.context.view_layer.objects.active = batoms.obj
+            bpy.ops.object.mode_set(mode='EDIT')
         return {'FINISHED'}

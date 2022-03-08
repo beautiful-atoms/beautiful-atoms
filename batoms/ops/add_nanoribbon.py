@@ -5,6 +5,7 @@ https://wiki.fysik.dtu.dk/ase/ase/build/build.html?highlight=Nanoribbon#ase.buil
 
 import bpy
 from bpy.types import Operator
+from bpy_extras.object_utils import AddObjectHelper
 from bpy.props import (StringProperty,
                        IntProperty,
                        IntVectorProperty,
@@ -16,19 +17,19 @@ from ase.build import graphene_nanoribbon
 from batoms import Batoms
 
 
-class BuildNanoribbon(Operator):
+class BuildNanoribbon(Operator, AddObjectHelper):
     bl_idname = "nano.nanoribbon_add"
     bl_label = "Add Nanoribbon"
     bl_options = {'REGISTER', 'UNDO'}
     bl_description = ("Add Nanoribbon")
 
-    type: StringProperty(
-        name="Symbol", default='zigzag',
-        description=("The orientation of the ribbon. Must be either ‘zigzag’ or ‘armchair’."))
+    label: StringProperty(
+        name="Label", default='graphene',
+        description="Label")
 
-    symbol: StringProperty(
-        name="Symbol", default='C',
-        description="The chemical symbol of the element to use.")
+    type: StringProperty(
+        name="Type", default='zigzag',
+        description=("The orientation of the ribbon. Must be either ‘zigzag’ or ‘armchair’."))
 
     n: IntProperty(
         name="n", default=3,
@@ -37,13 +38,8 @@ class BuildNanoribbon(Operator):
 
     m: IntProperty(
         name="m", default=6,
-        min=0, soft_max=20,
+        min=1, soft_max=20,
         description="The length of the nanoribbon.")
-
-    bond: FloatProperty(
-        name="bond", default=1.4,
-        min=0, soft_max=15,
-        description="bond")
 
     C_H: FloatProperty(
         name="C_H", default=1.09,
@@ -84,10 +80,6 @@ class BuildNanoribbon(Operator):
     saturate_element: StringProperty(
         name="Saturate_element", default='H',
         description="saturate_element")
-
-    label: StringProperty(
-        name="Label", default='graphene',
-        description="Label")
 
     def execute(self, context):
         atoms = graphene_nanoribbon(

@@ -26,7 +26,6 @@ from .gui import (
     gui_cell,
     gui_bond,
     gui_polyhedra,
-    gui_ase,
     gui_plane,
     gui_render,
     gui_pymatgen,
@@ -48,7 +47,6 @@ from .ops import (add_nanoparticle,
 from .modal import (record_selection,
             rigid_body,
             force_field,
-            replace_atoms,
             )
 
 # Register
@@ -82,13 +80,17 @@ classes = [
     add_surface.BuildSurfaceFCC100,
     add_surface.BuildSurfaceFCC110,
     add_surface.BuildSurfaceFCC111,
+    add_surface.BuildSurfaceFCC211,
     add_surface.BuildSurfaceFCC111Root,
     add_surface.BuildSurfaceBCC100,
     add_surface.BuildSurfaceBCC110,
     add_surface.BuildSurfaceBCC111,
     add_surface.BuildSurfaceBCC111Root,
     add_surface.BuildSurfaceHCP0001,
+    add_surface.BuildSurfaceHCP10m10,
     add_surface.BuildSurfaceHCP0001Root,
+    add_surface.BuildSurfaceDiamond100,
+    add_surface.BuildSurfaceDiamond111,
     add_nanotube.BuildNanotube,
     add_nanoribbon.BuildNanoribbon,
     add_nanoparticle.BuildDecahedron,
@@ -96,7 +98,6 @@ classes = [
     add_nanoparticle.BuildOctahedron,
     molecule_edit_atom.MolecueEditElement,
     molecule_edit_bond.MolecueEditBond,
-    replace_atoms.EDIT_MESH_OT_replace_atoms,
     transform.ApplyCell,
     transform.ApplyTransform,
     transform.ApplyBoundary,
@@ -125,8 +126,6 @@ classes = [
     gui_render.Render_PT_prepare,
     gui_render.RenderProperties,
     gui_render.AddButton,
-    gui_ase.ASE_PT_prepare,
-    gui_ase.ASEProperties,
     gui_pymatgen.Pymatgen_PT_prepare,
     gui_pymatgen.PymatgenProperties,
     gui_pymatgen.Search,
@@ -195,7 +194,6 @@ def register():
     scene.vopanel = PointerProperty(type=gui_volume.VolumeProperties)
     scene.rbpanel = PointerProperty(type=rigid_body.RigidBodyProperties)
     scene.ffpanel = PointerProperty(type=force_field.ForceFieldProperties)
-    scene.asepanel = PointerProperty(type=gui_ase.ASEProperties)
     scene.pmgpanel = PointerProperty(type=gui_pymatgen.PymatgenProperties)
     scene.pubcpanel = PointerProperty(type=gui_pubchem.PubchemProperties)
     Collection.batoms = PointerProperty(name='Batoms',

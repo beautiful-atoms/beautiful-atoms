@@ -154,6 +154,8 @@ class Bonds(ObjectGN):
                 name=attribute[0], type=attribute[1], domain='POINT')
         self.setting.coll.objects.link(obj)
         obj.parent = self.batoms.obj
+        obj.batoms.bbond.flag = True
+        obj.batoms.bbond.label = self.batoms.label
         #
         offsets = [offsets1, offsets2, offsets3, offsets4]
         for i in range(4):
