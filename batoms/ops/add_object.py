@@ -18,7 +18,28 @@ from batoms.utils.butils import get_selected_batoms
 from batoms import Batoms
 
 
-class AddMolecule(Operator, AddObjectHelper):
+class deleteBatoms(Operator):
+    bl_idname = "batoms.delete"
+    bl_label = "Delete batoms"
+    bl_description = ("Delete batoms")
+
+    label: StringProperty(
+        name="Label", default='',
+        description="Label")
+
+    def execute(self, context):
+        from batoms.utils.butils import remove_collection, read_batoms_list
+        if self.label != '':
+            coll = bpy.data.collections.get(self.label)
+            remove_collection(self.label)
+        else:
+            batoms_list = read_batoms_list()
+            for label in batoms_list:
+                coll = bpy.data.collections.get(label)
+                remove_collection(label)
+        return {'FINISHED'}
+
+class AddMolecule(Operator):
     bl_idname = "batoms.molecule_add"
     bl_label = "Add molecule"
     bl_options = {'REGISTER', 'UNDO'}
@@ -40,7 +61,7 @@ class AddMolecule(Operator, AddObjectHelper):
         return {'FINISHED'}
 
 
-class AddBulk(Operator, AddObjectHelper):
+class AddBulk(Operator):
     bl_idname = "batoms.bulk_add"
     bl_label = "Add bulk"
     bl_options = {'REGISTER', 'UNDO'}
@@ -100,7 +121,7 @@ class AddBulk(Operator, AddObjectHelper):
         return {'FINISHED'}
 
 
-class AddAtoms(Operator, AddObjectHelper):
+class AddAtoms(Operator):
     bl_idname = "batoms.atoms_add"
     bl_label = "Add atoms"
     bl_options = {'REGISTER', 'UNDO'}
@@ -122,7 +143,7 @@ class AddAtoms(Operator, AddObjectHelper):
         return {'FINISHED'}
 
 
-class AddSurface(Operator, AddObjectHelper):
+class AddSurface(Operator):
     @property
     def selected_batoms(self):
         return get_selected_batoms()
@@ -180,7 +201,7 @@ class AddSurface(Operator, AddObjectHelper):
 
 
 
-class AddRootSurface(Operator, AddObjectHelper):
+class AddRootSurface(Operator):
     @property
     def selected_batoms(self):
         return get_selected_batoms()

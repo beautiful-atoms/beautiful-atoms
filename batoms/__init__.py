@@ -31,6 +31,7 @@ from .gui import (
     gui_pymatgen,
     gui_pubchem,
     gui_rscb,
+    ui_list_bond,
     view3d_mt_batoms_add,
 )
 
@@ -41,17 +42,24 @@ from .ops import (add_nanoparticle,
     add_surface,
     molecule_edit_atom,
     molecule_edit_bond,
-    transform
+    transform,
+    measure,
+    manual_mapping,
+    ops_bond,
     )
 
-from .modal import (record_selection,
+from .ops import classes_ops
+
+from .modal import (
             rigid_body,
             force_field,
             )
 
-# Register
+# manul
 
-classes = [
+manuals = [manual_mapping.batoms_ase_manual_map,manual_mapping.batoms_manual_map]
+
+classes_prop = [
     custom_property.Belement,
     custom_property.Bspecies,
     custom_property.Batom,
@@ -69,14 +77,17 @@ classes = [
     custom_property.Bturn,
     custom_property.Bselect,
     custom_property.Bmssetting,
-    custom_property.Batoms_coll,
-    custom_property.Batoms_obj,
+    custom_property.BatomsCollection,
+    custom_property.BatomsObject
+]
+
+classes_ops = [
+    add_object.deleteBatoms,
     add_object.AddMolecule,
     add_object.AddBulk,
     add_object.AddAtoms,
     add_object.AddSurface,
     add_object.AddRootSurface,
-    add_object.deleteBatoms,
     add_surface.BuildSurfaceFCC100,
     add_surface.BuildSurfaceFCC110,
     add_surface.BuildSurfaceFCC111,
@@ -105,14 +116,11 @@ classes = [
     gui_batoms.Batoms_PT_prepare,
     gui_batoms.BatomsProperties,
     gui_batoms.ReplaceButton,
-    gui_batoms.MeasureButton,
-    gui_batoms.FragmentateButton,
+    measure.MeasureButton,
     gui_batom.Batom_PT_prepare,
     gui_batom.BatomProperties,
     gui_bond.Bond_PT_prepare,
     gui_bond.BondProperties,
-    gui_bond.RemoveButton,
-    gui_bond.AddButton,
     gui_polyhedra.Polyhedra_PT_prepare,
     gui_polyhedra.PolyhedraProperties,
     gui_cell.Cell_PT_prepare,
@@ -135,7 +143,6 @@ classes = [
     gui_rscb.RSCB_PT_prepare,
     gui_rscb.RSCBProperties,
     gui_rscb.RSCB_Import,
-    record_selection.EDIT_MESH_OT_record_selection,
     rigid_body.Rigid_Body_Operator,
     rigid_body.Rigid_Body_Modal_Panel,
     rigid_body.RigidBodyProperties,
@@ -146,42 +153,58 @@ classes = [
     view3d_mt_batoms_add.VIEW3D_MT_surface_add,
     view3d_mt_batoms_add.VIEW3D_MT_nanotube_add,
     view3d_mt_batoms_add.VIEW3D_MT_nanoparticle_add,
+    ui_list_bond.BOND_MT_bond_pair_context_menu,
+    # bond.BatomsButtonsPanel,
+    ui_list_bond.BOND_UL_bond_pairs,
+    ui_list_bond.BOND_PT_bond_pairs,
+    ops_bond.BondPairAdd,
+    ops_bond.BondPairRemove,
+    ops_bond.BondModify,
 ]
+# classes_ops.extend(classes_ops)
 #
-addon_keymaps = []
 
+addon_tools = []
+
+
+# handle the keymap
+wm = bpy.context.window_manager
+# Note that in background mode (no GUI available), keyconfigs are not available either,
+# so we have to check this to avoid nasty errors in background case.
+kc = wm.keyconfigs.addon
 
 def register():
 
     # class
-    for cls in classes:
+    for cls in classes_prop:
         bpy.utils.register_class(cls)
 
+    Collection.batoms = PointerProperty(name='Batoms',
+                                        type=custom_property.BatomsCollection)
+    Object.batoms = PointerProperty(name='Batoms',
+                                    type=custom_property.BatomsObject)
+    # class
+    for cls in classes_ops:
+        bpy.utils.register_class(cls)
+
+    # manual
+    for manual in manuals:
+        bpy.utils.register_manual_map(manual)
     # menu
     bpy.types.TOPBAR_MT_file_import.append(gui_io.menu_func_import_batoms)
     bpy.types.VIEW3D_MT_add.prepend(view3d_mt_batoms_add.menu_func)
-
-    # tool
-    bpy.utils.register_tool(gui_toolbar.AddMolecule, after={"builtin.scale_cage"}, separator=True, group=True)
-    bpy.utils.register_tool(gui_toolbar.AddBulk, after={gui_toolbar.AddMolecule.bl_idname})
-    bpy.utils.register_tool(gui_toolbar.AddSurface, after={gui_toolbar.AddBulk.bl_idname})
-    bpy.utils.register_tool(gui_toolbar.AddAtoms, after={gui_toolbar.AddSurface.bl_idname})
-    bpy.utils.register_tool(gui_toolbar.MoleculeEditElement,
-        after={"builtin.scale_cage"}, separator=True, group=True)
-    bpy.utils.register_tool(gui_toolbar.MolecueEditBond,
-        after={gui_toolbar.MoleculeEditElement.bl_idname}, separator=True, group=True)
-
-    # handle the keymap
-    wm = bpy.context.window_manager
-    # Note that in background mode (no GUI available), keyconfigs are not available either,
-    # so we have to check this to avoid nasty errors in background case.
-    kc = wm.keyconfigs.addon
+    
+    # in background mode, we don't need tool and we can not regester keymap
     if kc:
-        km = wm.keyconfigs.addon.keymaps.new(name='Object Mode', space_type='EMPTY')
-        kmi = km.keymap_items.new(gui_toolbar.MoleculeEditElement.bl_idname,
-                'RIGHTMOUSE', 'PRESS',
-                )
-        addon_keymaps.append((km, kmi))
+        # tool
+        bpy.utils.register_tool(gui_toolbar.BatomsTransform, after={"builtin.cursor"}, separator=True, group=True)
+        bpy.utils.register_tool(gui_toolbar.BatomsBoundary, after={gui_toolbar.BatomsTransform.bl_idname})
+        bpy.utils.register_tool(gui_toolbar.BatomsCell, after={gui_toolbar.BatomsBoundary.bl_idname})
+        # bpy.utils.register_tool(gui_toolbar.AddAtoms, after={gui_toolbar.AddSurface.bl_idname})
+        bpy.utils.register_tool(gui_toolbar.MoleculeEditElement,
+            after={"builtin.scale_cage"}, separator=True, group=True)
+        bpy.utils.register_tool(gui_toolbar.MolecueEditBond,
+            after={gui_toolbar.MoleculeEditElement.bl_idname}, separator=True, group=True)
 
     scene = bpy.types.Scene
     scene.bapanel = PointerProperty(type=gui_batoms.BatomsProperties)
@@ -196,29 +219,31 @@ def register():
     scene.ffpanel = PointerProperty(type=force_field.ForceFieldProperties)
     scene.pmgpanel = PointerProperty(type=gui_pymatgen.PymatgenProperties)
     scene.pubcpanel = PointerProperty(type=gui_pubchem.PubchemProperties)
-    Collection.batoms = PointerProperty(name='Batoms',
-                                        type=custom_property.Batoms_coll)
-    Object.batoms = PointerProperty(name='Batom',
-                                    type=custom_property.Batoms_obj)
+    
 
 
 def unregister():
     
     # class
-    for cls in classes:
+    for cls in classes_prop:
         bpy.utils.unregister_class(cls)
-
+    for cls in classes_ops:
+        bpy.utils.unregister_class(cls)
+    # manual
+    for manual in manuals:
+        bpy.utils.unregister_manual_map(manual)
     # menu
     bpy.types.TOPBAR_MT_file_import.remove(gui_io.menu_func_import_batoms)
     bpy.types.VIEW3D_MT_add.remove(view3d_mt_batoms_add.menu_func)
-
+    
     # tool
-    bpy.utils.unregister_tool(gui_toolbar.AddMolecule)
-    bpy.utils.unregister_tool(gui_toolbar.AddBulk)
-    bpy.utils.unregister_tool(gui_toolbar.AddSurface)
-    bpy.utils.unregister_tool(gui_toolbar.AddAtoms)
-    bpy.utils.unregister_tool(gui_toolbar.MoleculeEditElement)
-    bpy.utils.unregister_tool(gui_toolbar.MolecueEditBond)
+    if kc:
+        bpy.utils.unregister_tool(gui_toolbar.BatomsTransform)
+        bpy.utils.unregister_tool(gui_toolbar.BatomsBoundary)
+        bpy.utils.unregister_tool(gui_toolbar.BatomsCell)
+        # bpy.utils.unregister_tool(gui_toolbar.AddAtoms)
+        bpy.utils.unregister_tool(gui_toolbar.MoleculeEditElement)
+        bpy.utils.unregister_tool(gui_toolbar.MolecueEditBond)
 
 
 if __name__ == "__main__":

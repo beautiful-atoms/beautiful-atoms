@@ -23,26 +23,26 @@ class Cell_PT_prepare(Panel):
         clpanel = context.scene.clpanel
 
         op = layout.operator("batoms.apply_cell")
-        op.cell_a = clpanel.cell_a
-        op.cell_b = clpanel.cell_b
-        op.cell_c = clpanel.cell_c
+        op.a = clpanel.cell_a
+        op.b = clpanel.cell_b
+        op.c = clpanel.cell_c
         layout.prop(clpanel, "cell_a")
         layout.prop(clpanel, "cell_b")
         layout.prop(clpanel, "cell_c")
         layout.prop(clpanel, "pbc")
 
         op = layout.operator("batoms.apply_transform")
-        op.transform_a = clpanel.transform_a
-        op.transform_b = clpanel.transform_b
-        op.transform_c = clpanel.transform_c
+        op.a = clpanel.transform_a
+        op.b = clpanel.transform_b
+        op.c = clpanel.transform_c
         layout.prop(clpanel, "transform_a")
         layout.prop(clpanel, "transform_b")
         layout.prop(clpanel, "transform_c")
         #
         op = layout.operator("batoms.apply_boundary")
-        op.boundary_a = clpanel.boundary_a
-        op.boundary_b = clpanel.boundary_b
-        op.boundary_c = clpanel.boundary_c
+        op.a = clpanel.boundary_a
+        op.b = clpanel.boundary_b
+        op.c = clpanel.boundary_c
         layout.prop(clpanel, "boundary_a")
         layout.prop(clpanel, "boundary_b")
         layout.prop(clpanel, "boundary_c")

@@ -11,10 +11,10 @@ from bpy.types import (
 
 
 def menu_func(self, context):
-    self.layout.menu("VIEW3D_MT_batoms_add")
-    self.layout.menu("VIEW3D_MT_surface_add")
-    self.layout.menu("VIEW3D_MT_nanotube_add")
-    self.layout.menu("VIEW3D_MT_nanoparticle_add")
+    self.layout.menu("VIEW3D_MT_batoms_add", icon = "MESH_UVSPHERE")
+    self.layout.menu("VIEW3D_MT_surface_add", icon = "MOD_LATTICE")
+    self.layout.menu("VIEW3D_MT_nanotube_add", icon = "META_CAPSULE")
+    self.layout.menu("VIEW3D_MT_nanoparticle_add", icon = "MESH_ICOSPHERE")
 
 
 class VIEW3D_MT_batoms_add(Menu):
@@ -27,11 +27,11 @@ class VIEW3D_MT_batoms_add(Menu):
 
         layout.operator_context = 'INVOKE_REGION_WIN'
 
-        layout.operator("batoms.atoms_add", text="Atoms", icon='MESH_PLANE')
-        layout.operator("batoms.molecule_add", text="Molecule", icon='MESH_CUBE')
-        layout.operator("batoms.bulk_add", text="Bulk", icon='MESH_CIRCLE')
-        layout.operator("batoms.surface_add", text="Surface", icon='MESH_UVSPHERE')
-        layout.operator("batoms.root_surface_add", text="Root Surface", icon='MESH_UVSPHERE')
+        layout.operator("batoms.atoms_add", text="Atoms", icon='LAYER_ACTIVE')
+        layout.operator("batoms.molecule_add", text="Molecule", icon='FORCE_LENNARDJONES')
+        layout.operator("batoms.bulk_add", text="Bulk", icon='MESH_CUBE')
+        layout.operator("batoms.surface_add", text="Surface", icon='VIEW_ORTHO')
+        layout.operator("batoms.root_surface_add", text="Root Surface", icon='MOD_LATTICE')
         
         layout.separator()
 
@@ -57,7 +57,7 @@ class VIEW3D_MT_surface_add(Menu):
         layout.operator("surface.bcc100_add", text="bcc100", icon='MESH_PLANE')
         layout.operator("surface.bcc110_add", text="bcc110", icon='MESH_PLANE')
         layout.operator("surface.bcc111_add", text="bcc111", icon='MESH_PLANE')
-        layout.operator("surface.bcc111_add", text="bcc111_root", icon='MESH_PLANE')
+        layout.operator("surface.bcc111_root_add", text="bcc111_root", icon='MESH_PLANE')
         layout.separator()
         layout.operator("surface.hcp0001_add", text="hcp0001", icon='MESH_PLANE')
         layout.operator("surface.hcp10m10_add", text="hcp10m10", icon='MESH_PLANE')
@@ -94,8 +94,8 @@ class VIEW3D_MT_nanoparticle_add(Menu):
 
         layout.operator_context = 'INVOKE_REGION_WIN'
 
-        layout.operator("nano.decahedron_add", text="Decahedron", icon='MESH_CUBE')
-        layout.operator("nano.icosahedron_add", text="Icosahedron", icon='MESH_CUBE')
-        layout.operator("nano.octahedron_add", text="Octahedron", icon='MESH_CUBE')
+        layout.operator("nano.decahedron_add", text="Decahedron", icon='MESH_ICOSPHERE')
+        layout.operator("nano.icosahedron_add", text="Icosahedron", icon='MESH_ICOSPHERE')
+        layout.operator("nano.octahedron_add", text="Octahedron", icon='MESH_ICOSPHERE')
 
 

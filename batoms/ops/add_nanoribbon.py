@@ -17,7 +17,7 @@ from ase.build import graphene_nanoribbon
 from batoms import Batoms
 
 
-class BuildNanoribbon(Operator, AddObjectHelper):
+class BuildNanoribbon(Operator):
     bl_idname = "nano.nanoribbon_add"
     bl_label = "Add Nanoribbon"
     bl_options = {'REGISTER', 'UNDO'}

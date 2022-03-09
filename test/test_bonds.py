@@ -49,7 +49,7 @@ def test_bonds_add():
     au = Batoms("au", from_ase=au)
     au = au*[2, 2, 2]
     assert len(au.bonds.setting) == 0
-    au.bonds.setting.add(["Au", "Au"])
+    au.bonds.setting.add(("Au", "Au"))
     assert len(au.bonds.setting) == 1
 
 

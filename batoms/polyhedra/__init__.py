@@ -141,6 +141,8 @@ class Polyhedras(ObjectGN):
             mesh.attributes.new(
                 name=attribute[0], type=attribute[1], domain=attribute[2])
         self.setting.coll.objects.link(obj)
+        obj.batoms.type = 'POLYHEDRA'
+        obj.batoms.label = self.label
         obj.parent = self.batoms.obj
         #
         name = '%s_polyhedra_offset' % self.label

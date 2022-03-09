@@ -18,7 +18,7 @@ from ase.cluster.cubic import FaceCenteredCubic, BodyCenteredCubic, SimpleCubic
 from batoms import Batoms
 
 
-class BuildDecahedron(Operator, AddObjectHelper):
+class BuildDecahedron(Operator):
     bl_idname = "nano.decahedron_add"
     bl_label = "Add Decahedron"
     bl_options = {'REGISTER', 'UNDO'}
@@ -67,7 +67,7 @@ class BuildDecahedron(Operator, AddObjectHelper):
         return {'FINISHED'}
 
 
-class BuildIcosahedron(Operator, AddObjectHelper):
+class BuildIcosahedron(Operator):
     bl_idname = "nano.icosahedron_add"
     bl_label = "Add Icosahedron"
     bl_options = {'REGISTER', 'UNDO'}
@@ -104,7 +104,7 @@ class BuildIcosahedron(Operator, AddObjectHelper):
         return {'FINISHED'}
 
 
-class BuildOctahedron(Operator, AddObjectHelper):
+class BuildOctahedron(Operator):
     bl_idname = "nano.octahedron_add"
     bl_label = "Add Octahedron"
     bl_options = {'REGISTER', 'UNDO'}

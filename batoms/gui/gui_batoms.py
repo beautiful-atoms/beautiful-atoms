@@ -1,5 +1,3 @@
-from ase.build import molecule, bulk
-from ase import Atom, Atoms
 import bpy
 from bpy.types import (Panel,
                        Operator,
@@ -11,8 +9,6 @@ from bpy.props import (StringProperty,
                        )
 from batoms.utils.butils import get_selected_batoms, get_selected_vertices
 from batoms import Batoms
-
-# The panel.
 
 
 class Batoms_PT_prepare(Panel):
@@ -39,12 +35,9 @@ class Batoms_PT_prepare(Panel):
         layout.operator("batoms.replace")
         layout.prop(bapanel, "species")
 
-        layout.operator("batoms.fragmentate")
-        layout.prop(bapanel, "suffix", expand=True)
-
-        layout.label(text="Measurement")
-        layout.operator("batoms.record_selection")
-        layout.prop(bapanel, "measurement")
+        # layout.label(text="Measurement")
+        # layout.operator("batoms.record_selection")
+        # layout.prop(bapanel, "measurement")
 
         layout.label(text="Export atoms")
         layout.prop(bapanel, "filetype")
@@ -171,42 +164,3 @@ class ReplaceButton(Operator):
         replace_atoms(bapanel.species)
         return {'FINISHED'}
 
-
-class MeasureButton(Operator):
-    bl_idname = "batoms.measure"
-    bl_label = "Measure by"
-    bl_description = "Measure selected atoms by new species"
-
-    def execute(self, context):
-        bapanel = context.scene.bapanel
-        replace_atoms(bapanel.species)
-        return {'FINISHED'}
-
-
-def fragmentate(suffix):
-    batom_list = []
-    selected_vertices = get_selected_vertices()
-    for label, indices in selected_vertices:
-        batoms = Batoms(label=label)
-        batoms.fragmentate(species, indices, suffix)
-        batom_list.append(name)
-    for name in batom_list:
-        if name in bpy.data.objects:
-            obj = bpy.data.objects.get(name)
-            bpy.context.view_layer.objects.active = obj
-            bpy.ops.object.mode_set(mode='EDIT')
-
-
-class FragmentateButton(Operator):
-    bl_idname = "batoms.fragmentate"
-    bl_label = "Fragmentate"
-    bl_description = "Fragmentate selected atoms"
-
-    @classmethod
-    def poll(cls, context):
-        return context.mode in {'EDIT_MESH'}
-
-    def execute(self, context):
-        bapanel = context.scene.bapanel
-        fragmentate(bapanel.suffix)
-        return {'FINISHED'}

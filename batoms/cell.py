@@ -59,7 +59,8 @@ class Bcell(ObjectGN):
         obj = bpy.data.objects.new(self.obj_name, mesh)
         obj.data = mesh
         obj.location = location
-        obj.batoms.bcell.flag = True
+        obj.batoms.type = 'CELL'
+        obj.batoms.label = self.label
         if self.batoms is not None:
             self.batoms.coll.objects.link(obj)
         else:

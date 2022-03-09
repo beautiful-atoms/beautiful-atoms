@@ -22,7 +22,7 @@ from ase.build import (fcc100, fcc110, fcc111, fcc211, fcc111_root,
 from batoms import Batoms
 
 
-class BuildSurfaceFCC100(Operator, AddObjectHelper):
+class BuildSurfaceFCC100(Operator):
     bl_idname = "surface.fcc100_add"
     bl_label = "Add FCC(100) Surface"
     bl_options = {'REGISTER', 'UNDO'}
@@ -72,7 +72,7 @@ class BuildSurfaceFCC100(Operator, AddObjectHelper):
         return {'FINISHED'}
 
 
-class BuildSurfaceFCC110(Operator, AddObjectHelper):
+class BuildSurfaceFCC110(Operator):
     bl_idname = "surface.fcc110_add"
     bl_label = "Add FCC(110) Surface"
     bl_options = {'REGISTER', 'UNDO'}
@@ -122,7 +122,7 @@ class BuildSurfaceFCC110(Operator, AddObjectHelper):
         return {'FINISHED'}
 
 
-class BuildSurfaceFCC111(Operator, AddObjectHelper):
+class BuildSurfaceFCC111(Operator):
     bl_idname = "surface.fcc111_add"
     bl_label = "Add FCC(111) Surface"
     bl_options = {'REGISTER', 'UNDO'}
@@ -172,7 +172,7 @@ class BuildSurfaceFCC111(Operator, AddObjectHelper):
         return {'FINISHED'}
 
 
-class BuildSurfaceFCC211(Operator, AddObjectHelper):
+class BuildSurfaceFCC211(Operator):
     bl_idname = "surface.fcc211_add"
     bl_label = "Add FCC(211) Surface"
     bl_options = {'REGISTER', 'UNDO'}
@@ -217,7 +217,7 @@ class BuildSurfaceFCC211(Operator, AddObjectHelper):
         return {'FINISHED'}
 
 
-class BuildSurfaceFCC111Root(Operator, AddObjectHelper):
+class BuildSurfaceFCC111Root(Operator):
     bl_idname = "surface.fcc111_root_add"
     bl_label = "Add Root FCC(111) Surface"
     bl_options = {'REGISTER', 'UNDO'}
@@ -269,7 +269,7 @@ class BuildSurfaceFCC111Root(Operator, AddObjectHelper):
         return {'FINISHED'}
 
 
-class BuildSurfaceBCC100(Operator, AddObjectHelper):
+class BuildSurfaceBCC100(Operator):
     bl_idname = "surface.bcc100_add"
     bl_label = "Add BCC(100) Surface"
     bl_options = {'REGISTER', 'UNDO'}
@@ -319,7 +319,7 @@ class BuildSurfaceBCC100(Operator, AddObjectHelper):
         return {'FINISHED'}
 
 
-class BuildSurfaceBCC110(Operator, AddObjectHelper):
+class BuildSurfaceBCC110(Operator):
     bl_idname = "surface.bcc110_add"
     bl_label = "Add BCC(110) Surface"
     bl_options = {'REGISTER', 'UNDO'}
@@ -369,7 +369,7 @@ class BuildSurfaceBCC110(Operator, AddObjectHelper):
         return {'FINISHED'}
 
 
-class BuildSurfaceBCC111(Operator, AddObjectHelper):
+class BuildSurfaceBCC111(Operator):
     bl_idname = "surface.bcc111_add"
     bl_label = "Add BCC(111) Surface"
     bl_options = {'REGISTER', 'UNDO'}
@@ -419,7 +419,7 @@ class BuildSurfaceBCC111(Operator, AddObjectHelper):
         return {'FINISHED'}
 
 
-class BuildSurfaceBCC111Root(Operator, AddObjectHelper):
+class BuildSurfaceBCC111Root(Operator):
     bl_idname = "surface.bcc111_root_add"
     bl_label = "Add Root BCC(111) Surface"
     bl_options = {'REGISTER', 'UNDO'}
@@ -470,7 +470,7 @@ class BuildSurfaceBCC111Root(Operator, AddObjectHelper):
         Batoms(label=self.label, from_ase=atoms)
         return {'FINISHED'}
 
-class BuildSurfaceHCP0001(Operator, AddObjectHelper):
+class BuildSurfaceHCP0001(Operator):
     bl_idname = "surface.hcp0001_add"
     bl_label = "Add HCP(0001) Surface"
     bl_options = {'REGISTER', 'UNDO'}
@@ -527,7 +527,7 @@ class BuildSurfaceHCP0001(Operator, AddObjectHelper):
         return {'FINISHED'}
 
 
-class BuildSurfaceHCP10m10(Operator, AddObjectHelper):
+class BuildSurfaceHCP10m10(Operator):
     bl_idname = "surface.hcp10m10_add"
     bl_label = "Add HCP(10m10) Surface"
     bl_options = {'REGISTER', 'UNDO'}
@@ -583,7 +583,7 @@ class BuildSurfaceHCP10m10(Operator, AddObjectHelper):
         Batoms(label=self.label, from_ase=atoms)
         return {'FINISHED'}
 
-class BuildSurfaceHCP0001Root(Operator, AddObjectHelper):
+class BuildSurfaceHCP0001Root(Operator):
     bl_idname = "surface.hcp0001_root_add"
     bl_label = "Add Root HCP(0001) Surface"
     bl_options = {'REGISTER', 'UNDO'}
@@ -636,7 +636,7 @@ class BuildSurfaceHCP0001Root(Operator, AddObjectHelper):
 
 
 
-class BuildSurfaceDiamond100(Operator, AddObjectHelper):
+class BuildSurfaceDiamond100(Operator):
     bl_idname = "surface.diamond100_add"
     bl_label = "Add Diamond(100) Surface"
     bl_options = {'REGISTER', 'UNDO'}
@@ -686,7 +686,7 @@ class BuildSurfaceDiamond100(Operator, AddObjectHelper):
         return {'FINISHED'}
 
 
-class BuildSurfaceDiamond111(Operator, AddObjectHelper):
+class BuildSurfaceDiamond111(Operator):
     bl_idname = "surface.diamond111_add"
     bl_label = "Add Diamond(111) Surface"
     bl_options = {'REGISTER', 'UNDO'}

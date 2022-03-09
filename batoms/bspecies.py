@@ -96,7 +96,7 @@ class Species(BaseObject):
         obj = bpy.context.view_layer.objects.active
         obj.name = name
         obj.data.name = name
-        obj.batoms.batom.radius = radius
+        obj.batoms.atom.radius = radius
         #
         obj.users_collection[0].objects.unlink(obj)
         bpy.data.collections['%s_instancer' % self.label].objects.link(obj)
@@ -487,7 +487,7 @@ class Bspecies(Setting):
             s += str(sp)
             s += '\n'
         return s
-
+    
     @property
     def instancers(self):
         return self.get_instancers()
@@ -525,7 +525,7 @@ class Bspecies(Setting):
         instancers = self.instancers
         species_props = {}
         for sp in self.species:
-            radius = instancers[sp].batoms.batom.radius
+            radius = instancers[sp].batoms.atom.radius
             matname = instancers[sp].material_slots[0].name
             mat = bpy.data.materials.get(matname)
             color = mat.node_tree.nodes[0].inputs[0].default_value[:]

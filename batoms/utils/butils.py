@@ -21,7 +21,7 @@ def read_batoms_list():
     """
     Read all batoms collection
     """
-    items = [col.name for col in bpy.data.collections if col.batoms.flag]
+    items = [col.name for col in bpy.data.collections if col.batoms.type != 'OTHER']
     return items
 
 
@@ -31,7 +31,7 @@ def get_selected_batoms():
     batoms_list = []
     for obj in bpy.context.selected_objects:
         # for p in ['batom', 'bbond', 'bisosurface', 'bpolyhedra', 'bplane']:
-            if obj.batoms.flag:
+            if obj.batoms.type != 'OTHER':
                 batoms_list.append(obj.batoms.label)
     batoms_list = list(set(batoms_list))
     # print(batoms_list)
@@ -43,7 +43,7 @@ def get_selected_objects(attr):
     """
     objs = []
     for obj in bpy.context.selected_objects:
-        if getattr(obj.batoms, attr).flag:
+        if obj.batoms.type == attr.upper():
             objs.append(obj.name)
     return objs
 
@@ -58,7 +58,7 @@ def get_selected_vertices():
     selected_vertices = []
     objs = []
     for obj in bpy.context.objects_in_mode:
-        if obj.batoms.flag:
+        if obj.batoms.type != 'OTHER':
             objs.append(obj)
     if len(objs) == 0:
         print('Warning: No atoms is selected, please switch to Edit mode.')
@@ -86,7 +86,7 @@ def remove_collection(name, keep_batom=True):
     objs = collection.all_objects.keys()
     for obj in objs:
         obj = bpy.data.objects.get(obj)
-        if keep_batom and obj.batoms.batom:
+        if keep_batom and obj.batoms.atom:
             continue
         bpy.data.objects.remove(obj, do_unlink=True)
     collection = bpy.data.collections.get(name)

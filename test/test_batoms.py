@@ -124,10 +124,13 @@ def test_batoms_supercell():
     """make supercell"""
     removeAll()
     au = Batoms("au", from_ase=bulk("Au"))
+    # repeat
+    au = au*[2, 2, 2]
+    # transform
     P = np.array([[2, 3, 0, 5], [0, 1, 0, 5], [0, 0, 1, 0], [0, 0, 0, 1]])
     au = au.transform(P)
     # assert au.cell
-    assert len(au) == 2
+    assert len(au) == 16
 
 
 def test_batoms_occupy():

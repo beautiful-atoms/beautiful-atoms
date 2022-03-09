@@ -9,7 +9,6 @@ from time import time
 
 default_colors = [(1, 1, 0, 0.8), (0.0, 0.0, 1.0, 0.8)]
 
-
 class IsosurfaceSetting(Setting):
     def __init__(self, label, batoms=None, isosurfacesetting=None) -> None:
         """IsosurfaceSetting object
@@ -83,7 +82,7 @@ class IsosurfaceSetting(Setting):
                                 'edges': [],
                                 'faces': faces,
                                 'color': color,
-                                'battr_inputs': {'bisosurface': iso.as_dict()}
+                                'battr_inputs': {'isosurface': iso.as_dict()}
                                 }
         return isosurface
 

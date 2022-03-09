@@ -17,7 +17,7 @@ from ase.build import nanotube
 from batoms import Batoms
 
 
-class BuildNanotube(Operator, AddObjectHelper):
+class BuildNanotube(Operator):
     bl_idname = "nano.nanotube_add"
     bl_label = "Add Nanotube"
     bl_options = {'REGISTER', 'UNDO'}
