@@ -27,7 +27,8 @@ def test_batoms_crystal():
     """Create a Batoms object with cell"""
     removeAll()
     a = 4.08
-    positions = [[0, 0, 0], [a / 2, a / 2, 0], [a / 2, 0, a / 2], [0, a / 2, a / 2]]
+    positions = [[0, 0, 0], [a / 2, a / 2, 0],
+                 [a / 2, 0, a / 2], [0, a / 2, a / 2]]
     au = Batoms(
         label="au",
         species=["Au"] * len(positions),
@@ -59,13 +60,14 @@ def test_batoms_species():
     h2o.species["H"].color_style = 2
     assert np.isclose(h2o["H"].color, np.array([1, 0.8, 0.8, 1])).all()
     # materials
-    h2o.species["H"].materials = {"Metallic": 0.9, "Specular": 1.0, "Roughness": 0.01}
+    h2o.species["H"].materials = {
+        "Metallic": 0.9, "Specular": 1.0, "Roughness": 0.01}
     # elements
     h2o.species["H"].elements = {"H": 0.5, "O": 0.4}
     assert len(h2o["H"].elements) == 3
     # species X
-    h2o.replace([0], 'X')
-    h2o['X'].color = [0.8, 0.8, 0.0, 0.3]
+    h2o.replace([0], "X")
+    h2o["X"].color = [0.8, 0.8, 0.0, 0.3]
 
 
 def test_batoms_write(filename):
@@ -103,7 +105,8 @@ def test_batoms_wrap():
     """Wrap atoms into pbc cell"""
     removeAll()
     a = 4.08
-    positions = [[0, 0, 0], [a / 2, a / 2, 0], [a / 2, 0, a / 2], [0, a / 2, a / 2]]
+    positions = [[0, 0, 0], [a / 2, a / 2, 0],
+                 [a / 2, 0, a / 2], [0, a / 2, a / 2]]
     au = Batoms(
         label="au",
         species=["Au"] * len(positions),
@@ -121,10 +124,13 @@ def test_batoms_supercell():
     """make supercell"""
     removeAll()
     au = Batoms("au", from_ase=bulk("Au"))
+    # repeat
+    au = au*[2, 2, 2]
+    # transform
     P = np.array([[2, 3, 0, 5], [0, 1, 0, 5], [0, 0, 1, 0], [0, 0, 0, 1]])
     au = au.transform(P)
     # assert au.cell
-    assert len(au) == 2
+    assert len(au) == 16
 
 
 def test_batoms_occupy():

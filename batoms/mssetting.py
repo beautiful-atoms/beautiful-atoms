@@ -50,7 +50,7 @@ class MSsetting(Setting):
         if not bpy.data.collections.get(label):
             coll = bpy.data.collections.new(label)
             self.batoms.coll.children.link(coll)
-            coll.batoms.flag = True
+            coll.batoms.type = 'MS'
             coll.batoms.label = label
 
     def __repr__(self) -> str:
@@ -63,7 +63,7 @@ class MSsetting(Setting):
                 ms.color[0], ms.color[1], ms.color[2], ms.color[3])
         s += "-"*60 + "\n"
         return s
-
+    
     @property
     def sas_objs(self):
         sas_objs = {}

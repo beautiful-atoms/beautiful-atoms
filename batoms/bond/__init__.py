@@ -11,6 +11,7 @@ from batoms.utils.butils import object_mode, compareNodeType
 from batoms.utils import string2Number, number2String
 import numpy as np
 from batoms.base.object import ObjectGN
+from batoms.base.collection import BaseCollection
 from batoms.bond.bondsetting import BondSettings
 from batoms.search_bond import SearchBond, default_search_bond_datas
 # from pprint import pprint
@@ -68,7 +69,7 @@ default_bond_datas = {
 }
 
 
-class Bonds(ObjectGN):
+class Bonds(BaseCollection, ObjectGN):
     """Bbond Class
 
     A Bbond object is linked to this main collection in Blender.
@@ -89,10 +90,14 @@ class Bonds(ObjectGN):
         self.label = label
         name = 'bond'
         ObjectGN.__init__(self, label, name)
-        self.setting = BondSettings(self.label, batoms=batoms, bonds=self)
+        BaseCollection.__init__(self, coll_name=label)
         flag = self.load()
         if not flag and bond_datas is not None:
             self.build_object(bond_datas)
+            self.setting = BondSettings(self.label, batoms=batoms, bonds=self)
+            self.update_geometry_nodes()
+        else:
+            self.setting = BondSettings(self.label, batoms=batoms, bonds=self)
         self._search_bond = None
 
     def build_object(self, bond_datas, attributes={}):
@@ -152,8 +157,11 @@ class Bonds(ObjectGN):
         for attribute in default_attributes:
             mesh.attributes.new(
                 name=attribute[0], type=attribute[1], domain='POINT')
-        self.setting.coll.objects.link(obj)
+        self.coll.objects.link(obj)
         obj.parent = self.batoms.obj
+        obj.batoms.type = 'BOND'
+        obj.batoms.label = self.batoms.label
+        obj.batoms.bond.label = self.batoms.label
         #
         offsets = [offsets1, offsets2, offsets3, offsets4]
         for i in range(4):
@@ -163,7 +171,7 @@ class Bonds(ObjectGN):
             mesh.from_pydata(offsets[i], [], [])
             mesh.update()
             obj = bpy.data.objects.new(name, mesh)
-            self.setting.coll.objects.link(obj)
+            self.coll.objects.link(obj)
             obj.hide_set(True)
             obj.parent = self.batoms.obj
         #
@@ -389,9 +397,13 @@ class Bonds(ObjectGN):
             CompareStyle.inputs[1].default_value = style
             gn.node_group.links.new(
                 GroupInput.outputs[8], CompareStyle.inputs[0])
+        print('Build geometry nodes for bonds: %s' % (time() - tstart))
         #
+
+    def update_geometry_nodes(self):
+        tstart = time()
         # for sp in self.setting:
-            # self.add_geometry_node(sp.as_dict())
+        # self.add_geometry_node(sp.as_dict())
         # only build pair in bondlists
         bondlists = self.arrays
         if len(bondlists['atoms_index1']) == 0:
@@ -407,7 +419,7 @@ class Bonds(ObjectGN):
             sp = self.setting['%s-%s' % (sp1, sp2)]
             self.add_geometry_node(sp.as_dict())
 
-        print('Build geometry nodes for bonds: %s' % (time() - tstart))
+        print('Update geometry nodes for bonds: %s' % (time() - tstart))
 
     def add_geometry_node(self, sp):
         """
@@ -424,7 +436,7 @@ class Bonds(ObjectGN):
         #
         order = sp['order']
         style = int(sp['style'])
-        name = '%s_%s_%s_%s' % (self.label, sp["name"], order, style)
+        name = 'bond_%s_%s_%s_%s' % (self.label, sp["name"], order, style)
         InstanceOnPoint = get_nodes_by_name(gn.node_group.nodes,
                                             'InstanceOnPoint_%s' % name,
                                             'GeometryNodeInstanceOnPoints')
@@ -519,6 +531,52 @@ class Bonds(ObjectGN):
         gn.node_group.links.new(InstanceOnPoint.outputs['Instances'],
                                 JoinGeometry.inputs['Geometry'])
         # print('Add geometry nodes for bonds: %s'%(time() - tstart))
+
+    def update_geometry_node_instancer(self):
+        """
+        Make sure all pair has a geometry node flow 
+        and the instancer and material are updated.
+        """
+        from batoms.utils.butils import get_nodes_by_name
+        tstart = time()
+        #
+        bondlists = self.arrays
+        if len(bondlists['atoms_index1']) == 0:
+            return
+        pairs = np.concatenate((
+            bondlists['species_index1'].reshape(-1, 1),
+            bondlists['species_index2'].reshape(-1, 1)), axis=1)
+        pairs = np.unique(pairs, axis=0)
+        pairs = pairs.reshape(-1, 2)
+        for pair in pairs:
+            sp1 = number2String(pair[0])
+            sp2 = number2String(pair[1])
+            sp = self.setting['%s-%s' % (sp1, sp2)]
+            sp = sp.as_dict()
+            order_style = '%s_%s'% (sp["order"], sp["style"])
+            # update geometry node
+            if self.setting.instancers[sp["name"]][order_style] is None:
+                self.setting.build_instancer(sp)
+                self.add_geometry_node(sp)
+            # update materials
+            mat1 = self.setting.materials[sp["name"]]["%s_0"%(order_style)]
+            mat2 = self.setting.materials[sp["name"]]["%s_1"%(order_style)]
+            color1 = mat1.node_tree.nodes[0].inputs[0].default_value[:]
+            color2 = mat2.node_tree.nodes[0].inputs[0].default_value[:]
+            if not np.allclose(sp["color1"], color1) or \
+                not np.allclose(sp["color2"], color2):
+                print("change materials: %s"%sp["name"])
+                self.setting.build_materials(sp)
+                self.setting.assign_materials(sp, sp["order"], sp["style"])
+            # update  instancers
+            name = 'bond_%s_%s_%s_%s' % (self.label, sp["name"],
+                                            sp["order"], sp["style"])
+            ObjectInstancer = get_nodes_by_name(self.gnodes.node_group.nodes,
+                                                'ObjectInfo_%s' % name,
+                                                'GeometryNodeObjectInfo')
+            ObjectInstancer.inputs['Object'].default_value = \
+                self.setting.instancers[sp["name"]][order_style]
+        print('update bond instancer: %s'%(time() - tstart))
 
     def update(self, ):
         """
@@ -637,9 +695,11 @@ class Bonds(ObjectGN):
             self.set_attributes({'style': arrays['styles']})
             self.set_attributes({'model_style': arrays['model_styles']})
             self.set_attributes({'polyhedra': arrays['polyhedras']})
+            self.update_geometry_node_instancer()
         else:
             # add or remove vertices
             self.build_object(arrays)
+            self.update_geometry_nodes()
 
     @property
     def offsets(self):

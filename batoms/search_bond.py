@@ -268,7 +268,7 @@ class SearchBond(ObjectGN):
         return obj_o
 
     def get_search_bond(self):
-        boundary = np.array(self.batoms.coll.batoms.boundary)
+        boundary = np.array(self.batoms.obj.batoms.boundary)
         return boundary.reshape(3, -1)
 
     def set_arrays(self, arrays):

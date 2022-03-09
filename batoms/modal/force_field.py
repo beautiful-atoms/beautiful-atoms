@@ -14,16 +14,12 @@ Intermolecular: atomic radii.
 import bpy
 import numpy as np
 from batoms.utils.butils import get_selected_batoms, get_selected_objects, get_selected_vertices, object_mode
-from batoms import Batoms, Batom
-from batoms.data import covalent_radii, vdw_radii
+from batoms import Batoms
 from batoms.modal.rigid_body import mouse2positions
 from bpy.props import (StringProperty,
-                       BoolProperty,
                        IntProperty,
                        FloatProperty,
                        FloatVectorProperty,
-                       EnumProperty,
-                       PointerProperty,
                        )
 
 from ase.optimize import QuasiNewton, MDMin

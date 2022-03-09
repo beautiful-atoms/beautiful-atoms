@@ -16,7 +16,7 @@ class Bcell(ObjectGN):
     """
 
     def __init__(self, label,
-                 array=np.zeros([3, 3]),
+                 array=None,
                  location=np.array([0, 0, 0]),
                  color=(0.0, 0.0, 0.0, 1.0),
                  batoms=None,
@@ -35,7 +35,8 @@ class Bcell(ObjectGN):
                       ]
         self.width = 0.02
         self.color = color
-        self.build_object(array, location)
+        if array is not None:
+            self.build_object(array, location)
 
     def build_object(self, array, location):
         """
@@ -49,26 +50,21 @@ class Bcell(ObjectGN):
         else:
             verts = array - array[0]
             location = array[0]
-        if self.obj_name not in bpy.data.objects:
-            mesh = bpy.data.meshes.new(self.obj_name)
-            mesh.from_pydata(verts, self.edges, [])
-            mesh.update()
-            for f in mesh.polygons:
-                f.use_smooth = True
-            obj = bpy.data.objects.new(self.obj_name, mesh)
-            obj.data = mesh
-            obj.location = location
-            obj.batoms.bcell.flag = True
-            if self.batoms is not None:
-                self.batoms.coll.objects.link(obj)
-            else:
-                bpy.data.collections['Collection'].objects.link(obj)
-        elif bpy.data.objects[self.obj_name].batoms.bcell.flag:
-            # print('%s exist and is bcell, use it.'%self.obj_name)
-            pass
+        self.delete_obj(self.obj_name)
+        mesh = bpy.data.meshes.new(self.obj_name)
+        mesh.from_pydata(verts, self.edges, [])
+        mesh.update()
+        for f in mesh.polygons:
+            f.use_smooth = True
+        obj = bpy.data.objects.new(self.obj_name, mesh)
+        obj.data = mesh
+        obj.location = location
+        obj.batoms.type = 'CELL'
+        obj.batoms.label = self.label
+        if self.batoms is not None:
+            self.batoms.coll.objects.link(obj)
         else:
-            raise Exception("Failed, the name %s already \
-                in use and is not Bcell object!" % self.obj_name)
+            bpy.data.collections['Collection'].objects.link(obj)
         self.build_geometry_node()
         bpy.context.view_layer.update()
 
@@ -84,15 +80,8 @@ class Bcell(ObjectGN):
         gn = modifier
         GroupInput = modifier.node_group.nodes[0]
         GroupOutput = gn.node_group.nodes[1]
-        JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
-                                         '%s_JoinGeometry' % self.label,
-                                         'GeometryNodeJoinGeometry')
-        gn.node_group.links.new(
-            JoinGeometry.outputs['Geometry'], GroupOutput.inputs['Geometry'])
         # ------------------------------------------------------------------
-        # calculate bond vector, length, rotation based on the index
-        # Get four positions from batoms, bond and the second bond
-        # for high order bond plane
+        # transfer first 4 positions of cell
         PositionCell = get_nodes_by_name(gn.node_group.nodes,
                                          '%s_PositionCell' % (self.label),
                                          'GeometryNodeInputPosition')

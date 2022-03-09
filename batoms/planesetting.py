@@ -202,7 +202,7 @@ class PlaneSetting(Setting):
                                         'width': p.width,
                                         'battr_inputs': {},
                                         },
-                     'battr_inputs': {'bplane': p.as_dict()},
+                     'battr_inputs': {'plane': p.as_dict()},
                      'show_edge': p.show_edge,
                      'slicing': p.slicing,
                      'boundary': p.boundary,
@@ -369,7 +369,7 @@ class PlaneSetting(Setting):
                 index = np.where(x1 > -1e-6)[0]
                 if len(index) == 0:
                     continue
-                if obj.batoms.batom.flag:
+                if obj.batoms.type == 'BATOMS':
                     batoms.delete(obj.batoms.batom.species, index)
                 else:
                     bm = bmesh.new()
