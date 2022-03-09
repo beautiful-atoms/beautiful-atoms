@@ -258,8 +258,8 @@ class Batoms(BaseCollection, ObjectGN):
         modifier = self.obj.modifiers.new(name=name, type='NODES')
         modifier.node_group.name = name
         inputs = modifier.node_group.inputs
-        GroupInput = modifier.node_group.nodes.get('Group Input')
-        GroupOutput = modifier.node_group.nodes.get('Group Output')
+        GroupInput = modifier.node_group.nodes[0]
+        GroupOutput = modifier.node_group.nodes[1]
         # add new output sockets
         for att in default_GroupInput:
             GroupInput.outputs.new(type=att[1], name=att[0])
@@ -323,7 +323,7 @@ class Batoms(BaseCollection, ObjectGN):
                 Object to be instanced
         """
         gn = self.gnodes
-        GroupInput = gn.node_group.nodes.get('Group Input')
+        GroupInput = gn.node_group.nodes[0]
         JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
                                          '%s_JoinGeometry' % self.label,
                                          'GeometryNodeJoinGeometry')

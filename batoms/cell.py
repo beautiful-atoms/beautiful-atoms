@@ -78,8 +78,8 @@ class Bcell(ObjectGN):
         # ------------------------------------------------------------------
         # select attributes
         gn = modifier
-        GroupInput = modifier.node_group.nodes.get('Group Input')
-        GroupOutput = gn.node_group.nodes.get('Group Output')
+        GroupInput = modifier.node_group.nodes[0]
+        GroupOutput = gn.node_group.nodes[1]
         # ------------------------------------------------------------------
         # transfer first 4 positions of cell
         PositionCell = get_nodes_by_name(gn.node_group.nodes,

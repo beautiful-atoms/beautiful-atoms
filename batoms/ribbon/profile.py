@@ -1,5 +1,6 @@
 import numpy as np
 from math import pi
+from time import time
 
 
 def ellipse(n, w, h):
@@ -64,3 +65,10 @@ def build_mesh(vertices, normals, sides, profile, scales=None):
     # print('build mesh: %s'%(time() - tstart))
     return vertices, faces
 
+
+if __name__ == "__main__":
+    import matplotlib.pyplot as plt
+    # profile = ellipse(16, 1, 1)
+    profile = rectangle(1, 1)
+    plt.plot(profile[:, 0], profile[:, 1])
+    plt.show()
