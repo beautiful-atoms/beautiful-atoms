@@ -1,7 +1,6 @@
 import bpy
 from batoms import Batoms
 import numpy as np
-from batoms.utils.butils import removeAll
 import pytest
 
 def test_batoms():

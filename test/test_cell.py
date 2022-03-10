@@ -1,3 +1,4 @@
+import bpy
 import pytest
 from batoms.cell import Bcell
 import numpy as np
@@ -5,6 +6,7 @@ import numpy as np
 
 def test_cell():
     """ """
+    bpy.ops.batoms.delete()
     cell = Bcell(label="pt", array=[2, 2, 2])
     assert isinstance(cell, Bcell)
     cell[2, 2] += 5

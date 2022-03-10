@@ -1,6 +1,6 @@
+import bpy
 import pytest
 from time import time
-from batoms.utils.butils import removeAll
 from ase.build import bulk, molecule
 from ase.io import read
 from batoms.pdbparser import read_pdb
@@ -13,7 +13,7 @@ def test_SAS():
     isosurface area set 0
     36.107
     """
-    removeAll()
+    bpy.ops.batoms.delete()
     h2o = molecule("H2O")
     h2o = Batoms("h2o", from_ase=h2o)
     h2o.mssetting.draw_SAS()
@@ -33,7 +33,7 @@ def test_SAS_protein():
     """
     import numpy as np
 
-    removeAll()
+    bpy.ops.batoms.delete()
     prot = read_pdb("datas/1ema.pdb")  # 1tim
     prot = Batoms("1ema", from_ase=prot)
     prot.mssetting["1"] = {"resolution": 0.4}
@@ -52,7 +52,7 @@ def test_SES():
     isosurface area set 0
     36.107
     """
-    removeAll()
+    bpy.ops.batoms.delete()
     h2o = molecule("H2O")
     h2o = Batoms("h2o", from_ase=h2o)
     h2o.mssetting.draw_SES()
@@ -77,7 +77,7 @@ def test_SES_protein():
     QuickSES: 7298 (resolution 0.1)  23211
     EDTSurf 7338 (Use slightly different vdw radii)
     """
-    removeAll()
+    bpy.ops.batoms.delete()
     prot = read_pdb("datas/1ema.pdb")
     prot = Batoms("prot", from_ase=prot)
     tstart = time()

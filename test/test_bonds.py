@@ -1,3 +1,4 @@
+import bpy
 import pytest
 from batoms.utils.butils import removeAll
 from batoms.batoms import Batoms
@@ -16,7 +17,7 @@ extras = dict(engine="cycles") if use_cycles else {}
 
 
 def test_bonds():
-    removeAll()
+    bpy.ops.batoms.delete()
     c2h6so = molecule("C2H6SO")
     c2h6so = Batoms("c2h6so", from_ase=c2h6so)
     c2h6so.model_style = 1
@@ -31,7 +32,7 @@ def test_bonds():
 
 
 def test_bonds_high_order():
-    removeAll()
+    bpy.ops.batoms.delete()
     c6h6 = Batoms("c6h6", from_ase=molecule("C6H6"))
     c6h6.model_style = 1
     c6h6.bonds[0].order = 2
@@ -41,7 +42,7 @@ def test_bonds_high_order():
 
 
 def test_bonds_performance():
-    removeAll()
+    bpy.ops.batoms.delete()
     h2o = Batoms("h2o", from_ase=molecule("H2O"))
     h2o.cell = [3, 3, 3]
     h2o.pbc = True
@@ -53,7 +54,7 @@ def test_bonds_performance():
 
 
 def test_bonds_add():
-    removeAll()
+    bpy.ops.batoms.delete()
     au = bulk("Au")
     au = Batoms("au", from_ase=au)
     au = au*[2, 2, 2]
@@ -63,7 +64,7 @@ def test_bonds_add():
 
 
 def test_bonds_search_bond_1():
-    removeAll()
+    bpy.ops.batoms.delete()
     mol = read("datas/anthraquinone.cif")
     mol.boundary = 0.01
     mol.model_style = 1
@@ -74,7 +75,7 @@ def test_bonds_search_bond_1():
 
 
 def test_bonds_search_bond_2():
-    removeAll()
+    bpy.ops.batoms.delete()
     mof = read("datas/mof-5.cif")
     mof.boundary = 0.01
     mof.bonds.setting[("Zn", "O")].polyhedra = True
@@ -85,7 +86,7 @@ def test_bonds_search_bond_2():
 
 
 def test_hydrogen_bond():
-    removeAll()
+    bpy.ops.batoms.delete()
     ch3oh = Batoms(label="ch3oh", from_ase=molecule("CH3OH"))
     ch3oh.bonds.setting[("H", "O")].min = 2.0
     ch3oh.bonds.setting[("H", "O")].max = 3.0

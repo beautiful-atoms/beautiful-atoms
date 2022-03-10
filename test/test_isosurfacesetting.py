@@ -1,5 +1,5 @@
+import bpy
 import pytest
-from batoms.utils.butils import removeAll
 from batoms.batoms import Batoms
 from batoms.bio.bio import read
 import numpy as np
@@ -21,7 +21,7 @@ skip_test = bool(os.environ.get("NOTEST_CUBE", 0))
 def test_slice():
     if skip_test:
         pytest.skip("Skip tests on cube files since $NOTEST_CUBE provided.")
-    removeAll()
+    bpy.ops.batoms.delete()
     h2o = read("/home/xing/ase/batoms/h2o-homo.cube")
     h2o.isosurfacesetting["1"] = {"level": -0.001}
     h2o.isosurfacesetting["2"] = {"level": 0.001, "color": [0, 0, 0.8, 0.5]}
@@ -36,7 +36,7 @@ def test_slice():
 def test_diff():
     if skip_test:
         pytest.skip("Skip tests on cube files since $NOTEST_CUBE provided.")
-    removeAll()
+    bpy.ops.batoms.delete()
     ag_pto_fe = read("/home/xing/ase/batoms/ag-pto-fe.cube")
     ag_pto = read("/home/xing/ase/batoms/ag-pto.cube")
     ag_pto.hide = True

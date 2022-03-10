@@ -1,3 +1,4 @@
+import bpy
 import pytest
 import numpy as np
 from batoms.utils.butils import removeAll
@@ -16,7 +17,7 @@ extras = dict(engine="cycles") if use_cycles else {}
 
 def test_lights():
     """ """
-    removeAll()
+    bpy.ops.batoms.delete()
     r = Render(label="h2o")
     assert isinstance(r.lights, Lights)
     # properties
@@ -29,7 +30,7 @@ def test_lights():
 
 
 def test_light_direction():
-    removeAll()
+    bpy.ops.batoms.delete()
     h2o = molecule("h2o", "H2O")
     h2o.render.lights["Default"].type = "POINT"
     h2o.render.lights["Default"].energy = 1000

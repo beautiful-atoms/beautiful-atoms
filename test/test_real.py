@@ -1,3 +1,4 @@
+import bpy
 import pytest
 import numpy as np
 from ase.build import bulk
@@ -7,14 +8,14 @@ from ase.build import graphene_nanoribbon
 
 
 def test_force_field():
-    removeAll()
+    bpy.ops.batoms.delete()
     gnr = graphene_nanoribbon(2, 2, type="armchair", saturated=True, vacuum=3.5)
     gnr.pbc = False
     gnr = Batoms("gnr", from_ase=gnr)
 
 
 def test_force_field_al():
-    removeAll()
+    bpy.ops.batoms.delete()
     al = Batoms("al", from_ase=bulk("Al"))
     al = al * [1, 20, 1]
     al.pbc = False
