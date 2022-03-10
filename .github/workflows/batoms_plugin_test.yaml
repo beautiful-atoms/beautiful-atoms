@@ -26,10 +26,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Python 3.9.7
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.9.7'
       - name: Copy addons to blender
         run: |
           mkdir -p $BLENDER_PATH/scripts/addons_contrib
@@ -48,7 +44,7 @@ jobs:
       - name: Install test dependencies
         run: |
           $BLENDERPY -m pip install pytest flake8
-          pip install pytest-blender
+          $BLENDERPY -m pip install pytest-blender
           pytest-blender --blender-executable blender
       - name: Lint with flake8
         run: |
