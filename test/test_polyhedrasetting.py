@@ -5,6 +5,16 @@ from ase.io import read
 from ase.build import molecule
 import numpy as np
 
+try:
+    from _common_helpers import has_display, set_cycles_res
+
+    use_cycles = not has_display()
+except ImportError:
+    use_cycles = False
+
+extras = dict(engine="cycles") if use_cycles else {}
+
+
 
 def test_polyhedra_molecule():
     removeAll()
@@ -46,7 +56,9 @@ def test_polyhedra_setting():
     ch4.polyhedras.setting["C"] = {"color": [0.8, 0.1, 0.3, 0.3]}
     ch4.model_style = 2
     ch4.render.engine = "workbench"
-    ch4.get_image([1, 1, 0], output="polyhedras.png")
+    if use_cycles:
+        set_cycles_res(ch4)
+    ch4.get_image([1, 1, 0], output="polyhedras.png", **extras)
 
 
 if __name__ == "__main__":
