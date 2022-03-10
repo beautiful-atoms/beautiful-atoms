@@ -5,6 +5,15 @@ from ase.build import molecule, bulk
 from batoms.bio.bio import read
 from time import time
 
+try:
+    from _common_helpers import has_display, set_cycles_res
+
+    use_cycles = not has_display()
+except ImportError:
+    use_cycles = False
+
+extras = dict(engine="cycles") if use_cycles else {}
+
 
 def test_bonds():
     removeAll()
@@ -59,7 +68,9 @@ def test_bonds_search_bond_1():
     mol.boundary = 0.01
     mol.model_style = 1
     mol.bonds.show_search = True
-    mol.get_image([1, -0.3, 0.1], engine="workbench", output="anthraquinone.png")
+    if use_cycles:
+        set_cycles_res(mol)
+    mol.get_image([1, -0.3, 0.1], output="anthraquinone.png", **extras)
 
 
 def test_bonds_search_bond_2():
@@ -68,7 +79,9 @@ def test_bonds_search_bond_2():
     mof.boundary = 0.01
     mof.bonds.setting[("Zn", "O")].polyhedra = True
     mof.model_style = 1
-    mof.get_image([0, 1, 0], engine="workbench", output="mof-5.png")
+    if use_cycles:
+        set_cycles_res(mof)
+    mof.get_image([0, 1, 0], output="mof-5.png", **extras)
 
 
 def test_hydrogen_bond():
@@ -78,7 +91,9 @@ def test_hydrogen_bond():
     ch3oh.bonds.setting[("H", "O")].max = 3.0
     ch3oh.bonds.setting[("H", "O")].style = "2"
     ch3oh.model_style = 1
-    ch3oh.get_image([1, 0, 0], engine="workbench", output="bonds-hb.png")
+    if use_cycles:
+        set_cycles_res(ch3oh)
+    ch3oh.get_image([1, 0, 0], output="bonds-hb.png", **extras)
 
 
 if __name__ == "__main__":
