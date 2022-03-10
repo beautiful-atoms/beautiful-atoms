@@ -44,7 +44,7 @@ class Camera(BaseObject):
         self.label = label
         self.name = name
         obj_name = "%s_camera_%s" % (label, name)
-        bobj_name = "blight"
+        bobj_name = "camera"
         BaseObject.__init__(self, obj_name=obj_name, bobj_name=bobj_name)
         self.create_camera(type, location,
                            lens=lens, coll=coll, look_at=look_at,

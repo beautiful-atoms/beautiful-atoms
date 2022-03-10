@@ -100,7 +100,7 @@ class Bbond(bpy.types.PropertyGroup):
     """
     flag: BoolProperty(name="flag", default=False)
     label: StringProperty(name="label", default='batoms')
-    select: StringProperty(name="select", default='all')
+    # select: StringProperty(name="select", default='all')
     species1: StringProperty(name="species1")
     species2: StringProperty(name="species2")
     species: StringProperty(name="species")
@@ -109,9 +109,13 @@ class Bbond(bpy.types.PropertyGroup):
     search: IntProperty(name="search", default=0)
     polyhedra: BoolProperty(name="polyhedra", default=False)
     color1: FloatVectorProperty(
-        name="color1", size=4, default=(0, 0.2, 0.8, 1))
+        name="color1", size=4, 
+        subtype='COLOR',
+        default=(0, 0.2, 0.8, 1))
     color2: FloatVectorProperty(
-        name="color2", size=4, default=(0.6, 0.2, 0, 1))
+        name="color2", size=4, 
+        subtype='COLOR',
+        default=(0.6, 0.2, 0, 1))
     width: FloatProperty(name="width", default=0.10)
     order: IntProperty(name="order", default=1)
     segments: IntProperty(name="segments", default=16)
@@ -127,7 +131,7 @@ class Bbond(bpy.types.PropertyGroup):
 
     @property
     def name(self) -> str:
-        return '%s-%s-%s' % (self.select, self.species1, self.species2)
+        return '%s-%s-%s' % (self.species1, self.species2)
 
     def as_dict(self, reversed=False) -> dict:
         setdict = {
@@ -541,11 +545,22 @@ class Bselect(bpy.types.PropertyGroup):
         return s
 
 
-class Batoms_coll(bpy.types.PropertyGroup):
+class BatomsCollection(bpy.types.PropertyGroup):
     """
     """
-    flag: BoolProperty(name="flag", default=False)
     label: StringProperty(name="label", default='batoms')
+    type: EnumProperty(
+        name="type",
+        description="Structural models",
+        items=(('OTHER', "Not Batoms", "Not Batoms"),
+               ('BATOMS', "Batoms", "Batoms"),
+               ('VOLUME', "Volume", "Volume"),
+               ('BOND', "Bond", "Bond"),
+               ('POLYHEDRA', "Polyhedra", "Polyhedra"),
+               ('PLANE', "Plane", "Plane"),
+               ('MS', "MS", "Molecular Surface"),
+               ),
+        default='OTHER')
     model_style: EnumProperty(
         name="model_style",
         description="Structural models",
@@ -575,8 +590,11 @@ class Batoms_coll(bpy.types.PropertyGroup):
                              False, False, False], size=3)
     boundary: FloatVectorProperty(name="boundary", default=[
                                   0.0, 1.0, 0.0, 1.0, 0.0, 1.0], size=6)
+    # collection
     bbond: CollectionProperty(name='Bbond',
                               type=Bbond)
+    bond_index: IntProperty(name = "bond_index",
+                              default = 0)
     bplane: CollectionProperty(name='Bplane',
                                type=Bplane)
     bisosurface: CollectionProperty(name='Bisosurface',
@@ -599,33 +617,39 @@ class Batoms_coll(bpy.types.PropertyGroup):
                                    type=Bmssetting)
     # BRibbon = Bribbon()
 
-
-class Batoms_obj(bpy.types.PropertyGroup):
-    """
-    """
-    flag: BoolProperty(name="flag", default=False)
+class BatomsObject(bpy.types.PropertyGroup):
     label: StringProperty(name="label", default='batoms')
-
-    boundary: FloatVectorProperty(name="boundary", default=[
-                                  0.0, 1.0, 0.0, 1.0, 0.0, 1.0], size=6)
-
-    batom: PointerProperty(name='Batom',
+    type: EnumProperty(
+        name="type",
+        description="Structural models",
+        items=(('OTHER', "Not Batoms", "Not Batoms"),
+               ('BATOMS', "Batoms", "Batoms"),
+               ('VOLUME', "Volume", "Volume"),
+               ('CELL', "Cell", "Cell"),
+               ('BOND', "Bond", "Bond"),
+               ('POLYHEDRA', "Polyhedra", "Polyhedra"),
+               ('PLANE', "Plane", "Plane"),
+               ('MS', "MS", "Molecular Surface"),
+               ),
+        default='OTHER')
+    # obj
+    atom: PointerProperty(name='Batom',
                            type=Batom)
-    bcell: PointerProperty(name='Bcell',
+    cell: PointerProperty(name='Bcell',
                            type=Bcell)
-    bbond: PointerProperty(name='Bbond',
+    bond: PointerProperty(name='Bbond',
                            type=Bbond)
-    bplane: PointerProperty(name='Bplane',
+    plane: PointerProperty(name='Bplane',
                             type=Bplane)
-    bvolume: PointerProperty(name='Bvolume',
+    volume: PointerProperty(name='Bvolume',
                              type=Bvolume)
-    bisosurface: PointerProperty(name='Bisosurface',
+    isosurface: PointerProperty(name='Bisosurface',
                                  type=Bisosurface)
-    bpolyhedra: PointerProperty(name='Bpolyhedra',
+    polyhedra: PointerProperty(name='Bpolyhedra',
                                 type=Bpolyhedra)
-    bsheet: PointerProperty(name='Bsheet',
+    sheet: PointerProperty(name='Bsheet',
                             type=Bsheet)
-    blight: PointerProperty(name='Blight',
+    light: PointerProperty(name='Blight',
                             type=Blight)
-    bcamera: PointerProperty(name='Bcamera',
+    camera: PointerProperty(name='Bcamera',
                              type=Bcamera)

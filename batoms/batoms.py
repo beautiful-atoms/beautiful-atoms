@@ -49,17 +49,23 @@ subcollections = ['instancer', 'surface', 'ribbon', 'plane']
 
 
 class Batoms(BaseCollection, ObjectGN):
+    """_summary_
+
+    Args:
+        BaseCollection (_type_): _description_
+        ObjectGN (_type_): _description_
+    """
     def __init__(self,
                  label='batoms',
-                 species=[],
-                 positions=[],
-                 attributes={},
-                 species_props={},
-                 info={},
-                 pbc=False, cell=None,
+                 species=None,
+                 positions=None,
+                 attributes=None,
+                 species_props=None,
+                 pbc=False, cell=np.array([0, 0, 0]),
                  location=np.array([0, 0, 0]),
-                 show_unit_cell=True,
                  volume=None,
+                 info=None,
+                 show_unit_cell=True,
                  scale=1.0,
                  model_style=0,
                  polyhedra_style=0,
@@ -136,9 +142,12 @@ class Batoms(BaseCollection, ObjectGN):
         if from_pymatgen is not None:
             species, positions, attributes, cell, pbc, info = \
                 read_from_pymatgen(from_pymatgen)
-        if len(species) == 0 and self.check_batoms(label):
+        if species is None and self.check_batoms(label):
             self.from_batoms(label)
         else:
+            if species is None:
+                species = []
+                positions = []
             self.set_collection(label)
             self._cell = Bcell(label, cell, batoms=self)
             positions = np.array(positions)
@@ -149,25 +158,27 @@ class Batoms(BaseCollection, ObjectGN):
                 self._frames = np.array([positions])
             #
             natom = len(positions)
-            self.build_object(label, positions, location)
-            self.selects = Selects(label, self)
-            if not species_props:
-                species_props = {sp: {'elements': {sp.split('_')[0]: 1.0}}
-                                 for sp in species}
-            self.build_geometry_node()
-            self._species = Bspecies(
-                label, label, species_props, self, segments=segments)
-            self.selects.add('all', np.arange(len(self)))
             if isinstance(scale, (int, float)):
                 scale = np.ones(natom)*scale
             show = np.ones(natom, dtype=int)
             species_index = [string2Number(sp) for sp in species]
-            attributes.update({'species': species,
+            arrays = {'positions': positions,
+                                'species': species,
                                'species_index': species_index,
                                'scale': scale,
                                'show': show,
-                               })
-            self.set_attributes(attributes)
+                                'model_style': np.zeros(natom, dtype=int),
+                                'select': np.zeros(natom, dtype=int),
+                               }
+            if attributes is not None:
+                arrays.update(attributes)
+            self.build_object(label, arrays, location)
+            self.selects = Selects(label, self)
+            if species_props is None:
+                species_props = species
+            self._species = Bspecies(
+                label, label, species_props, self, segments=segments)
+            self.selects.add('all', np.arange(len(self)))
             if volume is not None:
                 self.build_volume(volume)
             self.set_pbc(pbc)
@@ -201,28 +212,30 @@ class Batoms(BaseCollection, ObjectGN):
         for sub_name in subcollections:
             subcoll = bpy.data.collections.new('%s_%s' % (label, sub_name))
             coll.children.link(subcoll)
-        coll.batoms.flag = True
+        coll.batoms.type = 'BATOMS'
         coll.batoms.label = label
 
     def hideOneLevel(self):
         """Hide one level of collecitons in the outline in Blender
         """
         from batoms.utils.butils import hideOneLevel
-        hideOneLevel()
+        # hideOneLevel()
+        pass
 
-    def build_object(self, label, positions, location=[0, 0, 0]):
+    def build_object(self, label, arrays, location=[0, 0, 0]):
         """Build the main Batoms object
 
         Args:
             label (str):
                 Name of the object
-            positions (array):
-                Positions of each atoms
+            arrays (array):
+                arrays of properties for each atoms
             location (list, optional):
                 Location of the object. Defaults to [0, 0, 0].
         """
         self.delete_obj(label)
         mesh = bpy.data.meshes.new(label)
+        positions = arrays.pop('positions')
         # Add attributes
         for attribute in default_attributes:
             mesh.attributes.new(
@@ -230,11 +243,13 @@ class Batoms(BaseCollection, ObjectGN):
         obj = bpy.data.objects.new(label, mesh)
         obj.data.from_pydata(positions, [], [])
         obj.location = location
-        obj.batoms.flag = True
+        obj.batoms.type = 'BATOMS'
         obj.batoms.label = label
         self.coll.objects.link(obj)
         # add cell object as its child
         self.cell.obj.parent = self.obj
+        self.set_attributes(arrays)
+        self.build_geometry_node()
 
     def build_geometry_node(self):
         """Geometry node for instancing sphere on vertices!
@@ -375,8 +390,8 @@ class Batoms(BaseCollection, ObjectGN):
         mesh.update()
         obj = bpy.data.objects.new(name, mesh)
         obj.data = mesh
-        obj.batoms.bvolume.is_bvolume = True
-        obj.batoms.bvolume.shape = shape
+        obj.batoms.type = 'VOLUME'
+        obj.batoms.volume.shape = shape
         self.coll.objects.link(obj)
         obj.hide_set(True)
         obj.hide_render = True
@@ -395,11 +410,11 @@ class Batoms(BaseCollection, ObjectGN):
         flag = True
         if label not in bpy.data.collections:
             flag = False
-        elif not bpy.data.collections[label].batoms.flag:
+        elif bpy.data.collections[label].batoms.type == 'OTHER':
             flag = False
         if label not in bpy.data.objects:
             flag = False
-        elif not bpy.data.objects[label].batoms.flag:
+        elif bpy.data.objects[label].batoms.type == 'OTHER':
             flag = False
         return flag
 
@@ -446,12 +461,32 @@ class Batoms(BaseCollection, ObjectGN):
     def volumeShape(self):
         if "%s_volume" % self.label not in bpy.data.objects:
             return 0
-        return bpy.data.objects["%s_volume" % self.label].batoms.bvolume.shape
+        return bpy.data.objects["%s_volume" % self.label].batoms.volume.shape
 
     @volumeShape.setter
     def volumeShape(self, volumeShape):
         bpy.data.objects["%s_volume" %
-                         self.label].batoms.bvolume.shape = volumeShape
+                         self.label].batoms.volume.shape = volumeShape
+
+    def set_arrays(self, arrays):
+        """
+        """
+        # if len(arrays['positions']) == 0:
+        #     return
+        attributes = self.attributes
+        # same length
+        if arrays['positions'].shape[0] == attributes['show'].shape[0]:
+            self.positions = arrays['positions']
+            # self.set_frames(arrays['positions'])
+            self.set_attributes({'species_index': arrays['species_index']})
+            self.set_attributes({'species': arrays['species']})
+            self.set_attributes({'scale': arrays['scale']})
+            self.set_attributes({'show': arrays['show']})
+            self.set_attributes({'model_style': arrays['model_style']})
+            self.set_attributes({'select': arrays['select']})
+        else:
+            # add or remove vertices
+            self.build_object(self.label, arrays, location=self.location)
 
     @property
     def label(self):
@@ -523,7 +558,7 @@ class Batoms(BaseCollection, ObjectGN):
         model_style = {'model_style': np.ones(
             len(self), dtype=int)*int(model_style)}
         self.set_attributes(model_style)
-        self.draw(model_style['model_style'], draw_isosurface=False)
+        self.draw()
         if self._boundary is not None:
             self.boundary.update()
 
@@ -553,7 +588,7 @@ class Batoms(BaseCollection, ObjectGN):
         radius = {}
         instancers = self.species.instancers
         for sp in self.species:
-            radius[sp.name] = instancers[sp.name].batoms.batom.radius
+            radius[sp.name] = instancers[sp.name].batoms.atom.radius
         return radius
 
     @property
@@ -680,12 +715,12 @@ class Batoms(BaseCollection, ObjectGN):
         self.set_pbc(pbc)
 
     def get_pbc(self):
-        return list(self.cell.obj.batoms.bcell.pbc)
+        return list(self.cell.obj.batoms.cell.pbc)
 
     def set_pbc(self, pbc):
         if isinstance(pbc, bool):
             pbc = [pbc]*3
-        self.cell.obj.batoms.bcell.pbc = pbc
+        self.cell.obj.batoms.cell.pbc = pbc
 
     @property
     def index(self):
@@ -871,6 +906,7 @@ class Batoms(BaseCollection, ObjectGN):
         M = np.product(m)
         n = len(self)
         frames = self.frames
+        nframe = len(frames)
         positions = self.positions
         positions = np.tile(positions, (M,) + (1,) *
                             (len(positions.shape) - 1))
@@ -887,26 +923,28 @@ class Batoms(BaseCollection, ObjectGN):
                     positions[i0:i1] += np.dot((m0, m1, m2), cell)
                     i0 = i1
                     n1 += 1
-        self.add_vertices(positions[n:])
-        self.set_attributes(attributes)
+        # self.add_arrays(arrays)
+        # self.set_attributes(attributes)
+        attributes.update({'positions': positions})
+        self.set_arrays(attributes)
+        self.species.update_geometry_node()
         self.cell.repeat(m)
         self.update_gn_cell()
         # if self.volume is not None:
         # self.volume = np.tile(self.volume, m)
         # repeat frames
         frames_new = []
-        if self.nframe > 1:
-            for i in range(0, self.nframe):
-                positions = np.tile(
-                    frames[i], (M,) + (1,) * (len(frames[i].shape) - 1))
-                i0 = 0
-                for m0 in range(m[0]):
-                    for m1 in range(m[1]):
-                        for m2 in range(m[2]):
-                            i1 = i0 + n
-                            positions[i0:i1] += np.dot((m0, m1, m2), cell)
-                            i0 = i1
-                frames_new.append(positions)
+        for i in range(0, nframe):
+            positions = np.tile(
+                frames[i], (M,) + (1,) * (len(frames[i].shape) - 1))
+            i0 = 0
+            for m0 in range(m[0]):
+                for m1 in range(m[1]):
+                    for m2 in range(m[2]):
+                        i1 = i0 + n
+                        positions[i0:i1] += np.dot((m0, m1, m2), cell)
+                        i0 = i1
+            frames_new.append(positions)
         self.set_frames(frames_new)
         if self._boundary is not None:
             self.boundary.update()
@@ -954,7 +992,7 @@ class Batoms(BaseCollection, ObjectGN):
         >>> slab = au111 + co
         todo: merge bonds setting
         """
-        # could also use self.add_vertices(other.positions)
+        # could also use self.add_arrays(other.positions)
         object_mode()
         # merge bondsetting
         self.bonds.setting.extend(other.bonds.setting)
@@ -1022,7 +1060,9 @@ class Batoms(BaseCollection, ObjectGN):
         # TODO remove species which is completely replaced.
         """
         # if kind exists, merger, otherwise build a new kind and add.
-        object_mode()
+        mode = self.obj.mode
+        bpy.context.view_layer.objects.active = self.obj
+        bpy.ops.object.mode_set(mode='OBJECT')
         if isinstance(species, str):
             species = [species, {'elements': {species.split('_')[0]: 1.0}}]
         if species[0] not in self.species:
@@ -1038,18 +1078,28 @@ class Batoms(BaseCollection, ObjectGN):
         species_array[indices] = species[0]
         self.set_attributes({'species_index': species_index})
         self.set_attributes({'species': species_array})
+        bpy.context.view_layer.objects.active = self.obj
+        # print(mode)
+        bpy.ops.object.mode_set(mode=mode)
         # print(self.species)
         # for sp in self.species:
         # self.bonds.setting.add([(species[0], sp.name)])
         # self.polyhedrasetting.add([species[0]])
 
-    def add_vertices(self, positions):
-        """
+    def add_atoms(self, arrays):
+        """ Used to add small number of atoms
         Todo: find a fast way.
         """
+        from batoms.utils import local2global
         import bmesh
         object_mode()
-        positions = positions - self.obj.location
+        n0 = len(self)
+        positions = arrays.pop('positions')
+        n1 = n0 + len(positions)
+        # add positions
+        positions = local2global(positions,
+                                 np.array(self.obj.matrix_world),
+                                 reversed=True)
         bm = bmesh.new()
         bm.from_mesh(self.obj.data)
         bm.verts.ensure_lookup_table()
@@ -1057,6 +1107,38 @@ class Batoms(BaseCollection, ObjectGN):
             bm.verts.new(pos)
         bm.to_mesh(self.obj.data)
         bm.clear()
+        # add species
+        self.species.add(list(set(arrays['species'])))
+        self.set_attribute_with_indices('species', range(n0, n1), arrays['species'])
+        if 'species_index' not in arrays:
+            species_index = [string2Number(sp) for sp in arrays['species']]
+            self.set_attribute_with_indices('species_index',
+                                        range(n0, n1),
+                                        species_index)
+        # add arrays
+        if 'show' not in arrays:
+            show = np.ones(n1 - n0)
+            self.set_attribute_with_indices('show', range(n0, n1), show)
+        if 'scale' not in arrays:
+            scale = np.ones(n1 - n0)
+            self.set_attribute_with_indices('scale', range(n0, n1), scale)
+        # add bonds setting
+        bond_dicts = self.bonds.setting.as_dict()
+        species0 = self.species.keys()
+        species1 = np.unique(arrays['species'])
+        for sp1 in species1:
+            for sp0 in species0:
+                pair1 = (sp1, sp0)
+                pair2 = (sp0, sp1)
+                if pair1 not in bond_dicts and pair2 not in bond_dicts:
+                    self.bonds.setting.add(pair1)
+                    sp3 = self.bonds.setting.find(pair1)
+                    sp4 = self.bonds.setting.find(pair2)
+                    if sp3:
+                        self.bonds.update_geometry_node_instancer(sp3.as_dict())
+                    if sp4:
+                        self.bonds.update_geometry_node_instancer(sp4.as_dict())
+
 
     def get_cell(self):
         if self.label not in bpy.data.collections:
@@ -1118,6 +1200,28 @@ class Batoms(BaseCollection, ObjectGN):
             cell = self.cell
             pbc = self.pbc
         return get_angles([v12], [v32], cell=cell, pbc=pbc)
+    
+    def get_dihedral(self, i1, i2, i3, i4, mic=False):
+        """
+
+        >>> h2o2.get_dihedral(0, 1, 2, 3)
+
+        """
+        from ase.geometry import get_dihedrals
+        positions = self.positions
+        p1 = positions[i1]
+        p2 = positions[i2]
+        p3 = positions[i3]
+        p4 = positions[i4]
+        v21 = p2 - p1
+        v32 = p3 - p2
+        v43 = p4 - p3
+        cell = None
+        pbc = None
+        if mic:
+            cell = self.cell
+            pbc = self.pbc
+        return get_dihedrals([v21], [v32], [v43], cell=cell, pbc=pbc)
 
     def get_center_of_mass(self, scaled=False):
         """Get the center of mass.
@@ -1435,7 +1539,7 @@ class Batoms(BaseCollection, ObjectGN):
                                 )
         return image
 
-    def draw(self, model_style=None, draw_isosurface=True):
+    def draw(self, model_style = None, draw_isosurface=True):
         """
         Draw atoms, bonds, polyhedra, .
 
@@ -1444,6 +1548,8 @@ class Batoms(BaseCollection, ObjectGN):
         model_style: str
         draw_isosurface: bool
         """
+        if model_style is not None:
+            self.model_style = model_style
         # self.draw_cell()
         self.draw_space_filling()
         self.draw_ball_and_stick()
@@ -1455,12 +1561,16 @@ class Batoms(BaseCollection, ObjectGN):
         self.set_attribute_with_indices('scale', mask, scale)
 
     def draw_ball_and_stick(self, scale=0.4):
-        mask = np.where(self.model_style == 1, True, False)
+        mask = np.where(self.model_style >= 1, True, False)
+        if not mask.any():
+            return
         self.set_attribute_with_indices('scale', mask, scale)
         self.bonds.update()
 
     def draw_polyhedra(self, scale=0.4):
         mask = np.where(self.model_style == 2, True, False)
+        if not mask.any():
+            return
         self.polyhedras.update()
         self.set_attribute_with_indices('show', mask, True)
         if self.polyhedra_style == 0:

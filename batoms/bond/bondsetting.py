@@ -152,35 +152,31 @@ class BondSetting():
 
 
 class BondSettings(Setting):
-    """
-    BondSetting object
-
-    The BondSetting object store the bondpair information.
-
-    Parameters:
-
-    label: str
-        The label define the batoms object that a Bondsetting belong to.
-    cutoff: float
-        Cutoff used to calculate the maxmium bondlength for bond pairs.
-    """
-
     def __init__(self, label, batoms=None,
                  bonds=None,
                  bondsetting=None,
-                 cutoff=1.3) -> None:
-        Setting.__init__(self, label, coll_name='%s' % label)
+                 dcutoff=0.5) -> None:
+        """
+        BondSettings object
+        The BondSettings object store the bondpair information.
+
+        Parameters:
+        label: str
+            The label define the batoms object that a Bondsetting belong to.
+        dcutoff: float
+            extra cutoff used to calculate the maxmium bondlength for bond pairs.
+        """
+        Setting.__init__(self, label, coll_name=label)
         self.label = label
         self.name = 'bbond'
-        self.cutoff = cutoff
+        self.dcutoff = dcutoff
         self.batoms = batoms
         self.bonds = bonds
         if len(self) == 0:
-            self.set_default(self.batoms.species.species_props, cutoff)
+            self.add_from_species(self.batoms.species.keys(), dcutoff)
         if bondsetting is not None:
             for key, data in bondsetting.items():
                 self[key] = data
-        #
 
     def build_materials(self, sp, node_inputs=None,
                         material_style='default'):
@@ -189,7 +185,7 @@ class BondSettings(Setting):
         from batoms.material import create_material
         colors = [sp['color1'], sp['color2']]
         for i in range(2):
-            name = '%s_%s_%s_%s_%s' % (
+            name = 'bond_%s_%s_%s_%s_%s' % (
                 self.label, sp['name'], sp['order'], sp['style'], i)
             if name in bpy.data.materials:
                 mat = bpy.data.materials.get(name)
@@ -201,6 +197,18 @@ class BondSettings(Setting):
                             backface_culling=True)
 
     def build_instancer(self, sp, vertices=32, shade_smooth=True):
+        """_summary_
+
+        Args:
+            sp (_type_): _description_
+            vertices (int, optional): _description_. Defaults to 32.
+            shade_smooth (bool, optional): _description_. Defaults to True.
+
+        Returns:
+            _type_: _description_
+        """
+        from batoms.utils.butils import get_nodes_by_name
+
         # only build the needed one
         order = sp['order']
         style = int(sp['style'])
@@ -212,7 +220,7 @@ class BondSettings(Setting):
         else:
             obj = self.cylinder(name, order=order, style=style,
                                 vertices=vertices, depth=1, radius=radius)
-        obj.batoms.batom.radius = radius
+        obj.batoms.atom.radius = radius
         #
         for coll in obj.users_collection:
             coll.objects.unlink(obj)
@@ -226,6 +234,12 @@ class BondSettings(Setting):
         #
         self.build_materials(sp)
         self.assign_materials(sp, order, style)
+        # update geometry nodes
+        ObjectInstancer = get_nodes_by_name(self.bonds.gnodes.node_group.nodes,
+                                            'ObjectInfo_%s' % name,
+                                            'GeometryNodeObjectInfo')
+        if ObjectInstancer is not None:
+            ObjectInstancer.inputs['Object'].default_value = obj
         # obj.data.materials.append(materials[data[0]])
         bpy.context.view_layer.update()
         return obj
@@ -416,7 +430,7 @@ class BondSettings(Setting):
             for order in [1, 2, 3]:
                 for style in [0, 1, 2, 3]:
                     for i in range(2):
-                        name = '%s_%s_%s_%s_%s' % (
+                        name = 'bond_%s_%s_%s_%s_%s' % (
                             self.label, data['name'], order, style, i)
                         mat = bpy.data.materials.get(name)
                         materials[data['name']]['%s_%s_%s' %
@@ -427,7 +441,7 @@ class BondSettings(Setting):
                 for order in [1, 2, 3]:
                     for style in [0, 1, 2, 3]:
                         for i in range(2):
-                            name = '%s_%s_%s_%s_%s' % (
+                            name = 'bond_%s_%s_%s_%s_%s' % (
                                 self.label, data['name'], order, style, i)
                             mat = bpy.data.materials.get(name)
                             materials[data['name']]['%s_%s_%s' %
@@ -464,13 +478,12 @@ class BondSettings(Setting):
         item = BondSetting(label=self.label, name=name, bonds=self.bonds)
         return item
 
-    def set_default(self, species_props, cutoff=1.3, self_interaction=True):
-        """
-        """
-        bondtable = get_bondtable(self.label, species_props, cutoff=cutoff,
-                                  self_interaction=self_interaction)
-        for key, value in bondtable.items():
-            self[key] = value
+    def items(self):
+        items = []
+        for b in self.collection:
+            item = BondSetting(label=self.label, name=b.name, bonds=self.bonds)
+            items.append(item)
+        return items
 
     def extend(self, other):
         for b in other:
@@ -483,25 +496,61 @@ class BondSettings(Setting):
         nspecies2 = species2 - species1
         for sp1 in nspecies1:
             for sp2 in nspecies2:
-                species = {sp1: self.batoms.species.species_props[sp1],
-                           sp2: other.batoms.species.species_props[sp2]}
-                self.set_default(species, self.cutoff, self_interaction=False)
+                pair = (sp1, sp2)
+                props = {sp1: self.batoms.species.species_props[sp1],
+                         sp2: other.batoms.species.species_props[sp2]}
+                self.add(pair, props)
 
-    def add(self, bondpairs):
-        if isinstance(bondpairs, tuple):
-            bondpairs = [bondpairs]
-        if isinstance(bondpairs[0], (str, int, float)):
-            bondpairs = [bondpairs]
-        for bondpair in bondpairs:
-            species = {
-                sp: self.batoms.species.species_props[sp] for sp in bondpair}
-            maxlength = species[bondpair[0]]['radius'] + \
-                species[bondpair[1]]['radius']
-            self[bondpair] = {'max': maxlength*self.cutoff,
-                              'color1': species[bondpair[0]]['color'],
-                              'color2': species[bondpair[1]]['color'],
-                              }
-            self.set_default(species)
+    def add_from_species(self, speciesList,
+                         only_default_bonds=False):
+        """_summary_
+
+        Args:
+            speciesList (_type_): _description_
+            self_interaction (bool, optional): _description_. Defaults to True.
+            only_default_bonds (bool, optional): _description_. Defaults to False.
+        """
+        from batoms.data import default_bonds
+        pairs = []
+        for sp1 in speciesList:
+            ele1 = sp1.split('_')[0]
+            for sp2 in speciesList:
+                ele2 = sp2.split('_')[0]
+                pair = (ele1, ele2)
+                if only_default_bonds and pair not in default_bonds:
+                    continue
+                pairs.append(pair)
+        for pair in pairs:
+            self.add(pair)
+
+    def add(self, pair, species_props = None):
+        """_summary_
+
+        Args:
+            pair (_type_): _description_
+        """
+        if species_props is None:
+            species_props = {
+                sp: self.batoms.species.species_props[sp] for sp in pair}
+        bond = self.get_bondtable(pair, species_props, dcutoff=0.5)
+        self[pair] = bond
+
+    def remove(self, index):
+        """
+        index: list of tuple
+        """
+        if isinstance(index, (str, int, float)):
+            index = [(index)]
+        if isinstance(index[0], (str, int, float)):
+            index = [index]
+        for key in index:
+            name = tuple2string(key)
+            i = self.collection.find(name)
+            if i != -1:
+                self.collection.remove(i)
+                self.coll.batoms.bond_index -= 1
+            else:
+                raise Exception('%s is not in %s' % (name, self.name))
 
     def copy(self, label):
         object_mode()
@@ -594,61 +643,46 @@ class BondSettings(Setting):
         return np.array(offsets_skin1), np.array(bondlist1), \
             np.array(offsets_skin2), np.array(bondlist2)
 
+    def get_bondtable(self, pair, props, dcutoff=0.5):
+        """
+        """
+        from batoms.data import default_bonds
 
-def get_bondtable(label, speciesdict, cutoff=1.3,
-                  self_interaction=True):
-    """
-    """
-    from batoms.data import default_bonds
-    bondtable = {}
-    for species1 in speciesdict:
-        element1 = species1.split('_')[0]
-        color1 = speciesdict[species1]['color']
-        radius1 = cutoff * speciesdict[species1]['radius']
-        for species2 in speciesdict:
-            if not self_interaction and species1 == species2:
-                continue
-            element2 = species2.split('_')[0]
-            element_pair = (element1, element2)
-            if element_pair not in default_bonds:
-                continue
-            pair12 = (species1, species2)
-            pair21 = (species2, species1)
-            # only add bond once, except for hedrogen bond
-            if pair21 in bondtable and ((element1 != 'H')
-                                        and (element2 != 'H')):
-                continue
-            color2 = speciesdict[species2]['color']
-            radius2 = cutoff * speciesdict[species2]['radius']
-            bondmax = radius1 + radius2
-            bondtable[pair12] = {
-                'flag': True,
-                'label': label,
-                'species1': species1,
-                'species2': species2,
-                'min': 0.0,
-                'max': bondmax,
-                'search': default_bonds[element_pair][0],
-                'polyhedra': default_bonds[element_pair][1],
-                'color1': color1,
-                'color2': color2,
-                'width': 0.10,
-                'order': 1,
-                'order_offset': 0.15,
-                'style': '1',
-            }
-    # special for hydrogen bond
-    hbs = [('H', 'O'), ('H', 'N')]
-    for pair in bondtable:
-        key = (pair[0].split('_')[0], pair[1].split('_')[0])
-        if key in hbs:
-            bondtable[pair]['min'] = 1.2
-            bondtable[pair]['max'] = 2.1
-            bondtable[pair]['search'] = 0
-            bondtable[pair]['color1'] = [0.1, 0.1, 0.1, 1.0]
-            bondtable[pair]['width'] = 0.03
-            bondtable[pair]['style'] = '2'
-    return bondtable
+        sp1 = pair[0]
+        sp2 = pair[1]
+        bondmax = props[sp1]['radius'] + \
+            props[sp2]['radius'] + dcutoff
+        if pair in default_bonds:
+            search = default_bonds[pair][0]
+            polyhedra = default_bonds[pair][1]
+        else:
+            search = 1
+            polyhedra = 0
+        bond = {
+            'label': self.label,
+            'species1': sp1,
+            'species2': sp2,
+            'min': 0.0,
+            'max': bondmax,
+            'search': search,
+            'polyhedra': polyhedra,
+            'color1': props[sp1]['color'],
+            'color2': props[sp2]['color'],
+            'width': 0.10,
+            'order': 1,
+            'order_offset': 0.15,
+            'style': '1',
+        }
+        # special for hydrogen bond
+        hbs = [('H', 'O'), ('H', 'N'), ('H', 'C')]
+        if pair in hbs:
+            bond['min'] = 1.5
+            bond['max'] = 2.1
+            bond['search'] = 0
+            bond['color1'] = [0.1, 0.1, 0.1, 1.0]
+            bond['width'] = 0.03
+            bond['style'] = '2'
+        return bond
 
 
 if __name__ == "__main__":

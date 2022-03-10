@@ -67,7 +67,7 @@ class Bond(childObjectGN):
 
     @style.setter
     def style(self, style):
-        self.attributes['style'].data[self.index].value = style
+        self.attributes['style'].data[self.index].value = int(style)
         # if stule not exist, add one
         sp = self.species
         sp['style'] = style

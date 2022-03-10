@@ -96,7 +96,7 @@ class Species(BaseObject):
         obj = bpy.context.view_layer.objects.active
         obj.name = name
         obj.data.name = name
-        obj.batoms.batom.radius = radius
+        obj.batoms.atom.radius = radius
         #
         obj.users_collection[0].objects.unlink(obj)
         bpy.data.collections['%s_instancer' % self.label].objects.link(obj)
@@ -395,7 +395,7 @@ class Bspecies(Setting):
     """Bspecies Class
     """
 
-    def __init__(self, label, coll_name, species={},
+    def __init__(self, label, coll_name, species=None,
                  batoms=None,
                  material_style='default',
                  segments=None,
@@ -408,8 +408,10 @@ class Bspecies(Setting):
         #
         self.calc_segments(segments)
         self.subdivisions = subdivisions
-        for sp, data in species.items():
-            self[sp] = data
+        if species is not None:
+            self.add(species)
+        # for sp, data in species.items():
+            # self[sp] = data
 
     def calc_segments(self, segments):
         if segments is not None:
@@ -442,22 +444,36 @@ class Bspecies(Setting):
         """
         Set species
         """
-        self.add(name, data)
+        self.add({name: data})
 
-    def add(self, name, data, instancer=None):
+    def add(self, species_props, instancer=None):
         """
         """
-        if 'color_style' not in data:
-            data['color_style'] = '0'
-        if 'radius_style' not in data:
-            data['radius_style'] = '0'
-        sp = self.find(name)
-        if sp is None:
-            sp = self.collection.add()
-        sp.name = name
-        sp.label = self.label
-        sp.segments = self.segments
-        sp = Species(sp.name, parent=self, data=data)
+        if species_props is None:
+            return
+        if isinstance(species_props, str):
+            species_props = {species_props: {'elements':
+                                             {species_props.split('_')[0]: 1.0}}}
+        if isinstance(species_props, (list, np.ndarray)):
+            species_props = {sp: {'elements': {sp.split('_')[0]: 1.0}}
+                             for sp in species_props}
+        for name, data in species_props.items():
+            if 'color_style' not in data:
+                data['color_style'] = '0'
+            if 'radius_style' not in data:
+                data['radius_style'] = '0'
+            sp = self.find(name)
+            if sp is None:
+                sp = self.collection.add()
+            sp.name = name
+            sp.label = self.label
+            sp.segments = self.segments
+            sp = Species(sp.name, parent=self, data=data)
+
+    def update_geometry_node(self):
+        instancers = self.instancers
+        for sp, obj in instancers.items():
+            self.batoms.add_geometry_node(sp, obj)
 
     def keys(self):
         return self.species.keys()
@@ -471,7 +487,7 @@ class Bspecies(Setting):
             s += str(sp)
             s += '\n'
         return s
-
+    
     @property
     def instancers(self):
         return self.get_instancers()
@@ -509,7 +525,7 @@ class Bspecies(Setting):
         instancers = self.instancers
         species_props = {}
         for sp in self.species:
-            radius = instancers[sp].batoms.batom.radius
+            radius = instancers[sp].batoms.atom.radius
             matname = instancers[sp].material_slots[0].name
             mat = bpy.data.materials.get(matname)
             color = mat.node_tree.nodes[0].inputs[0].default_value[:]
@@ -567,7 +583,7 @@ class Bspecies(Setting):
                 species3[spname] = [data, instancer]
         #
         for key, data in species3.items():
-            self.add(key, data[0], instancer=data[1])
+            self.add({key: data[0]}, instancer=data[1])
         return self
 
     def __iter__(self):

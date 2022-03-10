@@ -140,11 +140,11 @@ def modify_plane_attr(batoms_name_list, plpanel_name_list, key, value, center = 
             if plane.bplane.label == batoms_name:
                 batoms.planesetting[plane.bplane.indices] = {key: value}
             selected_plane_new.append(plane_name)
-        batoms.draw_lattice_plane()
+        batoms.planesetting.draw_lattice_plane()
         if center:
-            batoms.draw_crystal_shape(origin = batoms.cell.center)
+            batoms.planesetting.draw_crystal_shape(origin = batoms.cell.center)
         else:
-            batoms.draw_crystal_shape()
+            batoms.planesetting.draw_crystal_shape()
     for name in selected_plane_new:
         obj = bpy.data.objects.get(name)
         if obj is not None:
@@ -169,28 +169,68 @@ def add_plane(indices, color, distance, scale, crystal,
                                 'show_edge': show_edge,
                                 'color': color, 
                                 }
-        batoms.draw_lattice_plane()
+        batoms.planesetting.draw_lattice_plane()
         if center:
-            batoms.draw_crystal_shape(origin = batoms.cell.center)
+            batoms.planesetting.draw_crystal_shape(origin = batoms.cell.center)
         else:
-            batoms.draw_crystal_shape()
+            batoms.planesetting.draw_crystal_shape()
 
 class AddButton(Operator):
     bl_idname = "batoms.add_plane"
     bl_label = "Add"
-    bl_description = "Add distance, angle and dihedra angle"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = "Add plane"
+
+    indices: IntVectorProperty(
+        name="Miller indices", size = 3, default=(0, 0, 1),
+        description = "Miller indices for the plane", )
+    distance: FloatProperty(
+        name="Distance", default=3,
+        description = "distance from origin", )
+    scale: FloatProperty(
+        name="Scale", default=1,
+        description = "scale of the plane", )
+    crystal: BoolProperty(name="crystal",
+                default=False, 
+                description = "plane to form crystal shape",
+                )
+    center: BoolProperty(name="center",
+                default=False, 
+                description = "Apply center to model",
+                )
+    symmetry: BoolProperty(name="symmetry",
+                default=False, 
+                description = "Apply symmetry to indices",
+                )
+    slicing: BoolProperty(name="slicing",
+                default=False, 
+                description = "Apply slicing to volumetric data",
+                )
+    boundary: BoolProperty(name="boundary",
+                default=False, 
+                description = "Apply boundary to model",
+                )
+    show_edge: BoolProperty(
+        name = "show_edge", default=False,
+        description = "show_edge", )
+    color: FloatVectorProperty(
+        name="color", 
+        subtype='COLOR',
+        default=(0.1, 0.8, 0.4, 0.8),
+        size =4,
+        description="color picker",
+        )
 
     def execute(self, context):
-        plpanel = context.scene.plpanel
-        add_plane(plpanel.indices, 
-                    plpanel.color, 
-                    plpanel.distance, 
-                    plpanel.scale, 
-                    plpanel.crystal,
-                    plpanel.symmetry,
-                    plpanel.slicing,
-                    plpanel.boundary,
-                    plpanel.show_edge,
-                    plpanel.center,
+        add_plane(self.indices, 
+                    self.color, 
+                    self.distance, 
+                    self.scale, 
+                    self.crystal,
+                    self.symmetry,
+                    self.slicing,
+                    self.boundary,
+                    self.show_edge,
+                    self.center,
                     )
         return {'FINISHED'}
