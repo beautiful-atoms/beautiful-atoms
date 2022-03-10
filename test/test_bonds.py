@@ -59,7 +59,7 @@ def test_bonds_search_bond_1():
     mol.boundary = 0.01
     mol.model_style = 1
     mol.bonds.show_search = True
-    mol.get_image([1, -0.3, 0.1], engine="eevee", output="anthraquinone.png")
+    mol.get_image([1, -0.3, 0.1], engine="workbench", output="anthraquinone.png")
 
 
 def test_bonds_search_bond_2():
@@ -68,7 +68,7 @@ def test_bonds_search_bond_2():
     mof.boundary = 0.01
     mof.bonds.setting[("Zn", "O")].polyhedra = True
     mof.model_style = 1
-    mof.get_image([0, 1, 0], engine="eevee", output="mof-5.png")
+    mof.get_image([0, 1, 0], engine="workbench", output="mof-5.png")
 
 
 def test_hydrogen_bond():
@@ -78,7 +78,7 @@ def test_hydrogen_bond():
     ch3oh.bonds.setting[("H", "O")].max = 3.0
     ch3oh.bonds.setting[("H", "O")].style = "2"
     ch3oh.model_style = 1
-    ch3oh.get_image([1, 0, 0], engine="eevee", output="bonds-hb.png")
+    ch3oh.get_image([1, 0, 0], engine="workbench", output="bonds-hb.png")
 
 
 if __name__ == "__main__":
