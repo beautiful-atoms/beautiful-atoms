@@ -131,7 +131,7 @@ class MSsetting(Setting):
                       'edges': [],
                       'faces': faces,
                       'color': color,
-                      'battr_inputs': {'bisosurface': {}}
+                      'battr_inputs': {'isosurface': {}}
                       }
         print('Marching_cube: %s' % (time() - tstart))
         return isosurface

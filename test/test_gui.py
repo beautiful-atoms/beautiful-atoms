@@ -4,35 +4,16 @@ import numpy as np
 from batoms.utils.butils import removeAll
 import pytest
 
-def test_ase_molecule():
+def test_batoms():
     """Create a molecule use GUI ASE"""
-    removeAll()
-    bpy.context.scene.asepanel.formula = "NH3"
-    bpy.context.scene.asepanel.label = "nh3"
-    bpy.ops.batoms.add_molecule()
-    nh3 = Batoms('nh3')
-    assert len(nh3) == 4
-
-def test_ase_bulk():
-    """Create an bulk use GUI ASE"""
-    removeAll()
-    bpy.context.scene.asepanel.formula = "Au"
-    bpy.context.scene.asepanel.label = "au"
-    bpy.ops.batoms.add_bulk()
-    au = Batoms('au')
-    assert len(au) == 1
-
-def test_ase_surface():
-    """Create an surface use GUI ASE"""
-    removeAll()
-    bpy.context.scene.asepanel.formula = "Au"
-    bpy.context.scene.asepanel.label = "au"
-    bpy.ops.batoms.add_surface()
-    au = Batoms('au')
-    assert len(au) == 1
+    bpy.ops.batoms.delete()
+    bpy.ops.batoms.molecule_add()
+    ch4 = Batoms('CH4')
+    ch4.obj.select_set(True)
+    bpy.context.scene.bapanel.model_style = {"1", "1", "1"}
+    assert ch4.model_style[0] == 1
 
 
 if __name__ == "__main__":
-    test_ase_molecule()
-    test_ase_bulk()
-    print("\n Batoms: All pass! \n")
+    test_batoms()
+    print("\n GUI: All pass! \n")

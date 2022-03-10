@@ -70,7 +70,7 @@ def test_batoms_species():
     h2o["X"].color = [0.8, 0.8, 0.0, 0.3]
 
 
-def test_batoms_write(filename):
+def test_batoms_write():
     """Export Batoms to structure file
 
     Args:
@@ -242,7 +242,7 @@ if __name__ == "__main__":
     test_batoms_molecule()
     test_batoms_crystal()
     test_batoms_species()
-    test_batoms_write("h2o.in")
+    test_batoms_write()
     test_batoms_transform()
     test_batoms_wrap()
     test_batoms_supercell()
