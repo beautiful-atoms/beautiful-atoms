@@ -47,7 +47,7 @@ def test_boundary():
     if skip_test:
         pytest.skip("Skip tests on cube files since $NOTEST_CUBE provided.")
     bpy.ops.batoms.delete()
-    h2o = read("/home/xing/ase/batoms/h2o-homo.cube")
+    h2o = read("datas/h2o-homo.cube")
     h2o.planesetting[(0, 0, 1)] = {"distance": 6, "boundary": True}
     h2o.planesetting[(0, 0, -1)] = {"distance": -5, "boundary": True}
     h2o.planesetting.draw_lattice_plane()
