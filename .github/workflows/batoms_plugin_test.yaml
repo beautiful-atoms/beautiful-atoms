@@ -54,4 +54,5 @@ jobs:
           flake8 . --exclude=batoms/gui/,batoms/ops/,batoms/modal,batoms/__init__.py,batoms/custom_property.py --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Run blender unittests
         run: |
-          pytest -svv test
+          cd test
+          pytest -svv --blender-executable blender -- --background
