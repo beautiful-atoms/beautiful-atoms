@@ -22,7 +22,7 @@ def test_slice():
     if skip_test:
         pytest.skip("Skip tests on cube files since $NOTEST_CUBE provided.")
     bpy.ops.batoms.delete()
-    h2o = read("/home/xing/ase/batoms/h2o-homo.cube")
+    h2o = read("datas/h2o-homo.cube")
     h2o.isosurfacesetting["1"] = {"level": -0.001}
     h2o.isosurfacesetting["2"] = {"level": 0.001, "color": [0, 0, 0.8, 0.5]}
     h2o.isosurfacesetting.draw_isosurface()
@@ -37,25 +37,20 @@ def test_diff():
     if skip_test:
         pytest.skip("Skip tests on cube files since $NOTEST_CUBE provided.")
     bpy.ops.batoms.delete()
-    ag_pto_fe = read("/home/xing/ase/batoms/ag-pto-fe.cube")
-    ag_pto = read("/home/xing/ase/batoms/ag-pto.cube")
-    ag_pto.hide = True
-    fe = read("/home/xing/ase/batoms/fe.cube")
-    fe.hide = True
-    volume = ag_pto_fe.volume - ag_pto.volume - fe.volume
-    # volume = ag_pto_fe.isosurfacesetting.volume*2
-    # print(volume)
-    ag_pto_fe.volume = volume
-    ag_pto_fe.isosurfacesetting[1].level = 0.008
-    ag_pto_fe.isosurfacesetting[2] = {"level": -0.008, "color": [0, 0, 1, 0.8]}
-    ag_pto_fe.model_style = 1
-    ag_pto_fe.isosurfacesetting.draw_isosurface()
+    h2o = read("datas/h2o-homo.cube", label = "h2o")
+    volume = h2o.volume
+    h2o.volume = volume + 0.1
+    assert np.allclose(h2o.volume, volume + 0.1)
+    h2o.isosurfacesetting[1].level = 0.008
+    h2o.isosurfacesetting[2] = {"level": -0.008, "color": [0, 0, 1, 0.8]}
+    h2o.model_style = 1
+    h2o.isosurfacesetting.draw_isosurface()
     if use_cycles:
-        set_cycles_res(ag_pto_fe)
+        set_cycles_res(h2o)
     else:
-        ag_pto_fe.render.resolution = [3000, 3000]
-    ag_pto_fe.get_image([0, 0, 1], output="top.png", **extras)
-    ag_pto_fe.get_image([1, 0, 0], output="side.png", **extras)
+        h2o.render.resolution = [200, 200]
+    h2o.get_image([0, 0, 1], output="h2o-homo-diff-top.png", **extras)
+    h2o.get_image([1, 0, 0], output="h2o-homo-diff-side.png", **extras)
 
 
 if __name__ == "__main__":
