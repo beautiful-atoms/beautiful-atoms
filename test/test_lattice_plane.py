@@ -21,25 +21,14 @@ def test_lattice_plane():
     bpy.ops.batoms.delete()
     au = bulk("Au", cubic=True)
     au = Batoms("au", from_ase=au)
-    au.planesetting[(1, 1, 1)] = {"distance": 3, "scale": 1.1}
-    au.planesetting[(1, 1, 0)] = {"distance": 3, "color": [0.8, 0.1, 0, 0.8]}
-    au.planesetting.draw_lattice_plane()
+    au.lattice_plane.setting[(1, 1, 1)] = {"distance": 3, "scale": 1.1}
+    au.lattice_plane.setting[(1, 1, 0)] = {"distance": 3, "color": [0.8, 0.1, 0, 0.8]}
+    print(au.lattice_plane.setting)
+    au.lattice_plane.draw()
     # au.draw_cell()
     if use_cycles:
         set_cycles_res(au)
     au.get_image([0, 0, 1], output="plane-lattice-plane.png", **extras)
-
-
-def test_crystal_shape():
-    bpy.ops.batoms.delete()
-    au = bulk("Au", cubic=True)
-    au = Batoms("au", from_ase=au)
-    au.planesetting[(1, 1, 1)] = {"distance": 3, "crystal": True, "symmetry": True}
-    # au.planesetting[(0, 0, 1)] = {'distance': 3, 'crystal': True, 'symmetry': True}
-    au.planesetting.draw_crystal_shape(origin=au.cell.center)
-    if use_cycles:
-        set_cycles_res(au)
-    au.get_image([0, 0, 1], output="plane-crystal.png", **extras)
 
 
 def test_boundary():
@@ -47,10 +36,10 @@ def test_boundary():
     if skip_test:
         pytest.skip("Skip tests on cube files since $NOTEST_CUBE provided.")
     bpy.ops.batoms.delete()
-    h2o = read("datas/h2o-homo.cube")
-    h2o.planesetting[(0, 0, 1)] = {"distance": 6, "boundary": True}
-    h2o.planesetting[(0, 0, -1)] = {"distance": -5, "boundary": True}
-    h2o.planesetting.draw_lattice_plane()
+    h2o = read("../test/datas/h2o-homo.cube")
+    h2o.lattice_plane.setting[(0, 0, 1)] = {"distance": 6, "boundary": True}
+    h2o.lattice_plane.setting[(0, 0, -1)] = {"distance": -5, "boundary": True}
+    h2o.lattice_plane.draw()
     if use_cycles:
         set_cycles_res(h2o)
     h2o.get_image([1, 0, 0], output="plane-boundary.png", **extras)
@@ -58,6 +47,5 @@ def test_boundary():
 
 if __name__ == "__main__":
     test_lattice_plane()
-    test_crystal_shape()
     test_boundary()
-    print("\n Bcell: All pass! \n")
+    print("\n Lattice plane: All pass! \n")

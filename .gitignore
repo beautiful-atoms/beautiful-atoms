@@ -141,4 +141,5 @@ dmypy.json
 
 #test/
 .vscode/*
+*/.vscode/*
 Dockerfiles/Dockerfile.base_3.0

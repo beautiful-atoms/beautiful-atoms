@@ -18,13 +18,14 @@ from batoms.bselect import Selects
 from batoms.utils import string2Number, read_from_ase, read_from_pymatgen
 from batoms.base.collection import BaseCollection
 from batoms.base.object import ObjectGN
-from batoms.isosurfacesetting import IsosurfaceSetting
-from batoms.planesetting import PlaneSetting
-from batoms.mssetting import MSsetting
+from batoms.isosurface import Isosurface
+from batoms.lattice_plane import LatticePlane
+from batoms.crystal_shape import CrystalShape
 from batoms.ribbon.ribbon import Ribbon
 from batoms.utils.butils import object_mode, show_index, \
     get_nodes_by_name, compareNodeType
 import numpy as np
+from batoms.crystal_shape import CrystalShape
 # from time import time
 
 shapes = ["UV_SPHERE", "ICO_SPHERE", "CUBE", "METABALL"]
@@ -55,6 +56,7 @@ class Batoms(BaseCollection, ObjectGN):
         BaseCollection (_type_): _description_
         ObjectGN (_type_): _description_
     """
+
     def __init__(self,
                  label='batoms',
                  species=None,
@@ -163,13 +165,13 @@ class Batoms(BaseCollection, ObjectGN):
             show = np.ones(natom, dtype=int)
             species_index = [string2Number(sp) for sp in species]
             arrays = {'positions': positions,
-                                'species': species,
-                               'species_index': species_index,
-                               'scale': scale,
-                               'show': show,
-                                'model_style': np.zeros(natom, dtype=int),
-                                'select': np.zeros(natom, dtype=int),
-                               }
+                      'species': species,
+                      'species_index': species_index,
+                      'scale': scale,
+                      'show': show,
+                      'model_style': np.zeros(natom, dtype=int),
+                      'select': np.zeros(natom, dtype=int),
+                      }
             if attributes is not None:
                 arrays.update(attributes)
             self.build_object(label, arrays, location)
@@ -185,14 +187,15 @@ class Batoms(BaseCollection, ObjectGN):
             # self.label = label
             if movie:
                 self.set_frames()
-        self.isosurfacesetting = IsosurfaceSetting(self.label, batoms=self)
-        self.planesetting = PlaneSetting(self.label, batoms=self)
-        self.mssetting = MSsetting(self.label, probe=1.4, batoms=self)
         self.ribbon = Ribbon(self.label, batoms=self, datas=info, update=True)
         self._render = None
         self._bonds = None
         self._polyhedras = None
         self._boundary = None
+        self._isosurfaces = None
+        self._lattice_plane = None
+        self._crystal_shape = None
+        self._ms = None
         show_index()
         self.hideOneLevel()
 
@@ -1109,12 +1112,13 @@ class Batoms(BaseCollection, ObjectGN):
         bm.clear()
         # add species
         self.species.add(list(set(arrays['species'])))
-        self.set_attribute_with_indices('species', range(n0, n1), arrays['species'])
+        self.set_attribute_with_indices(
+            'species', range(n0, n1), arrays['species'])
         if 'species_index' not in arrays:
             species_index = [string2Number(sp) for sp in arrays['species']]
             self.set_attribute_with_indices('species_index',
-                                        range(n0, n1),
-                                        species_index)
+                                            range(n0, n1),
+                                            species_index)
         # add arrays
         if 'show' not in arrays:
             show = np.ones(n1 - n0)
@@ -1135,10 +1139,11 @@ class Batoms(BaseCollection, ObjectGN):
                     sp3 = self.bonds.setting.find(pair1)
                     sp4 = self.bonds.setting.find(pair2)
                     if sp3:
-                        self.bonds.update_geometry_node_instancer(sp3.as_dict())
+                        self.bonds.update_geometry_node_instancer(
+                            sp3.as_dict())
                     if sp4:
-                        self.bonds.update_geometry_node_instancer(sp4.as_dict())
-
+                        self.bonds.update_geometry_node_instancer(
+                            sp4.as_dict())
 
     def get_cell(self):
         if self.label not in bpy.data.collections:
@@ -1200,7 +1205,7 @@ class Batoms(BaseCollection, ObjectGN):
             cell = self.cell
             pbc = self.pbc
         return get_angles([v12], [v32], cell=cell, pbc=pbc)
-    
+
     def get_dihedral(self, i1, i2, i3, i4, mic=False):
         """
 
@@ -1459,6 +1464,59 @@ class Batoms(BaseCollection, ObjectGN):
                 boundary = np.array(boundary)
         self.boundary[:] = boundary
 
+    @property
+    def isosurfaces(self):
+        """isosurfaces object."""
+        if self._isosurfaces is not None:
+            return self._isosurfaces
+        isosurfaces = Isosurface(self.label, batoms=self)
+        self.isosurfaces = isosurfaces
+        return isosurfaces
+
+    @isosurfaces.setter
+    def isosurfaces(self, isosurfaces):
+        self._isosurfaces = isosurfaces
+    
+    @property
+    def lattice_plane(self):
+        """lattice_plane object."""
+        if self._lattice_plane is not None:
+            return self._lattice_plane
+        lattice_plane = LatticePlane(self.label, batoms=self)
+        self.lattice_plane = lattice_plane
+        return lattice_plane
+
+    @lattice_plane.setter
+    def lattice_plane(self, lattice_plane):
+        self._lattice_plane = lattice_plane
+    
+    @property
+    def crystal_shape(self):
+        """crystal_shape object."""
+        if self._crystal_shape is not None:
+            return self._crystal_shape
+        crystal_shape = CrystalShape(self.label, batoms=self)
+        self.crystal_shape = crystal_shape
+        return crystal_shape
+
+    @crystal_shape.setter
+    def crystal_shape(self, crystal_shape):
+        self._crystal_shape = crystal_shape
+    
+    @property
+    def ms(self):
+        """ms object."""
+        from batoms.ms import MS
+        if self._ms is not None:
+            return self._ms
+        ms = MS(self.label, batoms=self)
+        self.ms = ms
+        return ms
+
+    @ms.setter
+    def ms(self, ms):
+        self._ms = ms
+
     def get_arrays_with_boundary(self):
         """
         get arrays with boundary atoms
@@ -1539,14 +1597,13 @@ class Batoms(BaseCollection, ObjectGN):
                                 )
         return image
 
-    def draw(self, model_style = None, draw_isosurface=True):
+    def draw(self, model_style=None):
         """
         Draw atoms, bonds, polyhedra, .
 
         Parameters:
 
         model_style: str
-        draw_isosurface: bool
         """
         if model_style is not None:
             self.model_style = model_style
