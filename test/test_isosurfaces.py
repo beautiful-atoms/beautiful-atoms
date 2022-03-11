@@ -25,8 +25,8 @@ def test_slice():
     h2o.isosurfaces.setting["1"] = {"level": -0.001}
     h2o.isosurfaces.setting["2"] = {"level": 0.001, "color": [0, 0, 0.8, 0.5]}
     h2o.isosurfaces.draw()
-    h2o.planesetting[(1, 0, 0)] = {"distance": 6, "slicing": True}
-    h2o.planesetting.draw_lattice_plane()
+    h2o.lattice_plane.setting[(1, 0, 0)] = {"distance": 6, "slicing": True}
+    h2o.lattice_plane.draw()
     if use_cycles:
         set_cycles_res(h2o)
     h2o.get_image([0, 0, 1], **extras)

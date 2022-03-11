@@ -21,7 +21,6 @@ from batoms.base.object import ObjectGN
 from batoms.isosurface import Isosurface
 from batoms.lattice_plane import LatticePlane
 from batoms.crystal_shape import CrystalShape
-from batoms.mssetting import MSsetting
 from batoms.ribbon.ribbon import Ribbon
 from batoms.utils.butils import object_mode, show_index, \
     get_nodes_by_name, compareNodeType
@@ -188,7 +187,6 @@ class Batoms(BaseCollection, ObjectGN):
             # self.label = label
             if movie:
                 self.set_frames()
-        self.mssetting = MSsetting(self.label, probe=1.4, batoms=self)
         self.ribbon = Ribbon(self.label, batoms=self, datas=info, update=True)
         self._render = None
         self._bonds = None
@@ -197,6 +195,7 @@ class Batoms(BaseCollection, ObjectGN):
         self._isosurfaces = None
         self._lattice_plane = None
         self._crystal_shape = None
+        self._ms = None
         show_index()
         self.hideOneLevel()
 
@@ -1503,6 +1502,20 @@ class Batoms(BaseCollection, ObjectGN):
     @crystal_shape.setter
     def crystal_shape(self, crystal_shape):
         self._crystal_shape = crystal_shape
+    
+    @property
+    def ms(self):
+        """ms object."""
+        from batoms.ms import MS
+        if self._ms is not None:
+            return self._ms
+        ms = MS(self.label, batoms=self)
+        self.ms = ms
+        return ms
+
+    @ms.setter
+    def ms(self, ms):
+        self._ms = ms
 
     def get_arrays_with_boundary(self):
         """

@@ -23,6 +23,7 @@ def test_crystal_shape():
         "distance": 3, "crystal": True, "symmetry": True}
     au.crystal_shape.setting[(0, 0, 1)] = {'distance': 3, 
     'crystal': True, 'symmetry': True}
+    print(au.crystal_shape.setting)
     au.crystal_shape.draw(origin=au.cell.center)
     if use_cycles:
         set_cycles_res(au)

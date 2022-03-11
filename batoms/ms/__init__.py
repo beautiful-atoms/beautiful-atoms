@@ -1,73 +1,59 @@
+"""Definition of the plane class.
+
+This module defines the plane object in the Batoms package.
+
 """
-Molecular surface:
-1) van der Waals surface
-2) Accessible surface area (SAS)
-3) Solvent-excluded surface (SES) or Connolly surface
-"""
+
 import bpy
-import numpy as np
+import bmesh
 from time import time
-from batoms.base.collection import Setting
+import numpy as np
+from batoms.base.object import BaseObject
+from batoms.ms.mssetting import MSsetting
 
 default_colors = [(0.2, 0.1, 0.9, 1.0), (0.0, 0.0, 1.0, 1.0)]
 
 
-class MSsetting(Setting):
-    def __init__(self, label, probe=1.4, batoms=None,
-                 render_resolution=0.2,
-                 resolution=0.5,
-                 threshold=1e-4,
-                 update_method='FAST'
-                 ) -> None:
-        """MS object
-        The MS object store the MS information.
+class MS(BaseObject):
+    def __init__(self,
+                 label=None,
+                 location=np.array([0, 0, 0]),
+                 batoms=None,
+                 ):
+        """Plane Class
 
-        Parameters:
-
-        label: str
-            The label define the batoms object that
-            a Setting belong to.
-        probe: float
-            probe radius, in [0,inf], default is 1.4
+        Args:
+            label (_type_, optional): _description_. Defaults to None.
+            location (_type_, optional): _description_. Defaults to np.array([0, 0, 0]).
+            batoms (_type_, optional): _description_. Defaults to None.
         """
-        Setting.__init__(self, label)
-        self.label = label
-        self.name = 'bmssetting'
-        self.probe = probe
+        #
         self.batoms = batoms
-        self.sas_name = '%s_sas' % self.label
-        self.ses_name = '%s_ses' % self.label
-        self.resolution = resolution
-        if len(self) == 0:
-            self['1'] = {'select': 'all'}
+        self.label = label
+        name = 'plane'
+        BaseObject.__init__(self, label, name)
+        self.setting = MSsetting(
+            self.label, parent=self)
 
-    def add(self, name, datas={}):
-        self[name] = datas
-
-    def set_collection(self, label):
+    def build_materials(self, name, color, node_inputs=None,
+                        material_style='default'):
         """
         """
-        if not bpy.data.collections.get(label):
-            coll = bpy.data.collections.new(label)
-            self.batoms.coll.children.link(coll)
-            coll.batoms.type = 'MS'
-            coll.batoms.label = label
+        from batoms.material import create_material
+        if name in bpy.data.materials:
+            mat = bpy.data.materials.get(name)
+            bpy.data.materials.remove(mat, do_unlink=True)
+        mat = create_material(name,
+                              color=color,
+                              node_inputs=node_inputs,
+                              material_style=material_style,
+                              backface_culling=False)
+        return mat
 
-    def __repr__(self) -> str:
-        s = "-"*60 + "\n"
-        s = "name  select  probe   resolution    color  \n"
-        for ms in self.collection:
-            s += "{:4s}  {:6s}   {:1.3f}  {:1.3f} ".format(
-                ms.name, ms.select, ms.probe, ms.resolution)
-            s += "[{:1.1f}  {:1.1f}  {:1.1f}  {:1.1f}] \n".format(
-                ms.color[0], ms.color[1], ms.color[2], ms.color[3])
-        s += "-"*60 + "\n"
-        return s
-    
     @property
     def sas_objs(self):
         sas_objs = {}
-        for ms in self.collection:
+        for ms in self.setting.collection:
             sas_name = '%s_%s_sas' % (self.label, ms.name)
             obj = bpy.data.objects.get(sas_name)
             sas_objs[ms.name] = obj
@@ -84,15 +70,14 @@ class MSsetting(Setting):
     @property
     def ses_objs(self):
         ses_objs = {}
-        for ms in self.collection:
+        for ms in self.setting.collection:
             sas_name = '%s_%s_ses' % (self.label, ms.name)
             obj = bpy.data.objects.get(sas_name)
             ses_objs[ms.name] = obj
         return ses_objs
 
-    @property
-    def spacing(self):
-        return [self.resolution]*3
+    def get_space(self, resolution):
+        return [resolution]*3
 
     def get_box(self, vertices, padding=4):
         """
@@ -143,7 +128,7 @@ class MSsetting(Setting):
         3) Marching cube find isosurface = 5
         """
         from batoms.draw import draw_surface_from_vertices
-        for ms in self.collection:
+        for ms in self.setting.collection:
             resolution = ms.resolution
             probe = ms.probe
             print('Resolution: {:1.3f}, Probe: {:1.3}'.format(
@@ -164,20 +149,20 @@ class MSsetting(Setting):
                                          parallel=parallel)
             volume = volume_sas.reshape(self.shape)
             isosurface = self.calc_isosurface(
-                volume, 5, spacing=self.spacing, origin=self.box_origin)
+                volume, 5, spacing=self.get_space(resolution),
+                origin=self.box_origin)
             isosurface['color'] = ms.color
             print('Vertices: %s' % len(isosurface['vertices']))
             sas_name = '%s_%s_sas' % (self.label, ms.name)
-            obj = bpy.data.objects.get(sas_name)
-            if obj is not None:
-                bpy.data.objects.remove(obj, do_unlink=True)
+            self.delete_obj(sas_name)
             coll = self.batoms.coll.children['%s_surface' %
                                              self.batoms.coll_name]
-            draw_surface_from_vertices(sas_name,
+            obj = draw_surface_from_vertices(sas_name,
                                        datas=isosurface,
                                        coll=coll,
-                                       backface_culling=False,
                                        )
+            mat = self.build_materials(sas_name, color = isosurface['color'])
+            obj.data.materials.append(mat)
             print('Draw SAS: %s' % (time() - tstart))
 
     def draw_SES(self, parallel=1):
@@ -189,7 +174,7 @@ class MSsetting(Setting):
         5) Marching cube find isosurface = 5
         """
         from batoms.draw import draw_surface_from_vertices
-        for ms in self.collection:
+        for ms in self.setting.collection:
             resolution = ms.resolution
             probe = ms.probe
             print('Resolution: {:1.3f}, Probe: {:1.3}'.format(
@@ -213,7 +198,7 @@ class MSsetting(Setting):
                                          parallel=parallel)
             volume = volume_sas.reshape(self.shape)
             isosurface = self.calc_isosurface(
-                volume, 5, self.spacing, origin=self.box_origin)
+                volume, 5, self.get_space(resolution), origin=self.box_origin)
             # build SAS with probe = -self.resolution
             radii = radii_vdw - resolution
             volume_sas1 = np.where(volume_sas > 5, 6, volume_sas)
@@ -241,20 +226,19 @@ class MSsetting(Setting):
             self.volume_ses[indices] = volume_ses
             volume = self.volume_ses.reshape(self.shape)
             isosurface = self.calc_isosurface(
-                volume, 5, self.spacing, origin=self.box_origin)
+                volume, 5, self.get_space(resolution), origin=self.box_origin)
             isosurface['color'] = ms.color
             print('Vertices: %s' % len(isosurface['vertices']))
             ses_name = '%s_%s_ses' % (self.label, ms.name)
-            obj = bpy.data.objects.get(ses_name)
-            if obj is not None:
-                bpy.data.objects.remove(obj, do_unlink=True)
+            self.delete_obj(ses_name)
             coll = self.batoms.coll.children['%s_surface' %
                                              self.batoms.coll_name]
-            draw_surface_from_vertices(ses_name,
+            obj = draw_surface_from_vertices(ses_name,
                                        datas=isosurface,
                                        coll=coll,
-                                       backface_culling=False,
                                        )
+            mat = self.build_materials(ses_name, color = isosurface['color'])
+            obj.data.materials.append(mat)
             print('Time SES: %s' % (time() - tstart))
             self.get_sesa(ms.name)
 
@@ -792,12 +776,3 @@ class MSsetting(Setting):
         self.SAS_Shrake_Rupley = SAS_Shrake_Rupley
         bpy.data.objects.remove(source, do_unlink=True)
         # return 0
-
-    def draw_SAS_Shrake_Rupley(self):
-        from batoms.draw import draw_surface_from_vertices
-        name = '%s_%s' % (self.label, 'SAS')
-        draw_surface_from_vertices(name,
-                                   datas=self.SAS_Shrake_Rupley,
-                                   coll=self.batoms.coll.children['%s_volume' %
-                                                                  self.label],
-                                   )

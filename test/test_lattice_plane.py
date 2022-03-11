@@ -23,6 +23,7 @@ def test_lattice_plane():
     au = Batoms("au", from_ase=au)
     au.lattice_plane.setting[(1, 1, 1)] = {"distance": 3, "scale": 1.1}
     au.lattice_plane.setting[(1, 1, 0)] = {"distance": 3, "color": [0.8, 0.1, 0, 0.8]}
+    print(au.lattice_plane.setting)
     au.lattice_plane.draw()
     # au.draw_cell()
     if use_cycles:
