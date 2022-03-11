@@ -558,6 +558,7 @@ class BatomsCollection(bpy.types.PropertyGroup):
                ('BOND', "Bond", "Bond"),
                ('POLYHEDRA', "Polyhedra", "Polyhedra"),
                ('PLANE', "Plane", "Plane"),
+               ('ISOSURFACE', "Isosurface", "Isosurface"),
                ('MS', "MS", "Molecular Surface"),
                ),
         default='OTHER')
@@ -629,6 +630,7 @@ class BatomsObject(bpy.types.PropertyGroup):
                ('BOND', "Bond", "Bond"),
                ('POLYHEDRA', "Polyhedra", "Polyhedra"),
                ('PLANE', "Plane", "Plane"),
+               ('ISOSURFACE', "Isosurface", "Isosurface"),
                ('MS', "MS", "Molecular Surface"),
                ),
         default='OTHER')
