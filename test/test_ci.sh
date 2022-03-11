@@ -17,8 +17,7 @@ blender -b -P test_boundary.py
 blender -b -P test_camera.py
 blender -b -P test_cell.py
 blender -b -P test_light.py
-# SAS systems need more attention
-# blender -b -P test_ms.py
+blender -b -P test_ms.py
 blender -b -P test_performance.py
 blender -b -P test_plane.py
 blender -b -P test_plugins.py

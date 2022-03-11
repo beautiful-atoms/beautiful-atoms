@@ -131,7 +131,7 @@ class MSsetting(Setting):
                       'edges': [],
                       'faces': faces,
                       'color': color,
-                      'battr_inputs': {'bisosurface': {}}
+                      'battr_inputs': {'isosurface': {}}
                       }
         print('Marching_cube: %s' % (time() - tstart))
         return isosurface
@@ -149,9 +149,11 @@ class MSsetting(Setting):
             print('Resolution: {:1.3f}, Probe: {:1.3}'.format(
                 resolution, probe))
             tstart = time()
-            mask = self.batoms.selects[ms.select].mask
-            radii = np.array(self.batoms.radii_vdw[mask]) + probe
-            positions = self.batoms.positions[mask]
+            indices = self.batoms.selects[ms.select].indices
+            if len(indices) == 0:
+                return
+            radii = np.array(self.batoms.radii_vdw[indices]) + probe
+            positions = self.batoms.positions[indices]
             self.get_box(positions, padding=max(radii) + resolution)
             self.build_grid(resolution=resolution)
             print('Grid Points: %s %s %s' % self.shape)
@@ -193,10 +195,12 @@ class MSsetting(Setting):
             print('Resolution: {:1.3f}, Probe: {:1.3}'.format(
                 resolution, probe))
             tstart = time()
-            mask = self.batoms.selects[ms.select].mask
-            radii_vdw = np.array(self.batoms.radii_vdw[mask])
+            indices = self.batoms.selects[ms.select].indices
+            if len(indices) == 0:
+                return
+            radii_vdw = np.array(self.batoms.radii_vdw[indices])
             radii = radii_vdw + probe
-            positions = self.batoms.positions[mask]
+            positions = self.batoms.positions[indices]
             self.get_box(positions, padding=max(radii) + resolution + probe)
             self.build_grid(resolution=resolution)
             # draw_vertices('meshgrid', self.meshgrids)

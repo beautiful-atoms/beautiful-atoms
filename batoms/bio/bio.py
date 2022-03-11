@@ -5,16 +5,17 @@ from batoms import Batoms
 # from time import time
 
 
-def read(filename, **kwargs):
+def read(filename, label = None, **kwargs):
     """
     wrapper function for ase.io.read
     """
     base = os.path.basename(filename)
     base = os.path.splitext(base)
-    label = base[0]
-    label = label.replace('-', '_')
-    if label[:-1].isdigit():
-        label = 'b_' + label
+    if label is None:
+        label = base[0]
+        label = label.replace('-', '_')
+        if label[:-1].isdigit():
+            label = 'b_' + label
     ext = base[1]
     if ext == '.cube':
         # tstart = time()

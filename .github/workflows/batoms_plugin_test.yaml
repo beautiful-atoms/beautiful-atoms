@@ -43,7 +43,7 @@ jobs:
           blender -b --python-exit-code 1 --python-expr  "from batoms import Batoms; b = Batoms('O', ['O'], [[0, 0, 0]])"
       - name: Install test dependencies
         run: |
-          $BLENDERPY -m pip install pytest flake8
+          $BLENDERPY -m pip install pytest==6.2.5 flake8 pytest-blender
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
@@ -53,4 +53,4 @@ jobs:
       - name: Run blender unittests
         run: |
           cd test
-          PYTHONPATH=$(pwd) bash test_ci.sh
+          pytest -svv

@@ -1,7 +1,7 @@
+import bpy
 from ase.build import molecule, bulk
 from batoms import Batoms
 import numpy as np
-from batoms.utils.butils import removeAll
 import pytest
 
 try:
@@ -16,14 +16,14 @@ except ImportError:
 )
 def test_empty():
     """Create an empty Batoms object"""
-    removeAll()
+    bpy.ops.batoms.delete()
     h2o = Batoms("h2o")
     assert len(h2o) == 0
 
 
 def test_batoms_molecule():
     """Create a Batoms object from scratch"""
-    removeAll()
+    bpy.ops.batoms.delete()
     h2o = Batoms(
         "h2o",
         species=["O", "H", "H"],
@@ -34,7 +34,7 @@ def test_batoms_molecule():
 
 def test_batoms_crystal():
     """Create a Batoms object with cell"""
-    removeAll()
+    bpy.ops.batoms.delete()
     a = 4.08
     positions = [[0, 0, 0], [a / 2, a / 2, 0],
                  [a / 2, 0, a / 2], [0, a / 2, a / 2]]
@@ -51,7 +51,7 @@ def test_batoms_crystal():
 
 def test_batoms_species():
     """Setting properties of species"""
-    removeAll()
+    bpy.ops.batoms.delete()
     h2o = Batoms(
         "h2o",
         species=["O", "H", "H"],
@@ -79,13 +79,13 @@ def test_batoms_species():
     h2o["X"].color = [0.8, 0.8, 0.0, 0.3]
 
 
-def test_batoms_write(filename):
+def test_batoms_write():
     """Export Batoms to structure file
 
     Args:
         filename (str): filename and format of output file
     """
-    removeAll()
+    bpy.ops.batoms.delete()
     h2o = Batoms(
         "h2o",
         species=["O", "H", "H"],
@@ -96,7 +96,7 @@ def test_batoms_write(filename):
 
 def test_batoms_transform():
     """Transform: translate, rotate, mirror"""
-    removeAll()
+    bpy.ops.batoms.delete()
     h2o = Batoms(
         "h2o",
         species=["O", "H", "H"],
@@ -112,7 +112,7 @@ def test_batoms_transform():
 
 def test_batoms_wrap():
     """Wrap atoms into pbc cell"""
-    removeAll()
+    bpy.ops.batoms.delete()
     a = 4.08
     positions = [[0, 0, 0], [a / 2, a / 2, 0],
                  [a / 2, 0, a / 2], [0, a / 2, a / 2]]
@@ -131,7 +131,7 @@ def test_batoms_wrap():
 
 def test_batoms_supercell():
     """make supercell"""
-    removeAll()
+    bpy.ops.batoms.delete()
     au = Batoms("au", from_ase=bulk("Au"))
     # repeat
     au = au*[2, 2, 2]
@@ -144,7 +144,7 @@ def test_batoms_supercell():
 
 def test_batoms_occupy():
     """setting occupancy"""
-    removeAll()
+    bpy.ops.batoms.delete()
     h2o = Batoms(
         "h2o",
         species=["O", "H", "H"],
@@ -159,7 +159,7 @@ def test_batoms_occupy():
 
 def test_batoms_copy():
     """copy batoms"""
-    removeAll()
+    bpy.ops.batoms.delete()
     h2o = Batoms("h2o", from_ase=molecule("H2O"))
     h2o.pbc = True
     h2o.cell = [3, 3, 3]
@@ -170,7 +170,7 @@ def test_batoms_copy():
 
 def test_replace():
     """replace"""
-    removeAll()
+    bpy.ops.batoms.delete()
     h2o = Batoms("h2o", from_ase=molecule("H2O"))
     h2o.replace([1], "C")
     assert len(h2o.species) == 3
@@ -179,7 +179,7 @@ def test_replace():
 
 def test_batoms_add():
     """Merge two Batoms objects"""
-    removeAll()
+    bpy.ops.batoms.delete()
     h2o = Batoms("h2o", from_ase=molecule("H2O"))
     co = Batoms("co", from_ase=molecule("CO"))
     batoms = h2o + co
@@ -189,7 +189,7 @@ def test_batoms_add():
 
 def test_from_batoms():
     """Load Batoms"""
-    removeAll()
+    bpy.ops.batoms.delete()
     h2o = Batoms("h2o", from_ase=molecule("H2O"))
     h2o = Batoms("h2o")
     assert isinstance(h2o, Batoms)
@@ -199,7 +199,7 @@ def test_from_batoms():
 
 def test_set_arrays():
     """Set arrays and attributes"""
-    removeAll()
+    bpy.ops.batoms.delete()
     mol = molecule("H2O")
     h2o = Batoms("h2o", from_ase=mol)
     h2o.show = [1, 0, 1]
@@ -214,7 +214,7 @@ def test_set_arrays():
 
 def test_repeat():
     """Repeat"""
-    removeAll()
+    bpy.ops.batoms.delete()
     h2o = molecule("H2O")
     h2o = Batoms(label="h2o", from_ase=h2o)
     h2o.cell = [3, 3, 3]
@@ -225,7 +225,7 @@ def test_repeat():
 
 def test_get_geometry():
     """Test geometry"""
-    removeAll()
+    bpy.ops.batoms.delete()
     h2o = Batoms("h2o", from_ase=molecule("H2O"))
     angle = h2o.get_angle(1, 0, 2)
     assert np.isclose(angle, 103.9998)
@@ -241,7 +241,7 @@ def test_make_real():
     from ase.build import molecule
     from batoms.utils.butils import removeAll
 
-    removeAll()
+    bpy.ops.batoms.delete()
     h2o = Batoms("h2o", from_ase=molecule("H2O"))
     h2o.make_real()
 
@@ -251,7 +251,7 @@ if __name__ == "__main__":
     test_batoms_molecule()
     test_batoms_crystal()
     test_batoms_species()
-    test_batoms_write("h2o.in")
+    test_batoms_write()
     test_batoms_transform()
     test_batoms_wrap()
     test_batoms_supercell()

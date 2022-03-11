@@ -1,3 +1,4 @@
+import bpy
 import pytest
 from ase.build import molecule, fcc111
 from batoms.utils.butils import removeAll
@@ -7,7 +8,7 @@ from time import time
 
 
 def test_select():
-    removeAll()
+    bpy.ops.batoms.delete()
     au111 = fcc111("Au", (4, 4, 4), vacuum=0)
     au111 = Batoms("au111", from_ase=au111)
     mol = Batoms("mol", from_ase=molecule("CH3CH2OH"))
@@ -20,8 +21,7 @@ def test_select():
 
 def test_select_protein():
     from batoms.pdbparser import read_pdb
-
-    removeAll()
+    bpy.ops.batoms.delete()
     atoms = read_pdb("datas/1ema.pdb")  # 1tim
     batoms = Batoms("protein", from_ase=atoms)
     batoms.ribbon.draw()

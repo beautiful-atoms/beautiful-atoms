@@ -1,13 +1,13 @@
+import bpy
 import pytest
 from ase.build import molecule
 from batoms import Batoms
-from batoms.utils.butils import removeAll
 import numpy as np
 
 
 def test_batoms_batom():
     """Setting individual Batom"""
-    removeAll()
+    bpy.ops.batoms.delete()
     h2o = Batoms("h2o", from_ase=molecule("H2O"))
     print(h2o[0])
     h2o[1].scale = 1

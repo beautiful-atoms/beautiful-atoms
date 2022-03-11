@@ -13,7 +13,7 @@ def test_position():
     au.repeat([10, 10, 20])
     au.repeat([5, 5, 5])
     t = time() - tstart
-    assert t < 30
+    assert t < 100
     print("Repeat time: {:1.2f}".format(t))
     # get position
     tstart = time()
