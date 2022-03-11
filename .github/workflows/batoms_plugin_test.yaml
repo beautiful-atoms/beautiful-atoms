@@ -53,4 +53,4 @@ jobs:
       - name: Run blender unittests
         run: |
           cd test
-          pytest -v
+          pytest -s
