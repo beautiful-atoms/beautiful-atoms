@@ -41,8 +41,6 @@ jobs:
       - name: Test import
         run: |
           blender -b --python-exit-code 1 --python-expr  "from batoms import Batoms; b = Batoms('O', ['O'], [[0, 0, 0]])"
-      - name: Upgrade PIP
-        run: $BLENDERPY -m pip install --upgrade pip
       - name: Install test dependencies
         run: |
           $BLENDERPY -m pip install pytest flake8 pytest-blender
@@ -55,4 +53,4 @@ jobs:
       - name: Run blender unittests
         run: |
           cd test
-          pytest test_pytest.py
+          pytest -v
