@@ -17,7 +17,7 @@ jobs:
     defaults:
       run:
         shell: bash
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     container:
       # Consider change to matrix versions
       image: luciusm/blender_env:3.0
