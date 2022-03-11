@@ -26,9 +26,7 @@ from batoms.ribbon.ribbon import Ribbon
 from batoms.utils.butils import object_mode, show_index, \
     get_nodes_by_name, compareNodeType
 import numpy as np
-from crystal_shape import CrystalShape
-
-from lattice_plane import LatticePlane
+from batoms.crystal_shape import CrystalShape
 # from time import time
 
 shapes = ["UV_SPHERE", "ICO_SPHERE", "CUBE", "METABALL"]
@@ -190,7 +188,6 @@ class Batoms(BaseCollection, ObjectGN):
             # self.label = label
             if movie:
                 self.set_frames()
-        self.planesetting = PlaneSetting(self.label, batoms=self)
         self.mssetting = MSsetting(self.label, probe=1.4, batoms=self)
         self.ribbon = Ribbon(self.label, batoms=self, datas=info, update=True)
         self._render = None

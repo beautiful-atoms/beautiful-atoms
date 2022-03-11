@@ -8,10 +8,8 @@ import bpy
 import bmesh
 from time import time
 import numpy as np
-from batoms.utils.butils import clean_coll_objects, object_mode
 from batoms.base.object import BaseObject
-from batoms.lattice_plane.planesetting import PlaneSettings
-from batoms.utils.butils import clean_coll_objects
+from batoms.lattice_plane.lattice_plane_setting import LatticePlaneSettings
 from batoms.draw import draw_cylinder, draw_surface_from_vertices
 
 
@@ -33,8 +31,8 @@ class LatticePlane(BaseObject):
         self.label = label
         name = 'plane'
         BaseObject.__init__(self, label, name)
-        self.setting = PlaneSettings(
-            self.label, batoms=batoms, parent=self)
+        self.setting = LatticePlaneSettings(
+            self.label, parent=self)
 
     def build_materials(self, name, color, node_inputs=None,
                         material_style='default'):
@@ -44,12 +42,12 @@ class LatticePlane(BaseObject):
         if name in bpy.data.materials:
             mat = bpy.data.materials.get(name)
             bpy.data.materials.remove(mat, do_unlink=True)
-        create_material(name,
+        mat = create_material(name,
                         color=color,
                         node_inputs=node_inputs,
                         material_style=material_style,
-                        backface_culling=True)
-                        
+                        backface_culling=False)
+        return mat
 
     def build_plane(self, bcell, include_center=False):
         """
@@ -59,7 +57,7 @@ class LatticePlane(BaseObject):
         cellEdges = bcell.edges
         cellVerts = bcell.verts
         planes = {}
-        for p in self:
+        for p in self.setting:
             intersect_points = []
             normal = np.dot(p.indices, bcell.reciprocal)
             normal = normal/np.linalg.norm(normal)
@@ -236,16 +234,16 @@ class LatticePlane(BaseObject):
                                 'size': size}
         return slicings
 
-    def build_boundary(self, indices, batoms=None):
+    def build_boundary(self, indices):
         """
         Remove vertices above the plane
         """
-        p = self[indices]
-        normal = np.dot(np.array(p.indices), batoms.cell.reciprocal)
+        p = self.setting[indices]
+        normal = np.dot(np.array(p.indices), self.batoms.cell.reciprocal)
         normal = normal/np.linalg.norm(normal)
         point = p.distance*normal
         # isosurface, plane
-        colls = batoms.coll.children.keys()
+        colls = self.batoms.coll.children.keys()
         for coll_name in colls:
             objs = bpy.data.collections.get(coll_name).all_objects.keys()
             if 'cell' in coll_name:
@@ -265,7 +263,7 @@ class LatticePlane(BaseObject):
                 if len(index) == 0:
                     continue
                 if obj.batoms.type == 'BATOMS':
-                    batoms.delete(obj.batoms.batom.species, index)
+                    self.batoms.delete(obj.batoms.batom.species, index)
                 else:
                     bm = bmesh.new()
                     bm.from_mesh(obj.data)
@@ -274,8 +272,8 @@ class LatticePlane(BaseObject):
                     bmesh.ops.delete(bm, geom=verts_select, context='VERTS')
                     bm.to_mesh(obj.data)
 
-    def draw_lattice_plane(self, no=None,
-                           cuts=None, cmap='bwr', include_center=False):
+    def draw(self, no=None,
+             cuts=None, cmap='bwr', include_center=False):
         """Draw plane
         no: int
             spacegroup of structure, if None, no will be determined by
@@ -291,26 +289,35 @@ class LatticePlane(BaseObject):
         if no is not None:
             self.no = no
         planes = self.build_plane(
-            self.parent.batoms.cell, include_center=include_center)
-        clean_coll_objects(self.coll, 'plane')
+            self.batoms.cell, include_center=include_center)
         for species, plane in planes.items():
             if plane['boundary']:
                 name = '%s_%s_%s' % (self.label, 'plane', species)
-                self.build_boundary(plane['indices'], batoms=self.parent.batoms)
+                self.delete_obj(name)
+                self.build_boundary(plane['indices'])
                 bpy.context.view_layer.update()
             else:
                 name = '%s_%s_%s' % (self.label, 'plane', species)
-                draw_surface_from_vertices(name, plane,
-                                           coll=self.coll)
+                self.delete_obj(name)
+                obj = draw_surface_from_vertices(name, plane,
+                                                 coll=self.batoms.coll,
+                                                 )
+                mat = self.build_materials(name, color = plane['color'])
+                obj.data.materials.append(mat)
                 if plane['show_edge']:
                     name = '%s_%s_%s' % (self.label, 'plane_edge', species)
+                    self.delete_obj(name)
                     draw_cylinder(name=name,
                                   datas=plane['edges_cylinder'],
-                                  coll=self.coll)
+                                  coll=self.batoms.coll,
+                                  )
                 if plane['slicing']:
                     name = '%s_%s_%s' % (self.label, 'plane', species)
-                    self.build_slicing(name, self.parent.batoms.volume,
-                                       self.parent.batoms.cell, cuts=cuts, cmap=cmap)
+                    self.build_slicing(name, self.batoms.volume,
+                                       self.batoms.cell,
+                                       cuts=cuts,
+                                       cmap=cmap)
+
 
 def save_image(data, filename, interpolation='bicubic'):
     """

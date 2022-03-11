@@ -7,12 +7,12 @@ This module defines the plane object in the Batoms package.
 import bpy
 from time import time
 import numpy as np
-from batoms.utils.butils import clean_coll_objects, object_mode
+from batoms.utils.butils import clean_coll_objects
 from batoms.base.object import BaseObject
-from batoms.lattice_plane.planesetting import PlaneSettings
+from batoms.crystal_shape.crystal_shape_setting import CrystalShapeSettings
 from batoms.utils.butils import clean_coll_objects
 from batoms.draw import draw_cylinder, draw_surface_from_vertices
-from batoms.utils import get_equivalent_indices
+from batoms.base.collection import tuple2string
 
 
 class CrystalShape(BaseObject):
@@ -33,8 +33,8 @@ class CrystalShape(BaseObject):
         self.label = label
         name = 'plane'
         BaseObject.__init__(self, label, name)
-        self.setting = PlaneSettings(
-            self.label, batoms=batoms, parent=self)
+        self.setting = CrystalShapeSettings(
+            self.label,  parent=self)
 
     def build_materials(self, name, color, node_inputs=None,
                         material_style='default'):
@@ -44,31 +44,12 @@ class CrystalShape(BaseObject):
         if name in bpy.data.materials:
             mat = bpy.data.materials.get(name)
             bpy.data.materials.remove(mat, do_unlink=True)
-        create_material(name,
+        mat = create_material(name,
                         color=color,
                         node_inputs=node_inputs,
                         material_style=material_style,
-                        backface_culling=True)
-                        
-
-    def get_symmetry_indices(self):
-        if self.no == 1:
-            return
-        for p in self:
-            if p.symmetry:
-                indices = get_equivalent_indices(self.no, p.indices)
-                for index in indices:
-                    name = tuple2string(index)
-                    p1 = self.find(name)
-                    if p1 is None:
-                        p1 = self.collection.add()
-                        setdict = p.as_dict()
-                        for key, value in setdict.items():
-                            setattr(p1, key, value)
-                        p1.name = name
-                        p1.indices = index
-                        p1.label = self.label
-                        p1.flag = True
+                        backface_culling=False)
+        return mat
 
     def build_crystal(self, bcell, origin=[0, 0, 0]):
         """
@@ -77,9 +58,9 @@ class CrystalShape(BaseObject):
         no: Int
             spacegroup number
         """
-        self.get_symmetry_indices()
+        self.setting.get_symmetry_indices()
         planes = {}
-        for p in self:
+        for p in self.setting:
             if not p.crystal:
                 continue
             normal = np.dot(p.indices, bcell.reciprocal)
@@ -109,7 +90,7 @@ class CrystalShape(BaseObject):
                         planes[keys[k]]['vertices'].append(point)
         new_planes = {}
         for name, plane in planes.items():
-            p = self[plane['indices']]
+            p = self.setting[plane['indices']]
             vertices, edges, faces = faces_from_vertices(
                 plane['vertices'], plane['normal'])
             if len(vertices) >= 3:
@@ -151,8 +132,7 @@ class CrystalShape(BaseObject):
                 plane['edges_cylinder']['normals'].append(nvec)
         return plane
 
-
-    def draw_crystal_shape(self, no=None, origin=None):
+    def draw(self, no=None, origin=None):
         """Draw crystal shape
         no: int
             spacegroup of structure, if None, no will be determined by
@@ -163,22 +143,23 @@ class CrystalShape(BaseObject):
         if no is not None:
             self.no = no
         if origin is None:
-            origin = self.parent.batoms.cell.origin
-        planes = self.build_crystal(self.parent.batoms.cell, origin=origin)
-        clean_coll_objects(self.coll, 'crystal')
+            origin = self.batoms.cell.origin
+        planes = self.build_crystal(self.batoms.cell, origin=origin)
         for species, plane in planes.items():
             name = '%s_%s_%s' % (self.label, 'crystal', species)
-            draw_surface_from_vertices(name, plane,
-                                       coll=self.coll)
+            self.delete_obj(name)
+            obj = draw_surface_from_vertices(name, plane,
+                                       coll=self.batoms.coll,
+                                       )
+            mat = self.build_materials(name, color = plane['color'])
+            obj.data.materials.append(mat)
             if plane['show_edge']:
                 name = '%s_%s_%s' % (self.label, 'crystal_edge', species)
+                self.delete_obj(name)
                 draw_cylinder(name=name,
                               datas=plane['edges_cylinder'],
-                              coll=self.coll)
-            if plane['boundary']:
-                name = '%s_%s_%s' % (self.label, 'plane', species)
-                self.build_boundary(plane['indices'], batoms=self)
-                bpy.context.view_layer.update()
+                              coll=self.batoms.coll,
+                              )
 
 
 def save_image(data, filename, interpolation='bicubic'):

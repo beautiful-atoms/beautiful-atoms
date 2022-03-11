@@ -57,11 +57,13 @@ class Isosurface(BaseObject):
         if name in bpy.data.materials:
             mat = bpy.data.materials.get(name)
             bpy.data.materials.remove(mat, do_unlink=True)
-        create_material(name,
+        mat = create_material(name,
                         color=color,
                         node_inputs=node_inputs,
                         material_style=material_style,
-                        backface_culling=True)
+                        backface_culling=False)
+        return mat
+                    
                         
     def draw(self):
         """Draw isosurface.
