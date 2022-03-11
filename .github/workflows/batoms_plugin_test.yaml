@@ -17,7 +17,7 @@ jobs:
     defaults:
       run:
         shell: bash
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     container:
       # Consider change to matrix versions
       image: luciusm/blender_env:3.0
@@ -53,4 +53,4 @@ jobs:
       - name: Run blender unittests
         run: |
           cd test
-          pytest -s test_batom.py
+          pytest -svv
