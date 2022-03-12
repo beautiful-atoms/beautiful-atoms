@@ -8,9 +8,9 @@ from bpy.types import Menu, Panel, UIList
 from collections import defaultdict
 from batoms import Batoms
 
-class BOND_MT_bond_pair_context_menu(Menu):
+class BATOMS_MT_bond_pair_context_menu(Menu):
     bl_label = "Bond Pair Specials"
-    bl_idname = "BOND_MT_bond_pair_context_menu"
+    bl_idname = "BATOMS_MT_bond_pair_context_menu"
 
     def draw(self, _context):
         layout = self.layout
@@ -30,7 +30,7 @@ class BOND_MT_bond_pair_context_menu(Menu):
         # layout.operator("object.shape_key_move", icon='TRIA_DOWN_BAR', text="Move to Bottom").type = 'BOTTOM'
 
 
-class BOND_UL_bond_pairs(UIList):
+class BATOMS_UL_bond_pairs(UIList):
     def draw_item(self, _context, layout, _data, item, icon, active_data, _active_propname, index):
         bond_pair = item
         custom_icon = 'OBJECT_DATAMODE'
@@ -45,10 +45,10 @@ class BOND_UL_bond_pairs(UIList):
             layout.label(text="", icon=custom_icon)
 
 
-class BOND_PT_bond_pairs(Panel):
+class BATOMS_PT_bond_pairs(Panel):
     bl_label       = "Bond Pair"
     bl_category = "Bond"
-    bl_idname = "BOND_PT_Pairs"
+    bl_idname = "BATOMS_PT_Pairs"
     bl_space_type  = "VIEW_3D"
     bl_region_type = "UI"
     # bl_options = {'DEFAULT_CLOSED'}
@@ -80,7 +80,7 @@ class BOND_PT_bond_pairs(Panel):
         if kb:
             rows = 5
 
-        row.template_list("BOND_UL_bond_pairs", "", ba, "bbond", ba, "bond_index", rows=rows)
+        row.template_list("BATOMS_UL_bond_pairs", "", ba, "bbond", ba, "bond_index", rows=rows)
 
         col = row.column(align=True)
         op = col.operator("bond.bond_pair_add", icon='ADD', text="")
@@ -89,7 +89,7 @@ class BOND_PT_bond_pairs(Panel):
             op.name = kb.name
         col.separator()
 
-        col.menu("BOND_MT_bond_pair_context_menu", icon='DOWNARROW_HLT', text="")
+        col.menu("BATOMS_MT_bond_pair_context_menu", icon='DOWNARROW_HLT', text="")
 
         if kb:
             col.separator()
@@ -132,6 +132,4 @@ class BOND_PT_bond_pairs(Panel):
             col.prop(kb, "polyhedra",  text="Polyhedra")
             col.prop(kb, "color1",  text="color1")
             col.prop(kb, "color2",  text="color2")
-        #
-        
-        
+            op = layout.operator("bond.draw", icon='GREASEPENCIL', text="Draw")

@@ -272,7 +272,7 @@ class LatticePlane(BaseObject):
                     bmesh.ops.delete(bm, geom=verts_select, context='VERTS')
                     bm.to_mesh(obj.data)
 
-    def draw(self, no=None,
+    def draw(self, plane_name = 'ALL', no=None,
              cuts=None, cmap='bwr', include_center=False):
         """Draw plane
         no: int
@@ -286,11 +286,16 @@ class LatticePlane(BaseObject):
         include_center: bool
             include center of plane in the mesh
         """
+        from batoms.utils.butils import clean_coll_object_by_type
+        # delete old plane
+        clean_coll_object_by_type(self.batoms.coll, 'LATTICEPLANE')
         if no is not None:
             self.no = no
         planes = self.build_plane(
             self.batoms.cell, include_center=include_center)
         for species, plane in planes.items():
+            if plane_name.upper() != "ALL" and species != plane_name:
+                continue
             if plane['boundary']:
                 name = '%s_%s_%s' % (self.label, 'plane', species)
                 self.delete_obj(name)
@@ -304,13 +309,19 @@ class LatticePlane(BaseObject):
                                                  )
                 mat = self.build_materials(name, color = plane['color'])
                 obj.data.materials.append(mat)
+                obj.parent = self.batoms.obj
+                obj.batoms.type = 'LATTICEPLANE'
+                obj.batoms.label = self.batoms.label
                 if plane['show_edge']:
                     name = '%s_%s_%s' % (self.label, 'plane_edge', species)
                     self.delete_obj(name)
-                    draw_cylinder(name=name,
+                    obj = draw_cylinder(name=name,
                                   datas=plane['edges_cylinder'],
                                   coll=self.batoms.coll,
                                   )
+                    obj.parent = self.batoms.obj
+                    obj.batoms.type = 'LATTICEPLANE'
+                    obj.batoms.label = self.batoms.label
                 if plane['slicing']:
                     name = '%s_%s_%s' % (self.label, 'plane', species)
                     self.build_slicing(name, self.batoms.volume,

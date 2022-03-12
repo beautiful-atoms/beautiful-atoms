@@ -5,6 +5,7 @@ from bpy.types import (Panel,
                        )
 from bpy_extras.object_utils import AddObjectHelper
 from bpy.props import (BoolProperty,
+                        EnumProperty,
                        FloatProperty,
                        IntProperty,
                        StringProperty,
@@ -71,6 +72,37 @@ class BondPairRemove(Operator):
         batoms.coll.batoms.bond_index = min(max(0, index - 1),
                 len(batoms.bonds.setting) - 1)
         context.view_layer.objects.active = obj
+        return {'FINISHED'}
+
+
+class BondDraw(Operator):
+    bl_idname = "bond.draw"
+    bl_label = "Draw Bond"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = ("Draw Bond")
+
+    model_style: EnumProperty(
+        name="model_style",
+        description="Structural models",
+        items=(('0', "Space-filling", "Use ball"),
+               ('1', "Ball-and-stick", "Use ball and stick"),
+               ('2', "Polyhedral", "Use polyhedral"),
+               ('3', "Wireframe", "Use wireframe")),
+        default='1')
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        if obj:
+            return obj.batoms.type != 'OTHER'
+        else:
+            return False
+
+    def execute(self, context):
+        obj = context.object
+        batoms = Batoms(label=obj.batoms.label)
+        batoms.draw(self.model_style)
+        context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
 

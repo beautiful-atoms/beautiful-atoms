@@ -65,12 +65,17 @@ class Isosurface(BaseObject):
         return mat
                     
                         
-    def draw(self):
+    def draw(self, isosurface_name = 'ALL'):
         """Draw isosurface.
         """
         from batoms.draw import draw_surface_from_vertices
+        from batoms.utils.butils import clean_coll_object_by_type
+        # delete old isosurface
+        clean_coll_object_by_type(self.batoms.coll, 'ISOSURFACE')
         isosurface = self.build_isosurface(self.batoms.cell)
         for name, isosurface_data in isosurface.items():
+            if isosurface_name.upper() != "ALL" and name.name != isosurface_name:
+                continue
             name = '%s_%s_%s' % (self.label, 'isosurface', name)
             self.delete_obj(name)
             obj = draw_surface_from_vertices(name,

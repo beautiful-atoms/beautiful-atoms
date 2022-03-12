@@ -220,7 +220,10 @@ class Bisosurface(bpy.types.PropertyGroup):
     name: StringProperty(name="name")
     label: StringProperty(name="label", default='')
     level: FloatProperty(name="level", default=0.10)
-    color: FloatVectorProperty(name="color", size=4, default=[1, 1, 0, 0.5])
+    color: FloatVectorProperty(name="color", size=4,
+        subtype='COLOR',
+        default=[1, 1, 0, 0.5],
+        )
 
     def as_dict(self) -> dict:
         setdict = {
@@ -247,11 +250,14 @@ class Bplane(bpy.types.PropertyGroup):
     flag: BoolProperty(name="flag", default=False)
     label: StringProperty(name="label", default='')
     indices: IntVectorProperty(
-        name="Miller indices", size=3, default=[0, 0, 1])
+        name="Miller indices", size=3, default=[1, 0, 0])
     distance: FloatProperty(name="distance",
                             description="Distance from origin",
                             default=1)
-    color: FloatVectorProperty(name="color", size=4, default=[0, 0, 1, 0.5])
+    color: FloatVectorProperty(name="color", size=4,
+                                subtype='COLOR',
+                                default=[0, 0, 1, 0.5]
+                                )
     crystal: BoolProperty(name="crystal", default=False)
     symmetry: BoolProperty(name="symmetry", default=False)
     slicing: BoolProperty(name="slicing", default=False)
@@ -473,16 +479,26 @@ class Bturn(bpy.types.PropertyGroup):
         return s
 
 
-class Bmssetting(bpy.types.PropertyGroup):
+class Bms(bpy.types.PropertyGroup):
     """
     """
     flag: BoolProperty(name="flag", default=False)
     name: StringProperty(name="name")
     label: StringProperty(name="label", default='batoms')
-    probe: FloatProperty(name="probe", default=1.4)
-    resolution: FloatProperty(name="resolution", default=0.5)
+    type: EnumProperty(
+        name="type",
+        description="Surface type",
+        items=(('SAS', "SAS", "Solvent Accessible Surface"),
+               ('SES', "SES", "solvent-excluded surfaces"),
+               ),
+        default='SAS')
+    probe: FloatProperty(name="probe", soft_min = 0.4, soft_max = 2, default=1.4)
+    resolution: FloatProperty(name="resolution", soft_min = 0.2, soft_max = 2,
+                default=0.5)
     select: StringProperty(name="select", default='all')
-    color: FloatVectorProperty(name="color", size=4, default=[0, 1, 1, 1.0])
+    color: FloatVectorProperty(name="color", size=4,
+        subtype='COLOR',
+        default=[0, 1, 1, 1.0])
 
     def as_dict(self) -> dict:
         setdict = {
@@ -557,7 +573,8 @@ class BatomsCollection(bpy.types.PropertyGroup):
                ('VOLUME', "Volume", "Volume"),
                ('BOND', "Bond", "Bond"),
                ('POLYHEDRA', "Polyhedra", "Polyhedra"),
-               ('PLANE', "Plane", "Plane"),
+               ('CRYSTALSHAPE', "Crystal Shape", "Crystal Shape"),
+               ('LATTICEPLANE', "LatticePlane", "LatticePlane"),
                ('ISOSURFACE', "Isosurface", "Isosurface"),
                ('MS', "MS", "Molecular Surface"),
                ),
@@ -596,10 +613,18 @@ class BatomsCollection(bpy.types.PropertyGroup):
                               type=Bbond)
     bond_index: IntProperty(name = "bond_index",
                               default = 0)
-    bplane: CollectionProperty(name='Bplane',
+    blatticeplane: CollectionProperty(name='Blatticeplane',
                                type=Bplane)
+    latticeplane_index: IntProperty(name = "latticeplane_index",
+                              default = 0)
+    bcrystalshape: CollectionProperty(name='Bcrystalshape',
+                               type=Bplane)
+    crystalshape_index: IntProperty(name = "crystalshape_index",
+                              default = 0)
     bisosurface: CollectionProperty(name='Bisosurface',
                                     type=Bisosurface)
+    isosurface_index: IntProperty(name = "isosurface_index",
+                              default = 1)
     bpolyhedra: CollectionProperty(name='Bpolyhedra',
                                    type=Bpolyhedra)
     bsheet: CollectionProperty(name='Bsheet',
@@ -614,8 +639,10 @@ class BatomsCollection(bpy.types.PropertyGroup):
                              type=Brender)
     bspecies: CollectionProperty(name='Bspecies',
                                  type=Bspecies)
-    bmssetting: CollectionProperty(name='Bmssetting',
-                                   type=Bmssetting)
+    bms: CollectionProperty(name='Bms',
+                                   type=Bms)
+    ms_index: IntProperty(name = "ms_index",
+                              default = 1)
     # BRibbon = Bribbon()
 
 class BatomsObject(bpy.types.PropertyGroup):
@@ -629,7 +656,8 @@ class BatomsObject(bpy.types.PropertyGroup):
                ('CELL', "Cell", "Cell"),
                ('BOND', "Bond", "Bond"),
                ('POLYHEDRA', "Polyhedra", "Polyhedra"),
-               ('PLANE', "Plane", "Plane"),
+               ('CRYSTALSHAPE', "Crystal Shape", "Crystal Shape"),
+               ('LATTICEPLANE', "LatticePlane", "LatticePlane"),
                ('ISOSURFACE', "Isosurface", "Isosurface"),
                ('MS', "MS", "Molecular Surface"),
                ),

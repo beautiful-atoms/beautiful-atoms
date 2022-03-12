@@ -61,8 +61,6 @@ class CrystalShape(BaseObject):
         self.setting.get_symmetry_indices()
         planes = {}
         for p in self.setting:
-            if not p.crystal:
-                continue
             normal = np.dot(p.indices, bcell.reciprocal)
             normal = normal/np.linalg.norm(normal)
             point = p.distance*normal
@@ -132,7 +130,7 @@ class CrystalShape(BaseObject):
                 plane['edges_cylinder']['normals'].append(nvec)
         return plane
 
-    def draw(self, no=None, origin=None):
+    def draw(self, plane_name = "ALL", no=None, origin=None):
         """Draw crystal shape
         no: int
             spacegroup of structure, if None, no will be determined by
@@ -140,12 +138,17 @@ class CrystalShape(BaseObject):
         origin: xyz vector
             The center of cyrstal shape
         """
+        from batoms.utils.butils import clean_coll_object_by_type
+        # delete old plane
+        clean_coll_object_by_type(self.batoms.coll, 'CRYSTALSHAPE')
         if no is not None:
             self.no = no
         if origin is None:
             origin = self.batoms.cell.origin
         planes = self.build_crystal(self.batoms.cell, origin=origin)
         for species, plane in planes.items():
+            if plane_name.upper() != "ALL" and species != plane_name:
+                continue
             name = '%s_%s_%s' % (self.label, 'crystal', species)
             self.delete_obj(name)
             obj = draw_surface_from_vertices(name, plane,
@@ -153,13 +156,19 @@ class CrystalShape(BaseObject):
                                        )
             mat = self.build_materials(name, color = plane['color'])
             obj.data.materials.append(mat)
+            obj.parent = self.batoms.obj
+            obj.batoms.type = 'CRYSTALSHAPE'
+            obj.batoms.label = self.batoms.label
             if plane['show_edge']:
                 name = '%s_%s_%s' % (self.label, 'crystal_edge', species)
                 self.delete_obj(name)
-                draw_cylinder(name=name,
+                obj = draw_cylinder(name=name,
                               datas=plane['edges_cylinder'],
                               coll=self.batoms.coll,
                               )
+                obj.parent = self.batoms.obj
+                obj.batoms.type = 'CRYSTALSHAPE'
+                obj.batoms.label = self.batoms.label
 
 
 def save_image(data, filename, interpolation='bicubic'):

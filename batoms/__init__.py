@@ -32,6 +32,10 @@ from .gui import (
     gui_pubchem,
     gui_rscb,
     ui_list_bond,
+    ui_list_lattice_plane,
+    ui_list_crystal_shape,
+    ui_list_isosurface,
+    ui_list_ms,
     view3d_mt_batoms_add,
 )
 
@@ -41,11 +45,12 @@ from .ops import (add_nanoparticle,
     add_object,
     add_surface,
     molecule_edit_atom,
-    molecule_edit_bond,
+    molecule_edit_bond, ops_surface,
     transform,
     measure,
     manual_mapping,
     ops_bond,
+    ops_plane,
     )
 
 from .ops import classes_ops
@@ -76,7 +81,7 @@ classes_prop = [
     custom_property.Bhelix,
     custom_property.Bturn,
     custom_property.Bselect,
-    custom_property.Bmssetting,
+    custom_property.Bms,
     custom_property.BatomsCollection,
     custom_property.BatomsObject
 ]
@@ -153,13 +158,41 @@ classes_ops = [
     view3d_mt_batoms_add.VIEW3D_MT_surface_add,
     view3d_mt_batoms_add.VIEW3D_MT_nanotube_add,
     view3d_mt_batoms_add.VIEW3D_MT_nanoparticle_add,
-    ui_list_bond.BOND_MT_bond_pair_context_menu,
-    # bond.BatomsButtonsPanel,
-    ui_list_bond.BOND_UL_bond_pairs,
-    ui_list_bond.BOND_PT_bond_pairs,
+    ui_list_bond.BATOMS_MT_bond_pair_context_menu,
+    ui_list_bond.BATOMS_UL_bond_pairs,
+    ui_list_bond.BATOMS_PT_bond_pairs,
+    ui_list_lattice_plane.BATOMS_MT_lattice_plane_context_menu,
+    ui_list_lattice_plane.BATOMS_UL_lattice_planes,
+    ui_list_lattice_plane.BATOMS_PT_lattice_planes,
+    ui_list_crystal_shape.BATOMS_MT_crystal_shape_context_menu,
+    ui_list_crystal_shape.BATOMS_UL_crystal_shapes,
+    ui_list_crystal_shape.BATOMS_PT_crystal_shapes,
+    ui_list_isosurface.BATOMS_MT_isosurface_context_menu,
+    ui_list_isosurface.BATOMS_UL_isosurface,
+    ui_list_isosurface.BATOMS_PT_isosurface,
+    ui_list_ms.BATOMS_MT_ms_context_menu,
+    ui_list_ms.BATOMS_UL_ms,
+    ui_list_ms.BATOMS_PT_ms,
     ops_bond.BondPairAdd,
     ops_bond.BondPairRemove,
     ops_bond.BondModify,
+    ops_bond.BondDraw,
+    ops_plane.LatticePlaneAdd,
+    ops_plane.LatticePlaneRemove,
+    ops_plane.LatticePlaneDraw,
+    ops_plane.LatticePlaneModify,
+    ops_plane.CrystalShapeAdd,
+    ops_plane.CrystalShapeRemove,
+    ops_plane.CrystalShapeDraw,
+    ops_plane.CrystalShapeModify,
+    ops_surface.MSAdd,
+    ops_surface.MSRemove,
+    ops_surface.MSDraw,
+    ops_surface.MSModify,
+    ops_surface.IsosurfaceAdd,
+    ops_surface.IsosurfaceRemove,
+    ops_surface.IsosurfaceDraw,
+    ops_surface.IsosurfaceModify,
 ]
 # classes_ops.extend(classes_ops)
 #
@@ -241,7 +274,6 @@ def unregister():
         bpy.utils.unregister_tool(gui_toolbar.BatomsTransform)
         bpy.utils.unregister_tool(gui_toolbar.BatomsBoundary)
         bpy.utils.unregister_tool(gui_toolbar.BatomsCell)
-        # bpy.utils.unregister_tool(gui_toolbar.AddAtoms)
         bpy.utils.unregister_tool(gui_toolbar.MoleculeEditElement)
         bpy.utils.unregister_tool(gui_toolbar.MolecueEditBond)
 

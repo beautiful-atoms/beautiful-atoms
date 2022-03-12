@@ -43,19 +43,14 @@ class IsosurfaceSettings(Setting):
             if len(self) == 0:
                 self['1'] = {'level': volume.max()/8, 'color': [1, 1, 0, 0.8]}
 
-    def set_default(self):
-        """
-        """
-        for sp, data in self.species.items():
-            self[sp] = {'color': np.append(
-                data['color'][:3], 0.3), 'level': 0.005}
+    def add(self, isosurface):
+        if isinstance(isosurface, str):
+            self[isosurface] = {}
+        elif isinstance(isosurface, dict):
+            self[isosurface['name']] = isosurface
 
-    def add(self, isosurfacepair):
-        for key in isosurfacepair:
-            self.set_default(key)
-
-    def remove_isosurfaces(self, isosurfacepair):
-        for key in isosurfacepair:
+    def remove_isosurfaces(self, isosurface):
+        for key in isosurface:
             name = '%s-%s' % (key[0], key[1])
             i = self.collection.find(name)
             if i != -1:

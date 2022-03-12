@@ -117,6 +117,15 @@ def clean_coll_objects(coll, names=None):
                     bpy.data.objects.remove(obj, do_unlink=True)
 
 
+def clean_coll_object_by_type(coll, type):
+    """
+    remove all bond object in the bond collection
+    """
+    for obj in coll.all_objects:
+        if obj.batoms.type == type:
+            bpy.data.objects.remove(obj, do_unlink=True)
+
+
 def removeAll():
     for mesh in bpy.data.meshes:
         bpy.data.meshes.remove(mesh)
