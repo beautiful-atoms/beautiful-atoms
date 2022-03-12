@@ -17,18 +17,14 @@ class Batoms_PT_prepare(Panel):
     bl_category = "Batoms"
     bl_idname = "BATOMS_PT_Tools"
 
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
-        if obj:
-            return obj.batoms.type != 'OTHER'
-        else:
-            return False
 
     def draw(self, context):
-        obj = context.object
+        name = 'None'
+        if context.object:
+            if context.object.batoms.type != 'OTHER':
+                name = context.object.batoms.label
         layout = self.layout
-        layout.label(text="Active: " + obj.batoms.label)
+        layout.label(text="Active: " + name)
         layout.operator("batoms.import")
         layout.operator("batoms.export")
 
@@ -113,7 +109,8 @@ class BatomsProperties(bpy.types.PropertyGroup):
 def modify_batoms_attr(context, key, value):
     """
     """
-    batoms = Batoms(label=context.object.batoms.label)
-    setattr(batoms, key, value)
-    # batoms.obj.select_set(True)
-    bpy.context.view_layer.objects.active = batoms.obj
+    if context.object and context.object.batoms.type != 'OTHER':
+        batoms = Batoms(label=context.object.batoms.label)
+        setattr(batoms, key, value)
+        # batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
