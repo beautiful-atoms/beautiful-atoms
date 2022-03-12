@@ -220,7 +220,10 @@ class Bisosurface(bpy.types.PropertyGroup):
     name: StringProperty(name="name")
     label: StringProperty(name="label", default='')
     level: FloatProperty(name="level", default=0.10)
-    color: FloatVectorProperty(name="color", size=4, default=[1, 1, 0, 0.5])
+    color: FloatVectorProperty(name="color", size=4,
+        subtype='COLOR',
+        default=[1, 1, 0, 0.5],
+        )
 
     def as_dict(self) -> dict:
         setdict = {
@@ -620,6 +623,8 @@ class BatomsCollection(bpy.types.PropertyGroup):
                               default = 0)
     bisosurface: CollectionProperty(name='Bisosurface',
                                     type=Bisosurface)
+    isosurface_index: IntProperty(name = "isosurface_index",
+                              default = 1)
     bpolyhedra: CollectionProperty(name='Bpolyhedra',
                                    type=Bpolyhedra)
     bsheet: CollectionProperty(name='Bsheet',
@@ -637,7 +642,7 @@ class BatomsCollection(bpy.types.PropertyGroup):
     bms: CollectionProperty(name='Bms',
                                    type=Bms)
     ms_index: IntProperty(name = "ms_index",
-                              default = 0)
+                              default = 1)
     # BRibbon = Bribbon()
 
 class BatomsObject(bpy.types.PropertyGroup):

@@ -34,6 +34,7 @@ from .gui import (
     ui_list_bond,
     ui_list_lattice_plane,
     ui_list_crystal_shape,
+    ui_list_isosurface,
     ui_list_ms,
     view3d_mt_batoms_add,
 )
@@ -44,13 +45,12 @@ from .ops import (add_nanoparticle,
     add_object,
     add_surface,
     molecule_edit_atom,
-    molecule_edit_bond,
+    molecule_edit_bond, ops_surface,
     transform,
     measure,
     manual_mapping,
     ops_bond,
     ops_plane,
-    ops_ms,
     )
 
 from .ops import classes_ops
@@ -167,6 +167,9 @@ classes_ops = [
     ui_list_crystal_shape.BATOMS_MT_crystal_shape_context_menu,
     ui_list_crystal_shape.BATOMS_UL_crystal_shapes,
     ui_list_crystal_shape.BATOMS_PT_crystal_shapes,
+    ui_list_isosurface.BATOMS_MT_isosurface_context_menu,
+    ui_list_isosurface.BATOMS_UL_isosurface,
+    ui_list_isosurface.BATOMS_PT_isosurface,
     ui_list_ms.BATOMS_MT_ms_context_menu,
     ui_list_ms.BATOMS_UL_ms,
     ui_list_ms.BATOMS_PT_ms,
@@ -182,10 +185,14 @@ classes_ops = [
     ops_plane.CrystalShapeRemove,
     ops_plane.CrystalShapeDraw,
     ops_plane.CrystalShapeModify,
-    ops_ms.MSAdd,
-    ops_ms.MSRemove,
-    ops_ms.MSDraw,
-    ops_ms.MSModify,
+    ops_surface.MSAdd,
+    ops_surface.MSRemove,
+    ops_surface.MSDraw,
+    ops_surface.MSModify,
+    ops_surface.IsosurfaceAdd,
+    ops_surface.IsosurfaceRemove,
+    ops_surface.IsosurfaceDraw,
+    ops_surface.IsosurfaceModify,
 ]
 # classes_ops.extend(classes_ops)
 #
