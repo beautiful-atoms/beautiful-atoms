@@ -97,6 +97,7 @@ class Species(BaseObject):
         obj.name = name
         obj.data.name = name
         obj.batoms.atom.radius = radius
+        obj.batoms.type = 'INSTANCER'
         #
         obj.users_collection[0].objects.unlink(obj)
         bpy.data.collections['%s_instancer' % self.label].objects.link(obj)

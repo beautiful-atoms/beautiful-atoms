@@ -221,6 +221,7 @@ class BondSettings(Setting):
             obj = self.cylinder(name, order=order, style=style,
                                 vertices=vertices, depth=1, radius=radius)
         obj.batoms.atom.radius = radius
+        obj.batoms.type = 'INSTANCER'
         #
         for coll in obj.users_collection:
             coll.objects.unlink(obj)

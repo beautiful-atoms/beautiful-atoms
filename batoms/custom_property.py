@@ -656,6 +656,7 @@ class BatomsObject(bpy.types.PropertyGroup):
                ('VOLUME', "Volume", "Volume"),
                ('CELL', "Cell", "Cell"),
                ('BOND', "Bond", "Bond"),
+               ('INSTANCER', "Instancer", "Instancer"),
                ('POLYHEDRA', "Polyhedra", "Polyhedra"),
                ('CRYSTALSHAPE', "Crystal Shape", "Crystal Shape"),
                ('LATTICEPLANE', "LatticePlane", "LatticePlane"),
