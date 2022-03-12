@@ -32,6 +32,7 @@ from .gui import (
     gui_pubchem,
     gui_rscb,
     ui_list_bond,
+    ui_list_lattice_plane,
     view3d_mt_batoms_add,
 )
 
@@ -46,6 +47,7 @@ from .ops import (add_nanoparticle,
     measure,
     manual_mapping,
     ops_bond,
+    ops_plane,
     )
 
 from .ops import classes_ops
@@ -153,13 +155,18 @@ classes_ops = [
     view3d_mt_batoms_add.VIEW3D_MT_surface_add,
     view3d_mt_batoms_add.VIEW3D_MT_nanotube_add,
     view3d_mt_batoms_add.VIEW3D_MT_nanoparticle_add,
-    ui_list_bond.BOND_MT_bond_pair_context_menu,
-    # bond.BatomsButtonsPanel,
-    ui_list_bond.BOND_UL_bond_pairs,
-    ui_list_bond.BOND_PT_bond_pairs,
+    ui_list_bond.BATOMS_MT_bond_pair_context_menu,
+    ui_list_bond.BATOMS_UL_bond_pairs,
+    ui_list_bond.BATOMS_PT_bond_pairs,
+    ui_list_lattice_plane.BATOMS_MT_lattice_plane_context_menu,
+    ui_list_lattice_plane.BATOMS_UL_lattice_planes,
+    ui_list_lattice_plane.BATOMS_PT_lattice_planes,
     ops_bond.BondPairAdd,
     ops_bond.BondPairRemove,
     ops_bond.BondModify,
+    ops_plane.LatticePlaneAdd,
+    ops_plane.LatticePlaneRemove,
+    ops_plane.LatticePlaneModify,
 ]
 # classes_ops.extend(classes_ops)
 #
@@ -241,7 +248,6 @@ def unregister():
         bpy.utils.unregister_tool(gui_toolbar.BatomsTransform)
         bpy.utils.unregister_tool(gui_toolbar.BatomsBoundary)
         bpy.utils.unregister_tool(gui_toolbar.BatomsCell)
-        # bpy.utils.unregister_tool(gui_toolbar.AddAtoms)
         bpy.utils.unregister_tool(gui_toolbar.MoleculeEditElement)
         bpy.utils.unregister_tool(gui_toolbar.MolecueEditBond)
 

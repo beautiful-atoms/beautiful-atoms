@@ -145,7 +145,8 @@ class Setting():
         return self.get_collection()
 
     def get_collection(self):
-        collection = getattr(self.coll.batoms, self.name)
+        coll = bpy.data.collections.get(self.label)
+        collection = getattr(coll.batoms, self.name)
         return collection
 
     @property

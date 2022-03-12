@@ -247,11 +247,14 @@ class Bplane(bpy.types.PropertyGroup):
     flag: BoolProperty(name="flag", default=False)
     label: StringProperty(name="label", default='')
     indices: IntVectorProperty(
-        name="Miller indices", size=3, default=[0, 0, 1])
+        name="Miller indices", size=3, default=[1, 0, 0])
     distance: FloatProperty(name="distance",
                             description="Distance from origin",
                             default=1)
-    color: FloatVectorProperty(name="color", size=4, default=[0, 0, 1, 0.5])
+    color: FloatVectorProperty(name="color", size=4,
+                                subtype='COLOR',
+                                default=[0, 0, 1, 0.5]
+                                )
     crystal: BoolProperty(name="crystal", default=False)
     symmetry: BoolProperty(name="symmetry", default=False)
     slicing: BoolProperty(name="slicing", default=False)
@@ -596,8 +599,14 @@ class BatomsCollection(bpy.types.PropertyGroup):
                               type=Bbond)
     bond_index: IntProperty(name = "bond_index",
                               default = 0)
-    bplane: CollectionProperty(name='Bplane',
+    blatticeplane: CollectionProperty(name='Blatticeplane',
                                type=Bplane)
+    latticeplane_index: IntProperty(name = "latticeplane_index",
+                              default = 0)
+    bcrystalshape: CollectionProperty(name='Bcrystalshape',
+                               type=Bplane)
+    crystalshape_index: IntProperty(name = "crystalshape_index",
+                              default = 0)
     bisosurface: CollectionProperty(name='Bisosurface',
                                     type=Bisosurface)
     bpolyhedra: CollectionProperty(name='Bpolyhedra',

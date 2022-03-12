@@ -286,6 +286,8 @@ class LatticePlane(BaseObject):
         include_center: bool
             include center of plane in the mesh
         """
+        # delete old plane
+        
         if no is not None:
             self.no = no
         planes = self.build_plane(
@@ -304,13 +306,21 @@ class LatticePlane(BaseObject):
                                                  )
                 mat = self.build_materials(name, color = plane['color'])
                 obj.data.materials.append(mat)
+                obj.parent = self.batoms.obj
+                obj.batoms.type = 'PLANE'
+                obj.batoms.label = self.batoms.label
+                obj.batoms.plane.label = self.batoms.label
                 if plane['show_edge']:
                     name = '%s_%s_%s' % (self.label, 'plane_edge', species)
                     self.delete_obj(name)
-                    draw_cylinder(name=name,
+                    obj = draw_cylinder(name=name,
                                   datas=plane['edges_cylinder'],
                                   coll=self.batoms.coll,
                                   )
+                    obj.parent = self.batoms.obj
+                    obj.batoms.type = 'PLANE'
+                    obj.batoms.label = self.batoms.label
+                    obj.batoms.plane.label = self.batoms.label
                 if plane['slicing']:
                     name = '%s_%s_%s' % (self.label, 'plane', species)
                     self.build_slicing(name, self.batoms.volume,
