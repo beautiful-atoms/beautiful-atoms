@@ -476,16 +476,26 @@ class Bturn(bpy.types.PropertyGroup):
         return s
 
 
-class Bmssetting(bpy.types.PropertyGroup):
+class Bms(bpy.types.PropertyGroup):
     """
     """
     flag: BoolProperty(name="flag", default=False)
     name: StringProperty(name="name")
     label: StringProperty(name="label", default='batoms')
-    probe: FloatProperty(name="probe", default=1.4)
-    resolution: FloatProperty(name="resolution", default=0.5)
+    type: EnumProperty(
+        name="type",
+        description="Surface type",
+        items=(('SAS', "SAS", "Solvent Accessible Surface"),
+               ('SES', "SES", "solvent-excluded surfaces"),
+               ),
+        default='SAS')
+    probe: FloatProperty(name="probe", soft_min = 0.4, soft_max = 2, default=1.4)
+    resolution: FloatProperty(name="resolution", soft_min = 0.2, soft_max = 2,
+                default=0.5)
     select: StringProperty(name="select", default='all')
-    color: FloatVectorProperty(name="color", size=4, default=[0, 1, 1, 1.0])
+    color: FloatVectorProperty(name="color", size=4,
+        subtype='COLOR',
+        default=[0, 1, 1, 1.0])
 
     def as_dict(self) -> dict:
         setdict = {
@@ -624,8 +634,10 @@ class BatomsCollection(bpy.types.PropertyGroup):
                              type=Brender)
     bspecies: CollectionProperty(name='Bspecies',
                                  type=Bspecies)
-    bmssetting: CollectionProperty(name='Bmssetting',
-                                   type=Bmssetting)
+    bms: CollectionProperty(name='Bms',
+                                   type=Bms)
+    ms_index: IntProperty(name = "ms_index",
+                              default = 0)
     # BRibbon = Bribbon()
 
 class BatomsObject(bpy.types.PropertyGroup):

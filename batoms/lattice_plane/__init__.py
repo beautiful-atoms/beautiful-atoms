@@ -272,7 +272,7 @@ class LatticePlane(BaseObject):
                     bmesh.ops.delete(bm, geom=verts_select, context='VERTS')
                     bm.to_mesh(obj.data)
 
-    def draw(self, no=None,
+    def draw(self, plane_name = 'ALL', no=None,
              cuts=None, cmap='bwr', include_center=False):
         """Draw plane
         no: int
@@ -294,6 +294,8 @@ class LatticePlane(BaseObject):
         planes = self.build_plane(
             self.batoms.cell, include_center=include_center)
         for species, plane in planes.items():
+            if plane_name.upper() != "ALL" and species != plane_name:
+                continue
             if plane['boundary']:
                 name = '%s_%s_%s' % (self.label, 'plane', species)
                 self.delete_obj(name)

@@ -34,6 +34,7 @@ from .gui import (
     ui_list_bond,
     ui_list_lattice_plane,
     ui_list_crystal_shape,
+    ui_list_ms,
     view3d_mt_batoms_add,
 )
 
@@ -49,6 +50,7 @@ from .ops import (add_nanoparticle,
     manual_mapping,
     ops_bond,
     ops_plane,
+    ops_ms,
     )
 
 from .ops import classes_ops
@@ -79,7 +81,7 @@ classes_prop = [
     custom_property.Bhelix,
     custom_property.Bturn,
     custom_property.Bselect,
-    custom_property.Bmssetting,
+    custom_property.Bms,
     custom_property.BatomsCollection,
     custom_property.BatomsObject
 ]
@@ -165,15 +167,25 @@ classes_ops = [
     ui_list_crystal_shape.BATOMS_MT_crystal_shape_context_menu,
     ui_list_crystal_shape.BATOMS_UL_crystal_shapes,
     ui_list_crystal_shape.BATOMS_PT_crystal_shapes,
+    ui_list_ms.BATOMS_MT_ms_context_menu,
+    ui_list_ms.BATOMS_UL_ms,
+    ui_list_ms.BATOMS_PT_ms,
     ops_bond.BondPairAdd,
     ops_bond.BondPairRemove,
     ops_bond.BondModify,
+    ops_bond.BondDraw,
     ops_plane.LatticePlaneAdd,
     ops_plane.LatticePlaneRemove,
+    ops_plane.LatticePlaneDraw,
     ops_plane.LatticePlaneModify,
     ops_plane.CrystalShapeAdd,
     ops_plane.CrystalShapeRemove,
+    ops_plane.CrystalShapeDraw,
     ops_plane.CrystalShapeModify,
+    ops_ms.MSAdd,
+    ops_ms.MSRemove,
+    ops_ms.MSDraw,
+    ops_ms.MSModify,
 ]
 # classes_ops.extend(classes_ops)
 #

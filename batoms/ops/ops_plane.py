@@ -5,6 +5,7 @@ from bpy.types import (Panel,
                        )
 from bpy_extras.object_utils import AddObjectHelper
 from bpy.props import (BoolProperty,
+                       EnumProperty,
                        FloatProperty,
                        IntProperty,
                        IntVectorProperty,
@@ -68,6 +69,31 @@ class LatticePlaneRemove(Operator):
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 
+
+class LatticePlaneDraw(Operator):
+    bl_idname = "plane.lattice_plane_draw"
+    bl_label = "Draw Lattice Plane"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = ("Draw Lattice Plane")
+
+    name: StringProperty(
+        name="name", default="ALL",
+        description="Name of Lattice Plane to be drawed")
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        if obj:
+            return obj.batoms.type != 'OTHER'
+        else:
+            return False
+
+    def execute(self, context):
+        obj = context.object
+        batoms = Batoms(label=obj.batoms.label)
+        batoms.lattice_plane.draw(self.name)
+        context.view_layer.objects.active = batoms.obj
+        return {'FINISHED'}
 
 class LatticePlaneModify(Operator):
     bl_idname = "plane.lattice_plane_modify"
@@ -165,6 +191,31 @@ class CrystalShapeRemove(Operator):
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 
+
+class CrystalShapeDraw(Operator):
+    bl_idname = "plane.crystal_shape_draw"
+    bl_label = "Draw Crystal Shape"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = ("Draw Crystal Shape")
+
+    name: StringProperty(
+        name="name", default="ALL",
+        description="Name of Crystal Shape to be drawed")
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        if obj:
+            return obj.batoms.type != 'OTHER'
+        else:
+            return False
+
+    def execute(self, context):
+        obj = context.object
+        batoms = Batoms(label=obj.batoms.label)
+        batoms.crystal_shape.draw(self.name)
+        context.view_layer.objects.active = batoms.obj
+        return {'FINISHED'}
 
 class CrystalShapeModify(Operator):
     bl_idname = "plane.crystal_shape_modify"

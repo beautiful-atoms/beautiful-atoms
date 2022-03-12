@@ -130,7 +130,7 @@ class CrystalShape(BaseObject):
                 plane['edges_cylinder']['normals'].append(nvec)
         return plane
 
-    def draw(self, no=None, origin=None):
+    def draw(self, plane_name = "ALL", no=None, origin=None):
         """Draw crystal shape
         no: int
             spacegroup of structure, if None, no will be determined by
@@ -147,6 +147,8 @@ class CrystalShape(BaseObject):
             origin = self.batoms.cell.origin
         planes = self.build_crystal(self.batoms.cell, origin=origin)
         for species, plane in planes.items():
+            if plane_name.upper() != "ALL" and species != plane_name:
+                continue
             name = '%s_%s_%s' % (self.label, 'crystal', species)
             self.delete_obj(name)
             obj = draw_surface_from_vertices(name, plane,
