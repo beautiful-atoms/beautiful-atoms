@@ -5,16 +5,11 @@ https://wiki.fysik.dtu.dk/ase/ase/cluster/cluster.html?highlight=cluster#module-
 
 import bpy
 from bpy.types import Operator
-from bpy_extras.object_utils import AddObjectHelper
 from bpy.props import (StringProperty,
                        IntProperty,
-                       IntVectorProperty,
-                       FloatProperty,
-                       FloatVectorProperty,
                        BoolProperty,
                        )
-from ase.cluster import Cluster, Decahedron, Icosahedron, Octahedron, wulff_construction
-from ase.cluster.cubic import FaceCenteredCubic, BodyCenteredCubic, SimpleCubic
+from ase.cluster import Decahedron, Icosahedron, Octahedron, wulff_construction
 from batoms import Batoms
 
 
@@ -147,6 +142,6 @@ class BuildOctahedron(Operator):
             cutoff=self.cutoff,
             length=self.length,
             latticeconstant=latticeconstant,
-            alloy = self.alloy)
+            alloy=self.alloy)
         Batoms(label=self.label, from_ase=atoms)
         return {'FINISHED'}

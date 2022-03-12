@@ -12,11 +12,9 @@ from gpu_extras.batch import batch_for_shader
 def draw_callback_px(self, context):
     font_id = 0  # XXX, need to find out how best to get this.
     # draw some text
-    
     blf.position(font_id, 100, 300, 0)
     blf.size(font_id, 2, 7)
     blf.draw(font_id, self.results)
-
 
     # 50% alpha, 2 pixel width line
     shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
@@ -51,7 +49,8 @@ class MeasureButton(bpy.types.Operator):
             obj = context.object
             data = obj.data
             bm = bmesh.from_edit_mesh(data)
-            v = [s.index for s in bm.select_history if isinstance(s, bmesh.types.BMVert)]
+            v = [s.index for s in bm.select_history if isinstance(
+                s, bmesh.types.BMVert)]
             batoms = Batoms(label=obj.batoms.label)
             results = []
             for i in v:
@@ -61,7 +60,7 @@ class MeasureButton(bpy.types.Operator):
                 results = batoms[v[0]].position
             elif len(v) == 2:
                 results = batoms.get_distances(v[0],
-                                        [v[1]])
+                                               [v[1]])
                 measurement_type = 'Bond length: '
             elif len(v) == 3:
                 results = batoms.get_angle(v[0], v[1], v[2])
@@ -84,18 +83,16 @@ class MeasureButton(bpy.types.Operator):
             return {'CANCELLED'}
         return {'PASS_THROUGH'}
 
-    
     def invoke(self, context, event):
         if context.area.type == 'VIEW_3D':
             # the arguments we pass the the callback
             args = (self, context)
             # Add the region OpenGL drawing callback
             # draw in view space with 'POST_VIEW' and 'PRE_VIEW'
-            self._handle = bpy.types.SpaceView3D.draw_handler_add(draw_callback_px, args, 'WINDOW', 'POST_VIEW')
-
+            self._handle = bpy.types.SpaceView3D.draw_handler_add(
+                draw_callback_px, args, 'WINDOW', 'POST_VIEW')
             self.results = ""
             self.positions = []
-
             context.window_manager.modal_handler_add(self)
             return {'RUNNING_MODAL'}
         else:

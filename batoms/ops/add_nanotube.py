@@ -5,12 +5,9 @@ https://wiki.fysik.dtu.dk/ase/ase/build/build.html?highlight=nanotube#ase.build.
 
 import bpy
 from bpy.types import Operator
-from bpy_extras.object_utils import AddObjectHelper
 from bpy.props import (StringProperty,
                        IntProperty,
-                       IntVectorProperty,
                        FloatProperty,
-                       FloatVectorProperty,
                        BoolProperty,
                        )
 from ase.build import nanotube

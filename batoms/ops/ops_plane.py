@@ -1,34 +1,22 @@
 import bpy
 import bmesh
-from bpy.types import (Panel,
-                       Operator,
-                       )
-from bpy_extras.object_utils import AddObjectHelper
+from bpy.types import Operator
 from bpy.props import (BoolProperty,
-                       EnumProperty,
                        FloatProperty,
-                       IntProperty,
                        IntVectorProperty,
                        StringProperty
                        )
 from batoms import Batoms
+from batoms.ops.base import OperatorBatoms
 
-class LatticePlaneAdd(Operator):
+
+class LatticePlaneAdd(OperatorBatoms):
     bl_idname = "plane.lattice_plane_add"
     bl_label = "Add Lattice Plane"
-    bl_options = {'REGISTER', 'UNDO'}
     bl_description = ("Add Lattice Plane to a Batoms")
 
     indices: IntVectorProperty(
         name="Miller indices", size=3, default=[0, 0, 1])
-
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
-        if obj:
-            return obj.batoms.type != 'OTHER'
-        else:
-            return False
 
     def execute(self, context):
         obj = context.object
@@ -37,27 +25,19 @@ class LatticePlaneAdd(Operator):
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 
-class LatticePlaneRemove(Operator):
+
+class LatticePlaneRemove(OperatorBatoms):
     bl_idname = "plane.lattice_plane_remove"
     bl_label = "Remove Lattice Plane"
-    bl_options = {'REGISTER', 'UNDO'}
     bl_description = ("Remove Lattice Plane to a Batoms")
 
     name: StringProperty(
         name="name", default='1-1-1',
         description="Name of Lattice Plane to be removed")
-    
-    all: BoolProperty(name="all",
-                       default=False,
-                       description="Remove all Lattice Planes")
 
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
-        if obj:
-            return obj.batoms.type != 'OTHER'
-        else:
-            return False
+    all: BoolProperty(name="all",
+                      default=False,
+                      description="Remove all Lattice Planes")
 
     def execute(self, context):
         obj = context.object
@@ -65,12 +45,12 @@ class LatticePlaneRemove(Operator):
         index = batoms.coll.batoms.latticeplane_index
         batoms.lattice_plane.setting.remove((self.name))
         batoms.coll.batoms.latticeplane_index = min(max(0, index - 1),
-                len(batoms.lattice_plane.setting) - 1)
+                                                    len(batoms.lattice_plane.setting) - 1)
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 
 
-class LatticePlaneDraw(Operator):
+class LatticePlaneDraw(OperatorBatoms):
     bl_idname = "plane.lattice_plane_draw"
     bl_label = "Draw Lattice Plane"
     bl_options = {'REGISTER', 'UNDO'}
@@ -80,14 +60,6 @@ class LatticePlaneDraw(Operator):
         name="name", default="ALL",
         description="Name of Lattice Plane to be drawed")
 
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
-        if obj:
-            return obj.batoms.type != 'OTHER'
-        else:
-            return False
-
     def execute(self, context):
         obj = context.object
         batoms = Batoms(label=obj.batoms.label)
@@ -95,7 +67,8 @@ class LatticePlaneDraw(Operator):
         context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
-class LatticePlaneModify(Operator):
+
+class LatticePlaneModify(OperatorBatoms):
     bl_idname = "plane.lattice_plane_modify"
     bl_label = "Modify lattice_plane"
     bl_options = {'REGISTER', 'UNDO'}
@@ -105,10 +78,10 @@ class LatticePlaneModify(Operator):
         name="key", default='style',
         description="Replaced by this species")
 
-    slice: BoolProperty(name="slice", default=False, 
-                )
-    boundary: BoolProperty(name="boundary", default=False, 
-                )
+    slice: BoolProperty(name="slice", default=False,
+                        )
+    boundary: BoolProperty(name="boundary", default=False,
+                           )
     distance: FloatProperty(name="distance",
                             description="Distance from origin",
                             default=1)
@@ -125,7 +98,8 @@ class LatticePlaneModify(Operator):
         obj = context.object
         data = obj.data
         bm = bmesh.from_edit_mesh(data)
-        v = [s.index for s in bm.select_history if isinstance(s, bmesh.types.BMVert)]
+        v = [s.index for s in bm.select_history if isinstance(
+            s, bmesh.types.BMVert)]
         batoms = Batoms(label=obj.batoms.label)
         for i in v:
             setattr(batoms.bonds[i], self.key, getattr(self, self.key))
@@ -134,8 +108,7 @@ class LatticePlaneModify(Operator):
         return {'FINISHED'}
 
 
-
-class CrystalShapeAdd(Operator):
+class CrystalShapeAdd(OperatorBatoms):
     bl_idname = "plane.crystal_shape_add"
     bl_label = "Add Lattice Plane"
     bl_options = {'REGISTER', 'UNDO'}
@@ -144,14 +117,6 @@ class CrystalShapeAdd(Operator):
     indices: IntVectorProperty(
         name="Miller indices", size=3, default=[0, 0, 1])
 
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
-        if obj:
-            return obj.batoms.type != 'OTHER'
-        else:
-            return False
-
     def execute(self, context):
         obj = context.object
         batoms = Batoms(label=context.object.batoms.label)
@@ -159,7 +124,8 @@ class CrystalShapeAdd(Operator):
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 
-class CrystalShapeRemove(Operator):
+
+class CrystalShapeRemove(OperatorBatoms):
     bl_idname = "plane.crystal_shape_remove"
     bl_label = "Remove Lattice Plane"
     bl_options = {'REGISTER', 'UNDO'}
@@ -168,18 +134,10 @@ class CrystalShapeRemove(Operator):
     name: StringProperty(
         name="name", default='1-1-1',
         description="Name of Lattice Plane to be removed")
-    
-    all: BoolProperty(name="all",
-                       default=False,
-                       description="Remove all Lattice Planes")
 
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
-        if obj:
-            return obj.batoms.type != 'OTHER'
-        else:
-            return False
+    all: BoolProperty(name="all",
+                      default=False,
+                      description="Remove all Lattice Planes")
 
     def execute(self, context):
         obj = context.object
@@ -187,12 +145,12 @@ class CrystalShapeRemove(Operator):
         index = batoms.coll.batoms.crystalshape_index
         batoms.crystal_shape.setting.remove((self.name))
         batoms.coll.batoms.crystalshape_index = min(max(0, index - 1),
-                len(batoms.crystal_shape.setting) - 1)
+                                                    len(batoms.crystal_shape.setting) - 1)
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 
 
-class CrystalShapeDraw(Operator):
+class CrystalShapeDraw(OperatorBatoms):
     bl_idname = "plane.crystal_shape_draw"
     bl_label = "Draw Crystal Shape"
     bl_options = {'REGISTER', 'UNDO'}
@@ -202,14 +160,6 @@ class CrystalShapeDraw(Operator):
         name="name", default="ALL",
         description="Name of Crystal Shape to be drawed")
 
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
-        if obj:
-            return obj.batoms.type != 'OTHER'
-        else:
-            return False
-
     def execute(self, context):
         obj = context.object
         batoms = Batoms(label=obj.batoms.label)
@@ -217,7 +167,8 @@ class CrystalShapeDraw(Operator):
         context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
-class CrystalShapeModify(Operator):
+
+class CrystalShapeModify(OperatorBatoms):
     bl_idname = "plane.crystal_shape_modify"
     bl_label = "Modify lattice_plane"
     bl_options = {'REGISTER', 'UNDO'}
@@ -227,10 +178,10 @@ class CrystalShapeModify(Operator):
         name="key", default='style',
         description="Replaced by this species")
 
-    slice: BoolProperty(name="slice", default=False, 
-                )
-    boundary: BoolProperty(name="boundary", default=False, 
-                )
+    slice: BoolProperty(name="slice", default=False,
+                        )
+    boundary: BoolProperty(name="boundary", default=False,
+                           )
     distance: FloatProperty(name="distance",
                             description="Distance from origin",
                             default=1)
@@ -247,7 +198,8 @@ class CrystalShapeModify(Operator):
         obj = context.object
         data = obj.data
         bm = bmesh.from_edit_mesh(data)
-        v = [s.index for s in bm.select_history if isinstance(s, bmesh.types.BMVert)]
+        v = [s.index for s in bm.select_history if isinstance(
+            s, bmesh.types.BMVert)]
         batoms = Batoms(label=obj.batoms.label)
         for i in v:
             setattr(batoms.bonds[i], self.key, getattr(self, self.key))

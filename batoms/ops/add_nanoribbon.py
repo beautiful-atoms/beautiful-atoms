@@ -1,16 +1,12 @@
 """
 Use ASE's build function 
-https://wiki.fysik.dtu.dk/ase/ase/build/build.html?highlight=Nanoribbon#ase.build.Nanoribbon
 """
 
 import bpy
 from bpy.types import Operator
-from bpy_extras.object_utils import AddObjectHelper
 from bpy.props import (StringProperty,
                        IntProperty,
-                       IntVectorProperty,
                        FloatProperty,
-                       FloatVectorProperty,
                        BoolProperty,
                        )
 from ase.build import graphene_nanoribbon
@@ -45,7 +41,7 @@ class BuildNanoribbon(Operator):
         name="C_H", default=1.09,
         min=0, soft_max=15,
         description="Carbon-hydrogen bond length. Default: 1.09 Angstrom.")
-    
+
     C_C: FloatProperty(
         name="C_C", default=1.42,
         min=0, soft_max=15,
@@ -68,7 +64,7 @@ class BuildNanoribbon(Operator):
         name="initial_mag", default=1.2,
         min=0, soft_max=15,
         description="Magnitude of magnetic moment if magnetic.")
-    
+
     sheet: BoolProperty(
         name="Sheet", default=False,
         description=("If true, make an infinite sheet instead of a ribbon (default: False)"))
@@ -76,7 +72,7 @@ class BuildNanoribbon(Operator):
     main_element: StringProperty(
         name="Main_element", default='C',
         description="Main_element")
-    
+
     saturate_element: StringProperty(
         name="Saturate_element", default='H',
         description="saturate_element")
@@ -95,6 +91,6 @@ class BuildNanoribbon(Operator):
             sheet=self.sheet,
             main_element=self.main_element,
             saturate_element=self.saturate_element,
-            )
+        )
         Batoms(label=self.label, from_ase=atoms)
         return {'FINISHED'}

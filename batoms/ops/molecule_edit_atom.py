@@ -1,10 +1,9 @@
 import bpy
 from bpy.types import Operator
-from bpy_extras.object_utils import AddObjectHelper
 from bpy.props import (StringProperty,
                        IntProperty,
                        )
-import bmesh                    
+import bmesh
 from batoms import Batoms
 from ase import Atoms
 from ase.build.rotate import rotation_matrix_from_points
@@ -87,7 +86,8 @@ def edit_atom(batoms, indices, element):
                 a2 = positions[i] - positions[j]
                 bondlength = covalent_radii[chemical_symbols.index(element)] + \
                     covalent_radii[chemical_symbols.index(species[j])]
-                mol.positions += positions[j] + a2/np.linalg.norm(a2)*bondlength
+                mol.positions += positions[j] + \
+                    a2/np.linalg.norm(a2)*bondlength
                 # how many atoms (nbond) are connected to atoms i
                 baj0 = np.where((bondlists[:, 0] == j))[0]
                 baj1 = np.where((bondlists[:, 1] == j))[0]
@@ -102,7 +102,7 @@ def edit_atom(batoms, indices, element):
                 for i in range(20):
                     angle = i*9
                     mol1 = mol.copy()
-                    mol1.rotate(angle, a2, center = mol[0].position)
+                    mol1.rotate(angle, a2, center=mol[0].position)
                     p1 = mol1.positions[2:]
                     p2 = positions[baj]
                     D, D_len = get_distances(p1, p2)
@@ -110,7 +110,7 @@ def edit_atom(batoms, indices, element):
                     if maxd1 > maxd:
                         maxd = maxd1
                         maxi = i
-                mol.rotate(maxi*9, a2, center = mol[0].position)
+                mol.rotate(maxi*9, a2, center=mol[0].position)
                 del mol[[1]]
                 # find minimized overlap
             else:
@@ -135,7 +135,7 @@ def edit_atom(batoms, indices, element):
     batoms.model_style = 1
 
 
-class MolecueEditElement(Operator, AddObjectHelper):
+class MolecueEditElement(Operator):
     bl_idname = "batoms.molecule_edit_atom"
     bl_label = "Edit Atoms"
     bl_options = {'REGISTER', 'UNDO'}
@@ -150,19 +150,17 @@ class MolecueEditElement(Operator, AddObjectHelper):
 
     @classmethod
     def poll(cls, context):
-        return context.mode in {'EDIT_MESH'}
+        return context.mode in {'EDIT_MESH'} and \
+            context.object.batoms.type != 'OTHER'
 
     def execute(self, context):
         obj = context.object
-        if not obj.batoms.flag:
-            print('Please select a Batom.')
-            return {'FINISHED'}
         data = obj.data
         if data.total_vert_sel > 0:
             bm = bmesh.from_edit_mesh(data)
             indices = [s.index for s in bm.select_history
-                if isinstance(s, bmesh.types.BMVert)]
-            self.report({'INFO'}, '%s atoms were replaced'%len(indices))
+                       if isinstance(s, bmesh.types.BMVert)]
+            self.report({'INFO'}, '%s atoms were replaced' % len(indices))
             batoms = Batoms(label=obj.batoms.label)
             edit_atom(batoms, indices, self.element)
             bpy.context.view_layer.objects.active = batoms.obj

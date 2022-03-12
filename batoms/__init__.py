@@ -22,7 +22,6 @@ from .gui import (
     gui_batoms,
     gui_batom,
     gui_toolbar,
-    gui_volume,
     gui_cell,
     gui_bond,
     gui_polyhedra,
@@ -130,9 +129,6 @@ classes_ops = [
     gui_polyhedra.PolyhedraProperties,
     gui_cell.Cell_PT_prepare,
     gui_cell.CellProperties,
-    gui_volume.Volume_PT_prepare,
-    gui_volume.VolumeProperties,
-    gui_volume.AddButton,
     gui_plane.Plane_PT_prepare,
     gui_plane.PlaneProperties,
     gui_plane.AddButton,
@@ -247,7 +243,6 @@ def register():
     scene.popanel = PointerProperty(type=gui_polyhedra.PolyhedraProperties)
     scene.plpanel = PointerProperty(type=gui_plane.PlaneProperties)
     scene.repanel = PointerProperty(type=gui_render.RenderProperties)
-    scene.vopanel = PointerProperty(type=gui_volume.VolumeProperties)
     scene.rbpanel = PointerProperty(type=rigid_body.RigidBodyProperties)
     scene.ffpanel = PointerProperty(type=force_field.ForceFieldProperties)
     scene.pmgpanel = PointerProperty(type=gui_pymatgen.PymatgenProperties)
