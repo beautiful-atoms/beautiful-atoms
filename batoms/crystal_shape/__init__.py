@@ -61,8 +61,6 @@ class CrystalShape(BaseObject):
         self.setting.get_symmetry_indices()
         planes = {}
         for p in self.setting:
-            if not p.crystal:
-                continue
             normal = np.dot(p.indices, bcell.reciprocal)
             normal = normal/np.linalg.norm(normal)
             point = p.distance*normal
@@ -140,6 +138,9 @@ class CrystalShape(BaseObject):
         origin: xyz vector
             The center of cyrstal shape
         """
+        from batoms.utils.butils import clean_coll_object_by_type
+        # delete old plane
+        clean_coll_object_by_type(self.batoms.coll, 'CRYSTALSHAPE')
         if no is not None:
             self.no = no
         if origin is None:
@@ -153,13 +154,19 @@ class CrystalShape(BaseObject):
                                        )
             mat = self.build_materials(name, color = plane['color'])
             obj.data.materials.append(mat)
+            obj.parent = self.batoms.obj
+            obj.batoms.type = 'CRYSTALSHAPE'
+            obj.batoms.label = self.batoms.label
             if plane['show_edge']:
                 name = '%s_%s_%s' % (self.label, 'crystal_edge', species)
                 self.delete_obj(name)
-                draw_cylinder(name=name,
+                obj = draw_cylinder(name=name,
                               datas=plane['edges_cylinder'],
                               coll=self.batoms.coll,
                               )
+                obj.parent = self.batoms.obj
+                obj.batoms.type = 'CRYSTALSHAPE'
+                obj.batoms.label = self.batoms.label
 
 
 def save_image(data, filename, interpolation='bicubic'):

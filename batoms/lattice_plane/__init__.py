@@ -286,8 +286,9 @@ class LatticePlane(BaseObject):
         include_center: bool
             include center of plane in the mesh
         """
+        from batoms.utils.butils import clean_coll_object_by_type
         # delete old plane
-        
+        clean_coll_object_by_type(self.batoms.coll, 'LATTICEPLANE')
         if no is not None:
             self.no = no
         planes = self.build_plane(
@@ -307,9 +308,8 @@ class LatticePlane(BaseObject):
                 mat = self.build_materials(name, color = plane['color'])
                 obj.data.materials.append(mat)
                 obj.parent = self.batoms.obj
-                obj.batoms.type = 'PLANE'
+                obj.batoms.type = 'LATTICEPLANE'
                 obj.batoms.label = self.batoms.label
-                obj.batoms.plane.label = self.batoms.label
                 if plane['show_edge']:
                     name = '%s_%s_%s' % (self.label, 'plane_edge', species)
                     self.delete_obj(name)
@@ -318,9 +318,8 @@ class LatticePlane(BaseObject):
                                   coll=self.batoms.coll,
                                   )
                     obj.parent = self.batoms.obj
-                    obj.batoms.type = 'PLANE'
+                    obj.batoms.type = 'LATTICEPLANE'
                     obj.batoms.label = self.batoms.label
-                    obj.batoms.plane.label = self.batoms.label
                 if plane['slicing']:
                     name = '%s_%s_%s' % (self.label, 'plane', species)
                     self.build_slicing(name, self.batoms.volume,

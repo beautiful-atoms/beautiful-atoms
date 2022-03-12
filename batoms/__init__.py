@@ -33,6 +33,7 @@ from .gui import (
     gui_rscb,
     ui_list_bond,
     ui_list_lattice_plane,
+    ui_list_crystal_shape,
     view3d_mt_batoms_add,
 )
 
@@ -161,12 +162,18 @@ classes_ops = [
     ui_list_lattice_plane.BATOMS_MT_lattice_plane_context_menu,
     ui_list_lattice_plane.BATOMS_UL_lattice_planes,
     ui_list_lattice_plane.BATOMS_PT_lattice_planes,
+    ui_list_crystal_shape.BATOMS_MT_crystal_shape_context_menu,
+    ui_list_crystal_shape.BATOMS_UL_crystal_shapes,
+    ui_list_crystal_shape.BATOMS_PT_crystal_shapes,
     ops_bond.BondPairAdd,
     ops_bond.BondPairRemove,
     ops_bond.BondModify,
     ops_plane.LatticePlaneAdd,
     ops_plane.LatticePlaneRemove,
     ops_plane.LatticePlaneModify,
+    ops_plane.CrystalShapeAdd,
+    ops_plane.CrystalShapeRemove,
+    ops_plane.CrystalShapeModify,
 ]
 # classes_ops.extend(classes_ops)
 #
