@@ -41,6 +41,7 @@ def test_SES():
     bpy.ops.batoms.delete()
     h2o = molecule("H2O")
     h2o = Batoms("h2o", from_ase=h2o)
+    h2o.ms.setting["1"].type = "SES"
     h2o.ms.draw()
     # area = h2o.ms.get_sasa(partial=True)[0]
 
@@ -56,6 +57,7 @@ def test_SES_protein():
     prot = read_pdb("datas/1ema.pdb")
     prot = Batoms("prot", from_ase=prot)
     tstart = time()
+    prot.ms.setting["1"].type = "SES"
     prot.ms.draw()
     t = time() - tstart
     assert t < 5
