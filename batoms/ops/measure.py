@@ -1,6 +1,5 @@
 """
 """
-from turtle import position
 import bpy
 import bmesh
 from batoms import Batoms
