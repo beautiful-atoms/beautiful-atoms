@@ -1236,10 +1236,10 @@ class Batoms(BaseCollection, ObjectGN):
         """
         return self.as_ase().get_center_of_mass(scaled=scaled)
 
-    def get_center_of_geometry(self, colls=None):
+    def get_center_of_geometry(self, coll=None):
         """
         """
-        vertices = self.get_all_vertices(colls=colls, cell=self.show_unit_cell)
+        vertices = self.get_all_vertices(coll=coll, cell=self.show_unit_cell)
         canvas = np.zeros([2, 3])
         canvas[0] = np.min(vertices, axis=0)
         canvas[1] = np.max(vertices, axis=0)
@@ -1355,51 +1355,39 @@ class Batoms(BaseCollection, ObjectGN):
         atoms = Atoms(numbers=numbers, scaled_positions=points, cell=lattice)
         return atoms
 
-    def get_all_vertices(self, colls=None, cell=True):
+    def get_all_vertices(self, coll=None, cell=True):
         """
         Get position of all vertices from all mesh in batoms.
         Used for plane boundary and calc_camera_data
         """
         positions = self.positions
         # isosurface, plane
-        if colls is None:
-            colls = subcollections
-        for coll in colls:
-            if not cell and coll == 'cell':
+        if coll is None:
+            coll = self.coll
+        for obj in coll.all_objects:
+            if obj.type != 'MESH':
                 continue
-            if 'atom' == coll:
+            if obj.batoms.type == 'INSTANCER' or obj.batoms.type == 'VOLUME':
                 continue
-            if 'instancer' in coll:
-                continue
-            if 'render' in coll:
-                continue
-            for obj in self.coll.children['%s_%s' % (self.label,
-                                                     coll)].all_objects:
-                if obj.type != 'MESH':
-                    continue
-                if 'volume' in obj.name:
-                    continue
-                if 'instancer' in obj.name:
-                    continue
-                n = len(obj.data.vertices)
-                vertices = np.empty(n*3, dtype=np.float64)
-                obj.data.vertices.foreach_get('co', vertices)
-                vertices = vertices.reshape((n, 3))
-                vertices = np.append(vertices, np.ones((n, 1)), axis=1)
-                mat = np.array(obj.matrix_world)
-                vertices = mat.dot(vertices.T).T
-                # (natom, 4) back to (natom, 3)
-                vertices = vertices[:, :3]
-                positions = np.concatenate((positions, vertices), axis=0)
+            n = len(obj.data.vertices)
+            vertices = np.empty(n*3, dtype=np.float64)
+            obj.data.vertices.foreach_get('co', vertices)
+            vertices = vertices.reshape((n, 3))
+            vertices = np.append(vertices, np.ones((n, 1)), axis=1)
+            mat = np.array(obj.matrix_world)
+            vertices = mat.dot(vertices.T).T
+            # (natom, 4) back to (natom, 3)
+            vertices = vertices[:, :3]
+            positions = np.concatenate((positions, vertices), axis=0)
         return positions
 
-    def get_canvas_box(self, direction=[0, 0, 1], padding=None, colls=None):
+    def get_canvas_box(self, direction=[0, 0, 1], padding=None, coll=None):
         """
         Calculate the canvas box from [0, 0, 1] and other direction.
 
         """
         from batoms.utils import get_canvas
-        vertices = self.get_all_vertices(colls=colls, cell=self.show_unit_cell)
+        vertices = self.get_all_vertices(coll=coll, cell=self.show_unit_cell)
         canvas = get_canvas(vertices, direction=direction, padding=padding)
         width = canvas[1][0] - canvas[0][0]
         height = canvas[1][1] - canvas[0][1]
