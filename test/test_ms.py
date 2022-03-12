@@ -12,7 +12,7 @@ def test_SAS():
     bpy.ops.batoms.delete()
     h2o = molecule("H2O")
     h2o = Batoms("h2o", from_ase=h2o)
-    h2o.ms.draw_SAS()
+    h2o.ms.draw()
     print(h2o.ms.setting)
     # area = h2o.ms.get_psasa()
 
@@ -26,13 +26,13 @@ def test_SAS_protein():
     prot = read_pdb("datas/1ema.pdb")  # 1tim
     prot = Batoms("1ema", from_ase=prot)
     prot.ms.setting["1"] = {"resolution": 0.4}
-    prot.ms.draw_SAS()
+    prot.ms.draw()
     area = prot.ms.get_sasa("1")
     # area = prot.ms.get_psasa()
     assert abs(area[0] - 14461) < 10000
     prot.selects.add("A", "chain A")
     prot.ms.setting.add("2", {"select": "A", "color": [0.8, 0.1, 0.1, 1.0]})
-    prot.ms.draw_SAS()
+    prot.ms.draw()
 
 
 def test_SES():
@@ -41,7 +41,7 @@ def test_SES():
     bpy.ops.batoms.delete()
     h2o = molecule("H2O")
     h2o = Batoms("h2o", from_ase=h2o)
-    h2o.ms.draw_SES()
+    h2o.ms.draw()
     # area = h2o.ms.get_sasa(partial=True)[0]
 
 
@@ -56,7 +56,7 @@ def test_SES_protein():
     prot = read_pdb("datas/1ema.pdb")
     prot = Batoms("prot", from_ase=prot)
     tstart = time()
-    prot.ms.draw_SES(parallel=2)
+    prot.ms.draw(parallel=2)
     t = time() - tstart
     assert t < 5
     area = prot.ms.get_sesa("1")[0]
