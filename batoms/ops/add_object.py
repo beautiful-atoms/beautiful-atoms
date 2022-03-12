@@ -59,6 +59,7 @@ class AddMolecule(Operator):
         atoms = molecule(self.formula)
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.model_style = 1
+        batoms.obj.select_set(True)
         return {'FINISHED'}
 
 
@@ -118,7 +119,8 @@ class AddBulk(Operator):
                      a=a, b=b, c=c,
                      orthorhombic=self.orthorhombic,
                      cubic=self.cubic)
-        Batoms(label=self.label, from_ase=atoms)
+        batoms = Batoms(label=self.label, from_ase=atoms)
+        batoms.obj.select_set(True)
         return {'FINISHED'}
 
 
@@ -140,7 +142,8 @@ class AddAtoms(Operator):
         if self.label == '':
             self.label = self.formula
         atoms = Atoms(self.formula)
-        Batoms(label=self.label, from_ase=atoms)
+        batoms = Batoms(label=self.label, from_ase=atoms)
+        batoms.obj.select_set(True)
         return {'FINISHED'}
 
 
@@ -198,6 +201,7 @@ class AddSurface(Operator):
         batoms = Batoms(label=label, from_ase=atoms, movie=True)
         batoms = batoms*self.size
         batoms.translate([2, 2, 2])
+        batoms.obj.select_set(True)
         return {'FINISHED'}
 
 
@@ -234,4 +238,5 @@ class AddRootSurface(Operator):
         atoms = atoms*self.size
         batoms = Batoms(label=label, from_ase=atoms, movie=True)
         batoms.translate([2, 2, 2])
+        batoms.obj.select_set(True)
         return {'FINISHED'}

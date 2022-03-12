@@ -11,7 +11,7 @@ from batoms.bio.bio import read
 
 class IMPORT_OT_batoms(Operator, ImportHelper):
     bl_idname = "batoms.import"
-    bl_label = "Import batoms (*.batoms)"
+    bl_label = "Import"
     bl_options = {"REGISTER", "UNDO"}
 
     filename_ext = ".xyz"
@@ -52,7 +52,7 @@ class IMPORT_OT_batoms(Operator, ImportHelper):
 
 class EXPORT_OT_batoms(Operator, ExportHelper):
     bl_idname = "batoms.export"
-    bl_label = "Export batoms (*.batoms)"
+    bl_label = "Export"
     bl_options = {"REGISTER", "UNDO"}
 
     filename_ext = ".xyz"
