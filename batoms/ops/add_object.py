@@ -60,6 +60,7 @@ class AddMolecule(Operator):
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.model_style = 1
         batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
 
@@ -121,6 +122,7 @@ class AddBulk(Operator):
                      cubic=self.cubic)
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
 
@@ -144,6 +146,7 @@ class AddAtoms(Operator):
         atoms = Atoms(self.formula)
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
 
@@ -202,6 +205,7 @@ class AddSurface(Operator):
         batoms = batoms*self.size
         batoms.translate([2, 2, 2])
         batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
 
@@ -239,4 +243,5 @@ class AddRootSurface(Operator):
         batoms = Batoms(label=label, from_ase=atoms, movie=True)
         batoms.translate([2, 2, 2])
         batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}

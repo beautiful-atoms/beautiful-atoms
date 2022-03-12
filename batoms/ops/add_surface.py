@@ -65,7 +65,9 @@ class BuildSurfaceFCC100(Operator):
                        vacuum=self.vacuum,
                        orthogonal=self.orthogonal,
                        periodic=self.periodic)
-        Batoms(label=self.label, from_ase=atoms)
+        batoms = Batoms(label=self.label, from_ase=atoms)
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
 
@@ -115,7 +117,9 @@ class BuildSurfaceFCC110(Operator):
                        vacuum=self.vacuum,
                        orthogonal=self.orthogonal,
                        periodic=self.periodic)
-        Batoms(label=self.label, from_ase=atoms)
+        batoms = Batoms(label=self.label, from_ase=atoms)
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
 
@@ -165,7 +169,9 @@ class BuildSurfaceFCC111(Operator):
                        vacuum=self.vacuum,
                        orthogonal=self.orthogonal,
                        periodic=self.periodic)
-        Batoms(label=self.label, from_ase=atoms)
+        batoms = Batoms(label=self.label, from_ase=atoms)
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
 
@@ -210,7 +216,9 @@ class BuildSurfaceFCC211(Operator):
                        a=a,
                        vacuum=self.vacuum,
                        orthogonal=self.orthogonal)
-        Batoms(label=self.label, from_ase=atoms)
+        batoms = Batoms(label=self.label, from_ase=atoms)
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
 
@@ -262,7 +270,9 @@ class BuildSurfaceFCC111Root(Operator):
                             a=a,
                             vacuum=self.vacuum,
                             orthogonal=self.orthogonal)
-        Batoms(label=self.label, from_ase=atoms)
+        batoms = Batoms(label=self.label, from_ase=atoms)
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
 
@@ -312,7 +322,9 @@ class BuildSurfaceBCC100(Operator):
                        vacuum=self.vacuum,
                        orthogonal=self.orthogonal,
                        periodic=self.periodic)
-        Batoms(label=self.label, from_ase=atoms)
+        batoms = Batoms(label=self.label, from_ase=atoms)
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
 
@@ -362,7 +374,9 @@ class BuildSurfaceBCC110(Operator):
                        vacuum=self.vacuum,
                        orthogonal=self.orthogonal,
                        periodic=self.periodic)
-        Batoms(label=self.label, from_ase=atoms)
+        batoms = Batoms(label=self.label, from_ase=atoms)
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
 
@@ -412,7 +426,9 @@ class BuildSurfaceBCC111(Operator):
                        vacuum=self.vacuum,
                        orthogonal=self.orthogonal,
                        periodic=self.periodic)
-        Batoms(label=self.label, from_ase=atoms)
+        batoms = Batoms(label=self.label, from_ase=atoms)
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
 
@@ -464,7 +480,9 @@ class BuildSurfaceBCC111Root(Operator):
                             a=a,
                             vacuum=self.vacuum,
                             orthogonal=self.orthogonal)
-        Batoms(label=self.label, from_ase=atoms)
+        batoms = Batoms(label=self.label, from_ase=atoms)
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
 
@@ -521,7 +539,9 @@ class BuildSurfaceHCP0001(Operator):
                         vacuum=self.vacuum,
                         orthogonal=self.orthogonal,
                         periodic=self.periodic)
-        Batoms(label=self.label, from_ase=atoms)
+        batoms = Batoms(label=self.label, from_ase=atoms)
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
 
@@ -578,7 +598,9 @@ class BuildSurfaceHCP10m10(Operator):
                          vacuum=self.vacuum,
                          orthogonal=self.orthogonal,
                          periodic=self.periodic)
-        Batoms(label=self.label, from_ase=atoms)
+        batoms = Batoms(label=self.label, from_ase=atoms)
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
 
@@ -630,7 +652,9 @@ class BuildSurfaceHCP0001Root(Operator):
                              a=a,
                              vacuum=self.vacuum,
                              orthogonal=self.orthogonal)
-        Batoms(label=self.label, from_ase=atoms)
+        batoms = Batoms(label=self.label, from_ase=atoms)
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
 
@@ -680,7 +704,9 @@ class BuildSurfaceDiamond100(Operator):
                            vacuum=self.vacuum,
                            orthogonal=self.orthogonal,
                            periodic=self.periodic)
-        Batoms(label=self.label, from_ase=atoms)
+        batoms = Batoms(label=self.label, from_ase=atoms)
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
 
@@ -730,5 +756,7 @@ class BuildSurfaceDiamond111(Operator):
                            vacuum=self.vacuum,
                            orthogonal=self.orthogonal,
                            periodic=self.periodic)
-        Batoms(label=self.label, from_ase=atoms)
+        batoms = Batoms(label=self.label, from_ase=atoms)
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}

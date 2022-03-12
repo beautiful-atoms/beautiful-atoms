@@ -92,5 +92,7 @@ class BuildNanoribbon(Operator):
             main_element=self.main_element,
             saturate_element=self.saturate_element,
         )
-        Batoms(label=self.label, from_ase=atoms)
+        batoms = Batoms(label=self.label, from_ase=atoms)
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
