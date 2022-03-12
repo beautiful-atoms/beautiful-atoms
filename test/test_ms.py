@@ -56,7 +56,7 @@ def test_SES_protein():
     prot = read_pdb("datas/1ema.pdb")
     prot = Batoms("prot", from_ase=prot)
     tstart = time()
-    prot.ms.draw(parallel=2)
+    prot.ms.draw()
     t = time() - tstart
     assert t < 5
     area = prot.ms.get_sesa("1")[0]
