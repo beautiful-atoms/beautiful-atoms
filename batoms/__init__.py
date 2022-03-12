@@ -18,7 +18,6 @@ from bpy.types import Collection, Object
 from bpy.props import PointerProperty
 from . import custom_property
 from .gui import (
-    gui_io,
     gui_batoms,
     gui_batom,
     gui_toolbar,
@@ -38,14 +37,17 @@ from .gui import (
     view3d_mt_batoms_add,
 )
 
-from .ops import (add_nanoparticle,
+from .ops import (
+    ops_io,
+    add_nanoparticle,
     add_nanotube,
     add_nanoribbon,
     add_object,
     add_surface,
     molecule_edit_atom,
-    molecule_edit_bond, ops_surface,
-    transform,
+    molecule_edit_bond,
+    ops_batoms,
+    ops_surface,
     measure,
     manual_mapping,
     ops_bond,
@@ -113,13 +115,14 @@ classes_ops = [
     add_nanoparticle.BuildOctahedron,
     molecule_edit_atom.MolecueEditElement,
     molecule_edit_bond.MolecueEditBond,
-    transform.ApplyCell,
-    transform.ApplyTransform,
-    transform.ApplyBoundary,
-    gui_io.IMPORT_OT_batoms,
+    ops_batoms.BatomsReplace,
+    ops_batoms.ApplyCell,
+    ops_batoms.ApplyTransform,
+    ops_batoms.ApplyBoundary,
+    ops_io.IMPORT_OT_batoms,
+    ops_io.EXPORT_OT_batoms,
     gui_batoms.Batoms_PT_prepare,
     gui_batoms.BatomsProperties,
-    gui_batoms.ReplaceButton,
     measure.MeasureButton,
     gui_batom.Batom_PT_prepare,
     gui_batom.BatomProperties,
@@ -220,7 +223,8 @@ def register():
     for manual in manuals:
         bpy.utils.register_manual_map(manual)
     # menu
-    bpy.types.TOPBAR_MT_file_import.append(gui_io.menu_func_import_batoms)
+    bpy.types.TOPBAR_MT_file_import.append(ops_io.menu_func_import_batoms)
+    bpy.types.TOPBAR_MT_file_export.append(ops_io.menu_func_export_batoms)
     bpy.types.VIEW3D_MT_add.prepend(view3d_mt_batoms_add.menu_func)
     
     # in background mode, we don't need tool and we can not regester keymap
@@ -261,7 +265,8 @@ def unregister():
     for manual in manuals:
         bpy.utils.unregister_manual_map(manual)
     # menu
-    bpy.types.TOPBAR_MT_file_import.remove(gui_io.menu_func_import_batoms)
+    bpy.types.TOPBAR_MT_file_import.remove(ops_io.menu_func_import_batoms)
+    bpy.types.TOPBAR_MT_file_export.remove(ops_io.menu_func_export_batoms)
     bpy.types.VIEW3D_MT_add.remove(view3d_mt_batoms_add.menu_func)
     
     # tool

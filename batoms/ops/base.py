@@ -24,3 +24,17 @@ class OperatorBatoms(Operator):
         obj = context.object
         batoms = Batoms(label=obj.batoms.label)
         return {'FINISHED'}
+
+
+class OperatorBatomsEdit(OperatorBatoms):
+    """
+    """
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        if obj:
+            return obj.batoms.type != 'OTHER' and context.mode in {'EDIT_MESH'}
+        else:
+            return False

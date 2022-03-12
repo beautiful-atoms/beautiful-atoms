@@ -1,7 +1,5 @@
 import bpy
-from bpy.types import (Panel,
-                       Operator,
-                       )
+from bpy.types import Panel
 from bpy.props import (StringProperty,
                        BoolProperty,
                        FloatProperty,
@@ -33,14 +31,9 @@ class Batoms_PT_prepare(Panel):
         layout.prop(bapanel, "scale")
 
         layout.operator("batoms.replace")
-        layout.prop(bapanel, "species")
+        # layout.prop(bapanel, "species")
 
-        # layout.label(text="Measurement")
-        # layout.operator("batoms.record_selection")
-        # layout.prop(bapanel, "measurement")
-
-        layout.label(text="Export atoms")
-        layout.prop(bapanel, "filetype")
+        layout.operator("batoms.export")
 
 
 class BatomsProperties(bpy.types.PropertyGroup):
@@ -69,10 +62,6 @@ class BatomsProperties(bpy.types.PropertyGroup):
     def Callback_modify_scale(self, context):
         bapanel = bpy.context.scene.bapanel
         modify_batoms_attr(self.selected_batoms, 'scale', bapanel.scale)
-
-    def Callback_export_atoms(self, context):
-        bapanel = bpy.context.scene.bapanel
-        export_atoms(self.selected_batoms, bapanel.filetype)
 
     model_style: EnumProperty(
         name="model_style",
@@ -103,24 +92,9 @@ class BatomsProperties(bpy.types.PropertyGroup):
     scale: FloatProperty(
         name="scale", default=1.0,
         description="scale", update=Callback_modify_scale)
-    measurement: StringProperty(
-        name="", default='',
-        description="measurement in Angstrom, degree")
     species: StringProperty(
         name="species", default='O_1',
         description="Replaced by this species")
-    suffix: StringProperty(
-        name="suffix", default='f',
-        description="Replaced by this suffix")
-    atoms_str: StringProperty(
-        name="Formula", default='H2O',
-        description="atoms_str")
-    atoms_name: StringProperty(
-        name="Label", default='h2o',
-        description="Label")
-    filetype: StringProperty(
-        name="File type", default='xyz',
-        description="save batoms to file", update=Callback_export_atoms)
 
 
 def modify_batoms_attr(selected_batoms, key, value):
@@ -130,37 +104,5 @@ def modify_batoms_attr(selected_batoms, key, value):
     for name in selected_batoms:
         batoms = Batoms(name)
         setattr(batoms, key, value)
+        batoms.obj.select_set(True)
         batoms_list.append(batoms)
-
-
-def export_atoms(selected_batoms, filetype='xyz'):
-    batoms_list = []
-    for name in selected_batoms:
-        batoms = Batoms(name)
-        batoms.write('%s.%s' % (batoms.label, filetype))
-        batoms_list.append(batoms)
-    for batoms in batoms_list:
-        batoms.select = True
-
-
-def replace_atoms(species):
-    selected_vertices = get_selected_vertices()
-    for label, index in selected_vertices:
-        batoms = Batoms(label=label)
-        batoms.replace(index, species)
-
-
-class ReplaceButton(Operator):
-    bl_idname = "batoms.replace"
-    bl_label = "Replace by"
-    bl_description = "Replace selected atoms by new species"
-
-    @classmethod
-    def poll(cls, context):
-        return context.mode in {'EDIT_MESH'}
-
-    def execute(self, context):
-        bapanel = context.scene.bapanel
-        replace_atoms(bapanel.species)
-        return {'FINISHED'}
-
