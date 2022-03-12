@@ -3,15 +3,12 @@ Use ASE's build function
 https://wiki.fysik.dtu.dk/ase/ase/build/surface.html?highlight=surfa#ase.build.surface
 """
 
-from sympy import root
 import bpy
 from bpy.types import Operator
-from bpy_extras.object_utils import AddObjectHelper
 from bpy.props import (StringProperty,
                        IntProperty,
                        IntVectorProperty,
                        FloatProperty,
-                       FloatVectorProperty,
                        BoolProperty,
                        )
 from ase.build import (fcc100, fcc110, fcc111, fcc211, fcc111_root,
@@ -261,10 +258,10 @@ class BuildSurfaceFCC111Root(Operator):
             self.label = self.symbol
         a = None if self.a == 0 else self.a
         atoms = fcc111_root(self.symbol, size=self.size,
-                       root=self.root,
-                       a=a,
-                       vacuum=self.vacuum,
-                       orthogonal=self.orthogonal)
+                            root=self.root,
+                            a=a,
+                            vacuum=self.vacuum,
+                            orthogonal=self.orthogonal)
         Batoms(label=self.label, from_ase=atoms)
         return {'FINISHED'}
 
@@ -463,12 +460,13 @@ class BuildSurfaceBCC111Root(Operator):
             self.label = self.symbol
         a = None if self.a == 0 else self.a
         atoms = bcc111_root(self.symbol, size=self.size,
-                       root=self.root,
-                       a=a,
-                       vacuum=self.vacuum,
-                       orthogonal=self.orthogonal)
+                            root=self.root,
+                            a=a,
+                            vacuum=self.vacuum,
+                            orthogonal=self.orthogonal)
         Batoms(label=self.label, from_ase=atoms)
         return {'FINISHED'}
+
 
 class BuildSurfaceHCP0001(Operator):
     bl_idname = "surface.hcp0001_add"
@@ -575,13 +573,14 @@ class BuildSurfaceHCP10m10(Operator):
         a = None if self.a == 0 else self.a
         c = None if self.c == 0 else self.c
         atoms = hcp10m10(self.symbol, size=self.size,
-                        a=a,
-                        c=c,
-                        vacuum=self.vacuum,
-                        orthogonal=self.orthogonal,
-                        periodic=self.periodic)
+                         a=a,
+                         c=c,
+                         vacuum=self.vacuum,
+                         orthogonal=self.orthogonal,
+                         periodic=self.periodic)
         Batoms(label=self.label, from_ase=atoms)
         return {'FINISHED'}
+
 
 class BuildSurfaceHCP0001Root(Operator):
     bl_idname = "surface.hcp0001_root_add"
@@ -627,13 +626,12 @@ class BuildSurfaceHCP0001Root(Operator):
             self.label = self.symbol
         a = None if self.a == 0 else self.a
         atoms = hcp0001_root(self.symbol, size=self.size,
-                       root=self.root,
-                       a=a,
-                       vacuum=self.vacuum,
-                       orthogonal=self.orthogonal)
+                             root=self.root,
+                             a=a,
+                             vacuum=self.vacuum,
+                             orthogonal=self.orthogonal)
         Batoms(label=self.label, from_ase=atoms)
         return {'FINISHED'}
-
 
 
 class BuildSurfaceDiamond100(Operator):
@@ -678,10 +676,10 @@ class BuildSurfaceDiamond100(Operator):
             self.label = self.symbol
         a = None if self.a == 0 else self.a
         atoms = diamond100(self.symbol, size=self.size,
-                        a=a,
-                        vacuum=self.vacuum,
-                        orthogonal=self.orthogonal,
-                        periodic=self.periodic)
+                           a=a,
+                           vacuum=self.vacuum,
+                           orthogonal=self.orthogonal,
+                           periodic=self.periodic)
         Batoms(label=self.label, from_ase=atoms)
         return {'FINISHED'}
 
@@ -728,9 +726,9 @@ class BuildSurfaceDiamond111(Operator):
             self.label = self.symbol
         a = None if self.a == 0 else self.a
         atoms = diamond111(self.symbol, size=self.size,
-                        a=a,
-                        vacuum=self.vacuum,
-                        orthogonal=self.orthogonal,
-                        periodic=self.periodic)
+                           a=a,
+                           vacuum=self.vacuum,
+                           orthogonal=self.orthogonal,
+                           periodic=self.periodic)
         Batoms(label=self.label, from_ase=atoms)
         return {'FINISHED'}

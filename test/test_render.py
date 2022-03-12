@@ -21,12 +21,12 @@ def test_render():
     assert isinstance(render, Render)
     render.studiolight = "paint.sl"
     render.viewport = [1, 0, 0]
-    render.resolution = [1000, 1000]
+    render.resolution = [200, 200]
     # from collection
     render = Render("test")
     assert isinstance(render, Render)
     assert render.studiolight == "paint.sl"
-    assert render.resolution == [1000, 1000]
+    assert render.resolution == [200, 200]
 
 
 def test_render_init():
@@ -35,6 +35,7 @@ def test_render_init():
     h2o = Batoms("h2o", from_ase=h2o)
     h2o.render.init()
     h2o.render.viewport = [1, 0, 0]
+    h2o.render.resolution = [200, 200]
     if use_cycles:
         set_cycles_res(h2o)
     h2o.get_image(**extras)
@@ -52,6 +53,7 @@ def test_render_setter():
     nh3.render = Render("nh3")
     nh3.render.viewport = [0, 1, 0]
     nh3.render.lights.add("1", type="SUN", direction=[1, 0, 0])
+    nh3.render.resolution = [200, 200]
     if use_cycles:
         set_cycles_res(nh3)
     nh3.get_image(output="render-setter.png", **extras)
@@ -62,6 +64,7 @@ def test_render_au111():
     atoms = fcc111("Au", size=(4, 4, 4), vacuum=0)
     au111 = Batoms(label="au111", from_ase=atoms)
     au111.cell[2, 2] += 5
+    au111.render.resolution = [200, 200]
     if use_cycles:
         set_cycles_res(au111)
     au111.get_image(**extras)

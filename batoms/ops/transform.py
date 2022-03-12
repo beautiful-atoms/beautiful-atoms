@@ -1,15 +1,13 @@
 import bpy
-from bpy.types import (Panel,
-                       Operator,
-                       )
-from bpy_extras.object_utils import AddObjectHelper
-from bpy.props import (BoolProperty,
-                       FloatVectorProperty,
-                       IntVectorProperty
-                       )
+from bpy.types import Operator
+from bpy.props import (
+    FloatVectorProperty,
+    IntVectorProperty
+)
 from batoms import Batoms
 
-class ApplyCell(Operator, AddObjectHelper):
+
+class ApplyCell(Operator):
     bl_idname = "batoms.apply_cell"
     bl_label = "Apply Cell"
     bl_options = {'REGISTER', 'UNDO'}
@@ -18,15 +16,15 @@ class ApplyCell(Operator, AddObjectHelper):
     a: FloatVectorProperty(
         name="a", default=(1, 0, 0),
         # subtype = "XYZ",
-        description = "Cell in a axis")
+        description="Cell in a axis")
     b: FloatVectorProperty(
         name="b", default=(0, 1, 0),
         # subtype = "XYZ",
-        description = "Cell in b axis")
+        description="Cell in b axis")
     c: FloatVectorProperty(
         name="c", default=(0, 0, 1),
         # subtype = "XYZ",
-        description = "Cell in c axis")
+        description="Cell in c axis")
 
     # def draw(self, context):
     #     layout = self.layout
@@ -45,27 +43,28 @@ class ApplyCell(Operator, AddObjectHelper):
         batoms.cell = cell
         return {'FINISHED'}
 
-class ApplyTransform(Operator, AddObjectHelper):
+
+class ApplyTransform(Operator):
     bl_idname = "batoms.apply_transform"
     bl_label = "Apply Transform"
     bl_options = {'REGISTER', 'UNDO'}
     bl_description = ("Apply new transform parameters")
 
     a: IntVectorProperty(
-        name="a", default=(1, 0, 0, 10), size = 4,
-        soft_min = -10, soft_max = 10,
+        name="a", default=(1, 0, 0, 10), size=4,
+        soft_min=-10, soft_max=10,
         # subtype = "MATRIX",
-        description = "Transform matrix in a axis")
+        description="Transform matrix in a axis")
     b: IntVectorProperty(
-        name="b", default=(0, 1, 0, 10), size = 4,
-        soft_min = -10, soft_max = 10,
+        name="b", default=(0, 1, 0, 10), size=4,
+        soft_min=-10, soft_max=10,
         # subtype = "XYZ",
-        description = "Transform matrix in b axis")
+        description="Transform matrix in b axis")
     c: IntVectorProperty(
-        name="c", default=(0, 0, 1, 0), size = 4,
-        soft_min = -10, soft_max = 10,
+        name="c", default=(0, 0, 1, 0), size=4,
+        soft_min=-10, soft_max=10,
         # subtype = "XYZ",
-        description = "Transform matrix in c axis")
+        description="Transform matrix in c axis")
 
     def execute(self, context):
         transform = [self.a, self.b, self.c]
@@ -78,22 +77,22 @@ class ApplyTransform(Operator, AddObjectHelper):
         return {'FINISHED'}
 
 
-class ApplyBoundary(Operator, AddObjectHelper):
+class ApplyBoundary(Operator):
     bl_idname = "batoms.apply_boundary"
     bl_label = "Apply Boundary"
     bl_options = {'REGISTER', 'UNDO'}
     bl_description = ("Apply new boundary parameters")
 
     a: FloatVectorProperty(
-        name="a", default=(0, 1), size = 2,
-        description = "boundary  in a axis")
+        name="a", default=(0, 1), size=2,
+        description="boundary  in a axis")
     b: FloatVectorProperty(
-        name="b", default=(0, 1), size = 2,
-        description = "boundary  in b axis")
+        name="b", default=(0, 1), size=2,
+        description="boundary  in b axis")
     c: FloatVectorProperty(
-        name="c", default=(0, 1), size = 2,
-        description = "boundary  in c axis")
-        
+        name="c", default=(0, 1), size=2,
+        description="boundary  in c axis")
+
     def execute(self, context):
         boundary = [self.a, self.b, self.c]
         if not context.object.batoms.flag:

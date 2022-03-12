@@ -61,7 +61,7 @@ class BondProperties(bpy.types.PropertyGroup):
         items=(('0',"Unicolor cylinder", ""),
                ('1',"Bicolor cylinder", ""),
                ('2',"Dashed line", ""),
-               ('3',"Dotted line", "")),
+               ('3',"Spring", "")),
         default={'1'},
         update=Callback_bond_style,
         options={'ENUM_FLAG'},

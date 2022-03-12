@@ -4,7 +4,6 @@ https://wiki.fysik.dtu.dk/ase/ase/build/build.html?highlight=nanotube#
 """
 import bpy
 from bpy.types import Operator
-from bpy_extras.object_utils import AddObjectHelper
 from bpy.props import (StringProperty,
                        IntProperty,
                        IntVectorProperty,
@@ -39,6 +38,7 @@ class deleteBatoms(Operator):
                 remove_collection(label)
         return {'FINISHED'}
 
+
 class AddMolecule(Operator):
     bl_idname = "batoms.molecule_add"
     bl_label = "Add molecule"
@@ -57,7 +57,8 @@ class AddMolecule(Operator):
         if self.label == '':
             self.label = self.formula
         atoms = molecule(self.formula)
-        Batoms(label=self.label, from_ase=atoms)
+        batoms = Batoms(label=self.label, from_ase=atoms)
+        batoms.model_style = 1
         return {'FINISHED'}
 
 
@@ -81,19 +82,19 @@ class AddBulk(Operator):
 
     latticeconstant: FloatVectorProperty(
         name="Lattice constant", default=(0, 0, 0),
-        min = 0, soft_max = 100,
-        description = "Lattice constant")
-    
+        min=0, soft_max=100,
+        description="Lattice constant")
+
     alpha: FloatProperty(
         name="Angle", default=0,
-        min = 0, soft_max = 360,
-        description = "Angle in degrees for rhombohedral lattice.")
-    
+        min=0, soft_max=360,
+        description="Angle in degrees for rhombohedral lattice.")
+
     covera: FloatProperty(
         name="Covera", default=1.6329931,
-        min = 0, soft_max = 10,
-        description = "c/a ratio used for hcp. Default is ideal ratio: sqrt(8/3).")
-        
+        min=0, soft_max=10,
+        description="c/a ratio used for hcp. Default is ideal ratio: sqrt(8/3).")
+
     orthorhombic: BoolProperty(
         name="Orthorhombic", default=False,
         description="Orthorhombic")
@@ -114,7 +115,7 @@ class AddBulk(Operator):
         crystalstructure = None if self.crystalstructure == '' \
             else self.crystalstructure
         atoms = bulk(self.formula, crystalstructure=crystalstructure,
-                     a = a, b = b, c = c,
+                     a=a, b=b, c=c,
                      orthorhombic=self.orthorhombic,
                      cubic=self.cubic)
         Batoms(label=self.label, from_ase=atoms)
@@ -200,7 +201,6 @@ class AddSurface(Operator):
         return {'FINISHED'}
 
 
-
 class AddRootSurface(Operator):
     @property
     def selected_batoms(self):
@@ -213,7 +213,7 @@ class AddRootSurface(Operator):
     label: StringProperty(
         name="Label", default='rootsurf',
         description="Label")
-        
+
     root: IntProperty(name="root", min=1, soft_max=49, default=3)
 
     size: IntVectorProperty(
