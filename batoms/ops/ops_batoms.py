@@ -1,13 +1,36 @@
 import bpy
-from bpy.types import Operator
+import bmesh
 from bpy.props import (
+    StringProperty,
     FloatVectorProperty,
     IntVectorProperty
 )
 from batoms import Batoms
+from batoms.ops.base import OperatorBatoms, OperatorBatomsEdit
 
 
-class ApplyCell(Operator):
+class BatomsReplace(OperatorBatomsEdit):
+    bl_idname = "batoms.replace"
+    bl_label = "Replace"
+    bl_description = "Replace selected atoms by new species"
+
+    species: StringProperty(
+        name="species", default='O',
+        description="Replaced by this species")
+
+    def execute(self, context):
+        obj = context.object
+        data = obj.data
+        bm = bmesh.from_edit_mesh(data)
+        v = [s.index for s in bm.select_history if isinstance(
+            s, bmesh.types.BMVert)]
+        batoms = Batoms(label=obj.batoms.label)
+        batoms.replace(v, self.species)
+        bpy.ops.object.mode_set(mode='EDIT')
+        return {'FINISHED'}
+
+
+class ApplyCell(OperatorBatoms):
     bl_idname = "batoms.apply_cell"
     bl_label = "Apply Cell"
     bl_options = {'REGISTER', 'UNDO'}
@@ -26,25 +49,15 @@ class ApplyCell(Operator):
         # subtype = "XYZ",
         description="Cell in c axis")
 
-    # def draw(self, context):
-    #     layout = self.layout
-    #     box = layout.box()
-    #     box.label(text="Basic Parameters")
-    #     box.prop(self, 'a')
-    #     box.prop(self, 'b')
-    #     box.prop(self, 'c')
-
     def execute(self, context):
         cell = [self.a, self.b, self.c]
-        if not context.object.batoms.flag:
-            print('Please select a Batoms object.')
-            return {'FINISHED'}
         batoms = Batoms(label=context.object.batoms.label)
         batoms.cell = cell
+        batoms.obj.select_set(True)
         return {'FINISHED'}
 
 
-class ApplyTransform(Operator):
+class ApplyTransform(OperatorBatoms):
     bl_idname = "batoms.apply_transform"
     bl_label = "Apply Transform"
     bl_options = {'REGISTER', 'UNDO'}
@@ -68,16 +81,13 @@ class ApplyTransform(Operator):
 
     def execute(self, context):
         transform = [self.a, self.b, self.c]
-        if not context.object.batoms.flag:
-            print('Please select a Batoms object.')
-            return {'FINISHED'}
         batoms = Batoms(label=context.object.batoms.label)
         batoms.transform(transform)
-
+        batoms.obj.select_set(True)
         return {'FINISHED'}
 
 
-class ApplyBoundary(Operator):
+class ApplyBoundary(OperatorBatoms):
     bl_idname = "batoms.apply_boundary"
     bl_label = "Apply Boundary"
     bl_options = {'REGISTER', 'UNDO'}
@@ -95,9 +105,7 @@ class ApplyBoundary(Operator):
 
     def execute(self, context):
         boundary = [self.a, self.b, self.c]
-        if not context.object.batoms.flag:
-            print('Please select a Batoms object.')
-            return {'FINISHED'}
         batoms = Batoms(label=context.object.batoms.label)
         batoms.boundary = boundary
+        batoms.obj.select_set(True)
         return {'FINISHED'}
