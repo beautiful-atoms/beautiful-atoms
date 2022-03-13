@@ -23,7 +23,6 @@ from .gui import (
     gui_toolbar,
     gui_cell,
     gui_bond,
-    gui_polyhedra,
     gui_plane,
     gui_render,
     gui_pymatgen,
@@ -133,8 +132,6 @@ classes_ops = [
     gui_batom.BatomProperties,
     gui_bond.Bond_PT_prepare,
     gui_bond.BondProperties,
-    gui_polyhedra.Polyhedra_PT_prepare,
-    gui_polyhedra.PolyhedraProperties,
     gui_cell.Cell_PT_prepare,
     gui_cell.CellProperties,
     gui_plane.Plane_PT_prepare,
@@ -263,7 +260,6 @@ def register():
     scene.btpanel = PointerProperty(type=gui_batom.BatomProperties)
     scene.clpanel = PointerProperty(type=gui_cell.CellProperties)
     scene.bbpanel = PointerProperty(type=gui_bond.BondProperties)
-    scene.popanel = PointerProperty(type=gui_polyhedra.PolyhedraProperties)
     scene.plpanel = PointerProperty(type=gui_plane.PlaneProperties)
     scene.repanel = PointerProperty(type=gui_render.RenderProperties)
     scene.rbpanel = PointerProperty(type=rigid_body.RigidBodyProperties)
@@ -271,7 +267,6 @@ def register():
     scene.pmgpanel = PointerProperty(type=gui_pymatgen.PymatgenProperties)
     scene.pubcpanel = PointerProperty(type=gui_pubchem.PubchemProperties)
     
-
 
 def unregister():
     

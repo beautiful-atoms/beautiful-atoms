@@ -21,7 +21,7 @@ class SpeciesAdd(OperatorBatoms):
     def execute(self, context):
         obj = context.object
         batoms = Batoms(label=context.object.batoms.label)
-        batoms.species.setting.add(self.species)
+        batoms.species.add(self.species)
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 
@@ -43,9 +43,9 @@ class SpeciesRemove(OperatorBatoms):
         obj = context.object
         batoms = Batoms(label=obj.batoms.label)
         index = batoms.coll.batoms.species_index
-        batoms.species.setting.remove((self.name))
+        batoms.species.remove((self.species))
         batoms.coll.batoms.species_index = min(max(0, index - 1),
-                                                  len(batoms.species.setting) - 1)
+                                                  len(batoms.species) - 1)
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 

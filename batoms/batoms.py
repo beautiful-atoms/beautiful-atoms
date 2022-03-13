@@ -1075,12 +1075,19 @@ class Batoms(BaseCollection, ObjectGN):
 
         # TODO remove species which is completely replaced.
         """
+        from batoms.utils import get_default_species_data
         # if kind exists, merger, otherwise build a new kind and add.
         mode = self.obj.mode
         bpy.context.view_layer.objects.active = self.obj
         bpy.ops.object.mode_set(mode='OBJECT')
         if isinstance(species, str):
-            species = [species, {'elements': {species.split('_')[0]: {"occupancy":1.0}}}]
+            ele = species.split('_')[0]
+            species = [species, {'elements': {ele: {"occupancy":1.0}}}]
+            props = get_default_species_data(species[1]['elements'],
+                                             radius_style=self.radius_style,
+                                             color_style=self.color_style)
+            species[1].update(props)
+            species[1]["elements"].update(props["elements"])
         if species[0] not in self.species:
             self.species[species[0]] = species[1]
             # add geometry node

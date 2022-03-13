@@ -179,14 +179,6 @@ class Bpolyhedra(bpy.types.PropertyGroup):
                                size=4)
     width: FloatProperty(name="width", min=0, soft_max=1, default=0.01)
     show_edge: BoolProperty(name="show_edge", default=True)
-    style: EnumProperty(
-        name="style",
-        description="Polhhedra models",
-        items=(('0', "atoms, bonds and polyhedra", "atoms, bonds and polyhedra"),
-               ('1', "atoms, polyhedra", "atoms, polyhedra"),
-               ('2', "central atoms, polyhedra", "central atoms, polyhedra"),
-               ('3', "polyhedra", "polyhedra")),
-        default='0')
 
     @property
     def name(self) -> str:

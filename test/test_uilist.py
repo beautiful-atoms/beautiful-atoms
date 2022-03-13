@@ -4,6 +4,20 @@ from batoms import Batoms
 from batoms.bio.bio import read
 import pytest
 
+
+def test_species():
+    bpy.ops.batoms.delete()
+    bpy.ops.batoms.molecule_add()
+    ch4 = Batoms('CH4')
+    bpy.context.view_layer.objects.active = ch4.obj
+    assert len(ch4.species) == 2
+    bpy.ops.batoms.species_update()
+    bpy.ops.batoms.species_add(species = "O")
+    assert len(ch4.species) == 3
+    bpy.ops.batoms.species_remove(species = "O")
+    assert len(ch4.species) == 2
+
+
 def test_bond():
     bpy.ops.batoms.delete()
     bpy.ops.batoms.molecule_add()
@@ -14,6 +28,19 @@ def test_bond():
     bpy.ops.bond.bond_pair_add(species1 = "C", species2 = "H")
     assert len(ch4.bonds.setting) == 2
     bpy.ops.bond.draw()
+
+
+def test_polyhedra():
+    bpy.ops.batoms.delete()
+    bpy.ops.batoms.molecule_add()
+    ch4 = Batoms('CH4')
+    bpy.context.view_layer.objects.active = ch4.obj
+    assert len(ch4.polyhedras.setting) == 2
+    bpy.ops.batoms.polyhedra_draw()
+    bpy.ops.batoms.polyhedra_remove(species = "C")
+    assert len(ch4.polyhedras.setting) == 1
+    bpy.ops.batoms.polyhedra_add(species = "C")
+    assert len(ch4.polyhedras.setting) == 2
 
 def test_isosurface():
     bpy.ops.batoms.delete()
@@ -80,6 +107,7 @@ def test_crystal_shape():
     bpy.ops.plane.crystal_shape_draw()
 
 if __name__ == "__main__":
+    test_species()
     test_bond()
     test_isosurface()
     test_ms()

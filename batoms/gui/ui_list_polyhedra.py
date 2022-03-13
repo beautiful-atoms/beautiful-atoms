@@ -77,7 +77,7 @@ class BATOMS_PT_polyhedra(Panel):
         op = col.operator("batoms.polyhedra_add", icon='ADD', text="")
         op = col.operator("batoms.polyhedra_remove", icon='REMOVE', text="")
         if kb is not None:
-            op.name = kb.name
+            op.species = kb.species
         col.separator()
 
         col.menu("BATOMS_MT_polyhedra_context_menu",
@@ -102,8 +102,8 @@ class BATOMS_PT_polyhedra(Panel):
             row = layout.row()
             col = layout.column()
             sub = col.column(align=True)
-            sub.prop(kb, "style", text="Style")
             sub.prop(kb, "color", text="Color")
-            col.prop(kb, "show_edge",  text="Show edge")
+            # col.prop(kb, "show_edge",  text="Show edge")
+            # col.prop(kb, "width",  text="Width")
             op = layout.operator("batoms.polyhedra_draw",
                                  icon='GREASEPENCIL', text="Update")
