@@ -1627,15 +1627,11 @@ class Batoms(BaseCollection, ObjectGN):
 
     def draw_ball_and_stick(self, scale=0.4):
         mask = np.where(self.model_style >= 1, True, False)
-        if not mask.any():
-            return
         self.set_attribute_with_indices('scale', mask, scale)
         self.bonds.update()
 
     def draw_polyhedra(self, scale=0.4):
         mask = np.where(self.model_style == 2, True, False)
-        if not mask.any():
-            return
         self.polyhedras.update()
         self.set_attribute_with_indices('show', mask, True)
         if self.polyhedra_style == 0:
