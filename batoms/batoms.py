@@ -22,7 +22,7 @@ from batoms.isosurface import Isosurface
 from batoms.lattice_plane import LatticePlane
 from batoms.crystal_shape import CrystalShape
 from batoms.ribbon.ribbon import Ribbon
-from batoms.utils.butils import object_mode, show_index, \
+from batoms.utils.butils import clean_coll_objects, object_mode, show_index, \
     get_nodes_by_name, compareNodeType
 import numpy as np
 from batoms.crystal_shape import CrystalShape
@@ -1029,6 +1029,8 @@ class Batoms(BaseCollection, ObjectGN):
         # remove shape key from mol
         sp = self.obj.data.shape_keys.key_blocks.get('Basis_%s' % other.label)
         self.obj.shape_key_remove(sp)
+        # remove old
+        bpy.ops.batoms.delete(label=other.label)
 
     def __iadd__(self, other):
         """
@@ -1082,7 +1084,7 @@ class Batoms(BaseCollection, ObjectGN):
         bpy.ops.object.mode_set(mode='OBJECT')
         if isinstance(species, str):
             ele = species.split('_')[0]
-            species = [species, {'elements': {ele: {"occupancy":1.0}}}]
+            species = [species, {'elements': {ele: {"occupancy": 1.0}}}]
             props = get_default_species_data(species[1]['elements'],
                                              radius_style=self.radius_style,
                                              color_style=self.color_style)

@@ -316,43 +316,12 @@ class Species(BaseObject):
             if 'Alpha' in node.inputs:
                 node.inputs['Alpha'].default_value = color[3]
 
-    # @property
-    # def radius_style(self):
-    #     return self.get_radius_style()
+    @property
+    def radius(self):
+        return self.get_radius()
 
-    # @radius_style.setter
-    # def radius_style(self, radius_style):
-    #     self.set_radius_style(radius_style)
-
-    # def get_radius_style(self):
-    #     return self.data.radius_style
-
-    # def set_radius_style(self, radius_style):
-    #     # print(species_props)
-    #     radius_style = str(radius_style)
-    #     self.data.radius_style = radius_style
-    #     data = self.data.as_dict()
-    #     data['radius_style'] = radius_style
-    #     self.update(data)
-
-    # @property
-    # def color_style(self):
-    #     return self.get_color_style()
-
-    # @color_style.setter
-    # def color_style(self, color_style):
-    #     self.set_color_style(color_style)
-
-    # def get_color_style(self):
-    #     return self.data.color_style
-
-    # def set_color_style(self, color_style):
-    #     # print(species_props)
-    #     color_style = str(color_style)
-    #     self.data.color_style = color_style
-    #     data = self.data.as_dict()
-    #     data['color_style'] = color_style
-    #     self.update(data)
+    def get_radius(self):
+        return self.data.radius
 
     @property
     def indices(self):
@@ -392,6 +361,7 @@ class Species(BaseObject):
         data = {
             'species': self.name,
             'name': self.name,
+            'radius': self.radius,
             'elements': self.elements,
         }
         return data

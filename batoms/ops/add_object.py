@@ -57,6 +57,8 @@ class AddMolecule(Operator):
         if self.label == '':
             self.label = self.formula
         atoms = molecule(self.formula)
+        if self.label in bpy.data.collections:
+            self.label = "%s.001"%self.label
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.model_style = 1
         batoms.obj.select_set(True)
@@ -120,6 +122,8 @@ class AddBulk(Operator):
                      a=a, b=b, c=c,
                      orthorhombic=self.orthorhombic,
                      cubic=self.cubic)
+        if self.label in bpy.data.collections:
+            self.label = "%s.001"%self.label
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
@@ -144,6 +148,8 @@ class AddAtoms(Operator):
         if self.label == '':
             self.label = self.formula
         atoms = Atoms(self.formula)
+        if self.label in bpy.data.collections:
+            self.label = "%s.001"%self.label
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
@@ -201,6 +207,8 @@ class AddSurface(Operator):
                                               termination=self.termination)
         batoms.hide = True
         label = batoms.label + ''.join(str(i) for i in self.indices)
+        if self.label in bpy.data.collections:
+            self.label = "%s.001"%self.label
         batoms = Batoms(label=label, from_ase=atoms, movie=True)
         batoms = batoms*self.size
         batoms.translate([2, 2, 2])
@@ -240,6 +248,8 @@ class AddRootSurface(Operator):
         batoms.hide = True
         label = batoms.label + '_root'
         atoms = atoms*self.size
+        if self.label in bpy.data.collections:
+            self.label = "%s.001"%self.label
         batoms = Batoms(label=label, from_ase=atoms, movie=True)
         batoms.translate([2, 2, 2])
         batoms.obj.select_set(True)
