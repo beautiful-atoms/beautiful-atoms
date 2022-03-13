@@ -118,6 +118,7 @@ classes_ops = [
     molecule_edit_atom.MolecueEditElement,
     molecule_edit_bond.MolecueEditBond,
     ops_batoms.BatomsReplace,
+    ops_batoms.BatomModify,
     ops_batoms.ApplyCell,
     ops_batoms.ApplyTransform,
     ops_batoms.ApplyBoundary,

@@ -34,7 +34,7 @@ class BATOMS_UL_species(UIList):
 
 class BATOMS_PT_species(Panel):
     bl_label       = "Species"
-    bl_category = "Batoms"
+    bl_category = "Species"
     bl_idname = "BATOMS_PT_species"
     bl_space_type  = "VIEW_3D"
     bl_region_type = "UI"

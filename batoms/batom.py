@@ -57,7 +57,6 @@ class Batom(childObjectGN):
             self.attributes['model_style'].data[self.index].value = 2
         else:
             self.attributes['model_style'].data[self.index].value = 1
-        # update_object(self.parent.obj)
         self.parent.draw_polyhedra()
 
     @property
@@ -71,5 +70,4 @@ class Batom(childObjectGN):
             self.attributes['model_style'].data[self.index].value = 1
         else:
             self.attributes['model_style'].data[self.index].value = 0
-        # update_object(self.parent.obj)
         self.parent.draw_ball_and_stick()
