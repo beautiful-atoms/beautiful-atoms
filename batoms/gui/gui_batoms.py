@@ -35,6 +35,8 @@ class Batoms_PT_prepare(Panel):
         col.prop(bapanel, "model_style", expand=True)
         layout.label(text="Radius style")
         layout.prop(bapanel, "radius_style", expand=True)
+        layout.label(text="Color style")
+        layout.prop(bapanel, "color_style", expand=True)
 
         layout.prop(bapanel, "show", expand=True)
         layout.prop(bapanel, "wrap", expand=True)
@@ -55,6 +57,11 @@ class BatomsProperties(bpy.types.PropertyGroup):
         bapanel = bpy.context.scene.bapanel
         radius_style = list(bapanel.radius_style)[0]
         modify_batoms_attr(context, 'radius_style', radius_style)
+    
+    def Callback_color_style(self, context):
+        bapanel = bpy.context.scene.bapanel
+        color_style = list(bapanel.color_style)[0]
+        modify_batoms_attr(context, 'color_style', color_style)
 
     def Callback_modify_show(self, context):
         bapanel = bpy.context.scene.bapanel
@@ -79,6 +86,7 @@ class BatomsProperties(bpy.types.PropertyGroup):
         update=Callback_model_style,
         options={'ENUM_FLAG'},
     )
+
     radius_style: EnumProperty(
         name="radius_style",
         description="Structural models",
@@ -89,6 +97,17 @@ class BatomsProperties(bpy.types.PropertyGroup):
         update=Callback_radius_style,
         options={'ENUM_FLAG'},
     )
+
+    color_style: EnumProperty(
+        name="color_style",
+        description="Color",
+        items=(('0', "JMOL", "JMOL"),
+               ('1', "VESTA", "VESTA"),
+               ('2', "CPK", "CPK")),
+        default={'0'},
+        update=Callback_color_style,
+        options={'ENUM_FLAG'},
+        )
 
     show: BoolProperty(name="show",
                        default=False,

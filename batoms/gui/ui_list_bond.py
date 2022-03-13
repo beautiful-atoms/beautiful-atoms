@@ -5,7 +5,6 @@ startup/bl_ui/properties_data_mesh.py
 
 import bpy
 from bpy.types import Menu, Panel, UIList
-from collections import defaultdict
 from batoms import Batoms
 
 class BATOMS_MT_bond_pair_context_menu(Menu):

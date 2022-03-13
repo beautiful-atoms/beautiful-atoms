@@ -15,47 +15,44 @@ from bpy.props import (StringProperty,
 class Belement(bpy.types.PropertyGroup):
     name: StringProperty(name="name", default='H')
     occupancy: FloatProperty(name="occupancy")
-    radius: FloatProperty(name="radius")
+    radius: FloatProperty(name="radius", default = 1)
     color: FloatVectorProperty(name="color", size=4, default=(0, 0.2, 0.8, 1))
 
+    def as_dict(self) -> dict:
+        setdict = {
+            'occupancy': self.occupancy,
+            'name': self.name,
+            # 'radius': self.radius,
+            'color': self.color[:],
+        }
+        return setdict
 
 class Bspecies(bpy.types.PropertyGroup):
     name: StringProperty(name="name", default='H')
     species: StringProperty(name="species", default='H')
     elements: CollectionProperty(name='Belements',
                                  type=Belement)
+    scale: FloatProperty(name="scale", min=0, soft_max=2, default=1)
     radius: FloatProperty(name="radius", default=1.0)
-    radius_style: EnumProperty(
-        name="radius_style",
-        description="Radii",
-        items=(('0', "Covalent", "covalent"),
-               ('1', "VDW", "van der Waals"),
-               ('2', "Ionic", "ionic")),
-        default='0')
-    color_style: EnumProperty(
-        name="color_style",
-        description="Color",
-        items=(('0', "JMOL", "JMOL"),
-               ('1', "VESTA", "VESTA"),
-               ('2', "CPK", "CPK")),
-        default='0')
     segments: IntVectorProperty(name="segments", size=2, default=(24, 16))
+    color: FloatVectorProperty(
+        name="color", size=4,
+        subtype='COLOR',
+        default=(0, 0.2, 0.8, 1))
 
     @property
-    def occupancies(self):
-        occupancies = {}
-        data = self.elements
-        for eledata in data:
-            occupancies[eledata.name] = round(eledata.occupancy, 3)
-        return occupancies
+    def element_dict(self):
+        element_dict = {}
+        for ele in self.elements:
+            element_dict[ele.name] = ele.as_dict()
+        return element_dict
 
     def as_dict(self) -> dict:
         setdict = {
             'species': self.species,
             'name': self.name,
-            'elements': self.occupancies,
-            'radius_style': self.radius_style,
-            'color_style': self.color_style,
+            'scale': self.scale,
+            'elements': self.element_dict,
         }
         return setdict
 
@@ -579,6 +576,7 @@ class BatomsCollection(bpy.types.PropertyGroup):
                ('MS', "MS", "Molecular Surface"),
                ),
         default='OTHER')
+
     model_style: EnumProperty(
         name="model_style",
         description="Structural models",
@@ -587,6 +585,7 @@ class BatomsCollection(bpy.types.PropertyGroup):
                ('2', "Polyhedral", "Use polyhedral"),
                ('3', "Wireframe", "Use wireframe")),
         default='0')
+
     radius_style: EnumProperty(
         name="radius_style",
         description="Radii",
@@ -594,6 +593,15 @@ class BatomsCollection(bpy.types.PropertyGroup):
                ('1', "VDW", "van der Waals"),
                ('2', "Ionic", "ionic")),
         default='0')
+
+    color_style: EnumProperty(
+        name="color_style",
+        description="Color",
+        items=(('0', "JMOL", "JMOL"),
+               ('1', "VESTA", "VESTA"),
+               ('2', "CPK", "CPK")),
+        default='0')
+
     polyhedra_style: EnumProperty(
         name="polyhedra_style",
         description="Polhhedra models",
@@ -602,48 +610,71 @@ class BatomsCollection(bpy.types.PropertyGroup):
                ('2', "central atoms, polyhedra", "central atoms, polyhedra"),
                ('3', "polyhedra", "polyhedra")),
         default='0')
+
     show_unit_cell: BoolProperty(name="show_unit_cell", default=True)
+
     show_search: BoolProperty(name="show_search", default=False)
+
     wrap: BoolVectorProperty(name="wrap", default=[
                              False, False, False], size=3)
+
     boundary: FloatVectorProperty(name="boundary", default=[
                                   0.0, 1.0, 0.0, 1.0, 0.0, 1.0], size=6)
+
     # collection
     bbond: CollectionProperty(name='Bbond',
                               type=Bbond)
+
     bond_index: IntProperty(name="bond_index",
                             default=0)
+
     blatticeplane: CollectionProperty(name='Blatticeplane',
                                       type=Bplane)
+
     latticeplane_index: IntProperty(name="latticeplane_index",
                                     default=0)
+
     bcrystalshape: CollectionProperty(name='Bcrystalshape',
                                       type=Bplane)
+
     crystalshape_index: IntProperty(name="crystalshape_index",
                                     default=0)
+
     bisosurface: CollectionProperty(name='Bisosurface',
                                     type=Bisosurface)
+
     isosurface_index: IntProperty(name="isosurface_index",
                                   default=1)
+
     bpolyhedra: CollectionProperty(name='Bpolyhedra',
                                    type=Bpolyhedra)
+
     bsheet: CollectionProperty(name='Bsheet',
                                type=Bsheet)
+
     bhelix: CollectionProperty(name='Bhelix',
                                type=Bhelix)
+
     bturn: CollectionProperty(name='Bturn',
                               type=Bturn)
+
     bselect: CollectionProperty(name='Bselect',
                                 type=Bselect)
+
     brender: PointerProperty(name='Brender',
                              type=Brender)
+
     bspecies: CollectionProperty(name='Bspecies',
                                  type=Bspecies)
+
+    species_index: IntProperty(name="species_index",
+                               default=1)
+
     bms: CollectionProperty(name='Bms',
                             type=Bms)
+
     ms_index: IntProperty(name="ms_index",
                           default=1)
-    # BRibbon = Bribbon()
 
 
 class BatomsObject(bpy.types.PropertyGroup):

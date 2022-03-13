@@ -3,7 +3,6 @@
 
 import bpy
 from bpy.types import Menu, Panel, UIList
-from collections import defaultdict
 from batoms import Batoms
 
 class BATOMS_MT_crystal_shape_context_menu(Menu):
