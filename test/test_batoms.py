@@ -61,12 +61,12 @@ def test_batoms_species():
     # default covalent radius
     assert np.isclose(h2o.radius["H"], 0.31)
     # vdw radius
-    h2o.species["H"].radius_style = 1
+    h2o.radius_style = 1
     assert np.isclose(h2o.radius["H"], 1.2)
     # default Jmol color
     assert np.isclose(h2o["H"].color, np.array([1, 1, 1, 1])).all()
     # VESTA color
-    h2o.species["H"].color_style = 2
+    h2o.color_style = 2
     assert np.isclose(h2o["H"].color, np.array([1, 0.8, 0.8, 1])).all()
     # materials
     h2o.species["H"].materials = {

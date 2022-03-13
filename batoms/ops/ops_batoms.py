@@ -2,7 +2,9 @@ import bpy
 import bmesh
 from bpy.props import (
     StringProperty,
+    BoolProperty,
     FloatVectorProperty,
+    FloatProperty,
     IntVectorProperty
 )
 from batoms import Batoms
@@ -27,6 +29,47 @@ class BatomsReplace(OperatorBatomsEdit):
         batoms = Batoms(label=obj.batoms.label)
         batoms.replace(v, self.species)
         bpy.ops.object.mode_set(mode='EDIT')
+        return {'FINISHED'}
+
+
+class BatomModify(OperatorBatomsEdit):
+    bl_idname = "batoms.batom_modify"
+    bl_label = "Modify batom"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = ("Modify batom")
+
+    key: StringProperty(
+        name="key", default='style',
+        description="Replaced by this species")
+
+    scale: FloatProperty(name="scale", default=0.6,
+                         min=0, soft_max=2, description="scale",
+                         )
+    bond: BoolProperty(name="Bond", default=True,
+                       )
+    
+    show: BoolProperty(name="Show", default=True,
+                       )
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        if obj:
+            return obj.batoms.type == 'BATOMS' and obj.mode == 'EDIT'
+        else:
+            return False
+
+    def execute(self, context):
+        obj = context.object
+        data = obj.data
+        bm = bmesh.from_edit_mesh(data)
+        v = [s.index for s in bm.select_history if isinstance(
+            s, bmesh.types.BMVert)]
+        batoms = Batoms(label=obj.batoms.label)
+        for i in v:
+            setattr(batoms[i], self.key, getattr(self, self.key))
+        context.view_layer.objects.active = obj
+        bpy.ops.object.mode_set(mode="EDIT")
         return {'FINISHED'}
 
 

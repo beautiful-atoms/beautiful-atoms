@@ -2,7 +2,6 @@ import bpy
 import numpy as np
 from batoms.base.collection import Setting
 from batoms.base.object import ObjectGN, BaseObject
-from batoms.utils import get_default_species_data
 
 
 class Species(BaseObject):
@@ -30,28 +29,26 @@ class Species(BaseObject):
         Args:
             data (dict): properites of species
         """
-        data['elements'] = self.check_elements(data['elements'])
-        props = get_default_species_data(data['elements'],
-                                         radius_style=data['radius_style'],
-                                         color_style=data['color_style'])
-        props.update(data)
+        data['elements'] = self.check_occupancy(data['elements'])
         #
         sp = self.data
-        for key, value in props.items():
+        for key, value in data.items():
             if key == 'elements':
                 continue
             setattr(sp, key, value)
         # add elements
         sp.elements.clear()
-        for ele, occupancy in props['elements'].items():
-            eledata = sp.elements.add()
-            eledata.name = ele
-            eledata.occupancy = occupancy
-            eledata.color = props['color'][ele]
+        for name, eledata in data['elements'].items():
+            ele = sp.elements.add()
+            ele.name = name
+            if "occupancy" in eledata:
+                ele.occupancy = eledata['occupancy']
+            if "color" in eledata:
+                ele.color = eledata['color']
         self.build_instancer()
 
     @staticmethod
-    def check_elements(elements):
+    def check_occupancy(elements):
         """Check input elements
 
         Args:
@@ -64,14 +61,19 @@ class Species(BaseObject):
             _type_: dict of element with its occupancy
         """
         if isinstance(elements, str):
-            elements = {elements: 1.0}
+            elements = {elements: {
+                "occupancy": 1.0, "color": (0, 0.2, 0.8, 1)}}
         elif isinstance(elements, dict):
-            elements = elements
-            occu = sum(elements.values())
+            for ele, eledata in elements.items():
+                if isinstance(eledata, (int, float)):
+                    elements[ele] = {"occupancy": eledata}
+            occupancy = [ele['occupancy'] for ele in elements.values()]
+            total = sum(occupancy)
             # not fully occupied.
-            if occu < 1 - 1e-6:
-                elements['X'] = 1 - occu
-            elif occu > 1 + 1e-6:
+            if total < 1 - 1e-6:
+                elements['X'] = {"occupancy": 1 - total,
+                                 "color": (0.8, 0.8, 0.0, 1.0)}
+            elif total > 1 + 1e-6:
                 raise ValueError("Total occupancy should be smaller than 1!")
         return elements
 
@@ -83,7 +85,7 @@ class Species(BaseObject):
         """
         sp = self.data
         name = '%s_%s' % (self.label, sp.name)
-        radius = sp.radius
+        radius = sp.radius*sp.scale
         segments = sp.segments
         shape = 'UV_SPHERE'
         self.delete_obj(name)
@@ -108,6 +110,7 @@ class Species(BaseObject):
         #
         self.build_materials()
         self.assign_materials()
+        self.color = sp.color
         bpy.context.view_layer.update()
         self.parent.batoms.add_geometry_node(sp.name, obj)
         return obj
@@ -127,10 +130,10 @@ class Species(BaseObject):
         elements = self.elements
         for occ in self.sorted_occupancies:
             ele = elements[occ[0]]
-            name = '%s_%s_%s' % (self.label, self.name, ele.name)
+            name = '%s_%s_%s' % (self.label, self.name, ele["name"])
             self.delete_material(name)
             mat = create_material(name,
-                                  color=ele.color,
+                                  color=ele["color"],
                                   node_inputs=node_inputs,
                                   material_style=material_style,
                                   backface_culling=True)
@@ -206,8 +209,8 @@ class Species(BaseObject):
             dict: dict of Belement
         """
         elements = {}
-        for eledata in self.data.elements:
-            elements[eledata.name] = eledata
+        for ele in self.data.elements:
+            elements[ele.name] = ele.as_dict()
         return elements
 
     @elements.setter
@@ -220,8 +223,16 @@ class Species(BaseObject):
         >>> H2O['O'].elements = 'O'
         >>> H2O['O'].elements = {'O':1.0}
         >>> H2O['O'].elements = {'O':0.7, 'S': 0.3}
+        >>> H2O["O"].elements = {"O":{"occupancy": 0.7}, 
+                            "S":{"occupancy"}}
         """
         data = self.data.as_dict()
+        if isinstance(elements, str):
+            elements = {"elements": {elements: {"occupancy": 1.0}}}
+        if isinstance(elements, dict):
+            for ele, eledata in elements.items():
+                if isinstance(eledata, (int, float)):
+                    elements[ele] = {"occupancy": eledata}
         data['elements'] = elements
         self.update(data)
 
@@ -301,43 +312,43 @@ class Species(BaseObject):
             if 'Alpha' in node.inputs:
                 node.inputs['Alpha'].default_value = color[3]
 
-    @property
-    def radius_style(self):
-        return self.get_radius_style()
+    # @property
+    # def radius_style(self):
+    #     return self.get_radius_style()
 
-    @radius_style.setter
-    def radius_style(self, radius_style):
-        self.set_radius_style(radius_style)
+    # @radius_style.setter
+    # def radius_style(self, radius_style):
+    #     self.set_radius_style(radius_style)
 
-    def get_radius_style(self):
-        return self.data.radius_style
+    # def get_radius_style(self):
+    #     return self.data.radius_style
 
-    def set_radius_style(self, radius_style):
-        # print(species_props)
-        radius_style = str(radius_style)
-        self.data.radius_style = radius_style
-        data = self.data.as_dict()
-        data['radius_style'] = radius_style
-        self.update(data)
+    # def set_radius_style(self, radius_style):
+    #     # print(species_props)
+    #     radius_style = str(radius_style)
+    #     self.data.radius_style = radius_style
+    #     data = self.data.as_dict()
+    #     data['radius_style'] = radius_style
+    #     self.update(data)
 
-    @property
-    def color_style(self):
-        return self.get_color_style()
+    # @property
+    # def color_style(self):
+    #     return self.get_color_style()
 
-    @color_style.setter
-    def color_style(self, color_style):
-        self.set_color_style(color_style)
+    # @color_style.setter
+    # def color_style(self, color_style):
+    #     self.set_color_style(color_style)
 
-    def get_color_style(self):
-        return self.data.color_style
+    # def get_color_style(self):
+    #     return self.data.color_style
 
-    def set_color_style(self, color_style):
-        # print(species_props)
-        color_style = str(color_style)
-        self.data.color_style = color_style
-        data = self.data.as_dict()
-        data['color_style'] = color_style
-        self.update(data)
+    # def set_color_style(self, color_style):
+    #     # print(species_props)
+    #     color_style = str(color_style)
+    #     self.data.color_style = color_style
+    #     data = self.data.as_dict()
+    #     data['color_style'] = color_style
+    #     self.update(data)
 
     @property
     def indices(self):
@@ -370,25 +381,23 @@ class Species(BaseObject):
     def set_segments(self, segments):
         if not isinstance(segments, int):
             raise Exception('Segments should be int!')
-        self._species.build_instancers(segments=segments)
+        self._species.update(segments=segments)
         self.build_geometry_node()
 
     def as_dict(self) -> dict:
         data = {
             'species': self.name,
             'name': self.name,
-            'elements': self.occupancies,
-            'radius_style': self.radius_style,
-            'color_style': self.color_style,
+            'elements': self.elements,
         }
         return data
 
     def __repr__(self):
         s = "Bspecies(species = '%s', " % self.name
         s += "elements = %s, " % str(self.sorted_occupancies)
-        s += "color = %s, " % np.round(np.array(self.color), 2)
-        s += "radius_style = %s, " % self.radius_style
-        s += "color_style = %s)" % self.color_style
+        s += "color = %s)" % np.round(np.array(self.color), 2)
+        # s += "radius_style = %s, " % self.radius_style
+        # s += "color_style = %s)" % self.color_style
         return s
 
 
@@ -447,22 +456,25 @@ class Bspecies(Setting):
         """
         self.add({name: data})
 
-    def add(self, species_props, instancer=None):
+    def add(self, props, instancer=None):
         """
         """
-        if species_props is None:
+        if props is None:
             return
-        if isinstance(species_props, str):
-            species_props = {species_props: {'elements':
-                                             {species_props.split('_')[0]: 1.0}}}
-        if isinstance(species_props, (list, np.ndarray)):
-            species_props = {sp: {'elements': {sp.split('_')[0]: 1.0}}
-                             for sp in species_props}
-        for name, data in species_props.items():
-            if 'color_style' not in data:
-                data['color_style'] = '0'
-            if 'radius_style' not in data:
-                data['radius_style'] = '0'
+        if isinstance(props, str):
+            props = [props]
+        if isinstance(props, (list, np.ndarray)):
+            species_list = props
+            props = {}
+            for species in species_list:
+                ele = species.split('_')[0]
+                props[species] = {"elements": {ele: {"occupancy": 1.0,
+                                                     "color": (0.8, 0.8, 0, 1)}}}
+        for name, data in props.items():
+            # if 'color_style' not in data:
+            # data['color_style'] = '0'
+            # if 'radius_style' not in data:
+            # data['radius_style'] = '0'
             sp = self.find(name)
             if sp is None:
                 sp = self.collection.add()
@@ -488,8 +500,8 @@ class Bspecies(Setting):
             s += str(sp)
             s += '\n'
         return s
-    
-    @property
+
+    @ property
     def instancers(self):
         return self.get_instancers()
 
@@ -500,7 +512,7 @@ class Bspecies(Setting):
             instancers[sp] = bpy.data.objects.get(name)
         return instancers
 
-    @property
+    @ property
     def species(self):
         return self.get_species()
 
@@ -510,14 +522,14 @@ class Bspecies(Setting):
             species[sp.name] = Species(sp.name, parent=self)
         return species
 
-    @property
+    @ property
     def main_elements(self):
         main_elements = {}
         for name, sp in self.species.items():
             main_elements[name] = sp.main_element
         return main_elements
 
-    @property
+    @ property
     def species_props(self):
         return self.get_species_props()
 
@@ -592,8 +604,8 @@ class Bspecies(Setting):
         for i in range(len(item)):
             yield item[i]
 
-    def build_instancers(self, segments=None):
+    def update(self, segments=None):
         if segments:
             self.segments = segments
-        for sp in self:
-            self.build_instancer(sp)
+        for name, sp in self.species.items():
+            sp.build_instancer()

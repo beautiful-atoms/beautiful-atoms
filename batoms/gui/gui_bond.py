@@ -1,15 +1,11 @@
 import bpy
-from bpy.types import (Panel,
-                       Operator,
-                       )
+from bpy.types import Panel
 from bpy.props import (BoolProperty,
                        IntProperty,
                        FloatProperty,
                        EnumProperty,
                        )
 
-from batoms.utils.butils import get_selected_objects, get_selected_batoms
-from batoms import Batoms
 
 # The panel.
 class Bond_PT_prepare(Panel):
@@ -68,12 +64,14 @@ class BondProperties(bpy.types.PropertyGroup):
         )
     bondwidth: FloatProperty(
         name="bondwidth", default=0.1,
+        min = 0, soft_max = 1,
         description = "bondwidth", update = Callback_modify_bondwidth)
     search: IntProperty(name="Search mode", default=0, 
                 update = Callback_modify_search)
     polyhedra: BoolProperty(name="polyhedra", default=False, 
                 update = Callback_modify_polyhedra)
     order: IntProperty(name="Bond order", default=1, 
+                min = 1, max = 3,
                 update = Callback_modify_order)
     
 

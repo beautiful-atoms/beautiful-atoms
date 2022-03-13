@@ -71,6 +71,8 @@ class Batoms(BaseCollection, ObjectGN):
                  scale=1.0,
                  model_style=0,
                  polyhedra_style=0,
+                 radius_style='0',
+                 color_style='0',
                  from_ase=None,
                  from_pymatgen=None,
                  metaball=False,
@@ -185,6 +187,8 @@ class Batoms(BaseCollection, ObjectGN):
                 self.build_volume(volume)
             self.set_pbc(pbc)
             # self.label = label
+            self.radius_style = radius_style
+            self.color_style = color_style
             if movie:
                 self.set_frames()
         self.ribbon = Ribbon(self.label, batoms=self, datas=info, update=True)
@@ -596,27 +600,36 @@ class Batoms(BaseCollection, ObjectGN):
 
     @property
     def radius_style(self):
-        radius_style = {}
-        for name, sp in self.species.items():
-            radius_style[name] = sp.radius_style
-        return radius_style
+        return self.coll.batoms.radius_style
 
     @radius_style.setter
     def radius_style(self, radius_style):
+        from batoms.utils import get_default_species_data
+        self.coll.batoms.radius_style = str(radius_style)
         for name, sp in self.species.items():
-            sp.radius_style = radius_style
+            data = sp.as_dict()
+            props = get_default_species_data(data['elements'],
+                                             radius_style=radius_style,
+                                             color_style=self.color_style)
+            data.update(props)
+            sp.update(data)
 
     @property
     def color_style(self):
-        color_style = {}
-        for name, sp in self.species.items():
-            color_style[name] = sp.color_style
-        return color_style
+        return self.coll.batoms.color_style
 
     @color_style.setter
     def color_style(self, color_style):
+        from batoms.utils import get_default_species_data
+        self.coll.batoms.color_style = str(color_style)
         for name, sp in self.species.items():
-            sp.color_style = color_style
+            data = sp.as_dict()
+            props = get_default_species_data(data['elements'],
+                                             radius_style=self.radius_style,
+                                             color_style=color_style)
+            data.update(props)
+            self.species.collection[name].color = props["elements"][sp.main_element]["color"]
+            sp.update(data)
 
     @property
     def radii_vdw(self):
@@ -1067,7 +1080,7 @@ class Batoms(BaseCollection, ObjectGN):
         bpy.context.view_layer.objects.active = self.obj
         bpy.ops.object.mode_set(mode='OBJECT')
         if isinstance(species, str):
-            species = [species, {'elements': {species.split('_')[0]: 1.0}}]
+            species = [species, {'elements': {species.split('_')[0]: {"occupancy":1.0}}}]
         if species[0] not in self.species:
             self.species[species[0]] = species[1]
             # add geometry node
@@ -1464,7 +1477,7 @@ class Batoms(BaseCollection, ObjectGN):
     @isosurfaces.setter
     def isosurfaces(self, isosurfaces):
         self._isosurfaces = isosurfaces
-    
+
     @property
     def lattice_plane(self):
         """lattice_plane object."""
@@ -1477,7 +1490,7 @@ class Batoms(BaseCollection, ObjectGN):
     @lattice_plane.setter
     def lattice_plane(self, lattice_plane):
         self._lattice_plane = lattice_plane
-    
+
     @property
     def crystal_shape(self):
         """crystal_shape object."""
@@ -1490,7 +1503,7 @@ class Batoms(BaseCollection, ObjectGN):
     @crystal_shape.setter
     def crystal_shape(self, crystal_shape):
         self._crystal_shape = crystal_shape
-    
+
     @property
     def ms(self):
         """ms object."""
