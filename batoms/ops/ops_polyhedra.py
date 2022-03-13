@@ -9,70 +9,71 @@ from batoms import Batoms
 from batoms.ops.base import OperatorBatoms
 
 
-class SpeciesAdd(OperatorBatoms):
-    bl_idname = "batoms.species_add"
-    bl_label = "Add Species"
-    bl_description = ("Add Species to a Batoms")
+class PolyhedraAdd(OperatorBatoms):
+    bl_idname = "batoms.polyhedra_add"
+    bl_label = "Add polyhedra"
+    bl_description = ("Add polyhedra to a Batoms")
 
     species: StringProperty(
         name="species", default='C',
-        description="Species to be added")
+        description="species to be added")
 
     def execute(self, context):
         obj = context.object
         batoms = Batoms(label=context.object.batoms.label)
-        batoms.species.add(self.species)
+        batoms.polyhedras.setting.add(self.species)
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 
 
-class SpeciesRemove(OperatorBatoms):
-    bl_idname = "batoms.species_remove"
-    bl_label = "Remove Species"
-    bl_description = ("Remove Species to a Batoms")
+class PolyhedraRemove(OperatorBatoms):
+    bl_idname = "batoms.polyhedra_remove"
+    bl_label = "Remove polyhedra"
+    bl_description = ("Remove polyhedra to a Batoms")
 
     species: StringProperty(
         name="species", default='C',
-        description="Species to be removed")
+        description="species to be removed")
 
     all: BoolProperty(name="all",
                       default=False,
-                      description="Remove all Speciess")
+                      description="Remove all polyhedras")
 
     def execute(self, context):
         obj = context.object
         batoms = Batoms(label=obj.batoms.label)
-        index = batoms.coll.batoms.species_index
-        batoms.species.remove((self.species))
-        batoms.coll.batoms.species_index = min(max(0, index - 1),
-                                                  len(batoms.species) - 1)
+        index = batoms.coll.batoms.polyhedra_index
+        batoms.polyhedras.setting.remove((self.species))
+        batoms.coll.batoms.polyhedra_index = min(max(0, index - 1),
+                                                 len(batoms.polyhedras.setting) - 1)
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 
 
-class SpeciesUpdate(OperatorBatoms):
-    bl_idname = "batoms.species_update"
-    bl_label = "Update Species"
-    bl_description = ("Update Species to a Batoms")
+class PolyhedraDraw(OperatorBatoms):
+    bl_idname = "batoms.polyhedra_draw"
+    bl_label = "Update polyhedra"
+    bl_description = ("Update polyhedra to a Batoms")
 
-   
     def execute(self, context):
         obj = context.object
         batoms = Batoms(label=obj.batoms.label)
-        batoms.species.update()
+        batoms.model_style = '2'
+        batoms.draw()
+        batoms.obj.select_set(True)
         context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
 
-class SpeciesModify(Operator):
-    bl_idname = "batoms.species_modify"
-    bl_label = "Modify Species"
+class PolyhedraModify(Operator):
+    bl_idname = "batoms.polyhedra_modify"
+    bl_label = "Modify polyhedra"
     bl_options = {'REGISTER', 'UNDO'}
-    bl_description = ("Modify Species")
+    bl_description = ("Modify polyhedra")
 
     key: StringProperty(
         name="key", default='style',
-        description="Replaced by this species")
+        description="Replaced by this polyhedra")
 
     slice: BoolProperty(name="slice", default=False,
                         )

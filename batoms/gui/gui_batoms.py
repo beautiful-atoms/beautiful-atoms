@@ -17,7 +17,6 @@ class Batoms_PT_prepare(Panel):
     bl_category = "Batoms"
     bl_idname = "BATOMS_PT_Tools"
 
-
     def draw(self, context):
         name = 'None'
         if context.object:
@@ -37,14 +36,14 @@ class Batoms_PT_prepare(Panel):
         layout.prop(bapanel, "radius_style", expand=True)
         layout.label(text="Color style")
         layout.prop(bapanel, "color_style", expand=True)
+        layout.label(text="Polyhedra style")
+        layout.prop(bapanel, "polyhedra_style", expand=True)
 
         layout.prop(bapanel, "show", expand=True)
         layout.prop(bapanel, "wrap", expand=True)
         layout.prop(bapanel, "scale")
 
         layout.operator("batoms.replace")
-
-        
 
 
 class BatomsProperties(bpy.types.PropertyGroup):
@@ -57,16 +56,21 @@ class BatomsProperties(bpy.types.PropertyGroup):
         bapanel = bpy.context.scene.bapanel
         radius_style = list(bapanel.radius_style)[0]
         modify_batoms_attr(context, 'radius_style', radius_style)
-    
+
     def Callback_color_style(self, context):
         bapanel = bpy.context.scene.bapanel
         color_style = list(bapanel.color_style)[0]
         modify_batoms_attr(context, 'color_style', color_style)
 
+    def Callback_polyhedra_style(self, context):
+        bapanel = bpy.context.scene.bapanel
+        polyhedra_style = list(bapanel.polyhedra_style)[0]
+        modify_batoms_attr(context, 'polyhedra_style', polyhedra_style)
+
     def Callback_modify_show(self, context):
         bapanel = bpy.context.scene.bapanel
         modify_batoms_attr(context, 'show', bapanel.show)
-    
+
     def Callback_modify_wrap(self, context):
         bapanel = bpy.context.scene.bapanel
         modify_batoms_attr(context, 'wrap', bapanel.wrap)
@@ -107,13 +111,24 @@ class BatomsProperties(bpy.types.PropertyGroup):
         default={'0'},
         update=Callback_color_style,
         options={'ENUM_FLAG'},
-        )
+    )
+
+    polyhedra_style: EnumProperty(
+        name="polyhedra_style",
+        description="Polhhedra models",
+        items=(('0',"0", "atoms, bonds and polyhedra"),
+               ('1',"1", "atoms, polyhedra"),
+               ('2',"2","central atoms, polyhedra"),
+               ('3',"3", "polyhedra")),
+        default='0',
+        update=Callback_polyhedra_style,
+    )
 
     show: BoolProperty(name="show",
                        default=False,
                        description="show all object for view and rendering",
                        update=Callback_modify_show)
-    
+
     wrap: BoolProperty(name="wrap",
                        default=False,
                        description="wrap all atoms into cell",
@@ -121,7 +136,7 @@ class BatomsProperties(bpy.types.PropertyGroup):
 
     scale: FloatProperty(
         name="scale", default=1.0,
-        min = 0.0, soft_max = 2.0,
+        min=0.0, soft_max=2.0,
         description="scale", update=Callback_modify_scale)
 
 

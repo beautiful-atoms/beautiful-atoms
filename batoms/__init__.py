@@ -23,7 +23,6 @@ from .gui import (
     gui_toolbar,
     gui_cell,
     gui_bond,
-    gui_polyhedra,
     gui_plane,
     gui_render,
     gui_pymatgen,
@@ -31,6 +30,7 @@ from .gui import (
     gui_rscb,
     ui_list_species,
     ui_list_bond,
+    ui_list_polyhedra,
     ui_list_lattice_plane,
     ui_list_crystal_shape,
     ui_list_isosurface,
@@ -53,6 +53,7 @@ from .ops import (
     measure,
     manual_mapping,
     ops_bond,
+    ops_polyhedra,
     ops_plane,
     )
 
@@ -131,8 +132,6 @@ classes_ops = [
     gui_batom.BatomProperties,
     gui_bond.Bond_PT_prepare,
     gui_bond.BondProperties,
-    gui_polyhedra.Polyhedra_PT_prepare,
-    gui_polyhedra.PolyhedraProperties,
     gui_cell.Cell_PT_prepare,
     gui_cell.CellProperties,
     gui_plane.Plane_PT_prepare,
@@ -166,6 +165,9 @@ classes_ops = [
     ui_list_bond.BATOMS_MT_bond_pair_context_menu,
     ui_list_bond.BATOMS_UL_bond_pairs,
     ui_list_bond.BATOMS_PT_bond_pairs,
+    ui_list_polyhedra.BATOMS_MT_polyhedra_context_menu,
+    ui_list_polyhedra.BATOMS_UL_polyhedra,
+    ui_list_polyhedra.BATOMS_PT_polyhedra,
     ui_list_lattice_plane.BATOMS_MT_lattice_plane_context_menu,
     ui_list_lattice_plane.BATOMS_UL_lattice_planes,
     ui_list_lattice_plane.BATOMS_PT_lattice_planes,
@@ -186,6 +188,10 @@ classes_ops = [
     ops_bond.BondPairRemove,
     ops_bond.BondModify,
     ops_bond.BondDraw,
+    ops_polyhedra.PolyhedraAdd,
+    ops_polyhedra.PolyhedraRemove,
+    ops_polyhedra.PolyhedraDraw,
+    ops_polyhedra.PolyhedraModify,
     ops_plane.LatticePlaneAdd,
     ops_plane.LatticePlaneRemove,
     ops_plane.LatticePlaneDraw,
@@ -254,7 +260,6 @@ def register():
     scene.btpanel = PointerProperty(type=gui_batom.BatomProperties)
     scene.clpanel = PointerProperty(type=gui_cell.CellProperties)
     scene.bbpanel = PointerProperty(type=gui_bond.BondProperties)
-    scene.popanel = PointerProperty(type=gui_polyhedra.PolyhedraProperties)
     scene.plpanel = PointerProperty(type=gui_plane.PlaneProperties)
     scene.repanel = PointerProperty(type=gui_render.RenderProperties)
     scene.rbpanel = PointerProperty(type=rigid_body.RigidBodyProperties)
@@ -262,7 +267,6 @@ def register():
     scene.pmgpanel = PointerProperty(type=gui_pymatgen.PymatgenProperties)
     scene.pubcpanel = PointerProperty(type=gui_pubchem.PubchemProperties)
     
-
 
 def unregister():
     
