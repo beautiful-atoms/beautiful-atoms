@@ -15,7 +15,7 @@ from bpy.props import (StringProperty,
 class Belement(bpy.types.PropertyGroup):
     name: StringProperty(name="name", default='H')
     occupancy: FloatProperty(name="occupancy")
-    radius: FloatProperty(name="radius", default = 1)
+    radius: FloatProperty(name="radius", default=1)
     color: FloatVectorProperty(name="color", size=4, default=(0, 0.2, 0.8, 1))
 
     def as_dict(self) -> dict:
@@ -26,6 +26,7 @@ class Belement(bpy.types.PropertyGroup):
             'color': self.color[:],
         }
         return setdict
+
 
 class Bspecies(bpy.types.PropertyGroup):
     name: StringProperty(name="name", default='H')
@@ -173,8 +174,10 @@ class Bpolyhedra(bpy.types.PropertyGroup):
     label: StringProperty(name="label", default='')
     species: StringProperty(name="species")
     name: StringProperty(name="name")
-    color: FloatVectorProperty(name="color", size=4)
-    width: FloatProperty(name="width", default=0.01)
+    color: FloatVectorProperty(name="color",
+                               subtype='COLOR',
+                               size=4)
+    width: FloatProperty(name="width", min=0, soft_max=1, default=0.01)
     show_edge: BoolProperty(name="show_edge", default=True)
     style: EnumProperty(
         name="style",
@@ -648,6 +651,9 @@ class BatomsCollection(bpy.types.PropertyGroup):
 
     bpolyhedra: CollectionProperty(name='Bpolyhedra',
                                    type=Bpolyhedra)
+
+    polyhedra_index: IntProperty(name="polyhedra_index",
+                                 default=0)
 
     bsheet: CollectionProperty(name='Bsheet',
                                type=Bsheet)
