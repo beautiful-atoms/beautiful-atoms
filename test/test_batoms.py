@@ -200,14 +200,21 @@ def test_from_batoms():
 def test_set_arrays():
     """Set arrays and attributes"""
     bpy.ops.batoms.delete()
-    mol = molecule("H2O")
-    h2o = Batoms("h2o", from_ase=mol)
+    h2o = Batoms(
+        "h2o",
+        species=["O", "H", "H"],
+        positions=[[0, 0, 0.40], [0, -0.76, -0.2], [0, 0.76, -0.2]],
+    )
     h2o.show = [1, 0, 1]
     assert not h2o[1].show
     h2o.scale = [1, 1, 1]
     h2o.set_attributes({"scale": np.array([0.3, 0.3, 0.3])})
+    # positions
     positions = h2o.positions
     assert len(positions) == 3
+    h2o.positions = h2o.positions + 2
+    assert h2o.positions[0][0] == 2
+    #
     del h2o[[2]]
     assert len(h2o.arrays["positions"]) == 2
 

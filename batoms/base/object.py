@@ -257,7 +257,7 @@ class ObjectGN():
             'co', positions)
         self.obj.data.update()
         # bpy.context.view_layer.update()
-        # I don't why this is need to update the mesh positions
+        # I don't why the shape key is not udpate in background mode, so we need this.
         bpy.context.view_layer.objects.active = self.obj
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.object.mode_set(mode='OBJECT')
