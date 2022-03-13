@@ -47,7 +47,7 @@ class Species(BaseObject):
                 ele.color = eledata['color']
         # update the color for species, which is the color of the main element
         for name, eledata in data['elements'].items():
-            if name == self.main_element:
+            if name == self.main_element and "color" in eledata:
                 sp.color = eledata["color"]
         self.build_instancer()
 
