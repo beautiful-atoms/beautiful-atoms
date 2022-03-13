@@ -41,8 +41,10 @@ class Species(BaseObject):
         for name, eledata in data['elements'].items():
             ele = sp.elements.add()
             ele.name = name
-            ele.occupancy = eledata['occupancy']
-            ele.color = eledata['color']
+            if "occupancy" in eledata:
+                ele.occupancy = eledata['occupancy']
+            if "color" in eledata:
+                ele.color = eledata['color']
         self.build_instancer()
 
     @staticmethod
@@ -62,6 +64,9 @@ class Species(BaseObject):
             elements = {elements: {
                 "occupancy": 1.0, "color": (0, 0.2, 0.8, 1)}}
         elif isinstance(elements, dict):
+            for ele, eledata in elements.items():
+                if isinstance(eledata, (int, float)):
+                    elements[ele] = {"occupancy": eledata}
             occupancy = [ele['occupancy'] for ele in elements.values()]
             total = sum(occupancy)
             # not fully occupied.
@@ -218,8 +223,16 @@ class Species(BaseObject):
         >>> H2O['O'].elements = 'O'
         >>> H2O['O'].elements = {'O':1.0}
         >>> H2O['O'].elements = {'O':0.7, 'S': 0.3}
+        >>> H2O["O"].elements = {"O":{"occupancy": 0.7}, 
+                            "S":{"occupancy"}}
         """
         data = self.data.as_dict()
+        if isinstance(elements, str):
+            elements = {"elements": {elements: {"occupancy": 1.0}}}
+        if isinstance(elements, dict):
+            for ele, eledata in elements.items():
+                if isinstance(eledata, (int, float)):
+                    elements[ele] = {"occupancy": eledata}
         data['elements'] = elements
         self.update(data)
 

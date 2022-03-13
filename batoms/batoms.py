@@ -605,7 +605,7 @@ class Batoms(BaseCollection, ObjectGN):
     @radius_style.setter
     def radius_style(self, radius_style):
         from batoms.utils import get_default_species_data
-        self.coll.batoms.radius_style = radius_style
+        self.coll.batoms.radius_style = str(radius_style)
         for name, sp in self.species.items():
             data = sp.as_dict()
             props = get_default_species_data(data['elements'],
@@ -621,7 +621,7 @@ class Batoms(BaseCollection, ObjectGN):
     @color_style.setter
     def color_style(self, color_style):
         from batoms.utils import get_default_species_data
-        self.coll.batoms.color_style = color_style
+        self.coll.batoms.color_style = str(color_style)
         for name, sp in self.species.items():
             data = sp.as_dict()
             props = get_default_species_data(data['elements'],
@@ -1080,7 +1080,7 @@ class Batoms(BaseCollection, ObjectGN):
         bpy.context.view_layer.objects.active = self.obj
         bpy.ops.object.mode_set(mode='OBJECT')
         if isinstance(species, str):
-            species = [species, {'elements': {species.split('_')[0]: 1.0}}]
+            species = [species, {'elements': {species.split('_')[0]: {"occupancy":1.0}}}]
         if species[0] not in self.species:
             self.species[species[0]] = species[1]
             # add geometry node

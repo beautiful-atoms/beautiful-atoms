@@ -43,7 +43,7 @@ class Batom(childObjectGN):
         elements = self.parent.species[self.species].elements
         occupancies = {}
         for name, eledata in elements.items():
-            occupancies[name] = round(eledata.occupancy, 3)
+            occupancies[name] = round(eledata["occupancy"], 3)
         return occupancies
 
     @property

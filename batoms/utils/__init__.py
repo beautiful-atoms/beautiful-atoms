@@ -73,6 +73,8 @@ def default_element_prop(element, radius_style='covalent',
     from batoms.data import jmol_colors, cpk_colors, vesta_color
     element_prop = {}
     number = chemical_symbols.index(element)
+    color_style = str(color_style)
+    radius_style = str(radius_style)
     color_style = color_style.upper()
     radius_style = radius_style.upper()
     if color_style == 'JMOL' or color_style == '0':
