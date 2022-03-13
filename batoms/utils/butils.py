@@ -86,7 +86,7 @@ def remove_collection(name, keep_batom=True):
     objs = collection.all_objects.keys()
     for obj in objs:
         obj = bpy.data.objects.get(obj)
-        if keep_batom and obj.batoms.atom:
+        if keep_batom and obj.batoms.type != "OTHER":
             continue
         bpy.data.objects.remove(obj, do_unlink=True)
     collection = bpy.data.collections.get(name)

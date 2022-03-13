@@ -30,12 +30,12 @@ class deleteBatoms(Operator):
         from batoms.utils.butils import remove_collection, read_batoms_list
         if self.label != '':
             coll = bpy.data.collections.get(self.label)
-            remove_collection(self.label)
+            remove_collection(self.label, keep_batom=False)
         else:
             batoms_list = read_batoms_list()
             for label in batoms_list:
                 coll = bpy.data.collections.get(label)
-                remove_collection(label)
+                remove_collection(label, keep_batom=False)
         return {'FINISHED'}
 
 
