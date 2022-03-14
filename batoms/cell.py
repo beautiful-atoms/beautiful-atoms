@@ -10,11 +10,6 @@ from batoms.draw import draw_cylinder
 
 
 class Bcell(ObjectGN):
-    """
-    Unit cell of three dimensions.
-
-    """
-
     def __init__(self, label,
                  array=None,
                  location=np.array([0, 0, 0]),
@@ -22,6 +17,7 @@ class Bcell(ObjectGN):
                  batoms=None,
                  ) -> None:
         """
+        Unit cell of three dimensions.
         ver: 3x3 verlike object
           The three cell vectors: cell[0], cell[1], and cell[2].
         """

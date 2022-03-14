@@ -3,7 +3,7 @@
 
 import bpy
 from bpy.types import Menu, Panel, UIList
-from batoms import Batoms
+
 
 class BATOMS_MT_ms_context_menu(Menu):
     bl_label = "Molecular Surface Specials"
@@ -11,9 +11,11 @@ class BATOMS_MT_ms_context_menu(Menu):
 
     def draw(self, _context):
         layout = self.layout
-        op = layout.operator("surface.ms_add", icon='ADD', text="Add Molecular Surface")
+        op = layout.operator("surface.ms_add", icon='ADD',
+                             text="Add Molecular Surface")
         layout.separator()
-        op = layout.operator("surface.ms_remove", icon='X', text="Delete All Molecular Surface")
+        op = layout.operator("surface.ms_remove", icon='X',
+                             text="Delete All Molecular Surface")
         op.all = True
 
 
@@ -34,13 +36,12 @@ class BATOMS_UL_ms(UIList):
 
 
 class BATOMS_PT_ms(Panel):
-    bl_label       = "Molecular Surface"
+    bl_label = "Molecular Surface"
     bl_category = "Surface"
     bl_idname = "BATOMS_PT_ms"
-    bl_space_type  = "VIEW_3D"
+    bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     # bl_options = {'DEFAULT_CLOSED'}
-
 
     COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_EEVEE', 'BLENDER_WORKBENCH'}
 
@@ -54,10 +55,10 @@ class BATOMS_PT_ms(Panel):
 
     def draw(self, context):
         layout = self.layout
-        
+
         ob = context.object
         ba = bpy.data.collections[ob.batoms.label].batoms
-        if len(ba.bms) >0:
+        if len(ba.bms) > 0:
             kb = ba.bms[ba.ms_index]
         else:
             kb = None
@@ -68,7 +69,8 @@ class BATOMS_PT_ms(Panel):
         if kb:
             rows = 5
 
-        row.template_list("BATOMS_UL_ms", "", ba, "bms", ba, "ms_index", rows=rows)
+        row.template_list("BATOMS_UL_ms", "", ba, "bms",
+                          ba, "ms_index", rows=rows)
 
         col = row.column(align=True)
         op = col.operator("surface.ms_add", icon='ADD', text="")
@@ -104,5 +106,5 @@ class BATOMS_PT_ms(Panel):
             sub.prop(kb, "select", text="Select")
             col.prop(kb, "color",  text="color")
             col.separator()
-            op = layout.operator("surface.ms_draw", icon='GREASEPENCIL', text="Draw")
-
+            op = layout.operator(
+                "surface.ms_draw", icon='GREASEPENCIL', text="Draw")

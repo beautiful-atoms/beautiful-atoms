@@ -1,34 +1,22 @@
-"""Definition of the Batoms class.
-
-This module defines the Batoms object in the batoms package.
+"""Definition of the Batoms class in the batoms package.
 
 # TODO: get evaluated positiosn
 # TODO: add location for boundary, bonds and all child objects
 # TODO: add feature: cavity
 """
 import bpy
-from batoms.batom import Batom
-from batoms.bond import Bonds, default_bond_datas
-from batoms.polyhedra import Polyhedras, default_polyhedra_datas
-from batoms.boundary import Boundary, default_boundary_datas
 from batoms.bspecies import Bspecies
 from batoms.cell import Bcell
-from batoms.render.render import Render
 from batoms.bselect import Selects
-from batoms.utils import string2Number, read_from_ase, read_from_pymatgen
 from batoms.base.collection import BaseCollection
 from batoms.base.object import ObjectGN
-from batoms.isosurface import Isosurface
-from batoms.lattice_plane import LatticePlane
-from batoms.crystal_shape import CrystalShape
 from batoms.ribbon.ribbon import Ribbon
-from batoms.utils.butils import clean_coll_objects, object_mode, show_index, \
-    get_nodes_by_name, compareNodeType
+from batoms.utils.butils import object_mode, show_index, \
+    get_nodes_by_name
+from batoms.utils import string2Number, read_from_ase, read_from_pymatgen
 import numpy as np
-from batoms.crystal_shape import CrystalShape
-# from time import time
+from time import time
 
-shapes = ["UV_SPHERE", "ICO_SPHERE", "CUBE", "METABALL"]
 
 default_attributes = [
     ['select', 'INT'],
@@ -79,7 +67,7 @@ class Batoms(BaseCollection, ObjectGN):
                  movie=True,
                  segments=None,
                  ):
-        """Batom Class
+        """Batoms Class
         The Batoms object is a interface to a batoms object in Blender.
 
         Args:
@@ -329,6 +317,7 @@ class Batoms(BaseCollection, ObjectGN):
             instancer (bpy.data.object):
                 Object to be instanced
         """
+        from batoms.utils.butils import compareNodeType
         gn = self.gnodes
         GroupInput = gn.node_group.nodes[0]
         JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
@@ -797,6 +786,7 @@ class Batoms(BaseCollection, ObjectGN):
         """
         "UV_SPHERE", "ICO_SPHERE", "CUBE"
         """
+        shapes = ["UV_SPHERE", "ICO_SPHERE", "CUBE", "METABALL"]
         scale = self.scale
         if shape not in [0, 1, 2]:
             raise Exception('Shape %s is not supported!' % shape)
@@ -881,7 +871,7 @@ class Batoms(BaseCollection, ObjectGN):
         #todo: this is slow for large system
 
         """
-
+        from batoms.batom import Batom
         if isinstance(index, int):
             batom = Batom(self.label, index, batoms=self)
             # bpy.ops.object.mode_set(mode=mode)
@@ -1424,6 +1414,7 @@ class Batoms(BaseCollection, ObjectGN):
     @property
     def bonds(self):
         """bonds object."""
+        from batoms.bond import Bonds, default_bond_datas
         if self._bonds is not None:
             return self._bonds
         bonds = Bonds(self.label, bond_datas=default_bond_datas,
@@ -1438,6 +1429,7 @@ class Batoms(BaseCollection, ObjectGN):
     @property
     def polyhedras(self):
         """polyhedras object."""
+        from batoms.polyhedra import Polyhedras, default_polyhedra_datas
         if self._polyhedras is not None:
             return self._polyhedras
         polyhedras = Polyhedras(self.label,
@@ -1453,6 +1445,7 @@ class Batoms(BaseCollection, ObjectGN):
     @property
     def boundary(self):
         """boundary object."""
+        from batoms.boundary import Boundary, default_boundary_datas
         if self._boundary is not None:
             return self._boundary
         boundary = Boundary(self.label, boundary_datas=default_boundary_datas,
@@ -1477,6 +1470,7 @@ class Batoms(BaseCollection, ObjectGN):
     @property
     def isosurfaces(self):
         """isosurfaces object."""
+        from batoms.isosurface import Isosurface
         if self._isosurfaces is not None:
             return self._isosurfaces
         isosurfaces = Isosurface(self.label, batoms=self)
@@ -1490,6 +1484,7 @@ class Batoms(BaseCollection, ObjectGN):
     @property
     def lattice_plane(self):
         """lattice_plane object."""
+        from batoms.lattice_plane import LatticePlane
         if self._lattice_plane is not None:
             return self._lattice_plane
         lattice_plane = LatticePlane(self.label, batoms=self)
@@ -1503,6 +1498,7 @@ class Batoms(BaseCollection, ObjectGN):
     @property
     def crystal_shape(self):
         """crystal_shape object."""
+        from batoms.crystal_shape import CrystalShape
         if self._crystal_shape is not None:
             return self._crystal_shape
         crystal_shape = CrystalShape(self.label, batoms=self)
@@ -1556,6 +1552,7 @@ class Batoms(BaseCollection, ObjectGN):
     @property
     def render(self):
         """Render object."""
+        from batoms.render.render import Render
         if self._render is not None:
             return self._render
         render = Render()

@@ -3,7 +3,7 @@
 
 import bpy
 from bpy.types import Menu, Panel, UIList
-from batoms import Batoms
+
 
 class BATOMS_MT_isosurface_context_menu(Menu):
     bl_label = "Isosurface Specials"
@@ -11,9 +11,11 @@ class BATOMS_MT_isosurface_context_menu(Menu):
 
     def draw(self, _context):
         layout = self.layout
-        op = layout.operator("surface.isosurface_add", icon='ADD', text="Add Isosurface")
+        op = layout.operator("surface.isosurface_add",
+                             icon='ADD', text="Add Isosurface")
         layout.separator()
-        op = layout.operator("surface.isosurface_remove", icon='X', text="Delete All Isosurface")
+        op = layout.operator("surface.isosurface_remove",
+                             icon='X', text="Delete All Isosurface")
         op.all = True
 
 
@@ -23,7 +25,8 @@ class BATOMS_UL_isosurface(UIList):
         custom_icon = 'OBJECT_DATAMODE'
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
             split = layout.split(factor=0.5, align=False)
-            split.prop(isosurface, "name", text="", emboss=False, icon=custom_icon)
+            split.prop(isosurface, "name", text="",
+                       emboss=False, icon=custom_icon)
             row = split.row(align=True)
             row.emboss = 'NONE_OR_STATUS'
             row.prop(isosurface, "level", text="")
@@ -33,13 +36,12 @@ class BATOMS_UL_isosurface(UIList):
 
 
 class BATOMS_PT_isosurface(Panel):
-    bl_label       = "Isosurface"
+    bl_label = "Isosurface"
     bl_category = "Surface"
     bl_idname = "BATOMS_PT_isosurface"
-    bl_space_type  = "VIEW_3D"
+    bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     # bl_options = {'DEFAULT_CLOSED'}
-
 
     COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_EEVEE', 'BLENDER_WORKBENCH'}
 
@@ -53,10 +55,10 @@ class BATOMS_PT_isosurface(Panel):
 
     def draw(self, context):
         layout = self.layout
-        
+
         ob = context.object
         ba = bpy.data.collections[ob.batoms.label].batoms
-        if len(ba.bisosurface) >0:
+        if len(ba.bisosurface) > 0:
             kb = ba.bisosurface[ba.isosurface_index]
         else:
             kb = None
@@ -67,7 +69,8 @@ class BATOMS_PT_isosurface(Panel):
         if kb:
             rows = 5
 
-        row.template_list("BATOMS_UL_isosurface", "", ba, "bisosurface", ba, "isosurface_index", rows=rows)
+        row.template_list("BATOMS_UL_isosurface", "", ba,
+                          "bisosurface", ba, "isosurface_index", rows=rows)
 
         col = row.column(align=True)
         op = col.operator("surface.isosurface_add", icon='ADD', text="")
@@ -76,7 +79,8 @@ class BATOMS_PT_isosurface(Panel):
             op.name = kb.name
         col.separator()
 
-        col.menu("BATOMS_MT_isosurface_context_menu", icon='DOWNARROW_HLT', text="")
+        col.menu("BATOMS_MT_isosurface_context_menu",
+                 icon='DOWNARROW_HLT', text="")
 
         if kb:
             col.separator()
@@ -100,5 +104,5 @@ class BATOMS_PT_isosurface(Panel):
             sub.prop(kb, "level", text="Level")
             col.prop(kb, "color",  text="color")
             col.separator()
-            op = layout.operator("surface.isosurface_draw", icon='GREASEPENCIL', text="Draw")
-
+            op = layout.operator("surface.isosurface_draw",
+                                 icon='GREASEPENCIL', text="Draw")

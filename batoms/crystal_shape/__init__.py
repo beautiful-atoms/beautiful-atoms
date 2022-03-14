@@ -1,18 +1,13 @@
-"""Definition of the plane class.
-
-This module defines the plane object in the Batoms package.
+"""Definition of the CrystalShape object in the Batoms package.
 
 """
 
 import bpy
 from time import time
 import numpy as np
-from batoms.utils.butils import clean_coll_objects
 from batoms.base.object import BaseObject
 from batoms.crystal_shape.crystal_shape_setting import CrystalShapeSettings
-from batoms.utils.butils import clean_coll_objects
 from batoms.draw import draw_cylinder, draw_surface_from_vertices
-from batoms.base.collection import tuple2string
 
 
 class CrystalShape(BaseObject):
@@ -45,10 +40,10 @@ class CrystalShape(BaseObject):
             mat = bpy.data.materials.get(name)
             bpy.data.materials.remove(mat, do_unlink=True)
         mat = create_material(name,
-                        color=color,
-                        node_inputs=node_inputs,
-                        material_style=material_style,
-                        backface_culling=False)
+                              color=color,
+                              node_inputs=node_inputs,
+                              material_style=material_style,
+                              backface_culling=False)
         return mat
 
     def build_crystal(self, bcell, origin=[0, 0, 0]):
@@ -130,7 +125,7 @@ class CrystalShape(BaseObject):
                 plane['edges_cylinder']['normals'].append(nvec)
         return plane
 
-    def draw(self, plane_name = "ALL", no=None, origin=None):
+    def draw(self, plane_name="ALL", no=None, origin=None):
         """Draw crystal shape
         no: int
             spacegroup of structure, if None, no will be determined by
@@ -152,9 +147,9 @@ class CrystalShape(BaseObject):
             name = '%s_%s_%s' % (self.label, 'crystal', species)
             self.delete_obj(name)
             obj = draw_surface_from_vertices(name, plane,
-                                       coll=self.batoms.coll,
-                                       )
-            mat = self.build_materials(name, color = plane['color'])
+                                             coll=self.batoms.coll,
+                                             )
+            mat = self.build_materials(name, color=plane['color'])
             obj.data.materials.append(mat)
             obj.parent = self.batoms.obj
             obj.batoms.type = 'CRYSTALSHAPE'
@@ -163,9 +158,9 @@ class CrystalShape(BaseObject):
                 name = '%s_%s_%s' % (self.label, 'crystal_edge', species)
                 self.delete_obj(name)
                 obj = draw_cylinder(name=name,
-                              datas=plane['edges_cylinder'],
-                              coll=self.batoms.coll,
-                              )
+                                    datas=plane['edges_cylinder'],
+                                    coll=self.batoms.coll,
+                                    )
                 obj.parent = self.batoms.obj
                 obj.batoms.type = 'CRYSTALSHAPE'
                 obj.batoms.label = self.batoms.label

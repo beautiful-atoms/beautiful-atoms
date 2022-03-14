@@ -1,7 +1,7 @@
 import bpy
 import numpy as np
 from batoms.base.collection import Setting
-from batoms.base.object import ObjectGN, BaseObject
+from batoms.base.object import BaseObject
 
 
 class Species(BaseObject):

@@ -4,15 +4,12 @@ This module defines the plane object in the Batoms package.
 
 """
 
-from matplotlib.pyplot import draw
 import bpy
 import bmesh
 from time import time
 import numpy as np
 from batoms.base.object import BaseObject
 from batoms.ms.mssetting import MSsetting
-
-default_colors = [(0.2, 0.1, 0.9, 1.0), (0.0, 0.0, 1.0, 1.0)]
 
 
 class MS(BaseObject):
@@ -50,8 +47,8 @@ class MS(BaseObject):
                               material_style=material_style,
                               backface_culling=False)
         return mat
-    
-    def draw(self, ms_name = "ALL"):
+
+    def draw(self, ms_name="ALL"):
         from batoms.utils.butils import clean_coll_object_by_type
         # delete old plane
         clean_coll_object_by_type(self.batoms.coll, 'MS')
@@ -156,9 +153,9 @@ class MS(BaseObject):
         print('Grid Points: %s %s %s' % self.shape)
         indices_sas, volume_sas = \
             self.calc_power_distance(self.meshgrids,
-                                        positions,
-                                        radii,
-                                        parallel=parallel)
+                                     positions,
+                                     radii,
+                                     parallel=parallel)
         volume = volume_sas.reshape(self.shape)
         isosurface = self.calc_isosurface(
             volume, 5, spacing=self.get_space(resolution),
@@ -168,12 +165,12 @@ class MS(BaseObject):
         sas_name = '%s_%s_sas' % (self.label, ms.name)
         self.delete_obj(sas_name)
         coll = self.batoms.coll.children['%s_surface' %
-                                            self.batoms.coll_name]
+                                         self.batoms.coll_name]
         obj = draw_surface_from_vertices(sas_name,
-                                    datas=isosurface,
-                                    coll=coll,
-                                    )
-        mat = self.build_materials(sas_name, color = isosurface['color'])
+                                         datas=isosurface,
+                                         coll=coll,
+                                         )
+        mat = self.build_materials(sas_name, color=isosurface['color'])
         obj.data.materials.append(mat)
         obj.parent = self.batoms.obj
         obj.batoms.type = 'MS'
@@ -207,9 +204,9 @@ class MS(BaseObject):
         # build SAS
         indices_sas, volume_sas = \
             self.calc_power_distance(self.meshgrids,
-                                        positions,
-                                        radii,
-                                        parallel=parallel)
+                                     positions,
+                                     radii,
+                                     parallel=parallel)
         volume = volume_sas.reshape(self.shape)
         isosurface = self.calc_isosurface(
             volume, 5, self.get_space(resolution), origin=self.box_origin)
@@ -221,8 +218,8 @@ class MS(BaseObject):
         # select grid points inside sas for query
         indices_sas1, tmp = \
             self.calc_power_distance(self.meshgrids[indices],
-                                        positions, radii,
-                                        parallel=parallel)
+                                     positions, radii,
+                                     parallel=parallel)
         volume_sas1[indices] = tmp
         # ----------------------------
         # tstart1 = time()
@@ -235,8 +232,8 @@ class MS(BaseObject):
         indices = np.where((volume_sas < 5) & (volume_sas1 > 5))[0]
         indices_ses, volume_ses = \
             self.calc_power_distance(self.meshgrids[indices],
-                                        vertices, radii,
-                                        parallel=parallel)
+                                     vertices, radii,
+                                     parallel=parallel)
         self.volume_ses[indices] = volume_ses
         volume = self.volume_ses.reshape(self.shape)
         isosurface = self.calc_isosurface(
@@ -246,12 +243,12 @@ class MS(BaseObject):
         ses_name = '%s_%s_ses' % (self.label, ms.name)
         self.delete_obj(ses_name)
         coll = self.batoms.coll.children['%s_surface' %
-                                            self.batoms.coll_name]
+                                         self.batoms.coll_name]
         obj = draw_surface_from_vertices(ses_name,
-                                    datas=isosurface,
-                                    coll=coll,
-                                    )
-        mat = self.build_materials(ses_name, color = isosurface['color'])
+                                         datas=isosurface,
+                                         coll=coll,
+                                         )
+        mat = self.build_materials(ses_name, color=isosurface['color'])
         obj.data.materials.append(mat)
         obj.parent = self.batoms.obj
         obj.batoms.type = 'MS'
@@ -731,6 +728,7 @@ class MS(BaseObject):
         """
         Algorithm: ShrakeRupley
         """
+        default_colors = [(0.2, 0.1, 0.9, 1.0), (0.0, 0.0, 1.0, 1.0)]
         #
         tstart = time()
         self.probe = probe

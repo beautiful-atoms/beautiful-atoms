@@ -553,30 +553,30 @@ class Bonds(BaseCollection, ObjectGN):
             sp2 = number2String(pair[1])
             sp = self.setting['%s-%s' % (sp1, sp2)]
             sp = sp.as_dict()
-            order_style = '%s_%s'% (sp["order"], sp["style"])
+            order_style = '%s_%s' % (sp["order"], sp["style"])
             # update geometry node
             if self.setting.instancers[sp["name"]][order_style] is None:
                 self.setting.build_instancer(sp)
                 self.add_geometry_node(sp)
             # update materials
-            mat1 = self.setting.materials[sp["name"]]["%s_0"%(order_style)]
-            mat2 = self.setting.materials[sp["name"]]["%s_1"%(order_style)]
+            mat1 = self.setting.materials[sp["name"]]["%s_0" % (order_style)]
+            mat2 = self.setting.materials[sp["name"]]["%s_1" % (order_style)]
             color1 = mat1.node_tree.nodes[0].inputs[0].default_value[:]
             color2 = mat2.node_tree.nodes[0].inputs[0].default_value[:]
             if not np.allclose(sp["color1"], color1) or \
-                not np.allclose(sp["color2"], color2):
-                print("change materials: %s"%sp["name"])
+                    not np.allclose(sp["color2"], color2):
+                print("change materials: %s" % sp["name"])
                 self.setting.build_materials(sp)
                 self.setting.assign_materials(sp, sp["order"], sp["style"])
             # update  instancers
             name = 'bond_%s_%s_%s_%s' % (self.label, sp["name"],
-                                            sp["order"], sp["style"])
+                                         sp["order"], sp["style"])
             ObjectInstancer = get_nodes_by_name(self.gnodes.node_group.nodes,
                                                 'ObjectInfo_%s' % name,
                                                 'GeometryNodeObjectInfo')
             ObjectInstancer.inputs['Object'].default_value = \
                 self.setting.instancers[sp["name"]][order_style]
-        print('update bond instancer: %s'%(time() - tstart))
+        print('update bond instancer: %s' % (time() - tstart))
 
     def update(self, ):
         """

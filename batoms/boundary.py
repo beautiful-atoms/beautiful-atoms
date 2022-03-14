@@ -9,7 +9,6 @@ from batoms.utils.butils import object_mode, compareNodeType
 from batoms.utils import number2String, string2Number
 from ase.geometry import complete_cell
 
-shapes = ["UV_SPHERE", "ICO_SPHERE", "CUBE", "METABALL"]
 
 default_attributes = [
     ['atoms_index', 'INT'],
@@ -417,7 +416,7 @@ class Boundary(ObjectGN):
                 raise Exception('Wrong boundary setting!')
             self.batoms.coll.batoms.boundary = boundary[:].flatten()
         self.update()
-        
+
     def get_boundary(self):
         boundary = np.array(self.batoms.coll.batoms.boundary)
         return boundary.reshape(3, -1)

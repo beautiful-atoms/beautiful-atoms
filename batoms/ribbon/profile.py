@@ -1,6 +1,5 @@
 import numpy as np
 from math import pi
-from time import time
 
 
 def ellipse(n, w, h):

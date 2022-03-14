@@ -155,9 +155,9 @@ class Lights(BaseCollection):
         lights = {}
         for light in self.coll.objects:
             lights[light.batoms.light.name] = Light(light.batoms.light.label,
-                                                     light.batoms.light.name,
-                                                     direction=light.batoms.light.direction,
-                                                     lock_to_camera=light.batoms.light.lock_to_camera)
+                                                    light.batoms.light.name,
+                                                    direction=light.batoms.light.direction,
+                                                    lock_to_camera=light.batoms.light.lock_to_camera)
         return lights
 
     def __getitem__(self, name):

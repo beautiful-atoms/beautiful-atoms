@@ -5,7 +5,6 @@ from batoms.base.object import ObjectGN
 from batoms.utils.butils import object_mode, compareNodeType
 from batoms.utils import number2String, string2Number
 
-shapes = ["UV_SPHERE", "ICO_SPHERE", "CUBE", "METABALL"]
 
 default_attributes = [
     ['atoms_index', 'INT'],
@@ -40,15 +39,19 @@ default_search_bond_datas = {
 
 
 class SearchBond(ObjectGN):
-    """SearchBond Class
-
-    """
 
     def __init__(self,
                  label=None,
                  search_bond_datas=None,
                  batoms=None,
                  ):
+        """SearchBond Class
+
+        Args:
+            label (_type_, optional): _description_. Defaults to None.
+            search_bond_datas (_type_, optional): _description_. Defaults to None.
+            batoms (_type_, optional): _description_. Defaults to None.
+        """
         #
         self.batoms = batoms
         self.label = label

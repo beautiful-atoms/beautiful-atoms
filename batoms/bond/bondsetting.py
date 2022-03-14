@@ -1,7 +1,6 @@
 """
 """
 import bpy
-from batoms.utils.butils import object_mode
 import numpy as np
 from time import time
 from batoms.utils import string2Number
@@ -554,6 +553,7 @@ class BondSettings(Setting):
                 raise Exception('%s is not in %s' % (name, self.name))
 
     def copy(self, label):
+        from batoms.utils.butils import object_mode
         object_mode()
         bondsetting = self.__class__(label)
         for b in self:

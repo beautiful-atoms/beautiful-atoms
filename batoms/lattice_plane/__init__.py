@@ -43,10 +43,10 @@ class LatticePlane(BaseObject):
             mat = bpy.data.materials.get(name)
             bpy.data.materials.remove(mat, do_unlink=True)
         mat = create_material(name,
-                        color=color,
-                        node_inputs=node_inputs,
-                        material_style=material_style,
-                        backface_culling=False)
+                              color=color,
+                              node_inputs=node_inputs,
+                              material_style=material_style,
+                              backface_culling=False)
         return mat
 
     def build_plane(self, bcell, include_center=False):
@@ -272,7 +272,7 @@ class LatticePlane(BaseObject):
                     bmesh.ops.delete(bm, geom=verts_select, context='VERTS')
                     bm.to_mesh(obj.data)
 
-    def draw(self, plane_name = 'ALL', no=None,
+    def draw(self, plane_name='ALL', no=None,
              cuts=None, cmap='bwr', include_center=False):
         """Draw plane
         no: int
@@ -307,7 +307,7 @@ class LatticePlane(BaseObject):
                 obj = draw_surface_from_vertices(name, plane,
                                                  coll=self.batoms.coll,
                                                  )
-                mat = self.build_materials(name, color = plane['color'])
+                mat = self.build_materials(name, color=plane['color'])
                 obj.data.materials.append(mat)
                 obj.parent = self.batoms.obj
                 obj.batoms.type = 'LATTICEPLANE'
@@ -316,9 +316,9 @@ class LatticePlane(BaseObject):
                     name = '%s_%s_%s' % (self.label, 'plane_edge', species)
                     self.delete_obj(name)
                     obj = draw_cylinder(name=name,
-                                  datas=plane['edges_cylinder'],
-                                  coll=self.batoms.coll,
-                                  )
+                                        datas=plane['edges_cylinder'],
+                                        coll=self.batoms.coll,
+                                        )
                     obj.parent = self.batoms.obj
                     obj.batoms.type = 'LATTICEPLANE'
                     obj.batoms.label = self.batoms.label

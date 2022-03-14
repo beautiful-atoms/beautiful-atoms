@@ -3,7 +3,7 @@
 
 import bpy
 from bpy.types import Menu, Panel, UIList
-from batoms import Batoms
+
 
 class BATOMS_MT_species_context_menu(Menu):
     bl_label = "Species Specials"
@@ -11,9 +11,11 @@ class BATOMS_MT_species_context_menu(Menu):
 
     def draw(self, _context):
         layout = self.layout
-        op = layout.operator("batoms.species_add", icon='ADD', text="Add Species")
+        op = layout.operator("batoms.species_add",
+                             icon='ADD', text="Add Species")
         layout.separator()
-        op = layout.operator("batoms.species_remove", icon='X', text="Delete All Species")
+        op = layout.operator("batoms.species_remove",
+                             icon='X', text="Delete All Species")
         op.all = True
 
 
@@ -23,7 +25,8 @@ class BATOMS_UL_species(UIList):
         custom_icon = 'OBJECT_DATAMODE'
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
             split = layout.split(factor=0.66, align=False)
-            split.prop(species, "name", text="", emboss=False, icon=custom_icon)
+            split.prop(species, "name", text="",
+                       emboss=False, icon=custom_icon)
             row = split.row(align=True)
             row.emboss = 'NONE_OR_STATUS'
             # row.prop(species, "distance", text="")
@@ -33,13 +36,12 @@ class BATOMS_UL_species(UIList):
 
 
 class BATOMS_PT_species(Panel):
-    bl_label       = "Species"
+    bl_label = "Species"
     bl_category = "Species"
     bl_idname = "BATOMS_PT_species"
-    bl_space_type  = "VIEW_3D"
+    bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     # bl_options = {'DEFAULT_CLOSED'}
-
 
     COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_EEVEE', 'BLENDER_WORKBENCH'}
 
@@ -53,10 +55,10 @@ class BATOMS_PT_species(Panel):
 
     def draw(self, context):
         layout = self.layout
-        
+
         ob = context.object
         ba = bpy.data.collections[ob.batoms.label].batoms
-        if len(ba.bspecies) >0:
+        if len(ba.bspecies) > 0:
             kb = ba.bspecies[ba.species_index]
         else:
             kb = None
@@ -67,7 +69,8 @@ class BATOMS_PT_species(Panel):
         if kb:
             rows = 5
 
-        row.template_list("BATOMS_UL_species", "", ba, "bspecies", ba, "species_index", rows=rows)
+        row.template_list("BATOMS_UL_species", "", ba,
+                          "bspecies", ba, "species_index", rows=rows)
 
         col = row.column(align=True)
         op = col.operator("batoms.species_add", icon='ADD', text="")
@@ -76,7 +79,8 @@ class BATOMS_PT_species(Panel):
             op.species = kb.species
         col.separator()
 
-        col.menu("BATOMS_MT_species_context_menu", icon='DOWNARROW_HLT', text="")
+        col.menu("BATOMS_MT_species_context_menu",
+                 icon='DOWNARROW_HLT', text="")
 
         if kb:
             col.separator()
@@ -100,4 +104,5 @@ class BATOMS_PT_species(Panel):
             # sub.prop(kb, "radius_style", text="Radius_style")
             sub.prop(kb, "color", text="Color")
             col.prop(kb, "scale",  text="Scale")
-            op = layout.operator("batoms.species_update", icon='GREASEPENCIL', text="Update")
+            op = layout.operator("batoms.species_update",
+                                 icon='GREASEPENCIL', text="Update")
