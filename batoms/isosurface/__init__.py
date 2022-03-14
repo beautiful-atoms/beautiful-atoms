@@ -7,7 +7,6 @@ This module defines the isosurface object in the Batoms package.
 import bpy
 from time import time
 import numpy as np
-from batoms.utils.butils import clean_coll_objects, object_mode
 from batoms.base.object import BaseObject
 from batoms.isosurface.isosurfacesetting import IsosurfaceSettings
 
@@ -58,14 +57,13 @@ class Isosurface(BaseObject):
             mat = bpy.data.materials.get(name)
             bpy.data.materials.remove(mat, do_unlink=True)
         mat = create_material(name,
-                        color=color,
-                        node_inputs=node_inputs,
-                        material_style=material_style,
-                        backface_culling=False)
+                              color=color,
+                              node_inputs=node_inputs,
+                              material_style=material_style,
+                              backface_culling=False)
         return mat
-                    
-                        
-    def draw(self, isosurface_name = 'ALL'):
+
+    def draw(self, isosurface_name='ALL'):
         """Draw isosurface.
         """
         from batoms.draw import draw_surface_from_vertices
@@ -88,7 +86,6 @@ class Isosurface(BaseObject):
             # material
             mat = self.build_materials(name, isosurface_data['color'])
             obj.data.materials.append(mat)
-
 
 
 def calc_isosurface(volume, cell, level,

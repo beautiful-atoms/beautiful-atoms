@@ -3,7 +3,7 @@
 
 import bpy
 from bpy.types import Menu, Panel, UIList
-from batoms import Batoms
+
 
 class BATOMS_MT_lattice_plane_context_menu(Menu):
     bl_label = "Lattice Plane Specials"
@@ -11,9 +11,11 @@ class BATOMS_MT_lattice_plane_context_menu(Menu):
 
     def draw(self, _context):
         layout = self.layout
-        op = layout.operator("plane.lattice_plane_add", icon='ADD', text="Add Lattice Plane")
+        op = layout.operator("plane.lattice_plane_add",
+                             icon='ADD', text="Add Lattice Plane")
         layout.separator()
-        op = layout.operator("plane.lattice_plane_remove", icon='X', text="Delete All Lattice Plane")
+        op = layout.operator("plane.lattice_plane_remove",
+                             icon='X', text="Delete All Lattice Plane")
         op.all = True
 
 
@@ -23,7 +25,8 @@ class BATOMS_UL_lattice_planes(UIList):
         custom_icon = 'OBJECT_DATAMODE'
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
             split = layout.split(factor=0.66, align=False)
-            split.prop(lattice_plane, "name", text="", emboss=False, icon=custom_icon)
+            split.prop(lattice_plane, "name", text="",
+                       emboss=False, icon=custom_icon)
             row = split.row(align=True)
             row.emboss = 'NONE_OR_STATUS'
             row.prop(lattice_plane, "distance", text="")
@@ -33,13 +36,12 @@ class BATOMS_UL_lattice_planes(UIList):
 
 
 class BATOMS_PT_lattice_planes(Panel):
-    bl_label       = "Lattice Plane"
+    bl_label = "Lattice Plane"
     bl_category = "Plane"
     bl_idname = "BATOMS_PT_Lattice_Planes"
-    bl_space_type  = "VIEW_3D"
+    bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     # bl_options = {'DEFAULT_CLOSED'}
-
 
     COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_EEVEE', 'BLENDER_WORKBENCH'}
 
@@ -53,10 +55,10 @@ class BATOMS_PT_lattice_planes(Panel):
 
     def draw(self, context):
         layout = self.layout
-        
+
         ob = context.object
         ba = bpy.data.collections[ob.batoms.label].batoms
-        if len(ba.blatticeplane) >0:
+        if len(ba.blatticeplane) > 0:
             kb = ba.blatticeplane[ba.latticeplane_index]
         else:
             kb = None
@@ -67,7 +69,8 @@ class BATOMS_PT_lattice_planes(Panel):
         if kb:
             rows = 5
 
-        row.template_list("BATOMS_UL_lattice_planes", "", ba, "blatticeplane", ba, "latticeplane_index", rows=rows)
+        row.template_list("BATOMS_UL_lattice_planes", "", ba,
+                          "blatticeplane", ba, "latticeplane_index", rows=rows)
 
         col = row.column(align=True)
         op = col.operator("plane.lattice_plane_add", icon='ADD', text="")
@@ -76,7 +79,8 @@ class BATOMS_PT_lattice_planes(Panel):
             op.name = kb.name
         col.separator()
 
-        col.menu("BATOMS_MT_lattice_plane_context_menu", icon='DOWNARROW_HLT', text="")
+        col.menu("BATOMS_MT_lattice_plane_context_menu",
+                 icon='DOWNARROW_HLT', text="")
 
         if kb:
             col.separator()
@@ -101,4 +105,5 @@ class BATOMS_PT_lattice_planes(Panel):
             sub.prop(kb, "scale", text="Scale")
             col.prop(kb, "show_edge",  text="Show edge")
             col.prop(kb, "color",  text="color")
-            op = layout.operator("plane.lattice_plane_draw", icon='GREASEPENCIL', text="Draw")
+            op = layout.operator("plane.lattice_plane_draw",
+                                 icon='GREASEPENCIL', text="Draw")

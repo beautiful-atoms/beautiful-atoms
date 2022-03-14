@@ -1,8 +1,4 @@
 """
-
-Lattice Planes
-
-To insert lattice planes in structural models.
 """
 import bpy
 from batoms.base.collection import Setting, tuple2string
@@ -23,7 +19,7 @@ class CrystalShapeSettings(Setting):
 
     """
 
-    def __init__(self, label, parent = None, plane=None) -> None:
+    def __init__(self, label, parent=None, plane=None) -> None:
         Setting.__init__(self, label, coll_name='%s_plane' % label)
         self.name = 'bcrystalshape'
         self.parent = parent
@@ -58,7 +54,7 @@ class CrystalShapeSettings(Setting):
                 str(p.symmetry))
         s += "-"*60 + "\n"
         return s
-    
+
     def get_symmetry_indices(self):
         from batoms.utils import get_equivalent_indices
         if self.no == 1:

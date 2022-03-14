@@ -2,6 +2,7 @@ import bpy
 from batoms.base.object import childObjectGN
 import numpy as np
 
+
 class Batom(childObjectGN):
     def __init__(self, label, index=0, batoms=None) -> None:
         """Batom class

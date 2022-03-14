@@ -1,11 +1,10 @@
 import bpy
 from bpy.types import Panel
-from bpy.props import (StringProperty,
-                       BoolProperty,
-                       FloatProperty,
-                       EnumProperty,
-                       )
-from batoms.utils.butils import get_selected_batoms, get_selected_vertices
+from bpy.props import (
+    BoolProperty,
+    FloatProperty,
+    EnumProperty,
+)
 from batoms import Batoms
 
 
@@ -116,10 +115,10 @@ class BatomsProperties(bpy.types.PropertyGroup):
     polyhedra_style: EnumProperty(
         name="polyhedra_style",
         description="Polhhedra models",
-        items=(('0',"0", "atoms, bonds and polyhedra"),
-               ('1',"1", "atoms, polyhedra"),
-               ('2',"2","central atoms, polyhedra"),
-               ('3',"3", "polyhedra")),
+        items=(('0', "0", "atoms, bonds and polyhedra"),
+               ('1', "1", "atoms, polyhedra"),
+               ('2', "2", "central atoms, polyhedra"),
+               ('3', "3", "polyhedra")),
         default='0',
         update=Callback_polyhedra_style,
     )

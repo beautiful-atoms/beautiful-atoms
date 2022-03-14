@@ -5,8 +5,6 @@ import numpy as np
 from batoms.base.collection import Setting
 from time import time
 
-default_colors = [(1, 1, 0, 0.8), (0.0, 0.0, 1.0, 0.8)]
-
 
 class IsosurfaceSettings(Setting):
     def __init__(self, label, batoms=None, parent=None,

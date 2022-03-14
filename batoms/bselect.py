@@ -3,8 +3,6 @@ import numpy as np
 from batoms.utils import string2Number
 # from time import time
 
-subcollections = []
-
 
 class Select():
     def __init__(self, label, name='all',

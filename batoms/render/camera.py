@@ -16,23 +16,6 @@ def set_lock_camera_to_view(switch):
 
 
 class Camera(BaseObject):
-    """Camera Class
-
-    Parameters:
-
-    label: str
-    name: str
-    coll: str
-    type: str
-        'ORTHO' or 'PERSP'
-    lens: float
-    location: array
-    look_at : array
-    from_coll: bool
-    lock_camera_to_view: bool
-
-    """
-
     def __init__(self, label, name='Default',
                  coll=None,
                  type='ORTHO',
@@ -41,6 +24,18 @@ class Camera(BaseObject):
                  look_at=None,
                  lock_camera_to_view=True,
                  ) -> None:
+        """Camera Class
+
+        Args:
+            label (_type_): _description_
+            name (str, optional): _description_. Defaults to 'Default'.
+            coll (_type_, optional): _description_. Defaults to None.
+            type (str, optional): _description_. Defaults to 'ORTHO'. 'ORTHO' or 'PERSP'
+            lens (float, optional): _description_. Defaults to 39.6.
+            location (tuple, optional): _description_. Defaults to (0, 0, 30).
+            look_at (_type_, optional): _description_. Defaults to None.
+            lock_camera_to_view (bool, optional): _description_. Defaults to True.
+        """
         self.label = label
         self.name = name
         obj_name = "%s_camera_%s" % (label, name)

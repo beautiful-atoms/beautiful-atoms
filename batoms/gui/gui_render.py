@@ -2,19 +2,16 @@ import bpy
 from bpy.types import (Panel,
                        Operator,
                        )
-from bpy.props import (BoolProperty,
-                       IntVectorProperty,
-                       FloatProperty,
-                       FloatVectorProperty,
-                       )
-from batoms.utils.butils import get_selected_batoms
-from batoms.batoms import Batoms
+from bpy.props import (
+    IntVectorProperty,
+    FloatProperty,
+)
 from batoms.render.render import Render
 
-# The panel.
+
 class Render_PT_prepare(Panel):
-    bl_label       = "Render"
-    bl_space_type  = "VIEW_3D"
+    bl_label = "Render"
+    bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
     bl_category = "Batoms"
@@ -31,40 +28,33 @@ class Render_PT_prepare(Panel):
         layout.operator("batoms.add_render")
 
 
-
 class RenderProperties(bpy.types.PropertyGroup):
     """
     """
-    @property
-    def selected_batoms(self):
-        return get_selected_batoms()
     def Callback_modify_viewport(self, context):
         repanel = bpy.context.scene.repanel
-        modify_render_attr(self.selected_batoms, 'viewport', repanel.viewport)
+        modify_render_attr(context, 'viewport', repanel.viewport)
+
     def Callback_modify_distance(self, context):
         repanel = bpy.context.scene.repanel
-        modify_render_attr(self.selected_batoms, 'distance', repanel.distance)
-    
-    
+        modify_render_attr(context, 'distance', repanel.distance)
+
     viewport: IntVectorProperty(
-        name="Viewport", size = 3, default=(0, 0, 1),
-        description = "Miller viewport for the render", update = Callback_modify_viewport)
+        name="Viewport", size=3, default=(0, 0, 1),
+        description="Miller viewport for the render", update=Callback_modify_viewport)
     distance: FloatProperty(
         name="Distance", default=3,
-        description = "distance from origin", update = Callback_modify_distance)
-    
-    
+        description="distance from origin", update=Callback_modify_distance)
 
-def modify_render_attr(selected_batoms, key, value):
+
+def modify_render_attr(context, key, value):
+    from batoms.batoms import Batoms
     render = Render()
-    if len(selected_batoms) == 1:
-        render.batoms = Batoms(label = selected_batoms[0])
+    if context.object and context.object.batoms.type != 'OTHER':
+        batoms = Batoms(label=context.object.batoms.label)
+        render.batoms = batoms
         setattr(render, key, value)
 
-def add_render(viewport, distance):
-    """
-    """
-    render = Render(viewport = viewport, distance=distance)
 
 class AddButton(Operator):
     bl_idname = "batoms.add_render"
@@ -73,7 +63,6 @@ class AddButton(Operator):
 
     def execute(self, context):
         repanel = context.scene.repanel
-        add_render(repanel.viewport, 
-                    repanel.distance, 
-                    )
+        render = Render(viewport=repanel.viewport,
+                        distance=repanel.distance)
         return {'FINISHED'}

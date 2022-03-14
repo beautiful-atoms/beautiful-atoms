@@ -1,6 +1,5 @@
 import bpy
 import numpy as np
-from batoms.utils.butils import update_object
 from batoms.utils import number2String
 from batoms.base.object import childObjectGN
 

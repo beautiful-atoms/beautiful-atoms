@@ -3,7 +3,7 @@
 
 import bpy
 from bpy.types import Menu, Panel, UIList
-from batoms import Batoms
+
 
 class BATOMS_MT_crystal_shape_context_menu(Menu):
     bl_label = "Crystal Shape Specials"
@@ -11,9 +11,11 @@ class BATOMS_MT_crystal_shape_context_menu(Menu):
 
     def draw(self, _context):
         layout = self.layout
-        op = layout.operator("plane.crystal_shape_add", icon='ADD', text="Add Crystal Shape")
+        op = layout.operator("plane.crystal_shape_add",
+                             icon='ADD', text="Add Crystal Shape")
         layout.separator()
-        op = layout.operator("plane.crystal_shape_remove", icon='X', text="Delete All Crystal Shape")
+        op = layout.operator("plane.crystal_shape_remove",
+                             icon='X', text="Delete All Crystal Shape")
         op.all = True
 
 
@@ -23,7 +25,8 @@ class BATOMS_UL_crystal_shapes(UIList):
         custom_icon = 'OBJECT_DATAMODE'
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
             split = layout.split(factor=0.66, align=False)
-            split.prop(crystal_shape, "name", text="", emboss=False, icon=custom_icon)
+            split.prop(crystal_shape, "name", text="",
+                       emboss=False, icon=custom_icon)
             row = split.row(align=True)
             row.emboss = 'NONE_OR_STATUS'
             row.prop(crystal_shape, "distance", text="")
@@ -33,13 +36,12 @@ class BATOMS_UL_crystal_shapes(UIList):
 
 
 class BATOMS_PT_crystal_shapes(Panel):
-    bl_label       = "Crystal Shape"
+    bl_label = "Crystal Shape"
     bl_category = "Plane"
     bl_idname = "BATOMS_PT_crystal_shapes"
-    bl_space_type  = "VIEW_3D"
+    bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     # bl_options = {'DEFAULT_CLOSED'}
-
 
     COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_EEVEE', 'BLENDER_WORKBENCH'}
 
@@ -53,10 +55,10 @@ class BATOMS_PT_crystal_shapes(Panel):
 
     def draw(self, context):
         layout = self.layout
-        
+
         ob = context.object
         ba = bpy.data.collections[ob.batoms.label].batoms
-        if len(ba.bcrystalshape) >0:
+        if len(ba.bcrystalshape) > 0:
             kb = ba.bcrystalshape[ba.crystalshape_index]
         else:
             kb = None
@@ -67,7 +69,8 @@ class BATOMS_PT_crystal_shapes(Panel):
         if kb:
             rows = 5
 
-        row.template_list("BATOMS_UL_crystal_shapes", "", ba, "bcrystalshape", ba, "crystalshape_index", rows=rows)
+        row.template_list("BATOMS_UL_crystal_shapes", "", ba,
+                          "bcrystalshape", ba, "crystalshape_index", rows=rows)
 
         col = row.column(align=True)
         op = col.operator("plane.crystal_shape_add", icon='ADD', text="")
@@ -76,7 +79,8 @@ class BATOMS_PT_crystal_shapes(Panel):
             op.name = kb.name
         col.separator()
 
-        col.menu("BATOMS_MT_crystal_shape_context_menu", icon='DOWNARROW_HLT', text="")
+        col.menu("BATOMS_MT_crystal_shape_context_menu",
+                 icon='DOWNARROW_HLT', text="")
 
         if kb:
             col.separator()
@@ -102,5 +106,5 @@ class BATOMS_PT_crystal_shapes(Panel):
             col.prop(kb, "symmetry",  text="Symmetry")
             col.prop(kb, "show_edge",  text="Show edge")
             col.prop(kb, "color",  text="color")
-            op = layout.operator("plane.crystal_shape_draw", icon='GREASEPENCIL', text="Draw")
-        
+            op = layout.operator("plane.crystal_shape_draw",
+                                 icon='GREASEPENCIL', text="Draw")

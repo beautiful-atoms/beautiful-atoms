@@ -3,7 +3,6 @@
 
 import bpy
 from bpy.types import Menu, Panel, UIList
-from batoms import Batoms
 
 
 class BATOMS_MT_polyhedra_context_menu(Menu):
