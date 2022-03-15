@@ -540,6 +540,17 @@ class Batoms(BaseCollection, ObjectGN):
             self._species[key] = data
 
     @property
+    def elements(self):
+        return self.get_elements()
+
+    def get_elements(self):
+        # main elements
+        arrays = self.arrays
+        main_elements = self.species.main_elements
+        elements = [main_elements[sp] for sp in arrays['species']]
+        return elements
+
+    @property
     def model_style(self):
         return self.get_model_style()
 
@@ -677,7 +688,6 @@ class Batoms(BaseCollection, ObjectGN):
             arrays['radius'][mask] = value
         # size
         arrays['size'] = arrays['radius']*arrays['scale']
-        # main elements
         main_elements = self.species.main_elements
         elements = [main_elements[sp] for sp in arrays['species']]
         arrays.update({'elements': np.array(elements, dtype='U20')})
@@ -847,10 +857,10 @@ class Batoms(BaseCollection, ObjectGN):
         """
         pass
 
-    def get_frames(self):
+    def get_frames(self, local=False):
         """
         """
-        frames = self.get_obj_frames(self.obj)
+        frames = self.get_obj_frames(self.obj, local=local)
         return frames
 
     def set_frames(self, frames=None, frame_start=0, only_basis=False):
@@ -1667,25 +1677,34 @@ class Batoms(BaseCollection, ObjectGN):
         self.set_attribute_with_indices('scale', mask, 0.0001)
         # self.update(mask)
 
-    def as_ase(self, local=True):
+    def as_ase(self, local=True, with_attribute=True):
         """
         local: bool
             if True, use the origin of uint cell as the origin
         """
         from ase import Atoms
+        frames = self.get_frames()
         arrays = self.arrays
-        positions = arrays['positions']
-        if local:
-            positions -= self.cell.origin
-        atoms = Atoms(symbols=arrays['elements'],
-                      positions=positions,
-                      cell=self.cell, pbc=self.pbc)
-        for name, array in arrays.items():
-            if name in ['elements', 'positions']:
-                continue
-            atoms.set_array(name, np.array(array))
-
-        return atoms
+        arrays = self.arrays
+        nframe = len(frames)
+        images = []
+        for f in range(nframe):
+            positions = frames[f]
+            if local:
+                positions -= self.cell.origin
+            atoms = Atoms(symbols=arrays['elements'],
+                          positions=positions,
+                          cell=self.cell, pbc=self.pbc)
+            if with_attribute:
+                for name, array in arrays.items():
+                    if name in ['elements', 'positions']:
+                        continue
+                    atoms.set_array(name, np.array(array))
+            images.append(atoms)
+        if nframe == 1:
+            return images[0]
+        else:
+            return images
 
     def write(self, filename, local=True):
         """

@@ -43,44 +43,27 @@ default_boundary_datas = {
 }
 
 
-def search_boundary(species, positions,
-                    cell, pbc,
+def search_boundary(atoms,
                     boundary=[[0, 1], [0, 1], [0, 1]],
-                    skin=3):
-    """
-    search atoms in the boundary
+                    ):
+    """Search atoms in the boundary
 
-    Parameters:
+    Args:
+        atoms: _description_
+        boundary (list, optional): _description_.
+            Defaults to [[0, 1], [0, 1], [0, 1]].
 
-    atoms: ASE Atoms object
-
-    boundary: list
-
-    skin: float
-        Could be the maximum cutoff.
-
-    Return:
-
-    atoms_boundary: ASE Atoms object
-        atoms inside the boudary, not include the core
-    offsets_skin: numpy array
-        atoms close to boundary with a skin distance.
-        Used to search bond outside the boundary.
-        index and offset
-
+    Returns:
+        _type_: _description_
     """
     # tstart = time()
+    cell = atoms.cell
+    positions = atoms.positions
+    species = atoms.arrays['species']
     if isinstance(boundary, float):
         boundary = [[-boundary, 1 + boundary],
                     [-boundary, 1+boundary], [-boundary, 1+boundary]]
     boundary = np.array(boundary)
-    boundary_skin = boundary.copy()
-    # skin to scaled distance in cell
-    par = np.linalg.norm(cell, axis=0)
-    skin = np.array([skin/par[0], skin/par[1], skin/par[2]])
-    # skin region
-    boundary_skin[:, 0] += skin
-    boundary_skin[:, 1] -= skin
     # find supercell
     f = np.floor(boundary)
     c = np.ceil(boundary)
@@ -95,7 +78,6 @@ def search_boundary(species, positions,
     # index
     offsets = np.zeros((M*n, 4), dtype=int)
     ind0 = np.arange(n).reshape(-1, 1)
-    # symbols0 = elements
     species0 = species
     species = []
     # repeat the positions so that
@@ -109,7 +91,6 @@ def search_boundary(species, positions,
                 npositions[i0:i1] += (m0, m1, m2)
                 offsets[i0:i1] = np.append(
                     ind0, np.array([[m0, m1, m2]]*n), axis=1)
-                # symbols.extend(symbols0)
                 species.extend(species0)
                 i0 = i1
     # boundary condition
@@ -153,12 +134,12 @@ class Boundary(ObjectGN):
         if boundary_datas is not None:
             if batoms is not None:
                 location = batoms.location
-            self.build_object(boundary_datas, location=location)
+            self.build_object(boundary_datas)  # , location=location)
         else:
             self.load(label)
         self.boundary = boundary
 
-    def build_object(self, datas, location, attributes={}):
+    def build_object(self, datas, location=[0, 0, 0], attributes={}):
         """
         build child object and add it to main objects.
         """
@@ -352,17 +333,16 @@ class Boundary(ObjectGN):
     def update(self):
         object_mode()
         # clean_coll_objects(self.coll, 'bond')
-        frames = self.batoms.get_frames()
-        arrays = self.batoms.arrays
-        species = arrays['species']
-        nframe = len(frames)
+        images = self.batoms.as_ase()
+        nframe = self.batoms.nframe
+        if nframe == 1:
+            images = [images]
         tstart = time()
         for f in range(nframe):
             # print('update boundary: ', f)
-            positions = frames[f]
-            boundary_list = search_boundary(species, positions,
-                                            self.batoms.cell,
-                                            self.batoms.pbc,
+            # print(images[f].positions)
+            # use local positions for boundary search
+            boundary_list = search_boundary(images[f],
                                             self.boundary)
             if f == 0:
                 boundary_lists = boundary_list
@@ -370,7 +350,7 @@ class Boundary(ObjectGN):
                 boundary_lists = np.append(
                     boundary_lists, boundary_list, axis=0)
         boundary_datas = self.calc_boundary_data(
-            boundary_lists, arrays, self.batoms.cell)
+            boundary_lists, images[0].arrays, self.batoms.cell)
         self.set_arrays(boundary_datas)
         self.batoms.draw()
         print('draw bond: {0:10.2f} s'.format(time() - tstart))
@@ -382,6 +362,7 @@ class Boundary(ObjectGN):
     def get_obj(self):
         obj = bpy.data.objects.get(self.obj_name)
         if obj is None:
+            # , self.batoms.location)
             self.build_object(default_boundary_datas)
         return obj
 
@@ -436,9 +417,10 @@ class Boundary(ObjectGN):
                                 'scale': arrays['scales'],
                                  'show': arrays['shows'],
                                  })
+            # self.obj.location = self.batoms.obj.location
         else:
             # add or remove vertices
-            self.build_object(arrays, self.batoms.location)
+            self.build_object(arrays)
             species = np.unique(arrays['species'])
             for sp in species:
                 self.add_geometry_node(sp)
@@ -562,7 +544,8 @@ class Boundary(ObjectGN):
         # ------------------------------------
         offset_vectors = boundary_lists[:, 1:4]
         offsets = np.dot(offset_vectors, cell)
-        positions = arrays['positions'][boundary_lists[:, 0]] + offsets
+        # use global positions to build boundary positions
+        positions = arrays['positions'][boundary_lists[:, 0]] + offsets + cell.origin
         datas = {
             'atoms_index': np.array(boundary_lists[:, 0]),
             'species_index': species_indexs,

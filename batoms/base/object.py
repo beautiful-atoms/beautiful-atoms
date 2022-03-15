@@ -11,7 +11,158 @@ default_object_datas = {
 }
 
 
-class ObjectGN():
+class BaseObject():
+
+    def __init__(self, obj_name, bobj_name = "batoms"):
+        self.obj_name = obj_name
+        self.bobj_name = bobj_name
+
+    @property
+    def obj(self):
+        return self.get_obj()
+
+    def get_obj(self):
+        obj = bpy.data.objects.get(self.obj_name)
+        if obj is None:
+            raise KeyError('%s object is not exist.' % self.obj_name)
+        return obj
+
+    @property
+    def bobj(self):
+        return self.get_bobj()
+
+    def get_bobj(self):
+        bobj = getattr(self.obj.batoms, self.bobj_name)
+        return bobj
+
+    @property
+    def location(self):
+        return self.get_location()
+
+    def get_location(self):
+        return np.array(self.obj.location)
+
+    @location.setter
+    def location(self, location):
+        self.set_location(location)
+
+    def set_location(self, location):
+        self.obj.location = location
+
+    @property
+    def type(self):
+        return self.get_type()
+    # this is weak, because not work for mesh object
+
+    @type.setter
+    def type(self, type):
+        self.set_type(type)
+
+    def get_type(self):
+        return self.obj.data.type
+
+    def set_type(self, type):
+        self.obj.data.type = type.upper()
+
+    @property
+    def hide(self):
+        return self.get_hide()
+
+    @hide.setter
+    def hide(self, state):
+        self.set_hide(state)
+
+    def get_hide(self):
+        return self.obj.hide_get()
+
+    def set_hide(self, state):
+        self.obj.hide_render = state
+        self.obj.hide_set(state)
+
+    @property
+    def select(self):
+        return self.get_select()
+
+    @select.setter
+    def select(self, state):
+        self.set_select(state)
+
+    def get_select(self):
+        return self.obj.select_get()
+
+    def set_select(self, state):
+        self.obj.select_set(state)
+
+    @property
+    def scene(self):
+        return self.get_scene()
+
+    def get_scene(self):
+        return bpy.data.scenes['Scene']
+
+    @property
+    def look_at(self):
+        return self.get_look_at()
+
+    @look_at.setter
+    def look_at(self, look_at):
+        self.set_look_at(look_at)
+
+    def get_look_at(self):
+        return np.array(self.bobj.look_at)
+
+    def set_look_at(self, look_at):
+        self.bobj.look_at = look_at
+        set_look_at(self.obj, look_at, roll=0.0)
+
+    def translate(self, displacement):
+        """Translate atomic positions.
+
+        The displacement argument is an xyz vector.
+
+        For example, move H species molecule by a vector [0, 0, 5]
+
+        >>> h.translate([0, 0, 5])
+        """
+        object_mode()
+        bpy.ops.object.select_all(action='DESELECT')
+        self.obj.select_set(True)
+        bpy.ops.transform.translate(value=displacement)
+
+    def rotate(self, angle, axis='Z', orient_type='GLOBAL'):
+        """Rotate atomic based on a axis and an angle.
+
+        Parameters:
+
+        angle: float
+            Angle that the atoms is rotated around the axis.
+        axis: str
+            'X', 'Y' or 'Z'.
+
+        For example, rotate h2o molecule 90 degree around 'Z' axis:
+
+        >>> h.rotate(90, 'Z')
+
+        """
+        object_mode()
+        bpy.ops.object.select_all(action='DESELECT')
+        self.obj.select_set(True)
+        bpy.context.view_layer.objects.active = self.obj
+        bpy.ops.transform.rotate(value=angle, orient_axis=axis.upper(),
+                                 orient_type=orient_type)
+
+    def delete_obj(self, name):
+        if name in bpy.data.objects:
+            obj = bpy.data.objects.get(name)
+            bpy.data.objects.remove(obj, do_unlink=True)
+
+    def delete_material(self, name):
+        if name in bpy.data.materials:
+            obj = bpy.data.materials.get(name)
+            bpy.data.materials.remove(obj, do_unlink=True)
+
+
+class ObjectGN(BaseObject):
     """
     Object with Geometry Node
 
@@ -23,12 +174,12 @@ class ObjectGN():
             self.obj_name = '%s_%s' % (label, name)
         else:
             self.obj_name = label
+        
 
     def build_object(self, arrays, attributes={}):
         self.set_attributes(attributes)
         self.build_geometry_node()
         self.set_frames(self._frames, only_basis=False)
-        #
 
     def load(self):
         flag = True
@@ -217,6 +368,28 @@ class ObjectGN():
         self.obj.data.vertices.foreach_get('co', local_positions)
         local_positions = local_positions.reshape((n, 3))
         return local_positions
+    
+    @local_positions.setter
+    def local_positions(self, local_positions):
+        self.set_local_positions(local_positions)
+    
+    def set_local_positions(self, local_positions):
+        """
+        Set local_positions to local vertices
+        """
+        object_mode()
+        from batoms.utils import local2global
+        natom = len(self)
+        if len(local_positions) != natom:
+            raise ValueError('local_positions has wrong shape %s != %s.' %
+                             (len(local_positions), natom))
+        local_positions = local_positions.reshape((natom*3, 1))
+        self.obj.data.shape_keys.key_blocks[0].data.foreach_set(
+            'co', local_positions)
+        self.obj.data.update()
+        bpy.context.view_layer.objects.active = self.obj
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.object.mode_set(mode='OBJECT')
 
     @property
     def positions(self):
@@ -280,7 +453,7 @@ class ObjectGN():
     def frames(self, frames):
         self.set_frames(frames)
 
-    def get_obj_frames(self, obj):
+    def get_obj_frames(self, obj, local=False):
         """
         read shape key
         """
@@ -293,9 +466,12 @@ class ObjectGN():
             sk = obj.data.shape_keys.key_blocks[i]
             sk.data.foreach_get('co', positions)
             local_positions = positions.reshape((n, 3))
-            local_positions = local2global(local_positions,
-                                           np.array(self.obj.matrix_world))
-            frames[i] = local_positions
+            if local:
+                frames[i] = local_positions
+            else:
+                global_positions = local2global(local_positions,
+                                                np.array(self.obj.matrix_world))
+                frames[i] = global_positions
         return frames
 
     def set_frames_positions(self, frames=None, frame_start=0,
@@ -366,156 +542,6 @@ class ObjectGN():
             bpy.data.objects.remove(obj, do_unlink=True)
 
 
-class BaseObject():
-
-    def __init__(self, obj_name, bobj_name):
-        self.obj_name = obj_name
-        self.bobj_name = bobj_name
-
-    @property
-    def obj(self):
-        return self.get_obj()
-
-    def get_obj(self):
-        obj = bpy.data.objects.get(self.obj_name)
-        if obj is None:
-            raise KeyError('%s object is not exist.' % self.obj_name)
-        return obj
-
-    @property
-    def bobj(self):
-        return self.get_bobj()
-
-    def get_bobj(self):
-        bobj = getattr(self.obj.batoms, self.bobj_name)
-        return bobj
-
-    @property
-    def location(self):
-        return self.get_location()
-
-    def get_location(self):
-        return np.array(self.obj.location)
-
-    @location.setter
-    def location(self, location):
-        self.set_location(location)
-
-    def set_location(self, location):
-        self.obj.location = location
-
-    @property
-    def type(self):
-        return self.get_type()
-    # this is weak, because not work for mesh object
-
-    @type.setter
-    def type(self, type):
-        self.set_type(type)
-
-    def get_type(self):
-        return self.obj.data.type
-
-    def set_type(self, type):
-        self.obj.data.type = type.upper()
-
-    @property
-    def hide(self):
-        return self.get_hide()
-
-    @hide.setter
-    def hide(self, state):
-        self.set_hide(state)
-
-    def get_hide(self):
-        return self.obj.hide_get()
-
-    def set_hide(self, state):
-        self.obj.hide_render = state
-        self.obj.hide_set(state)
-
-    @property
-    def select(self):
-        return self.get_select()
-
-    @select.setter
-    def select(self, state):
-        self.set_select(state)
-
-    def get_select(self):
-        return self.obj.select_get()
-
-    def set_select(self, state):
-        self.obj.select_set(state)
-
-    @property
-    def scene(self):
-        return self.get_scene()
-
-    def get_scene(self):
-        return bpy.data.scenes['Scene']
-
-    @property
-    def look_at(self):
-        return self.get_look_at()
-
-    @look_at.setter
-    def look_at(self, look_at):
-        self.set_look_at(look_at)
-
-    def get_look_at(self):
-        return np.array(self.bobj.look_at)
-
-    def set_look_at(self, look_at):
-        self.bobj.look_at = look_at
-        set_look_at(self.obj, look_at, roll=0.0)
-
-    def translate(self, displacement):
-        """Translate atomic positions.
-
-        The displacement argument is an xyz vector.
-
-        For example, move H species molecule by a vector [0, 0, 5]
-
-        >>> h.translate([0, 0, 5])
-        """
-        object_mode()
-        bpy.ops.object.select_all(action='DESELECT')
-        self.obj.select_set(True)
-        bpy.ops.transform.translate(value=displacement)
-
-    def rotate(self, angle, axis='Z', orient_type='GLOBAL'):
-        """Rotate atomic based on a axis and an angle.
-
-        Parameters:
-
-        angle: float
-            Angle that the atoms is rotated around the axis.
-        axis: str
-            'X', 'Y' or 'Z'.
-
-        For example, rotate h2o molecule 90 degree around 'Z' axis:
-
-        >>> h.rotate(90, 'Z')
-
-        """
-        object_mode()
-        bpy.ops.object.select_all(action='DESELECT')
-        self.obj.select_set(True)
-        bpy.ops.transform.rotate(value=angle, orient_axis=axis.upper(),
-                                 orient_type=orient_type)
-
-    def delete_obj(self, name):
-        if name in bpy.data.objects:
-            obj = bpy.data.objects.get(name)
-            bpy.data.objects.remove(obj, do_unlink=True)
-
-    def delete_material(self, name):
-        if name in bpy.data.materials:
-            obj = bpy.data.materials.get(name)
-            bpy.data.materials.remove(obj, do_unlink=True)
-
-
 class childObjectGN():
     """
     Child of Object with Geometry Node
@@ -553,7 +579,7 @@ class childObjectGN():
         """
         from batoms.utils import local2global
         position = local2global(np.array([self.local_position]),
-                                 np.array(self.parent.obj.matrix_world))
+                                np.array(self.parent.obj.matrix_world))
         return position[0]
 
     def set_position(self, position):
