@@ -54,8 +54,8 @@ class Bcell(ObjectGN):
             positions = array[0]
             self._frames = {'positions': [positions]}
         else:
-            print(array.shape)
-        
+            raise Exception('Shape of cell %s is not corrected!' % array.shape)
+
         self.delete_obj(self.obj_name)
         mesh = bpy.data.meshes.new(self.obj_name)
         mesh.from_pydata(positions, self.edges, [])
@@ -72,7 +72,7 @@ class Bcell(ObjectGN):
         else:
             bpy.data.collections['Collection'].objects.link(obj)
         self.build_geometry_node()
-        self.set_frames(self._frames, only_basis=True)
+        self.set_frames(self._frames)
         bpy.context.view_layer.update()
 
     def build_geometry_node(self):
@@ -213,7 +213,7 @@ class Bcell(ObjectGN):
             return
         name = self.label
         obj = self.obj
-        self.set_obj_frames(name, obj, frames)
+        self.set_obj_frames(name, obj, frames["positions"])
 
     def build_cell_cylinder(self):
         #
@@ -238,7 +238,7 @@ class Bcell(ObjectGN):
         return cell_cylinder
 
     def __repr__(self) -> str:
-        numbers = self.array.tolist()
+        numbers = np.round(self.array, 3).tolist()
         s = 'Cell({})'.format(numbers)
         return s
 
@@ -270,10 +270,17 @@ class Bcell(ObjectGN):
         return self.get_array()
 
     def get_array(self):
-        verts = self.local_positions
-        cell = np.array([verts[1] - verts[0],
-                         verts[2] - verts[0],
-                         verts[3] - verts[0]])
+        """
+        In this case, the origin is translated to vertices[0].
+        While the orientation is reserved. 
+        
+        Returns:
+            (3x3 array): The vectors of cell.
+        """
+        positions = self.local_positions
+        cell = np.array([positions[1] - positions[0],
+                         positions[2] - positions[0],
+                         positions[3] - positions[0]])
         return cell
 
     @property
@@ -283,7 +290,7 @@ class Bcell(ObjectGN):
     def array2verts(self, array):
         """
         """
-        verts = np.array([[0, 0, 0],
+        positions = np.array([[0, 0, 0],
                           [1, 0, 0],
                           [0, 1, 0],
                           [0, 0, 1],
@@ -292,8 +299,8 @@ class Bcell(ObjectGN):
                           [0, 1, 1],
                           [1, 1, 1],
                           ])
-        verts = np.dot(verts, array)
-        return verts
+        positions = np.dot(positions, array)
+        return positions
 
     def copy(self, label):
         object_mode()

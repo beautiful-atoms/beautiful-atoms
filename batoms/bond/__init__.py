@@ -680,26 +680,30 @@ class Bonds(BaseCollection, ObjectGN):
         #     return
         attributes = self.attributes
         # same length
-        if arrays['centers'].shape[1] == attributes['show'].shape[0]:
-            # self.positions = arrays['centers']
-            self.set_frames(arrays)
-            self.offsets = [arrays['offsets1'], arrays['offsets2'],
-                            arrays['offsets3'], arrays['offsets4']]
-            self.set_attributes({'atoms_index1': arrays['atoms_index1']})
-            self.set_attributes({'atoms_index2': arrays['atoms_index2']})
-            self.set_attributes({'atoms_index3': arrays['atoms_index3']})
-            self.set_attributes({'atoms_index4': arrays['atoms_index4']})
-            self.set_attributes({'species_index1': arrays['species_index1']})
-            self.set_attributes({'species_index2': arrays['species_index2']})
-            self.set_attributes({'order': arrays['orders']})
-            self.set_attributes({'style': arrays['styles']})
-            self.set_attributes({'model_style': arrays['model_styles']})
-            self.set_attributes({'polyhedra': arrays['polyhedras']})
-            self.update_geometry_node_instancer()
-        else:
-            # add or remove vertices
-            self.build_object(arrays)
-            self.update_geometry_nodes()
+        dnvert = len(arrays['atoms_index1']) - len(attributes['atoms_index1'])
+        if dnvert > 0:
+            # add
+            objs = self.obj_o
+            for obj in objs:
+                self.add_verts(dnvert, obj)
+            self.add_verts(dnvert)
+        elif dnvert < 0:
+            self.delete_verts(-dnvert)
+        # self.positions = arrays['centers']
+        self.set_frames(arrays)
+        self.offsets = [arrays['offsets1'], arrays['offsets2'],
+                        arrays['offsets3'], arrays['offsets4']]
+        self.set_attributes({'atoms_index1': arrays['atoms_index1']})
+        self.set_attributes({'atoms_index2': arrays['atoms_index2']})
+        self.set_attributes({'atoms_index3': arrays['atoms_index3']})
+        self.set_attributes({'atoms_index4': arrays['atoms_index4']})
+        self.set_attributes({'species_index1': arrays['species_index1']})
+        self.set_attributes({'species_index2': arrays['species_index2']})
+        self.set_attributes({'order': arrays['orders']})
+        self.set_attributes({'style': arrays['styles']})
+        self.set_attributes({'model_style': arrays['model_styles']})
+        self.set_attributes({'polyhedra': arrays['polyhedras']})
+        self.update_geometry_node_instancer()
 
     @property
     def offsets(self):
@@ -918,19 +922,6 @@ class Bonds(BaseCollection, ObjectGN):
     def __repr__(self):
         s = "Bonds(Total: {:6d}, {}" .format(len(self), self.arrays)
         return s
-
-    def add_vertices(self, positions):
-        """
-        Todo: find a fast way.
-        """
-        object_mode()
-        positions = positions - self.location
-        bm = bmesh.new()
-        bm.from_mesh(self.obj.data)
-        bm.verts.ensure_lookup_table()
-        for pos in positions:
-            bm.verts.new(pos)
-        bm.to_mesh(self.obj.data)
 
     def build_bondlists(self, species, positions, cell, pbc, setting):
         """

@@ -471,18 +471,23 @@ class Batoms(BaseCollection, ObjectGN):
         #     return
         attributes = self.attributes
         # same length
-        if arrays['positions'].shape[0] == attributes['show'].shape[0]:
+        dnvert = len(arrays['species_index']) - len(attributes['species_index'])
+        if dnvert > 0:
+            # self.obj.data.vertices.add(dnvert)
+            self.add_verts(dnvert)
+            # self.udpate_mesh(self.obj)
+        elif dnvert < 0:
+            self.delete_verts(-dnvert)
+        self.obj.data.update()
+        if "positions" in arrays:
             self.positions = arrays['positions']
-            # self.set_frames(arrays['positions'])
-            self.set_attributes({'species_index': arrays['species_index']})
-            self.set_attributes({'species': arrays['species']})
-            self.set_attributes({'scale': arrays['scale']})
-            self.set_attributes({'show': arrays['show']})
-            self.set_attributes({'model_style': arrays['model_style']})
-            self.set_attributes({'select': arrays['select']})
-        else:
-            # add or remove vertices
-            self.build_object(self.label, arrays, location=self.location)
+        self.set_attributes({'species_index': arrays['species_index']})
+        self.set_attributes({'species': arrays['species']})
+        self.set_attributes({'scale': arrays['scale']})
+        self.set_attributes({'show': arrays['show']})
+        self.set_attributes({'model_style': arrays['model_style']})
+        self.set_attributes({'select': arrays['select']})
+        
 
     @property
     def label(self):
@@ -808,25 +813,6 @@ class Batoms(BaseCollection, ObjectGN):
                                          shape=shapes[shape])
         instancer.parent = self.obj
 
-    def delete_verts(self, index=[]):
-        """
-        delete verts
-        """
-        import bmesh
-        object_mode()
-        obj = self.obj
-        bm = bmesh.new()
-        bm.from_mesh(obj.data)
-        bm.verts.ensure_lookup_table()
-        verts_select = [bm.verts[i] for i in index]
-        bmesh.ops.delete(bm, geom=verts_select, context='VERTS')
-        if len(bm.verts) == 0:
-            bpy.data.objects.remove(self.instancer)
-            bpy.data.objects.remove(obj)
-        else:
-            bm.to_mesh(obj.data)
-            bm.clear()
-
     def delete(self, index=[]):
         """Delete atoms by index.
 
@@ -930,24 +916,8 @@ class Batoms(BaseCollection, ObjectGN):
         for key, data in attributes.items():
             attributes[key] = np.tile(
                 data, (M,) + (1,) * (len(data.shape) - 1))
-        i0 = 0
-        n1 = 0
-        for m0 in range(m[0]):
-            for m1 in range(m[1]):
-                for m2 in range(m[2]):
-                    i1 = i0 + n
-                    positions[i0:i1] += np.dot((m0, m1, m2), cell)
-                    i0 = i1
-                    n1 += 1
-        # self.add_arrays(arrays)
-        # self.set_attributes(attributes)
-        attributes.update({'positions': positions})
+        # positions will be updated in frames
         self.set_arrays(attributes)
-        self.species.update_geometry_node()
-        self.cell.repeat(m)
-        self.update_gn_cell()
-        # if self.volume is not None:
-        # self.volume = np.tile(self.volume, m)
         # repeat frames
         frames_new = []
         for i in range(0, nframe):
@@ -962,6 +932,12 @@ class Batoms(BaseCollection, ObjectGN):
                         i0 = i1
             frames_new.append(positions)
         self.set_frames(frames_new)
+        self.cell.repeat(m)
+        self.update_gn_cell()
+        # if self.volume is not None:
+        # self.volume = np.tile(self.volume, m)
+        self.species.update_geometry_node()
+
         if self._boundary is not None:
             self.boundary.update()
         self.draw()

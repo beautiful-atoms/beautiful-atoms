@@ -161,6 +161,40 @@ class BaseObject():
             obj = bpy.data.materials.get(name)
             bpy.data.materials.remove(obj, do_unlink=True)
 
+    def udpate_mesh(self, obj = None):
+        import bmesh
+        object_mode()
+        if obj is None:
+            obj = self.obj
+        bm = bmesh.new()
+        bm.from_mesh(obj.data)
+        bm.verts.ensure_lookup_table()
+        bm.to_mesh(obj.data)
+        bm.clear()
+
+    def add_verts(self, count, obj = None):
+        import bmesh
+        object_mode()
+        if obj is None:
+            obj = self.obj
+        obj.data.vertices.add(count)
+        self.udpate_mesh(obj)
+
+    def delete_verts(self, index=[], obj = None,):
+        """
+        delete verts
+        """
+        import bmesh
+        object_mode()
+        if obj is None:
+            obj = self.obj
+        bm = bmesh.new()
+        bm.from_mesh(obj.data)
+        bm.verts.ensure_lookup_table()
+        verts_select = [bm.verts[i] for i in index]
+        bmesh.ops.delete(bm, geom=verts_select, context='VERTS')
+        bm.to_mesh(obj.data)
+        bm.clear()
 
 class ObjectGN(BaseObject):
     """
@@ -500,34 +534,41 @@ class ObjectGN(BaseObject):
         # obj = bpy.data.objects.get(name)
         base_name = 'Basis_%s' % (name)
         if obj.data.shape_keys is None:
-            obj.shape_key_add(name=base_name)
+            sk = obj.shape_key_add(name=base_name)
         elif base_name not in obj.data.shape_keys.key_blocks:
-            obj.shape_key_add(name=base_name)
+            sk = obj.shape_key_add(name=base_name)
+        else:
+            sk = obj.data.shape_keys.key_blocks.get(base_name)
+        # set basis key
+        nvert = len(obj.data.shape_keys.key_blocks[0].data)
+        positions = frames[0]
+        vertices = positions.reshape(nvert*3)
+        sk.data.foreach_set('co', vertices)
         if only_basis:
             return
-        nvert = len(obj.data.vertices)
         for i in range(1, nframe):
             name = str(i)
             if name not in obj.data.shape_keys.key_blocks:
                 sk = obj.shape_key_add(name=name)
+                # Add Keyframes, the last one is different
+                if i != nframe - 1:
+                    add_keyframe_to_shape_key(sk, 'value',
+                                            [0, 1, 0],
+                                            [frame_start + i - 1,
+                                            frame_start + i,
+                                            frame_start + i + 1])
+                else:
+                    add_keyframe_to_shape_key(sk, 'value',
+                                            [0, 1],
+                                            [frame_start + i - 1,
+                                            frame_start + i])
             else:
                 sk = obj.data.shape_keys.key_blocks.get(name)
             # Use the local position here
             positions = frames[i]
-            positions = positions.reshape((nvert*3, 1))
-            sk.data.foreach_set('co', positions)
-            # Add Keyframes, the last one is different
-            if i != nframe - 1:
-                add_keyframe_to_shape_key(sk, 'value',
-                                          [0, 1, 0],
-                                          [frame_start + i - 1,
-                                           frame_start + i,
-                                           frame_start + i + 1])
-            else:
-                add_keyframe_to_shape_key(sk, 'value',
-                                          [0, 1],
-                                          [frame_start + i - 1,
-                                           frame_start + i])
+            vertices = positions.reshape((nvert*3, 1))
+            sk.data.foreach_set('co', vertices)
+            
 
     def __len__(self):
         return len(self.obj.data.vertices)

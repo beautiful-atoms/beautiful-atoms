@@ -351,6 +351,9 @@ class Boundary(ObjectGN):
                     boundary_lists, boundary_list, axis=0)
         boundary_datas = self.calc_boundary_data(
             boundary_lists, images[0].arrays, self.batoms.cell)
+        # update unit cell
+        
+        #
         self.set_arrays(boundary_datas)
         self.batoms.draw()
         print('draw bond: {0:10.2f} s'.format(time() - tstart))
