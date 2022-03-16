@@ -144,10 +144,10 @@ class Batoms(BaseCollection, ObjectGN):
             self._cell = Bcell(label, cell, batoms=self)
             positions = np.array(positions)
             if len(positions.shape) == 3:
-                self._frames = positions
-                positions = self._frames[0]
+                self._frames = {"positions": positions}
+                positions = self._frames["positions"][0]
             else:
-                self._frames = np.array([positions])
+                self._frames = {"positions": np.array([positions])}
             #
             natom = len(positions)
             if isinstance(scale, (int, float)):
@@ -474,13 +474,11 @@ class Batoms(BaseCollection, ObjectGN):
         dnvert = len(arrays['species_index']) - len(attributes['species_index'])
         if dnvert > 0:
             # self.obj.data.vertices.add(dnvert)
-            self.add_verts(dnvert)
+            self.add_vertices_bmesh(dnvert)
             # self.udpate_mesh(self.obj)
         elif dnvert < 0:
-            self.delete_verts(-dnvert)
-        self.obj.data.update()
-        if "positions" in arrays:
-            self.positions = arrays['positions']
+            self.delete_vertices_bmesh(-dnvert)
+        self.set_frames(arrays)
         self.set_attributes({'species_index': arrays['species_index']})
         self.set_attributes({'species': arrays['species']})
         self.set_attributes({'scale': arrays['scale']})
@@ -830,7 +828,7 @@ class Batoms(BaseCollection, ObjectGN):
             index = np.where(index)[0]
         if isinstance(index, int):
             index = [index]
-        self.delete_verts(index)
+        self.delete_vertices_bmesh(index)
 
     def __delitem__(self, index):
         """
@@ -843,7 +841,7 @@ class Batoms(BaseCollection, ObjectGN):
         """
         pass
 
-    def get_frames(self, local=False):
+    def get_frames(self, local=True):
         """
         """
         frames = self.get_obj_frames(self.obj, local=local)
@@ -852,12 +850,12 @@ class Batoms(BaseCollection, ObjectGN):
     def set_frames(self, frames=None, frame_start=0, only_basis=False):
         if frames is None:
             frames = self._frames
-        nframe = len(frames)
+        nframe = len(frames['positions'])
         if nframe == 0:
             return
         name = self.label
         obj = self.obj
-        self.set_obj_frames(name, obj, frames)
+        self.set_obj_frames(name, obj, frames['positions'])
 
     def __getitem__(self, index):
         """Return a subset of the Batom.
@@ -909,15 +907,11 @@ class Batoms(BaseCollection, ObjectGN):
         n = len(self)
         frames = self.frames
         nframe = len(frames)
-        positions = self.positions
-        positions = np.tile(positions, (M,) + (1,) *
-                            (len(positions.shape) - 1))
         attributes = self.attributes
         for key, data in attributes.items():
             attributes[key] = np.tile(
                 data, (M,) + (1,) * (len(data.shape) - 1))
         # positions will be updated in frames
-        self.set_arrays(attributes)
         # repeat frames
         frames_new = []
         for i in range(0, nframe):
@@ -931,13 +925,14 @@ class Batoms(BaseCollection, ObjectGN):
                         positions[i0:i1] += np.dot((m0, m1, m2), cell)
                         i0 = i1
             frames_new.append(positions)
-        self.set_frames(frames_new)
+        attributes["positions"] = np.array(frames_new)
+        self.set_arrays(attributes)
+        # self.set_frames(frames_new)
         self.cell.repeat(m)
         self.update_gn_cell()
         # if self.volume is not None:
         # self.volume = np.tile(self.volume, m)
         self.species.update_geometry_node()
-
         if self._boundary is not None:
             self.boundary.update()
         self.draw()
@@ -1661,13 +1656,12 @@ class Batoms(BaseCollection, ObjectGN):
         from ase import Atoms
         frames = self.get_frames()
         arrays = self.arrays
-        arrays = self.arrays
         nframe = len(frames)
         images = []
         for f in range(nframe):
             positions = frames[f]
-            if local:
-                positions -= self.cell.origin
+            if not local:
+                positions += self.cell.origin
             atoms = Atoms(symbols=arrays['elements'],
                           positions=positions,
                           cell=self.cell, pbc=self.pbc)

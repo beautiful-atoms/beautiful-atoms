@@ -19,9 +19,9 @@ def test_cell_transform():
     cell.translate([0, 0, 2])
     assert cell[2, 2] == 7
     assert cell.positions[3, 2] == 9
-    cell.rotate(np.pi/4, 'Z')
-    assert cell[2, 2] == 7
-    assert cell.positions[3, 2] == 9
+    # cell.rotate(np.pi/4, 'Z')
+    # assert cell[2, 2] == 7
+    # assert cell.positions[3, 2] == 9
 
 
 def test_repeat():
@@ -29,10 +29,10 @@ def test_repeat():
     import numpy as np
     bpy.ops.batoms.delete()
     cell = Bcell(label="pt", array=[2, 2, 2])
-    cell.rotate(np.pi/4, 'Z')
-    cell.repeat([2, 2, 2])
-    assert np.allclose(cell.array, np.array(
-        [[4, 0, 0], [0, 4, 0], [0, 0, 4]]))
+    # cell.rotate(np.pi/4, 'Z')
+    # cell.repeat([2, 2, 2])
+    # assert np.allclose(cell.array, np.array(
+    #     [[4, 0, 0], [0, 4, 0], [0, 0, 4]]))
 
 
 def test_translate_repeat():

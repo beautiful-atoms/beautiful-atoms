@@ -161,16 +161,21 @@ class BaseObject():
             obj = bpy.data.materials.get(name)
             bpy.data.materials.remove(obj, do_unlink=True)
 
-    def udpate_mesh(self, obj = None):
+    def update_mesh(self, obj = None):
         import bmesh
         object_mode()
         if obj is None:
             obj = self.obj
-        bm = bmesh.new()
-        bm.from_mesh(obj.data)
-        bm.verts.ensure_lookup_table()
-        bm.to_mesh(obj.data)
-        bm.clear()
+        # bm = bmesh.new()
+        # bm.from_mesh(obj.data)
+        # bm.verts.ensure_lookup_table()
+        # bm.to_mesh(obj.data)
+        # bm.clear()
+        # bpy.context.view_layer.update()
+        # I don't why the shape key is not udpate in background mode, so we need this.
+        bpy.context.view_layer.objects.active = self.obj
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.object.mode_set(mode='OBJECT')
 
     def add_verts(self, count, obj = None):
         import bmesh
@@ -178,9 +183,24 @@ class BaseObject():
         if obj is None:
             obj = self.obj
         obj.data.vertices.add(count)
-        self.udpate_mesh(obj)
+        self.update_mesh(obj)
+    
+    def add_vertices_bmesh(self, count, obj = None):
+        import bmesh
+        import numpy as np
+        object_mode()
+        if obj is None:
+            obj = self.obj
+        bm = bmesh.new()
+        bm.from_mesh(obj.data)
+        bm.verts.ensure_lookup_table()
+        vertices = np.zeros((count, 3))
+        for vert in vertices:
+            bm.verts.new(vert)
+        bm.to_mesh(obj.data)
+        bm.clear()
 
-    def delete_verts(self, index=[], obj = None,):
+    def delete_vertices_bmesh(self, index=[], obj = None,):
         """
         delete verts
         """
@@ -463,11 +483,8 @@ class ObjectGN(BaseObject):
         self.obj.data.shape_keys.key_blocks[0].data.foreach_set(
             'co', positions)
         self.obj.data.update()
-        # bpy.context.view_layer.update()
-        # I don't why the shape key is not udpate in background mode, so we need this.
-        bpy.context.view_layer.objects.active = self.obj
-        bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.object.mode_set(mode='OBJECT')
+        self.update_mesh(obj=object)
+        
 
     @property
     def nframe(self):
@@ -487,7 +504,7 @@ class ObjectGN(BaseObject):
     def frames(self, frames):
         self.set_frames(frames)
 
-    def get_obj_frames(self, obj, local=False):
+    def get_obj_frames(self, obj, local=True):
         """
         read shape key
         """

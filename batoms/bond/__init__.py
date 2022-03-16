@@ -61,6 +61,7 @@ default_bond_datas = {
     # 'eulers':np.eye(3),
     # 'lengths':np.zeros((0, 3)),
     'widths': np.ones(0, dtype=float),
+    'shows': np.zeros(0, dtype=int),
     'orders': np.zeros(0, dtype=int),
     'styles': np.zeros(0, dtype=int),
     'model_styles': np.ones(0, dtype=int),
@@ -685,10 +686,13 @@ class Bonds(BaseCollection, ObjectGN):
             # add
             objs = self.obj_o
             for obj in objs:
-                self.add_verts(dnvert, obj)
-            self.add_verts(dnvert)
+                self.add_vertices_bmesh(dnvert, obj)
+            self.add_vertices_bmesh(dnvert)
         elif dnvert < 0:
-            self.delete_verts(-dnvert)
+            self.delete_vertices_bmesh(range(-dnvert))
+            objs = self.obj_o
+            for obj in objs:
+                self.delete_vertices_bmesh(range(-dnvert), obj)
         # self.positions = arrays['centers']
         self.set_frames(arrays)
         self.offsets = [arrays['offsets1'], arrays['offsets2'],
@@ -699,11 +703,13 @@ class Bonds(BaseCollection, ObjectGN):
         self.set_attributes({'atoms_index4': arrays['atoms_index4']})
         self.set_attributes({'species_index1': arrays['species_index1']})
         self.set_attributes({'species_index2': arrays['species_index2']})
+        self.set_attributes({'show': arrays['shows']})
         self.set_attributes({'order': arrays['orders']})
         self.set_attributes({'style': arrays['styles']})
         self.set_attributes({'model_style': arrays['model_styles']})
         self.set_attributes({'polyhedra': arrays['polyhedras']})
-        self.update_geometry_node_instancer()
+        self.update_geometry_nodes()
+        # self.update_geometry_node_instancer()
 
     @property
     def offsets(self):
@@ -752,7 +758,7 @@ class Bonds(BaseCollection, ObjectGN):
     def set_frames(self, frames=None, frame_start=0, only_basis=False):
         if frames is None:
             frames = self._frames
-        nframe = len(frames)
+        nframe = len(frames['centers'])
         if nframe == 0:
             return
         name = '%s_bond' % (self.label)
@@ -1268,6 +1274,7 @@ class Bonds(BaseCollection, ObjectGN):
         # atoms_index3 and atoms_index4 will be removed for Blender 3.1
         atoms_index3 = np.roll(atoms_index1, 1)
         atoms_index4 = np.roll(atoms_index2, 1)
+        shows = np.ones(nb, dtype=int)
         orders = np.zeros(nb, dtype=int)  # 1, 2, 3
         styles = np.zeros(nb, dtype=int)  # 0, 1, 2
         widths = np.ones(nb, dtype=float)
@@ -1324,6 +1331,7 @@ class Bonds(BaseCollection, ObjectGN):
             'offsets3': offsets3,
             'offsets4': offsets4,
             'widths': widths,
+            'shows': shows,
             'orders': orders,
             'styles': styles,
             'model_styles': model_styles,

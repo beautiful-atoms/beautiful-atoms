@@ -243,7 +243,7 @@ class Bcell(ObjectGN):
         return s
 
     def __getitem__(self, index):
-        return self.array[index]
+        return self.local_array[index]
 
     def __setitem__(self, index, value):
         """Set unit cell vectors.
@@ -253,7 +253,6 @@ class Bcell(ObjectGN):
         Examples:
 
         """
-        obj = self.obj
         array = self.array
         array[index] = value
         positions = self.array2verts(array)
@@ -263,8 +262,26 @@ class Bcell(ObjectGN):
         if dtype != float:
             raise ValueError('Cannot convert cell to array of type {}'
                              .format(dtype))
-        return self.array
+        return self.local_array
 
+    @property
+    def local_array(self):
+        return self.get_local_array()
+
+    def get_local_array(self):
+        """
+        In this case, the origin is translated to vertices[0].
+        While the orientation is reserved. 
+        
+        Returns:
+            (3x3 local_array): The array of cell.
+        """
+        positions = self.local_positions
+        local_array = np.array([positions[1] - positions[0],
+                         positions[2] - positions[0],
+                         positions[3] - positions[0]])
+        return local_array
+    
     @property
     def array(self):
         return self.get_array()
@@ -275,13 +292,13 @@ class Bcell(ObjectGN):
         While the orientation is reserved. 
         
         Returns:
-            (3x3 array): The vectors of cell.
+            (3x3 array): The array of cell.
         """
-        positions = self.local_positions
-        cell = np.array([positions[1] - positions[0],
+        positions = self.positions
+        array = np.array([positions[1] - positions[0],
                          positions[2] - positions[0],
                          positions[3] - positions[0]])
-        return cell
+        return array
 
     @property
     def origin(self):
@@ -308,11 +325,11 @@ class Bcell(ObjectGN):
         return cell
 
     def repeat(self, m):
-        self[:] = np.array([m[c] * self.array[c] for c in range(3)])
+        self[:] = np.array([m[c] * self.local_array[c] for c in range(3)])
 
     @property
     def length(self):
-        length = np.linalg.norm(self.array, axis=0)
+        length = np.linalg.norm(self.local_array, axis=0)
         return length
 
     @property

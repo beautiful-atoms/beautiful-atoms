@@ -1,14 +1,15 @@
 """
 # TODO add locaiton in geometry node
 """
+from time import time
+
 import bpy
 import numpy as np
-from time import time
-from batoms.base.object import ObjectGN
-from batoms.utils.butils import object_mode, compareNodeType
-from batoms.utils import number2String, string2Number
 from ase.geometry import complete_cell
 
+from batoms.base.object import ObjectGN
+from batoms.utils import number2String, string2Number
+from batoms.utils.butils import compareNodeType, object_mode
 
 default_attributes = [
     ['atoms_index', 'INT'],
@@ -331,8 +332,14 @@ class Boundary(ObjectGN):
                                 JoinGeometry.inputs['Geometry'])
 
     def update(self):
+        """Main function to update boundary
+        1) for each frame, search the boundary list
+        2) mearch all boundary list, and find the unique boundary list
+        3) calculate all boundary data
+        """
         object_mode()
         # clean_coll_objects(self.coll, 'bond')
+        frames = self.batoms.get_frames()
         images = self.batoms.as_ase()
         nframe = self.batoms.nframe
         if nframe == 1:
@@ -349,10 +356,11 @@ class Boundary(ObjectGN):
             else:
                 boundary_lists = np.append(
                     boundary_lists, boundary_list, axis=0)
+        boundary_lists = np.unique(boundary_lists, axis=0)
         boundary_datas = self.calc_boundary_data(
-            boundary_lists, images[0].arrays, self.batoms.cell)
+            boundary_lists, images[0].arrays, frames, self.batoms.cell)
         # update unit cell
-        
+
         #
         self.set_arrays(boundary_datas)
         self.batoms.draw()
@@ -412,21 +420,28 @@ class Boundary(ObjectGN):
         # return
         attributes = self.attributes
         # same length
-        if len(arrays['positions']) == len(attributes['show']):
-            self.positions = arrays['positions']
-            self.offsets = arrays['offsets']
-            species_index = [string2Number(sp) for sp in arrays['species']]
-            self.set_attributes({'species_index': species_index,
-                                'scale': arrays['scales'],
-                                 'show': arrays['shows'],
-                                 })
-            # self.obj.location = self.batoms.obj.location
-        else:
-            # add or remove vertices
-            self.build_object(arrays)
-            species = np.unique(arrays['species'])
-            for sp in species:
-                self.add_geometry_node(sp)
+        dnvert = len(arrays['species_index']) - \
+            len(attributes['species_index'])
+        if dnvert > 0:
+            self.add_vertices_bmesh(dnvert)
+            self.add_vertices_bmesh(dnvert, self.obj_o)
+        elif dnvert < 0:
+            self.delete_vertices_bmesh(range(-dnvert))
+            self.delete_vertices_bmesh(range(-dnvert), self.obj_o)
+        self.positions = arrays["positions"][0]
+        self.offsets = arrays["offsets"][0]
+        self.set_frames(arrays)
+        self.update_mesh()
+        species_index = [string2Number(sp) for sp in arrays['species']]
+        self.set_attributes({
+                            'atoms_index': arrays["atoms_index"],
+                            'species_index': species_index,
+                            'scale': arrays['scales'],
+                            'show': arrays['shows'],
+                            })
+        species = np.unique(arrays['species'])
+        for sp in species:
+            self.add_geometry_node(sp)
 
     def get_arrays(self):
         """
@@ -533,7 +548,7 @@ class Boundary(ObjectGN):
         obj = self.obj_o
         self.set_obj_frames(name, obj, frames['offsets'])
 
-    def calc_boundary_data(self, boundary_lists, arrays, cell):
+    def calc_boundary_data(self, boundary_lists, arrays, positions, cell):
         """
         """
         # tstart = time()
@@ -548,14 +563,16 @@ class Boundary(ObjectGN):
         offset_vectors = boundary_lists[:, 1:4]
         offsets = np.dot(offset_vectors, cell)
         # use global positions to build boundary positions
-        positions = arrays['positions'][boundary_lists[:, 0]] + offsets + cell.origin
+        if len(positions.shape) == 2:
+            positions = np.array([positions])
+        positions = positions[:, boundary_lists[:, 0]] + offsets
         datas = {
             'atoms_index': np.array(boundary_lists[:, 0]),
             'species_index': species_indexs,
             'species': species,
             'positions': positions,
             # 'offsets':offsets,
-            'offsets': offset_vectors,
+            'offsets': np.array([offset_vectors]),
             'model_styles': model_styles,
             'shows': shows,
             'selects': selects,
