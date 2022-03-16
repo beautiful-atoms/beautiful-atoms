@@ -125,8 +125,10 @@ class ApplyTransform(OperatorBatoms):
     def execute(self, context):
         transform = [self.a, self.b, self.c]
         batoms = Batoms(label=context.object.batoms.label)
-        batoms.transform(transform)
-        batoms.obj.select_set(True)
+        batoms1 = batoms.transform(transform)
+        # batoms.obj.select_set(True)
+        # batoms1.obj.select_set(False)
+        bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
 
