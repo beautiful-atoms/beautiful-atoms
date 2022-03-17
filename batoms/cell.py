@@ -38,17 +38,27 @@ class Bcell(ObjectGN):
         """
         Draw unit cell by edge, however, can not be rendered.
         """
+        array = np.array(array)
         if array is None:
-            array = np.zeros([3, 3])
-        if not len(array) == 8:
+            positions = np.zeros([8, 3])
+            self._frames = {'positions': [positions]}
+        elif array.shape in [(3, ), (3, 1), (6, ), (6, 1), (3, 3)]:
             cell = Cell.new(array)
-            verts = self.array2verts(cell.array)
-        else:
-            verts = array - array[0]
+            positions = self.array2verts(cell.array)
+            self._frames = {'positions': [positions]}
+        elif array.shape == (8, 3):
+            positions = array - array[0]
             location = array[0]
+            self._frames = {'positions': [positions]}
+        elif len(array.shape) == 3:
+            positions = array[0]
+            self._frames = {'positions': [positions]}
+        else:
+            raise Exception('Shape of cell %s is not corrected!' % array.shape)
+
         self.delete_obj(self.obj_name)
         mesh = bpy.data.meshes.new(self.obj_name)
-        mesh.from_pydata(verts, self.edges, [])
+        mesh.from_pydata(positions, self.edges, [])
         mesh.update()
         for f in mesh.polygons:
             f.use_smooth = True
@@ -62,6 +72,7 @@ class Bcell(ObjectGN):
         else:
             bpy.data.collections['Collection'].objects.link(obj)
         self.build_geometry_node()
+        self.set_frames(self._frames)
         bpy.context.view_layer.update()
 
     def build_geometry_node(self):
@@ -194,6 +205,16 @@ class Bcell(ObjectGN):
         gn.node_group.links.new(VectorSubtracts[4].outputs[0],
                                 SetPositions[3].inputs['Position'])
 
+    def set_frames(self, frames=None, frame_start=0, only_basis=False):
+        if frames is None:
+            frames = self._frames
+        nframe = len(frames)
+        if nframe == 0:
+            return
+        name = self.label
+        obj = self.obj
+        self.set_obj_frames(name, obj, frames["positions"])
+
     def build_cell_cylinder(self):
         #
         cell_cylinder = {'lengths': [],
@@ -204,11 +225,11 @@ class Bcell(ObjectGN):
                          'color': self.color,
                          'battr_inputs': {},
                          }
-        if np.max(abs(self.verts)) < 1e-6:
+        if np.max(abs(self.positions)) < 1e-6:
             return cell_cylinder
         for e in self.edges:
-            center = (self.verts[e[0]] + self.verts[e[1]])/2.0
-            vec = self.verts[e[0]] - self.verts[e[1]]
+            center = (self.positions[e[0]] + self.positions[e[1]])/2.0
+            vec = self.positions[e[0]] - self.positions[e[1]]
             length = np.linalg.norm(vec)
             nvec = vec/length
             cell_cylinder['lengths'].append(length)
@@ -217,12 +238,12 @@ class Bcell(ObjectGN):
         return cell_cylinder
 
     def __repr__(self) -> str:
-        numbers = self.array.tolist()
+        numbers = np.round(self.array, 3).tolist()
         s = 'Cell({})'.format(numbers)
         return s
 
     def __getitem__(self, index):
-        return self.array[index]
+        return self.local_array[index]
 
     def __setitem__(self, index, value):
         """Set unit cell vectors.
@@ -232,55 +253,61 @@ class Bcell(ObjectGN):
         Examples:
 
         """
-        obj = self.obj
         array = self.array
         array[index] = value
-        verts = self.array2verts(array)
-        for i in range(8):
-            obj.data.vertices[i].co = np.array(verts[i])
+        positions = self.array2verts(array)
+        self.local_positions = positions
 
     def __array__(self, dtype=float):
         if dtype != float:
             raise ValueError('Cannot convert cell to array of type {}'
                              .format(dtype))
-        return self.array
+        return self.local_array
 
+    @property
+    def local_array(self):
+        return self.get_local_array()
+
+    def get_local_array(self):
+        """
+        In this case, the origin is translated to vertices[0].
+        While the orientation is reserved. 
+        
+        Returns:
+            (3x3 local_array): The array of cell.
+        """
+        positions = self.local_positions
+        local_array = np.array([positions[1] - positions[0],
+                         positions[2] - positions[0],
+                         positions[3] - positions[0]])
+        return local_array
+    
     @property
     def array(self):
         return self.get_array()
 
     def get_array(self):
-        verts = self.verts
-        cell = np.array([verts[1] - verts[0],
-                         verts[2] - verts[0],
-                         verts[3] - verts[0]])
-        return cell
-
-    @property
-    def local_verts(self):
-        return self.get_local_verts()
-
-    def get_local_verts(self):
-        obj = self.obj
-        return np.array([obj.data.vertices[i].co for i in range(8)])
-
-    @property
-    def verts(self):
-        return self.get_verts()
-
-    def get_verts(self):
-        verts = np.array([self.obj.matrix_world @
-                          self.obj.data.vertices[i].co for i in range(8)])
-        return verts
+        """
+        In this case, the origin is translated to vertices[0].
+        While the orientation is reserved. 
+        
+        Returns:
+            (3x3 array): The array of cell.
+        """
+        positions = self.positions
+        array = np.array([positions[1] - positions[0],
+                         positions[2] - positions[0],
+                         positions[3] - positions[0]])
+        return array
 
     @property
     def origin(self):
-        return self.verts[0]
+        return self.positions[0]
 
     def array2verts(self, array):
         """
         """
-        verts = np.array([[0, 0, 0],
+        positions = np.array([[0, 0, 0],
                           [1, 0, 0],
                           [0, 1, 0],
                           [0, 0, 1],
@@ -289,8 +316,8 @@ class Bcell(ObjectGN):
                           [0, 1, 1],
                           [1, 1, 1],
                           ])
-        verts = np.dot(verts, array)
-        return verts
+        positions = np.dot(positions, array)
+        return positions
 
     def copy(self, label):
         object_mode()
@@ -298,11 +325,11 @@ class Bcell(ObjectGN):
         return cell
 
     def repeat(self, m):
-        self[:] = np.array([m[c] * self.array[c] for c in range(3)])
+        self[:] = np.array([m[c] * self.local_array[c] for c in range(3)])
 
     @property
     def length(self):
-        length = np.linalg.norm(self.array, axis=0)
+        length = np.linalg.norm(self.local_array, axis=0)
         return length
 
     @property

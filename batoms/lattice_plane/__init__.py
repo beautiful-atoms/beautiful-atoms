@@ -55,7 +55,7 @@ class LatticePlane(BaseObject):
 
         """
         cellEdges = bcell.edges
-        cellVerts = bcell.verts
+        cellVerts = bcell.local_positions
         planes = {}
         for p in self.setting:
             intersect_points = []

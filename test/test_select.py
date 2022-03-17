@@ -1,7 +1,6 @@
 import bpy
 import pytest
 from ase.build import molecule, fcc111
-from batoms.utils.butils import removeAll
 from batoms.batoms import Batoms
 import numpy as np
 from time import time
