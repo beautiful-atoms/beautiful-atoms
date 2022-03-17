@@ -52,7 +52,7 @@ default_bond_datas = {
     'atoms_index4': np.ones(0, dtype=int),
     'species_index1': np.ones(0, dtype=int),
     'species_index2': np.ones(0, dtype=int),
-    'centers': np.zeros((0, 3)),
+    'centers': np.zeros((1, 0, 3)),
     # 'vectors':np.zeros((0, 3)),
     'offsets1': np.zeros((0, 3)),
     'offsets2': np.zeros((0, 3)),
@@ -60,12 +60,12 @@ default_bond_datas = {
     'offsets4': np.zeros((0, 3)),
     # 'eulers':np.eye(3),
     # 'lengths':np.zeros((0, 3)),
-    'widths': np.ones(0, dtype=float),
-    'shows': np.zeros(0, dtype=int),
-    'orders': np.zeros(0, dtype=int),
-    'styles': np.zeros(0, dtype=int),
-    'model_styles': np.ones(0, dtype=int),
-    'polyhedras': np.ones(0, dtype=float),
+    # 'widths': np.ones(0, dtype=float),
+    'show': np.zeros(0, dtype=int),
+    'order': np.zeros(0, dtype=int),
+    'style': np.zeros(0, dtype=int),
+    'model_style': np.ones(0, dtype=int),
+    'polyhedra': np.ones(0, dtype=float),
     'second_bond': np.ones(0, dtype=int),
 }
 
@@ -143,10 +143,9 @@ class Bonds(BaseCollection, ObjectGN):
             'species_index1': bond_datas['species_index1'],
             'species_index2': bond_datas['species_index2'],
             'show': show,
-            'model_style': bond_datas['model_styles'],
-            'style': bond_datas['styles'],
-            'order': bond_datas['orders'],
-            'polyhedra': bond_datas['polyhedras'],
+            'model_style': bond_datas['model_style'],
+            'style': bond_datas['style'],
+            'order': bond_datas['order'],
             'second_bond': bond_datas['second_bond'],
         })
         name = self.obj_name
@@ -677,8 +676,6 @@ class Bonds(BaseCollection, ObjectGN):
     def set_arrays(self, arrays):
         """
         """
-        # if len(arrays['centers']) == 0:
-        #     return
         attributes = self.attributes
         # same length
         dnvert = len(arrays['atoms_index1']) - len(attributes['atoms_index1'])
@@ -693,23 +690,13 @@ class Bonds(BaseCollection, ObjectGN):
             objs = self.obj_o
             for obj in objs:
                 self.delete_vertices_bmesh(range(-dnvert), obj)
-        # self.positions = arrays['centers']
         self.set_frames(arrays)
-        self.offsets = [arrays['offsets1'], arrays['offsets2'],
-                        arrays['offsets3'], arrays['offsets4']]
-        self.set_attributes({'atoms_index1': arrays['atoms_index1']})
-        self.set_attributes({'atoms_index2': arrays['atoms_index2']})
-        self.set_attributes({'atoms_index3': arrays['atoms_index3']})
-        self.set_attributes({'atoms_index4': arrays['atoms_index4']})
-        self.set_attributes({'species_index1': arrays['species_index1']})
-        self.set_attributes({'species_index2': arrays['species_index2']})
-        self.set_attributes({'show': arrays['shows']})
-        self.set_attributes({'order': arrays['orders']})
-        self.set_attributes({'style': arrays['styles']})
-        self.set_attributes({'model_style': arrays['model_styles']})
-        self.set_attributes({'polyhedra': arrays['polyhedras']})
+        self.offsets = [arrays.pop('offsets1'), arrays.pop('offsets2'),
+                        arrays.pop('offsets3'), arrays.pop('offsets4')]
+        arrays.pop("centers")
+        self.set_attributes(arrays)
+        self.update_geometry_node_instancer()
         self.update_geometry_nodes()
-        # self.update_geometry_node_instancer()
 
     @property
     def offsets(self):
@@ -1330,12 +1317,12 @@ class Bonds(BaseCollection, ObjectGN):
             'offsets2': offsets2,
             'offsets3': offsets3,
             'offsets4': offsets4,
-            'widths': widths,
-            'shows': shows,
-            'orders': orders,
-            'styles': styles,
-            'model_styles': model_styles,
-            'polyhedras': polyhedras,
+            # 'widths': widths,
+            'show': shows,
+            'order': orders,
+            'style': styles,
+            'model_style': model_styles,
+            'polyhedra': polyhedras,
         }
         # print('datas: ', datas)
         print('calc_bond_data: {0:10.2f} s'.format(time() - tstart))

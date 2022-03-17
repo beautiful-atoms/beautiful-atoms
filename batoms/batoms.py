@@ -1398,7 +1398,7 @@ class Batoms(BaseCollection, ObjectGN):
         from batoms.bond import Bonds, default_bond_datas
         if self._bonds is not None:
             return self._bonds
-        bonds = Bonds(self.label, bond_datas=default_bond_datas,
+        bonds = Bonds(self.label, bond_datas=default_bond_datas.copy(),
                       batoms=self)
         self.bonds = bonds
         return bonds
@@ -1429,7 +1429,7 @@ class Batoms(BaseCollection, ObjectGN):
         from batoms.boundary import Boundary, default_boundary_datas
         if self._boundary is not None:
             return self._boundary
-        boundary = Boundary(self.label, boundary_datas=default_boundary_datas,
+        boundary = Boundary(self.label, boundary_datas=default_boundary_datas.copy(),
                             batoms=self,
                             location=self.location)
         self._boundary = boundary
@@ -1609,7 +1609,7 @@ class Batoms(BaseCollection, ObjectGN):
         mask = np.where(self.model_style >= 1, True, False)
         if not mask.any():
             from batoms.bond import default_bond_datas
-            self.bonds.set_arrays(default_bond_datas)
+            self.bonds.set_arrays(default_bond_datas.copy())
             return
         self.set_attribute_with_indices('scale', mask, scale)
         self.bonds.update()

@@ -85,6 +85,16 @@ def test_bonds_search_bond_2():
     mof.get_image([0, 1, 0], output="mof-5.png", **extras)
 
 
+def test_bonds_search_bond_3():
+    from ase.io import read
+    bpy.ops.batoms.delete()
+    tio2 = read("../test/datas/tio2.cif", ":")
+    tio2 = Batoms("tio2", from_ase=tio2)
+    tio2.boundary = 0.01
+    tio2.model_style = 1
+    # assert len(tio2.bonds.search_bond) < 20
+
+
 def test_hydrogen_bond():
     bpy.ops.batoms.delete()
     ch3oh = Batoms(label="ch3oh", from_ase=molecule("CH3OH"))

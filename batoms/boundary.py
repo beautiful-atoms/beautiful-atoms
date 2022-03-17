@@ -416,8 +416,6 @@ class Boundary(ObjectGN):
     def set_arrays(self, arrays):
         """
         """
-        # if len(arrays['positions']) == 0:
-        # return
         attributes = self.attributes
         # same length
         dnvert = len(arrays['species_index']) - \
@@ -494,7 +492,8 @@ class Boundary(ObjectGN):
         """
         n = len(self)
         offsets = np.empty(n*3, dtype=int)
-        self.obj_o.data.vertices.foreach_get('co', offsets)
+        self.obj_o.data.shape_keys.key_blocks[0].data.foreach_get(
+            'co', offsets)
         return offsets.reshape((n, 3))
 
     @offsets.setter
