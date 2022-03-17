@@ -7,7 +7,7 @@ This module defines the Bonds object in the Batoms package.
 import bpy
 import bmesh
 from time import time
-from batoms.utils.butils import object_mode, compareNodeType
+from batoms.utils.butils import object_mode, compareNodeType, get_nodes_by_name
 from batoms.utils import string2Number, number2String
 import numpy as np
 from batoms.base.object import ObjectGN
@@ -476,19 +476,23 @@ class Bonds(BaseCollection, ObjectGN):
         CompareSpecies0 = get_nodes_by_name(
             gn.node_group.nodes,
             '%s_CompareSpecies_%s_0' % (self.label,
-                                        sp["species1"]))
+                                        sp["species1"]),
+            compareNodeType)
         CompareSpecies1 = get_nodes_by_name(
             gn.node_group.nodes,
             '%s_CompareSpecies_%s_1' % (self.label,
-                                        sp["species2"]))
+                                        sp["species2"]),
+            compareNodeType)
         CompareOrder = get_nodes_by_name(
             gn.node_group.nodes,
             'CompareFloats_%s_%s_order' % (self.label,
-                                           order))
+                                           order),
+            compareNodeType)
         CompareStyle = get_nodes_by_name(
             gn.node_group.nodes,
             'CompareFloats_%s_%s_style' % (self.label,
-                                           style))
+                                           style),
+            compareNodeType)
         #
         CombineXYZ = get_nodes_by_name(
             gn.node_group.nodes,
@@ -532,12 +536,35 @@ class Bonds(BaseCollection, ObjectGN):
                                 JoinGeometry.inputs['Geometry'])
         # print('Add geometry nodes for bonds: %s'%(time() - tstart))
 
+
+    def update_geometry_node_species(self):
+        # find bond kinds by the names of species
+        tstart = time()
+        gn = self.gnodes
+        GroupInput = gn.node_group.nodes[0]
+        for sp in self.batoms.species:
+            # we need two compares for one species,
+            # because we have two sockets: species_index1 and species_index2
+            CompareSpecies = []
+            for i in range(2):
+                tmp = get_nodes_by_name(gn.node_group.nodes,
+                                        '%s_CompareSpecies_%s_%s' % (
+                                            self.label, sp.name, i),
+                                        compareNodeType)
+                tmp.operation = 'EQUAL'
+                tmp.inputs[1].default_value = string2Number(sp.name)
+                CompareSpecies.append(tmp)
+            gn.node_group.links.new(
+                GroupInput.outputs[5], CompareSpecies[0].inputs[0])
+            gn.node_group.links.new(
+                GroupInput.outputs[6], CompareSpecies[1].inputs[0])
+        print('UPdate geometry nodes species for bonds: %s'%(time() - tstart))
+
     def update_geometry_node_instancer(self):
         """
         Make sure all pair has a geometry node flow 
         and the instancer and material are updated.
         """
-        from batoms.utils.butils import get_nodes_by_name
         tstart = time()
         #
         bondlists = self.arrays
@@ -695,6 +722,7 @@ class Bonds(BaseCollection, ObjectGN):
                         arrays.pop('offsets3'), arrays.pop('offsets4')]
         arrays.pop("centers")
         self.set_attributes(arrays)
+        self.update_geometry_node_species()
         self.update_geometry_node_instancer()
         self.update_geometry_nodes()
 

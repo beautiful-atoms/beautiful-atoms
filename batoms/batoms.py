@@ -993,7 +993,7 @@ class Batoms(BaseCollection, ObjectGN):
         other.obj.select_set(True)
         bpy.context.view_layer.objects.active = self.obj
         bpy.ops.object.join()
-        # update species and species_indextsa
+        # update species and species_index
         self._species.extend(other._species)
         self.selects.add(self.label[0:min(4, len(self.label))], indices1)
         self.selects.add(other.label[0:min(4, len(other.label))], indices2)
