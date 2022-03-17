@@ -5,8 +5,15 @@ from ase.build import bulk
 from batoms import Batoms
 import numpy as np
 
-
 def test_boundary():
+    bpy.ops.batoms.delete()
+    o = Batoms('o', ['O'], [[1, 1, 1]],
+               pbc=True,
+               cell=[2, 2, 2])
+    o.boundary = [1, 0, 0]
+    assert len(o.boundary) == 2
+
+def test_boundary_off_origin():
     bpy.ops.batoms.delete()
     au = Batoms("au", from_ase=bulk("Au", cubic=True))
     au.boundary = [1, 1, 0]
@@ -39,14 +46,7 @@ def test_boundary_animation():
     assert len(tio2.boundary.obj.data.vertices) == 9
 
 
-def test_boundary_off_origin():
-    bpy.ops.batoms.delete()
-    o = Batoms('o', ['O'], [[1, 1, 1]],
-               pbc=True,
-               cell=[2, 2, 2])
-    o.boundary = [1, 0, 0]
-    o.translate([1, 0, 0])
-    o.boundary = [1, 0, 0]
+
 
 
 if __name__ == "__main__":
