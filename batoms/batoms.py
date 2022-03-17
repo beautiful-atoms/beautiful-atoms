@@ -1711,34 +1711,22 @@ class Batoms(BaseCollection, ObjectGN):
         return self.coll.batoms.show_label
 
     @show_label.setter
-    def show_label(self, label = 0):
+    def show_label(self, label = "species"):
         arrays = self.arrays
         positions = arrays["positions"]
         if hasattr(self, "_handle_label"):
             bpy.types.SpaceView3D.draw_handler_remove(
                 self._handle_label, 'WINDOW')
             delattr(self, "_handle_label")
-        if label == 0:
+        if label is None:
             return
-        elif label == 1:
+        if label.lower() == "index":
             n = len(positions)
-            label = "index"
-        elif label == 2:
-            label = "species"
-        elif label == 3:
-            label = 'elements'
-        elif label == 4:
-            label = 'magnetic'
-        elif label == 5:
-            label = 'charge'
-        #
-        if label == "index":
             texts = [str(i) for i in range(n)]
+        elif label.lower() in arrays:
+            texts = arrays[label]
         else:
-            if label not in arrays:
-                raise Exception("%s does not have %s attribute"%(self.label, label))
-            else:
-                texts = arrays[label]
+            raise Exception("%s does not have %s attribute"%(self.label, label))
         self._handle_label = bpy.types.SpaceView3D.draw_handler_add(
             self.draw_callback_text, (positions, texts), 'WINDOW', 'POST_PIXEL')
         bpy.context.view_layer.update()
@@ -1760,4 +1748,4 @@ class Batoms(BaseCollection, ObjectGN):
             # draw some text
             blf.position(font_id, coord_2d[0], coord_2d[1], 0)
             blf.size(font_id, 20, 72)
-            blf.draw(font_id, texts[i])
+            blf.draw(font_id, str(texts[i]))
