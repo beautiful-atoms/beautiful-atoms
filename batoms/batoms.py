@@ -1705,3 +1705,36 @@ class Batoms(BaseCollection, ObjectGN):
         batoms.translate(translation)
         # self.hide = True
         return batoms
+
+    def show_label(self, label="ELEMENT"):
+        if label is None:
+            bpy.types.SpaceView3D.draw_handler_remove(self._handle_label, 'WINDOW')
+        else:
+            self._handle_label = bpy.types.SpaceView3D.draw_handler_add(
+                self.draw_callback_text, (), 'WINDOW', 'POST_PIXEL')
+
+    def draw_callback_text(self):
+        from bpy_extras import view3d_utils
+        import blf
+        # get the context arguments
+        positions = self.positions
+        texts = self.elements
+        n = len(positions)
+        if n == 0:
+            return
+        context = bpy.context
+        scene = context.scene
+        region = context.region
+        rv3d = context.region_data
+        # coord = event.mouse_region_x, event.mouse_region_y
+        font_id = 0  # XXX, need to find out how best to get this.
+        for i in range(n):
+            coord = positions[i]
+            coord_2d = view3d_utils.location_3d_to_region_2d(region, rv3d, coord, default=None)
+            # draw some text
+            blf.position(font_id, coord_2d[0], coord_2d[1] + 10, 0)
+            blf.size(font_id, 20, 72)
+            blf.draw(font_id, texts[i])
+
+
+            
