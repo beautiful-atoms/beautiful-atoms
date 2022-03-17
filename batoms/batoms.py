@@ -471,7 +471,8 @@ class Batoms(BaseCollection, ObjectGN):
         #     return
         attributes = self.attributes
         # same length
-        dnvert = len(arrays['species_index']) - len(attributes['species_index'])
+        dnvert = len(arrays['species_index']) - \
+            len(attributes['species_index'])
         if dnvert > 0:
             # self.obj.data.vertices.add(dnvert)
             self.add_vertices_bmesh(dnvert)
@@ -485,7 +486,6 @@ class Batoms(BaseCollection, ObjectGN):
         self.set_attributes({'show': arrays['show']})
         self.set_attributes({'model_style': arrays['model_style']})
         self.set_attributes({'select': arrays['select']})
-        
 
     @property
     def label(self):
@@ -1706,35 +1706,58 @@ class Batoms(BaseCollection, ObjectGN):
         # self.hide = True
         return batoms
 
-    def show_label(self, label="ELEMENT"):
-        if label is None:
-            bpy.types.SpaceView3D.draw_handler_remove(self._handle_label, 'WINDOW')
-        else:
-            self._handle_label = bpy.types.SpaceView3D.draw_handler_add(
-                self.draw_callback_text, (), 'WINDOW', 'POST_PIXEL')
+    @property
+    def show_label(self):
+        return self.coll.batoms.show_label
 
-    def draw_callback_text(self):
+    @show_label.setter
+    def show_label(self, label = 0):
+        arrays = self.arrays
+        positions = arrays["positions"]
+        if hasattr(self, "_handle_label"):
+            bpy.types.SpaceView3D.draw_handler_remove(
+                self._handle_label, 'WINDOW')
+            delattr(self, "_handle_label")
+        if label == 0:
+            return
+        elif label == 1:
+            n = len(positions)
+            label = "index"
+        elif label == 2:
+            label = "species"
+        elif label == 3:
+            label = 'elements'
+        elif label == 4:
+            label = 'magnetic'
+        elif label == 5:
+            label = 'charge'
+        #
+        if label == "index":
+            texts = [str(i) for i in range(n)]
+        else:
+            if label not in arrays:
+                raise Exception("%s does not have %s attribute"%(self.label, label))
+            else:
+                texts = arrays[label]
+        self._handle_label = bpy.types.SpaceView3D.draw_handler_add(
+            self.draw_callback_text, (positions, texts), 'WINDOW', 'POST_PIXEL')
+        bpy.context.view_layer.update()
+
+    def draw_callback_text(self, positions, texts):
         from bpy_extras import view3d_utils
         import blf
         # get the context arguments
-        positions = self.positions
-        texts = self.elements
-        n = len(positions)
-        if n == 0:
-            return
         context = bpy.context
         scene = context.scene
         region = context.region
         rv3d = context.region_data
-        # coord = event.mouse_region_x, event.mouse_region_y
-        font_id = 0  # XXX, need to find out how best to get this.
+        font_id = 0  
+        n = len(positions)
         for i in range(n):
             coord = positions[i]
-            coord_2d = view3d_utils.location_3d_to_region_2d(region, rv3d, coord, default=None)
+            coord_2d = view3d_utils.location_3d_to_region_2d(
+                region, rv3d, coord, default=None)
             # draw some text
-            blf.position(font_id, coord_2d[0], coord_2d[1] + 10, 0)
+            blf.position(font_id, coord_2d[0], coord_2d[1], 0)
             blf.size(font_id, 20, 72)
             blf.draw(font_id, texts[i])
-
-
-            
