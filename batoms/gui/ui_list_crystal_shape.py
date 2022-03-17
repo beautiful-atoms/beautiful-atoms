@@ -37,7 +37,7 @@ class BATOMS_UL_crystal_shapes(UIList):
 
 class BATOMS_PT_crystal_shapes(Panel):
     bl_label = "Crystal Shape"
-    bl_category = "Plane"
+    bl_category = "Surface"
     bl_idname = "BATOMS_PT_crystal_shapes"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"

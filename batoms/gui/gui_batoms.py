@@ -31,6 +31,8 @@ class Batoms_PT_prepare(Panel):
         layout.label(text="Model style")
         col = layout.column()
         col.prop(bapanel, "model_style", expand=True)
+        layout.label(text="Add label")
+        layout.prop(bapanel, "show_label", expand=True)
         layout.label(text="Radius style")
         layout.prop(bapanel, "radius_style", expand=True)
         layout.label(text="Color style")
@@ -50,6 +52,13 @@ class BatomsProperties(bpy.types.PropertyGroup):
         bapanel = bpy.context.scene.bapanel
         model_style = list(bapanel.model_style)[0]
         modify_batoms_attr(context, 'model_style', model_style)
+    
+    def Callback_show_label(self, context):
+        bapanel = bpy.context.scene.bapanel
+        show_label = list(bapanel.show_label)[0]
+        if show_label == 'none':
+            show_label = None
+        modify_batoms_attr(context, 'show_label', show_label)
 
     def Callback_radius_style(self, context):
         bapanel = bpy.context.scene.bapanel
@@ -87,6 +96,19 @@ class BatomsProperties(bpy.types.PropertyGroup):
                ('3', "Stick", "Use stick")),
         default={'0'},
         update=Callback_model_style,
+        options={'ENUM_FLAG'},
+    )
+
+    show_label: EnumProperty(
+        name="show_label",
+        description="Structural models",
+        items=(('none', "None", "None"),
+               ('index', "Index", "Index"),
+               ('species', "Species", "Species"),
+               ('charge', "Charge", "charge"),
+               ),
+        default={'none'},
+        update=Callback_show_label,
         options={'ENUM_FLAG'},
     )
 

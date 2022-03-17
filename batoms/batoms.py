@@ -1705,6 +1705,19 @@ class Batoms(BaseCollection, ObjectGN):
         batoms.translate(translation)
         # self.hide = True
         return batoms
+    
+    @property
+    def draw_text(self):
+        """draw_text object.
+        Shoud be a global variable.
+        """
+        from batoms.draw.draw_screen import DrawText
+        dns = bpy.app.driver_namespace
+        if self.label in dns:
+            return dns[self.label]
+        context = bpy.context             
+        dns[self.label] = DrawText(context, self.label)
+        return dns[self.label]
 
     @property
     def show_label(self):
@@ -1712,12 +1725,10 @@ class Batoms(BaseCollection, ObjectGN):
 
     @show_label.setter
     def show_label(self, label = "species"):
+        self.coll.batoms.show_label = str(label)
         arrays = self.arrays
         positions = arrays["positions"]
-        if hasattr(self, "_handle_label"):
-            bpy.types.SpaceView3D.draw_handler_remove(
-                self._handle_label, 'WINDOW')
-            delattr(self, "_handle_label")
+        self.draw_text.remove_handle()
         if label is None:
             return
         if label.lower() == "index":
@@ -1727,25 +1738,6 @@ class Batoms(BaseCollection, ObjectGN):
             texts = arrays[label]
         else:
             raise Exception("%s does not have %s attribute"%(self.label, label))
-        self._handle_label = bpy.types.SpaceView3D.draw_handler_add(
-            self.draw_callback_text, (positions, texts), 'WINDOW', 'POST_PIXEL')
-        bpy.context.view_layer.update()
+        self.draw_text.add_handle(positions, texts)
 
-    def draw_callback_text(self, positions, texts):
-        from bpy_extras import view3d_utils
-        import blf
-        # get the context arguments
-        context = bpy.context
-        scene = context.scene
-        region = context.region
-        rv3d = context.region_data
-        font_id = 0  
-        n = len(positions)
-        for i in range(n):
-            coord = positions[i]
-            coord_2d = view3d_utils.location_3d_to_region_2d(
-                region, rv3d, coord, default=None)
-            # draw some text
-            blf.position(font_id, coord_2d[0], coord_2d[1], 0)
-            blf.size(font_id, 20, 72)
-            blf.draw(font_id, str(texts[i]))
+    
