@@ -37,7 +37,7 @@ class BATOMS_UL_polyhedra(UIList):
 
 class BATOMS_PT_polyhedra(Panel):
     bl_label = "polyhedra"
-    bl_category = "Polyhedra"
+    bl_category = "Bond"
     bl_idname = "BATOMS_PT_polyhedra"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"

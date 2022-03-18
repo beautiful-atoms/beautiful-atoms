@@ -37,7 +37,7 @@ class BATOMS_UL_lattice_planes(UIList):
 
 class BATOMS_PT_lattice_planes(Panel):
     bl_label = "Lattice Plane"
-    bl_category = "Plane"
+    bl_category = "Surface"
     bl_idname = "BATOMS_PT_Lattice_Planes"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
