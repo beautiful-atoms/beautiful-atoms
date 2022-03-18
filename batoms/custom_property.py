@@ -39,6 +39,7 @@ class Bspecies(bpy.types.PropertyGroup):
     color: FloatVectorProperty(
         name="color", size=4,
         subtype='COLOR',
+        min=0, max=1,
         default=(0, 0.2, 0.8, 1))
 
     @property
@@ -109,10 +110,12 @@ class Bbond(bpy.types.PropertyGroup):
     color1: FloatVectorProperty(
         name="color1", size=4,
         subtype='COLOR',
+        min=0, max=1,
         default=(0, 0.2, 0.8, 1))
     color2: FloatVectorProperty(
         name="color2", size=4,
         subtype='COLOR',
+        min=0, max=1,
         default=(0.6, 0.2, 0, 1))
     width: FloatProperty(name="width", default=0.10)
     order: IntProperty(name="order", default=1)
@@ -176,6 +179,7 @@ class Bpolyhedra(bpy.types.PropertyGroup):
     name: StringProperty(name="name")
     color: FloatVectorProperty(name="color",
                                subtype='COLOR',
+                               min=0, max=1,
                                size=4)
     width: FloatProperty(name="width", min=0, soft_max=1, default=0.01)
     show_edge: BoolProperty(name="show_edge", default=True)
@@ -214,6 +218,7 @@ class Bisosurface(bpy.types.PropertyGroup):
     level: FloatProperty(name="level", default=0.10)
     color: FloatVectorProperty(name="color", size=4,
                                subtype='COLOR',
+                               min=0, max=1,
                                default=[1, 1, 0, 0.5],
                                )
 
@@ -248,6 +253,7 @@ class Bplane(bpy.types.PropertyGroup):
                             default=1)
     color: FloatVectorProperty(name="color", size=4,
                                subtype='COLOR',
+                               min=0, max=1,
                                default=[0, 0, 1, 0.5]
                                )
     crystal: BoolProperty(name="crystal", default=False)
@@ -490,6 +496,7 @@ class Bms(bpy.types.PropertyGroup):
     select: StringProperty(name="select", default='all')
     color: FloatVectorProperty(name="color", size=4,
                                subtype='COLOR',
+                               min=0, max=1,
                                default=[0, 1, 1, 1.0])
 
     def as_dict(self) -> dict:

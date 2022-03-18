@@ -329,7 +329,7 @@ class Bcell(ObjectGN):
 
     @property
     def length(self):
-        length = np.linalg.norm(self.local_array, axis=0)
+        length = np.linalg.norm(self.local_array, axis=1)
         return length
 
     @property
