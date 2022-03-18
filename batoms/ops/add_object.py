@@ -5,15 +5,12 @@ https://wiki.fysik.dtu.dk/ase/ase/build/build.html?highlight=nanotube#
 import bpy
 from bpy.types import Operator
 from bpy.props import (StringProperty,
-                       IntProperty,
-                       IntVectorProperty,
                        FloatProperty,
                        FloatVectorProperty,
                        BoolProperty,
                        )
 from ase.build import molecule, bulk
 from ase import Atoms
-from batoms.utils.butils import get_selected_batoms
 from batoms import Batoms
 
 
@@ -155,103 +152,3 @@ class AddAtoms(Operator):
         bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
-
-class AddSurface(Operator):
-    @property
-    def selected_batoms(self):
-        return get_selected_batoms()
-    bl_idname = "batoms.surface_add"
-    bl_label = "Add surface"
-    bl_options = {'REGISTER', 'UNDO'}
-    bl_description = ("Add surface")
-
-    label: StringProperty(
-        name="Label", default='surf',
-        description="Label")
-
-    indices: IntVectorProperty(
-        name="Miller indices", size=3, default=(1, 1, 1),
-        soft_min=-10, soft_max=10,
-        description="Miller indices for the plane")
-
-    size: IntVectorProperty(
-        name="Size", size=3, default=(1, 1, 1),
-        min=1, soft_max=10,
-        description="System size in units of the minimal unit cell.")
-
-    vacuum: FloatProperty(
-        name="vacuum", default=5.0,
-        min=0, soft_max=15,
-        description="vacuum")
-
-    nlayer: IntProperty(name="layers", min=1, soft_max=10, default=4)
-
-    termination: StringProperty(
-        name="termination", default='',
-        description="termination")
-
-    def execute(self, context):
-        from ase.build import surface
-        from ase.build.surfaces_with_termination import surfaces_with_termination
-        selected_batoms = self.selected_batoms
-        if len(selected_batoms) != 1:
-            raise Exception('Please select one structure')
-        batoms = Batoms(selected_batoms[0])
-        bulk = batoms.as_ase()
-        if len(self.termination) == 0:
-            atoms = surface(bulk, self.indices,
-                            self.nlayer, self.vacuum)
-        else:
-            atoms = surfaces_with_termination(bulk, self.indices,
-                                              self.nlayer, self.vacuum,
-                                              termination=self.termination)
-        batoms.hide = True
-        label = batoms.label + ''.join(str(i) for i in self.indices)
-        if self.label in bpy.data.collections:
-            self.label = "%s.001"%self.label
-        batoms = Batoms(label=label, from_ase=atoms, movie=True)
-        batoms = batoms*self.size
-        batoms.translate([2, 2, 2])
-        batoms.obj.select_set(True)
-        bpy.context.view_layer.objects.active = batoms.obj
-        return {'FINISHED'}
-
-
-class AddRootSurface(Operator):
-    @property
-    def selected_batoms(self):
-        return get_selected_batoms()
-    bl_idname = "batoms.root_surface_add"
-    bl_label = "Add root surface"
-    bl_options = {'REGISTER', 'UNDO'}
-    bl_description = ("Add root surface")
-
-    label: StringProperty(
-        name="Label", default='rootsurf',
-        description="Label")
-
-    root: IntProperty(name="root", min=1, soft_max=49, default=3)
-
-    size: IntVectorProperty(
-        name="Size", size=3, default=(1, 1, 1),
-        min=1, soft_max=10,
-        description="System size in units of the minimal unit cell.")
-
-    def execute(self, context):
-        from ase.build import root_surface
-        selected_batoms = self.selected_batoms
-        if len(selected_batoms) != 1:
-            raise Exception('Please select one structure')
-        batoms = Batoms(selected_batoms[0])
-        surf = batoms.as_ase()
-        atoms = root_surface(surf, self.root)
-        batoms.hide = True
-        label = batoms.label + '_root'
-        atoms = atoms*self.size
-        if self.label in bpy.data.collections:
-            self.label = "%s.001"%self.label
-        batoms = Batoms(label=label, from_ase=atoms, movie=True)
-        batoms.translate([2, 2, 2])
-        batoms.obj.select_set(True)
-        bpy.context.view_layer.objects.active = batoms.obj
-        return {'FINISHED'}
