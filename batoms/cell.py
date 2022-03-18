@@ -29,7 +29,7 @@ class Bcell(ObjectGN):
                       [3, 5], [2, 6], [7, 5], [7, 6],
                       [0, 2], [3, 6], [1, 5], [4, 7]
                       ]
-        self.width = 0.02
+        self.width = 0.1
         self.color = color
         if array is not None:
             self.build_object(array, location)
@@ -404,14 +404,18 @@ class Bcell(ObjectGN):
         name = '%s_cell_bevel_object' % (self.label)
         return bpy.data.objects.get(name)
 
-    def draw_cell(self):
+    def draw(self):
         """Draw unit cell
         """
         object_mode()
         name = '%s_%s_%s' % (self.label, 'cell', 'cylinder')
-        clean_coll_objects(self.coll, 'cylinder')
+        self.delete_obj(name)
         cell_cylinder = self.build_cell_cylinder()
+        if self.batoms is not None:
+            coll = self.batoms.coll
+        else:
+            coll = bpy.data.collections["Collection"]
         draw_cylinder(name=name,
                       datas=cell_cylinder,
-                      coll=self.batoms.coll
+                      coll=coll
                       )
