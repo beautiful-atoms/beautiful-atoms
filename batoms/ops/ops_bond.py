@@ -92,9 +92,7 @@ class BondModify(Operator):
         name="style", default='0',
         description="style")
 
-    search: IntProperty(name="Search mode", default=0,
-                        )
-    polyhedra: BoolProperty(name="polyhedra", default=False,
+    show: BoolProperty(name="show", default=False,
                             )
     order: IntProperty(name="Bond order", default=1,
                        )
@@ -118,4 +116,5 @@ class BondModify(Operator):
             setattr(batoms.bonds[i], self.key, getattr(self, self.key))
         # batoms.draw()
         context.view_layer.objects.active = obj
+        bpy.ops.object.mode_set(mode = 'EDIT')
         return {'FINISHED'}

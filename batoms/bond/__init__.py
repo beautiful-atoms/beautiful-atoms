@@ -595,6 +595,11 @@ class Bonds(BaseCollection, ObjectGN):
                 print("change materials: %s" % sp["name"])
                 self.setting.build_materials(sp)
                 self.setting.assign_materials(sp, sp["order"], sp["style"])
+            # compare radius
+            if not np.isclose(sp["width"], 
+                    self.setting.instancers[sp["name"]][order_style].batoms.bond.width):
+                self.setting.build_instancer(sp)
+                self.setting.assign_materials(sp, sp["order"], sp["style"])
             # update  instancers
             name = 'bond_%s_%s_%s_%s' % (self.label, sp["name"],
                                          sp["order"], sp["style"])
@@ -1051,9 +1056,9 @@ class Bonds(BaseCollection, ObjectGN):
         # print(bondlists)
         bondlists = bondlists.astype(int)
         bondlists = np.unique(bondlists, axis=0)
-        # self.peciesBondLists = peciesBondLists
-        # self.molPeciesDatas = molPeciesDatas
-        # self.peciesBondDatas = peciesBondDatas
+        self.peciesBondLists = peciesBondLists
+        self.molPeciesDatas = molPeciesDatas
+        self.peciesBondDatas = peciesBondDatas
         return bondlists, bonddatas, peciesBondDatas, molPeciesDatas
 
     def build_peciesBondLists(self, natom, bondlists):
@@ -1162,7 +1167,7 @@ class Bonds(BaseCollection, ObjectGN):
                     mollist[5:8] = offsets
                     peciesBondLists = np.append(
                         peciesBondLists, np.array([mollist]), axis=0)
-
+        self.molDatas = molDatas
         return peciesBondLists, molPeciesDatas
 
     def build_bondlists_with_boundary(self, arrays, bondlists, bonddatas,

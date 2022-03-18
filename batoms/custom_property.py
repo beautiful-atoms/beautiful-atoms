@@ -129,6 +129,14 @@ class Bbond(bpy.types.PropertyGroup):
                ('2', "Dashed line", ""),
                ('3', "Spring", "Spring")),
         default='1')
+    type: EnumProperty(
+        name="type",
+        description="bond type",
+        items=(('0', "Normal", ""),
+               ('1', "Hydrogen", ""),
+               ('2', "Aromaticity", ""),
+               ),
+        default='0')
 
     @property
     def name(self) -> str:

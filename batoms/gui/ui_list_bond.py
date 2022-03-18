@@ -107,6 +107,7 @@ class BATOMS_PT_bond_pairs(Panel):
             sub = col.column(align=True)
             sub.prop(kb, "min", text="Min")
             sub.prop(kb, "max", text="Max")
+            sub.prop(kb, "width", text="Width")
             col.prop(kb, "search", text="Search")
             col.prop(kb, "style", text="Style")
             col.prop(kb, "order", text="Order")

@@ -53,10 +53,19 @@ def test_copy():
     assert np.isclose(reciprocal[0, 0], 3.14159)
 
 
+def test_draw():
+    bpy.ops.batoms.delete()
+    cell = Bcell(label="pt", array=[2, 2, 2])
+    cell.width = 0.1
+    cell.color = [1, 0, 0, 1]
+    cell.draw()
+
+
 if __name__ == "__main__":
     test_cell()
     test_cell_transform()
     test_repeat()
     test_translate_repeat()
     test_copy()
+    test_draw()
     print("\n Cell: All pass! \n")
