@@ -1446,6 +1446,7 @@ class Batoms(BaseCollection, ObjectGN):
                                     [-boundary[2], 1 + boundary[2]]])
             elif len(boundary[0]) == 2:
                 boundary = np.array(boundary)
+        self.update_gn_cell()
         self.boundary[:] = boundary
 
     @property

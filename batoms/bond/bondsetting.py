@@ -219,7 +219,7 @@ class BondSettings(Setting):
         else:
             obj = self.cylinder(name, order=order, style=style,
                                 vertices=vertices, depth=1, radius=radius)
-        obj.batoms.atom.radius = radius
+        obj.batoms.bond.width = sp['width']
         obj.batoms.type = 'INSTANCER'
         #
         for coll in obj.users_collection:
@@ -656,9 +656,11 @@ class BondSettings(Setting):
         if pair in default_bonds:
             search = default_bonds[pair][0]
             polyhedra = default_bonds[pair][1]
+            bondtype = str(default_bonds[pair][2])
         else:
             search = 1
             polyhedra = 0
+            bondtype = '0'
         bond = {
             'label': self.label,
             'species1': sp1,
@@ -669,19 +671,17 @@ class BondSettings(Setting):
             'polyhedra': polyhedra,
             'color1': props[sp1]['color'],
             'color2': props[sp2]['color'],
-            'width': 0.10,
             'order': 1,
             'order_offset': 0.15,
             'style': '1',
+            'type': bondtype,
         }
         # special for hydrogen bond
-        hbs = [('H', 'O'), ('H', 'N'), ('H', 'C')]
-        if pair in hbs:
+        if bondtype == '1':
             bond['min'] = 1.5
-            bond['max'] = 2.1
+            bond['max'] = 2.5
             bond['search'] = 0
             bond['color1'] = [0.1, 0.1, 0.1, 1.0]
-            bond['width'] = 0.03
             bond['style'] = '2'
         return bond
 

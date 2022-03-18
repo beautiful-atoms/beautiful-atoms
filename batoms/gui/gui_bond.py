@@ -25,8 +25,7 @@ class Bond_PT_prepare(Panel):
         col.prop(bbpanel, "bond_style", expand=True)
         layout.prop(bbpanel, "bondwidth")
         layout.prop(bbpanel, "order")
-        layout.prop(bbpanel, "search")
-        layout.prop(bbpanel, "polyhedra")
+        layout.prop(bbpanel, "show")
 
 
 class BondProperties(bpy.types.PropertyGroup):
@@ -40,15 +39,10 @@ class BondProperties(bpy.types.PropertyGroup):
         bondwidth = bbpanel.bondwidth
         bpy.ops.bond.bond_modify(key='width', bondwidth=bondwidth)
 
-    def Callback_modify_search(self, context):
+    def Callback_modify_show(self, context):
         bbpanel = bpy.context.scene.bbpanel
-        search = bbpanel.search
-        bpy.ops.bond.bond_modify(key='search', search=search)
-
-    def Callback_modify_polyhedra(self, context):
-        bbpanel = bpy.context.scene.bbpanel
-        polyhedra = bbpanel.polyhedra
-        bpy.ops.bond.bond_modify(key='polyhedra', polyhedra=polyhedra)
+        show = bbpanel.show
+        bpy.ops.bond.bond_modify(key='show', show=show)
 
     def Callback_modify_order(self, context):
         bbpanel = bpy.context.scene.bbpanel
@@ -70,10 +64,8 @@ class BondProperties(bpy.types.PropertyGroup):
         name="bondwidth", default=0.1,
         min=0, soft_max=1,
         description="bondwidth", update=Callback_modify_bondwidth)
-    search: IntProperty(name="Search mode", default=0,
-                        update=Callback_modify_search)
-    polyhedra: BoolProperty(name="polyhedra", default=False,
-                            update=Callback_modify_polyhedra)
     order: IntProperty(name="Bond order", default=1,
                        min=1, max=3,
                        update=Callback_modify_order)
+    show: BoolProperty(name="show", default=False,
+                            update=Callback_modify_show)
