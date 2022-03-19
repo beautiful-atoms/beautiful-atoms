@@ -245,6 +245,28 @@ def install(
     proc = subprocess.run(commands)
     if proc.returncode != 0:
         raise RuntimeError(f"Error updating conda env. Error is {proc.stderr}")
+    
+    # Extra steps (windows only), replace the numpy version with pip's numpy
+    # since python on windows comes with wheel this should be relatively straighforward
+    # TODO: clean up series of commands
+    if _get_os_name() in ["windows",]:
+        commands = [
+            "python",
+            "-m",
+            "pip",
+            "uninstall",
+            "numpy",
+        ]
+        subprocess.run(commands)
+
+        commands = [
+            "python",
+            "-m",
+            "pip",
+            "install",
+            "numpy",
+        ]
+        subprocess.run(commands)
 
     # Symlink the conda env python --> `blender_root` / "python"
     # scenarios:
