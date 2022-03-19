@@ -86,7 +86,7 @@ def remove_collection(name, keep_batom=True):
     objs = collection.all_objects.keys()
     for obj in objs:
         obj = bpy.data.objects.get(obj)
-        if keep_batom and obj.batoms.atom:
+        if keep_batom and obj.batoms.type != "OTHER":
             continue
         bpy.data.objects.remove(obj, do_unlink=True)
     collection = bpy.data.collections.get(name)
@@ -115,6 +115,15 @@ def clean_coll_objects(coll, names=None):
             for obj in coll.all_objects:
                 if name in obj.name:
                     bpy.data.objects.remove(obj, do_unlink=True)
+
+
+def clean_coll_object_by_type(coll, type):
+    """
+    remove all bond object in the bond collection
+    """
+    for obj in coll.all_objects:
+        if obj.batoms.type == type:
+            bpy.data.objects.remove(obj, do_unlink=True)
 
 
 def removeAll():

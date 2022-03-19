@@ -41,7 +41,6 @@ default_polyhedra_datas = {
     'faces': [],
     'widths': np.ones(0, dtype=float),
     'show': np.zeros(0, dtype=int),
-    'styles': np.zeros(0, dtype=int),
 }
 
 
@@ -128,7 +127,6 @@ class Polyhedras(ObjectGN):
             'face_species_index': datas['face_species_index'],
             'show': show,
             # 'model_style': datas['model_styles'],
-            'style': datas['styles'],
         })
         name = self.obj_name
         self.delete_obj(name)
@@ -342,6 +340,27 @@ class Polyhedras(ObjectGN):
         # bpy.context.scene.frame_set(self.batoms.nframe)
         print('draw polyhedra: {0:10.2f} s'.format(time() - tstart))
 
+    def update_geometry_node_material(self):
+        """
+        Make sure all species has a geometry node flow 
+        and the material are updated.
+        """
+        from batoms.utils.butils import get_nodes_by_name
+        tstart = time()
+        for sp in self.setting:
+            sp = sp.as_dict()
+            # update material in geometry node
+            self.setting.build_materials(sp)
+        self.assign_materials()
+        for i in range(len(self.setting.collection)):
+            sp = self.setting.collection[i]
+            setMaterialIndex = get_nodes_by_name(self.gnodes.node_group.nodes,
+                                                '%s_setMaterialIndex_%s' % (
+                                                    self.label, sp["species"]),
+                                                'GeometryNodeSetMaterialIndex')
+            setMaterialIndex.inputs[2].default_value = i
+        print('update bond instancer: %s'%(time() - tstart))
+
     @property
     def obj_o(self):
         return self.get_obj_o()
@@ -386,7 +405,7 @@ class Polyhedras(ObjectGN):
             self.set_attributes({'species_index': arrays['species_index']})
             self.set_attributes(
                 {'face_species_index': arrays['face_species_index']})
-            self.set_attributes({'style': arrays['styles']})
+            self.update_geometry_node_material()
         else:
             # add or remove vertices, rebuild the object
             self.build_object(arrays)
@@ -487,7 +506,6 @@ class Polyhedras(ObjectGN):
         atoms_index1 = np.zeros(npoly, dtype=int)  # 0, 1, 2
         atoms_index2 = np.zeros(npoly, dtype=int)  # 0, 1, 2
         face_species_index = np.zeros(npoly, dtype=int)  # 0, 1, 2
-        styles = np.zeros(npoly, dtype=int)  # 0, 1, 2
         widths = np.ones(npoly, dtype=float)
         species_index = np.zeros(npoly, dtype=int)
         # ------------------------------------
@@ -544,7 +562,6 @@ class Polyhedras(ObjectGN):
                     nf1 = nf + dnf
                     atoms_index1[nv:nv1] = bondlist1[mask, 0]
                     atoms_index2[nv:nv1] = bondlist1[mask, 1]
-                    styles[nv:nv1] = int(poly.style)
                     widths[nv:nv1] = poly.width
                     species_index[nv:nv1] = string2Number(poly.species)
                     face_species_index[nf:nf1] = string2Number(poly.species)
@@ -565,7 +582,6 @@ class Polyhedras(ObjectGN):
                 'widths': widths[0:n],
                 'edges': edges,
                 'faces': faces,
-                'styles': styles[0:n],
                 'model_styles': model_styles,
             }
         # print('datas: ', datas)

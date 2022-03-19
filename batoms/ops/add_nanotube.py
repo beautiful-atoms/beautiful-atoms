@@ -5,12 +5,9 @@ https://wiki.fysik.dtu.dk/ase/ase/build/build.html?highlight=nanotube#ase.build.
 
 import bpy
 from bpy.types import Operator
-from bpy_extras.object_utils import AddObjectHelper
 from bpy.props import (StringProperty,
                        IntProperty,
-                       IntVectorProperty,
                        FloatProperty,
-                       FloatVectorProperty,
                        BoolProperty,
                        )
 from ase.build import nanotube
@@ -71,5 +68,7 @@ class BuildNanotube(Operator):
             symbol=self.symbol,
             vacuum=self.vacuum,
             verbose=self.verbose)
-        Batoms(label=self.label, from_ase=atoms)
+        batoms = Batoms(label=self.label, from_ase=atoms)
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}

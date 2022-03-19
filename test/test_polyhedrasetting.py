@@ -1,13 +1,23 @@
+import bpy
 import pytest
-from batoms.utils.butils import removeAll
 from batoms.batoms import Batoms
 from ase.io import read
 from ase.build import molecule
 import numpy as np
 
+try:
+    from _common_helpers import has_display, set_cycles_res
+
+    use_cycles = not has_display()
+except ImportError:
+    use_cycles = False
+
+extras = dict(engine="cycles") if use_cycles else {}
+
+
 
 def test_polyhedra_molecule():
-    removeAll()
+    bpy.ops.batoms.delete()
     ch4 = molecule("CH4")
     mh4 = ch4.copy()
     mh4.translate([2, 2, 0])
@@ -20,8 +30,9 @@ def test_polyhedra_molecule():
 
 
 def test_polyhedra_crystal():
-    removeAll()
-    tio2 = read("datas/tio2.cif")
+    from ase.io import read
+    bpy.ops.batoms.delete()
+    tio2 = read("../test/datas/tio2.cif")
     tio2 = Batoms("tio2", from_ase=tio2)
     tio2.model_style = 2
     tio2 = tio2 * [3, 3, 3]
@@ -30,7 +41,7 @@ def test_polyhedra_crystal():
 
 
 def test_polyhedra_setting():
-    removeAll()
+    bpy.ops.batoms.delete()
     ch4 = Batoms("ch4", from_ase=molecule("CH4"))
     ch4.bonds.setting[("C", "H")].polyhedra = True
     ch4.model_style = 2
@@ -46,7 +57,9 @@ def test_polyhedra_setting():
     ch4.polyhedras.setting["C"] = {"color": [0.8, 0.1, 0.3, 0.3]}
     ch4.model_style = 2
     ch4.render.engine = "workbench"
-    ch4.get_image([1, 1, 0], output="polyhedras.png")
+    if use_cycles:
+        set_cycles_res(ch4)
+    ch4.get_image([1, 1, 0], output="polyhedras.png", **extras)
 
 
 if __name__ == "__main__":

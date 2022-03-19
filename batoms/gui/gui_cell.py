@@ -1,7 +1,5 @@
 import bpy
-from bpy.types import (Panel,
-                       Operator,
-                       )
+from bpy.types import Panel
 from bpy.props import (BoolProperty,
                        FloatVectorProperty,
                        IntVectorProperty
@@ -9,15 +7,15 @@ from bpy.props import (BoolProperty,
 
 from batoms import Batoms
 
+
 class Cell_PT_prepare(Panel):
-    bl_label       = "Cell"
-    bl_space_type  = "VIEW_3D"
+    bl_label = "Cell"
+    bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
     bl_category = "Batoms"
     bl_idname = "BATOMS_PT_Cell"
 
-  
     def draw(self, context):
         layout = self.layout
         clpanel = context.scene.clpanel
@@ -48,7 +46,6 @@ class Cell_PT_prepare(Panel):
         layout.prop(clpanel, "boundary_c")
 
 
-
 class CellProperties(bpy.types.PropertyGroup):
 
     def selected_batoms(self, context):
@@ -62,55 +59,58 @@ class CellProperties(bpy.types.PropertyGroup):
         modify_batoms_attr(self.selected_batoms(context), 'pbc', pbc)
 
     pbc: BoolProperty(
-        name = "pbc", default=True,
-        description = "pbc", update = Callback_modify_pbc)
+        name="pbc", default=True,
+        description="pbc", update=Callback_modify_pbc)
     cell_a: FloatVectorProperty(
         name="a", default=(1, 0, 0),
         # subtype = "XYZ",
-        description = "Cell in a axis")
+        description="Cell in a axis")
     cell_b: FloatVectorProperty(
         name="b", default=(0, 1, 0),
         # subtype = "XYZ",
-        description = "Cell in b axis")
+        description="Cell in b axis")
     cell_c: FloatVectorProperty(
         name="c", default=(0, 0, 1),
         # subtype = "XYZ",
-        description = "Cell in c axis")
+        description="Cell in c axis")
     transform_a: IntVectorProperty(
-        name="a", default=(1, 0, 0, 0), size = 4,
-        min = -20, max = 20,
+        name="a", default=(1, 0, 0, 0), size=4,
+        min=-20, max=20,
         # subtype = "XYZ",
-        description = "Transform matrix in a axis")
+        description="Transform matrix in a axis")
     transform_b: IntVectorProperty(
-        name="b", default=(0, 1, 0, 0), size = 4,
-        min = -20, max = 20,
+        name="b", default=(0, 1, 0, 0), size=4,
+        min=-20, max=20,
         # subtype = "XYZ",
-        description = "Transform matrix in b axis")
+        description="Transform matrix in b axis")
     transform_c: IntVectorProperty(
-        name="c", default=(0, 0, 1, 0), size = 4,
-        min = -20, max = 20,
+        name="c", default=(0, 0, 1, 0), size=4,
+        min=-20, max=20,
         # subtype = "XYZ",
-        description = "Transform matrix in c axis")
-    
+        description="Transform matrix in c axis")
+
     boundary_a: FloatVectorProperty(
-        name="a", default=(0, 1), size = 2,
-        description = "boundary  in a axis")
+        name="a", default=(0, 1), size=2,
+        description="boundary  in a axis")
     boundary_b: FloatVectorProperty(
-        name="b", default=(0, 1), size = 2,
-        description = "boundary  in b axis")
+        name="b", default=(0, 1), size=2,
+        description="boundary  in b axis")
     boundary_c: FloatVectorProperty(
-        name="c", default=(0, 1), size = 2,
-        description = "boundary  in c axis")
+        name="c", default=(0, 1), size=2,
+        description="boundary  in c axis")
 
 
 def modify_batoms_attr(name, key, value):
-    if name is None: return
-    batoms = Batoms(label = name)
+    if name is None:
+        return
+    batoms = Batoms(label=name)
     setattr(batoms, key, value)
     # batoms.select = True
-        
+
+
 def modify_transform(name, transform):
-    if name is None: return
-    batoms = Batoms(label = name)
+    if name is None:
+        return
+    batoms = Batoms(label=name)
     batoms.transform(transform)
     batoms.hide = True

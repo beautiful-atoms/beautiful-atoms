@@ -5,16 +5,11 @@ https://wiki.fysik.dtu.dk/ase/ase/cluster/cluster.html?highlight=cluster#module-
 
 import bpy
 from bpy.types import Operator
-from bpy_extras.object_utils import AddObjectHelper
 from bpy.props import (StringProperty,
                        IntProperty,
-                       IntVectorProperty,
-                       FloatProperty,
-                       FloatVectorProperty,
                        BoolProperty,
                        )
-from ase.cluster import Cluster, Decahedron, Icosahedron, Octahedron, wulff_construction
-from ase.cluster.cubic import FaceCenteredCubic, BodyCenteredCubic, SimpleCubic
+from ase.cluster import Decahedron, Icosahedron, Octahedron, wulff_construction
 from batoms import Batoms
 
 
@@ -63,7 +58,9 @@ class BuildDecahedron(Operator):
             q=self.q,
             r=self.r,
             latticeconstant=latticeconstant)
-        Batoms(label=self.label, from_ase=atoms)
+        batoms = Batoms(label=self.label, from_ase=atoms)
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
 
@@ -100,7 +97,9 @@ class BuildIcosahedron(Operator):
             symbol=self.symbol,
             noshells=self.noshells,
             latticeconstant=latticeconstant)
-        Batoms(label=self.label, from_ase=atoms)
+        batoms = Batoms(label=self.label, from_ase=atoms)
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
 
@@ -147,6 +146,8 @@ class BuildOctahedron(Operator):
             cutoff=self.cutoff,
             length=self.length,
             latticeconstant=latticeconstant,
-            alloy = self.alloy)
-        Batoms(label=self.label, from_ase=atoms)
+            alloy=self.alloy)
+        batoms = Batoms(label=self.label, from_ase=atoms)
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}

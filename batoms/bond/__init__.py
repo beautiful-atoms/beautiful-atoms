@@ -7,7 +7,7 @@ This module defines the Bonds object in the Batoms package.
 import bpy
 import bmesh
 from time import time
-from batoms.utils.butils import object_mode, compareNodeType
+from batoms.utils.butils import object_mode, compareNodeType, get_nodes_by_name
 from batoms.utils import string2Number, number2String
 import numpy as np
 from batoms.base.object import ObjectGN
@@ -52,7 +52,7 @@ default_bond_datas = {
     'atoms_index4': np.ones(0, dtype=int),
     'species_index1': np.ones(0, dtype=int),
     'species_index2': np.ones(0, dtype=int),
-    'centers': np.zeros((0, 3)),
+    'centers': np.zeros((1, 0, 3)),
     # 'vectors':np.zeros((0, 3)),
     'offsets1': np.zeros((0, 3)),
     'offsets2': np.zeros((0, 3)),
@@ -60,11 +60,12 @@ default_bond_datas = {
     'offsets4': np.zeros((0, 3)),
     # 'eulers':np.eye(3),
     # 'lengths':np.zeros((0, 3)),
-    'widths': np.ones(0, dtype=float),
-    'orders': np.zeros(0, dtype=int),
-    'styles': np.zeros(0, dtype=int),
-    'model_styles': np.ones(0, dtype=int),
-    'polyhedras': np.ones(0, dtype=float),
+    # 'widths': np.ones(0, dtype=float),
+    'show': np.zeros(0, dtype=int),
+    'order': np.zeros(0, dtype=int),
+    'style': np.zeros(0, dtype=int),
+    'model_style': np.ones(0, dtype=int),
+    'polyhedra': np.ones(0, dtype=float),
     'second_bond': np.ones(0, dtype=int),
 }
 
@@ -142,10 +143,9 @@ class Bonds(BaseCollection, ObjectGN):
             'species_index1': bond_datas['species_index1'],
             'species_index2': bond_datas['species_index2'],
             'show': show,
-            'model_style': bond_datas['model_styles'],
-            'style': bond_datas['styles'],
-            'order': bond_datas['orders'],
-            'polyhedra': bond_datas['polyhedras'],
+            'model_style': bond_datas['model_style'],
+            'style': bond_datas['style'],
+            'order': bond_datas['order'],
             'second_bond': bond_datas['second_bond'],
         })
         name = self.obj_name
@@ -476,19 +476,23 @@ class Bonds(BaseCollection, ObjectGN):
         CompareSpecies0 = get_nodes_by_name(
             gn.node_group.nodes,
             '%s_CompareSpecies_%s_0' % (self.label,
-                                        sp["species1"]))
+                                        sp["species1"]),
+            compareNodeType)
         CompareSpecies1 = get_nodes_by_name(
             gn.node_group.nodes,
             '%s_CompareSpecies_%s_1' % (self.label,
-                                        sp["species2"]))
+                                        sp["species2"]),
+            compareNodeType)
         CompareOrder = get_nodes_by_name(
             gn.node_group.nodes,
             'CompareFloats_%s_%s_order' % (self.label,
-                                           order))
+                                           order),
+            compareNodeType)
         CompareStyle = get_nodes_by_name(
             gn.node_group.nodes,
             'CompareFloats_%s_%s_style' % (self.label,
-                                           style))
+                                           style),
+            compareNodeType)
         #
         CombineXYZ = get_nodes_by_name(
             gn.node_group.nodes,
@@ -532,12 +536,35 @@ class Bonds(BaseCollection, ObjectGN):
                                 JoinGeometry.inputs['Geometry'])
         # print('Add geometry nodes for bonds: %s'%(time() - tstart))
 
+
+    def update_geometry_node_species(self):
+        # find bond kinds by the names of species
+        tstart = time()
+        gn = self.gnodes
+        GroupInput = gn.node_group.nodes[0]
+        for sp in self.batoms.species:
+            # we need two compares for one species,
+            # because we have two sockets: species_index1 and species_index2
+            CompareSpecies = []
+            for i in range(2):
+                tmp = get_nodes_by_name(gn.node_group.nodes,
+                                        '%s_CompareSpecies_%s_%s' % (
+                                            self.label, sp.name, i),
+                                        compareNodeType)
+                tmp.operation = 'EQUAL'
+                tmp.inputs[1].default_value = string2Number(sp.name)
+                CompareSpecies.append(tmp)
+            gn.node_group.links.new(
+                GroupInput.outputs[5], CompareSpecies[0].inputs[0])
+            gn.node_group.links.new(
+                GroupInput.outputs[6], CompareSpecies[1].inputs[0])
+        print('UPdate geometry nodes species for bonds: %s'%(time() - tstart))
+
     def update_geometry_node_instancer(self):
         """
         Make sure all pair has a geometry node flow 
         and the instancer and material are updated.
         """
-        from batoms.utils.butils import get_nodes_by_name
         tstart = time()
         #
         bondlists = self.arrays
@@ -553,30 +580,35 @@ class Bonds(BaseCollection, ObjectGN):
             sp2 = number2String(pair[1])
             sp = self.setting['%s-%s' % (sp1, sp2)]
             sp = sp.as_dict()
-            order_style = '%s_%s'% (sp["order"], sp["style"])
+            order_style = '%s_%s' % (sp["order"], sp["style"])
             # update geometry node
             if self.setting.instancers[sp["name"]][order_style] is None:
                 self.setting.build_instancer(sp)
                 self.add_geometry_node(sp)
             # update materials
-            mat1 = self.setting.materials[sp["name"]]["%s_0"%(order_style)]
-            mat2 = self.setting.materials[sp["name"]]["%s_1"%(order_style)]
+            mat1 = self.setting.materials[sp["name"]]["%s_0" % (order_style)]
+            mat2 = self.setting.materials[sp["name"]]["%s_1" % (order_style)]
             color1 = mat1.node_tree.nodes[0].inputs[0].default_value[:]
             color2 = mat2.node_tree.nodes[0].inputs[0].default_value[:]
             if not np.allclose(sp["color1"], color1) or \
-                not np.allclose(sp["color2"], color2):
-                print("change materials: %s"%sp["name"])
+                    not np.allclose(sp["color2"], color2):
+                print("change materials: %s" % sp["name"])
                 self.setting.build_materials(sp)
+                self.setting.assign_materials(sp, sp["order"], sp["style"])
+            # compare radius
+            if not np.isclose(sp["width"], 
+                    self.setting.instancers[sp["name"]][order_style].batoms.bond.width):
+                self.setting.build_instancer(sp)
                 self.setting.assign_materials(sp, sp["order"], sp["style"])
             # update  instancers
             name = 'bond_%s_%s_%s_%s' % (self.label, sp["name"],
-                                            sp["order"], sp["style"])
+                                         sp["order"], sp["style"])
             ObjectInstancer = get_nodes_by_name(self.gnodes.node_group.nodes,
                                                 'ObjectInfo_%s' % name,
                                                 'GeometryNodeObjectInfo')
             ObjectInstancer.inputs['Object'].default_value = \
                 self.setting.instancers[sp["name"]][order_style]
-        print('update bond instancer: %s'%(time() - tstart))
+        print('update bond instancer: %s' % (time() - tstart))
 
     def update(self, ):
         """
@@ -676,30 +708,28 @@ class Bonds(BaseCollection, ObjectGN):
     def set_arrays(self, arrays):
         """
         """
-        # if len(arrays['centers']) == 0:
-        #     return
         attributes = self.attributes
         # same length
-        if arrays['centers'].shape[1] == attributes['show'].shape[0]:
-            # self.positions = arrays['centers']
-            self.set_frames(arrays)
-            self.offsets = [arrays['offsets1'], arrays['offsets2'],
-                            arrays['offsets3'], arrays['offsets4']]
-            self.set_attributes({'atoms_index1': arrays['atoms_index1']})
-            self.set_attributes({'atoms_index2': arrays['atoms_index2']})
-            self.set_attributes({'atoms_index3': arrays['atoms_index3']})
-            self.set_attributes({'atoms_index4': arrays['atoms_index4']})
-            self.set_attributes({'species_index1': arrays['species_index1']})
-            self.set_attributes({'species_index2': arrays['species_index2']})
-            self.set_attributes({'order': arrays['orders']})
-            self.set_attributes({'style': arrays['styles']})
-            self.set_attributes({'model_style': arrays['model_styles']})
-            self.set_attributes({'polyhedra': arrays['polyhedras']})
-            self.update_geometry_node_instancer()
-        else:
-            # add or remove vertices
-            self.build_object(arrays)
-            self.update_geometry_nodes()
+        dnvert = len(arrays['atoms_index1']) - len(attributes['atoms_index1'])
+        if dnvert > 0:
+            # add
+            objs = self.obj_o
+            for obj in objs:
+                self.add_vertices_bmesh(dnvert, obj)
+            self.add_vertices_bmesh(dnvert)
+        elif dnvert < 0:
+            self.delete_vertices_bmesh(range(-dnvert))
+            objs = self.obj_o
+            for obj in objs:
+                self.delete_vertices_bmesh(range(-dnvert), obj)
+        self.set_frames(arrays)
+        self.offsets = [arrays.pop('offsets1'), arrays.pop('offsets2'),
+                        arrays.pop('offsets3'), arrays.pop('offsets4')]
+        arrays.pop("centers")
+        self.set_attributes(arrays)
+        self.update_geometry_node_species()
+        self.update_geometry_node_instancer()
+        self.update_geometry_nodes()
 
     @property
     def offsets(self):
@@ -748,7 +778,7 @@ class Bonds(BaseCollection, ObjectGN):
     def set_frames(self, frames=None, frame_start=0, only_basis=False):
         if frames is None:
             frames = self._frames
-        nframe = len(frames)
+        nframe = len(frames['centers'])
         if nframe == 0:
             return
         name = '%s_bond' % (self.label)
@@ -919,19 +949,6 @@ class Bonds(BaseCollection, ObjectGN):
         s = "Bonds(Total: {:6d}, {}" .format(len(self), self.arrays)
         return s
 
-    def add_vertices(self, positions):
-        """
-        Todo: find a fast way.
-        """
-        object_mode()
-        positions = positions - self.location
-        bm = bmesh.new()
-        bm.from_mesh(self.obj.data)
-        bm.verts.ensure_lookup_table()
-        for pos in positions:
-            bm.verts.new(pos)
-        bm.to_mesh(self.obj.data)
-
     def build_bondlists(self, species, positions, cell, pbc, setting):
         """
         build bondlist for atoms
@@ -1039,9 +1056,9 @@ class Bonds(BaseCollection, ObjectGN):
         # print(bondlists)
         bondlists = bondlists.astype(int)
         bondlists = np.unique(bondlists, axis=0)
-        # self.peciesBondLists = peciesBondLists
-        # self.molPeciesDatas = molPeciesDatas
-        # self.peciesBondDatas = peciesBondDatas
+        self.peciesBondLists = peciesBondLists
+        self.molPeciesDatas = molPeciesDatas
+        self.peciesBondDatas = peciesBondDatas
         return bondlists, bonddatas, peciesBondDatas, molPeciesDatas
 
     def build_peciesBondLists(self, natom, bondlists):
@@ -1150,7 +1167,7 @@ class Bonds(BaseCollection, ObjectGN):
                     mollist[5:8] = offsets
                     peciesBondLists = np.append(
                         peciesBondLists, np.array([mollist]), axis=0)
-
+        self.molDatas = molDatas
         return peciesBondLists, molPeciesDatas
 
     def build_bondlists_with_boundary(self, arrays, bondlists, bonddatas,
@@ -1277,6 +1294,7 @@ class Bonds(BaseCollection, ObjectGN):
         # atoms_index3 and atoms_index4 will be removed for Blender 3.1
         atoms_index3 = np.roll(atoms_index1, 1)
         atoms_index4 = np.roll(atoms_index2, 1)
+        shows = np.ones(nb, dtype=int)
         orders = np.zeros(nb, dtype=int)  # 1, 2, 3
         styles = np.zeros(nb, dtype=int)  # 0, 1, 2
         widths = np.ones(nb, dtype=float)
@@ -1332,11 +1350,12 @@ class Bonds(BaseCollection, ObjectGN):
             'offsets2': offsets2,
             'offsets3': offsets3,
             'offsets4': offsets4,
-            'widths': widths,
-            'orders': orders,
-            'styles': styles,
-            'model_styles': model_styles,
-            'polyhedras': polyhedras,
+            # 'widths': widths,
+            'show': shows,
+            'order': orders,
+            'style': styles,
+            'model_style': model_styles,
+            'polyhedra': polyhedras,
         }
         # print('datas: ', datas)
         print('calc_bond_data: {0:10.2f} s'.format(time() - tstart))

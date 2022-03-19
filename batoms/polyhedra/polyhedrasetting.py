@@ -43,11 +43,12 @@ class PolyhedraSettings(Setting):
         if name in bpy.data.materials:
             mat = bpy.data.materials.get(name)
             bpy.data.materials.remove(mat, do_unlink=True)
-        create_material(name,
+        mat = create_material(name,
                         color=sp['color'],
                         node_inputs=node_inputs,
                         material_style=material_style,
                         backface_culling=True)
+        return mat
 
     def __setitem__(self, index, setdict):
         """

@@ -64,23 +64,13 @@ def draw_cylinder(
 def draw_surface_from_vertices(name,
                                datas,
                                coll=None,
-                               node_type='Principled BSDF',
-                               use_smooth=True,
-                               node_inputs=None,
-                               material_style='plastic',
-                               backface_culling=True):
+                               use_smooth=True):
     if len(datas['vertices']) == 0:
         return
-    material = create_material(name,
-                               datas['color'],
-                               node_type=node_type,
-                               node_inputs=node_inputs,
-                               material_style=material_style,
-                               backface_culling=backface_culling)
     #
     mesh = bpy.data.meshes.new(name)
     if len(datas['edges']) > 0:
-        mesh.from_pydata(datas['vertices'], [], datas['faces'])
+        mesh.from_pydata(datas['vertices'], datas['edges'], datas['faces'])
     else:
         mesh.from_pydata(datas['vertices'], [], datas['faces'])
     mesh.update()
@@ -88,14 +78,14 @@ def draw_surface_from_vertices(name,
                               [use_smooth]*len(mesh.polygons))
     obj = bpy.data.objects.new(name, mesh)
     obj.data = mesh
-    obj.data.materials.append(material)
     #
     for name, inputs in datas['battr_inputs'].items():
         battr = getattr(obj.batoms, name)
         for key, value in inputs.items():
             setattr(battr, key, value)
     bpy.ops.object.shade_smooth()
-    coll.objects.link(obj)
+    if coll is not None:
+        coll.objects.link(obj)
     return obj
     # print('bonds: {0}   {1:10.2f} s'.format(name, time() - tstart))
 

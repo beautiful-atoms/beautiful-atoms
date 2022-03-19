@@ -5,7 +5,6 @@ from batoms.base.object import ObjectGN
 from batoms.utils.butils import object_mode, compareNodeType
 from batoms.utils import number2String, string2Number
 
-shapes = ["UV_SPHERE", "ICO_SPHERE", "CUBE", "METABALL"]
 
 default_attributes = [
     ['atoms_index', 'INT'],
@@ -40,15 +39,19 @@ default_search_bond_datas = {
 
 
 class SearchBond(ObjectGN):
-    """SearchBond Class
-
-    """
 
     def __init__(self,
                  label=None,
                  search_bond_datas=None,
                  batoms=None,
                  ):
+        """SearchBond Class
+
+        Args:
+            label (_type_, optional): _description_. Defaults to None.
+            search_bond_datas (_type_, optional): _description_. Defaults to None.
+            batoms (_type_, optional): _description_. Defaults to None.
+        """
         #
         self.batoms = batoms
         self.label = label
@@ -276,20 +279,28 @@ class SearchBond(ObjectGN):
         """
         attributes = self.attributes
         # same length
-        if len(arrays['positions']) == len(attributes['show']):
-            self.positions = arrays['positions']
-            self.offsets = arrays['offsets']
-            species_index = [string2Number(sp) for sp in arrays['species']]
-            self.set_attributes({'species_index': species_index,
-                                'scale': arrays['scales'],
-                                 'show': arrays['shows'],
-                                 })
-        else:
-            # add or remove vertices
-            self.build_object(arrays)
-            species = np.unique(arrays['species'])
-            for sp in species:
-                self.add_geometry_node(sp)
+        dnvert = len(arrays['species_index']) - \
+            len(attributes['species_index'])
+        if dnvert > 0:
+            self.add_vertices_bmesh(dnvert)
+            self.add_vertices_bmesh(dnvert, self.obj_o)
+        elif dnvert < 0:
+            self.delete_vertices_bmesh(range(-dnvert))
+            self.delete_vertices_bmesh(range(-dnvert), self.obj_o)
+        self.positions = arrays["positions"][0]
+        self.offsets = arrays["offsets"][0]
+        self.set_frames(arrays)
+        self.update_mesh()
+        species_index = [string2Number(sp) for sp in arrays['species']]
+        self.set_attributes({
+                            'atoms_index': arrays["atoms_index"],
+                            'species_index': species_index,
+                            'scale': arrays['scales'],
+                            'show': arrays['shows'],
+                            })
+        species = np.unique(arrays['species'])
+        for sp in species:
+            self.add_geometry_node(sp)
 
     def get_arrays(self):
         """
@@ -452,9 +463,9 @@ class SearchBond(ObjectGN):
             'atoms_index': np.array(indices),
             'species_index': species_indexs,
             'species': species,
-            'positions': positions,
+            'positions': np.array([positions]),
             # 'offsets':offsets,
-            'offsets': offset_vectors,
+            'offsets': np.array([offset_vectors]),
             'model_styles': model_styles,
             'shows': shows,
             'selects': selects,

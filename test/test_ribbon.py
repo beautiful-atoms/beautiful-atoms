@@ -1,11 +1,11 @@
+import bpy
 import pytest
-from batoms.utils.butils import removeAll
 from batoms.pdbparser import read_pdb
 from batoms.batoms import Batoms
 
 
 def test_ribbon():
-    removeAll()
+    bpy.ops.batoms.delete()
     atoms = read_pdb("datas/1ema.pdb")  # 1ema, 1tim, 4hhb
     protein = Batoms("protein", from_ase=atoms)
     protein.ribbon.draw()

@@ -1,20 +1,18 @@
 import bpy
 import bmesh
-from bpy.types import (Panel,
-                       Operator,
-                       )
-from bpy_extras.object_utils import AddObjectHelper
+from bpy.types import Operator
 from bpy.props import (BoolProperty,
-                       FloatProperty,
+                       EnumProperty,
                        IntProperty,
                        StringProperty,
                        )
 from batoms import Batoms
+from batoms.ops.base import OperatorBatoms
 
-class BondPairAdd(Operator):
+
+class BondPairAdd(OperatorBatoms):
     bl_idname = "bond.bond_pair_add"
     bl_label = "Add Bond Pair"
-    bl_options = {'REGISTER', 'UNDO'}
     bl_description = ("Add Bond Pair to a Batoms")
 
     species1: StringProperty(
@@ -25,14 +23,6 @@ class BondPairAdd(Operator):
         name="species", default='H',
         description="Replaced by this species")
 
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
-        if obj:
-            return obj.batoms.type != 'OTHER'
-        else:
-            return False
-
     def execute(self, context):
         obj = context.object
         batoms = Batoms(label=context.object.batoms.label)
@@ -41,27 +31,19 @@ class BondPairAdd(Operator):
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 
-class BondPairRemove(Operator):
+
+class BondPairRemove(OperatorBatoms):
     bl_idname = "bond.bond_pair_remove"
     bl_label = "Remove Bond Pair"
-    bl_options = {'REGISTER', 'UNDO'}
     bl_description = ("Remove Bond Pair to a Batoms")
 
     name: StringProperty(
         name="name", default='C-H',
         description="Name of bond pair to be removed")
-    
-    all: BoolProperty(name="all",
-                       default=False,
-                       description="Remove all bond pairs")
 
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
-        if obj:
-            return obj.batoms.type != 'OTHER'
-        else:
-            return False
+    all: BoolProperty(name="all",
+                      default=False,
+                      description="Remove all bond pairs")
 
     def execute(self, context):
         obj = context.object
@@ -69,8 +51,30 @@ class BondPairRemove(Operator):
         index = batoms.coll.batoms.bond_index
         batoms.bonds.setting.remove((self.name))
         batoms.coll.batoms.bond_index = min(max(0, index - 1),
-                len(batoms.bonds.setting) - 1)
+                                            len(batoms.bonds.setting) - 1)
         context.view_layer.objects.active = obj
+        return {'FINISHED'}
+
+
+class BondDraw(OperatorBatoms):
+    bl_idname = "bond.draw"
+    bl_label = "Draw Bond"
+    bl_description = ("Draw Bond")
+
+    model_style: EnumProperty(
+        name="model_style",
+        description="Structural models",
+        items=(('0', "Space-filling", "Use ball"),
+               ('1', "Ball-and-stick", "Use ball and stick"),
+               ('2', "Polyhedral", "Use polyhedral"),
+               ('3', "Wireframe", "Use wireframe")),
+        default='1')
+
+    def execute(self, context):
+        obj = context.object
+        batoms = Batoms(label=obj.batoms.label)
+        batoms.draw(self.model_style)
+        context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
 
@@ -88,12 +92,10 @@ class BondModify(Operator):
         name="style", default='0',
         description="style")
 
-    search: IntProperty(name="Search mode", default=0, 
-                )
-    polyhedra: BoolProperty(name="polyhedra", default=False, 
-                )
-    order: IntProperty(name="Bond order", default=1, 
-                )
+    show: BoolProperty(name="show", default=False,
+                            )
+    order: IntProperty(name="Bond order", default=1,
+                       )
 
     @classmethod
     def poll(cls, context):
@@ -107,10 +109,12 @@ class BondModify(Operator):
         obj = context.object
         data = obj.data
         bm = bmesh.from_edit_mesh(data)
-        v = [s.index for s in bm.select_history if isinstance(s, bmesh.types.BMVert)]
+        v = [s.index for s in bm.select_history if isinstance(
+            s, bmesh.types.BMVert)]
         batoms = Batoms(label=obj.batoms.label)
         for i in v:
             setattr(batoms.bonds[i], self.key, getattr(self, self.key))
         # batoms.draw()
         context.view_layer.objects.active = obj
+        bpy.ops.object.mode_set(mode = 'EDIT')
         return {'FINISHED'}

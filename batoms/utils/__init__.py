@@ -73,6 +73,8 @@ def default_element_prop(element, radius_style='covalent',
     from batoms.data import jmol_colors, cpk_colors, vesta_color
     element_prop = {}
     number = chemical_symbols.index(element)
+    color_style = str(color_style)
+    radius_style = str(radius_style)
     color_style = color_style.upper()
     radius_style = radius_style.upper()
     if color_style == 'JMOL' or color_style == '0':
@@ -101,14 +103,14 @@ def get_default_species_data(elements, radius_style='covalent',
     Set default color, radii for elements,
     Todo fraction occupancy
     """
-    species_props = {}
     radius = 0
-    species_props = {'color': {}}
-    for ele, fraction in elements.items():
+    species_props = {"elements": {}}
+    for ele, eledata in elements.items():
+        species_props["elements"][ele] = eledata
         data = default_element_prop(ele, radius_style=radius_style,
                                     color_style=color_style)
-        radius += data['radius']*fraction
-        species_props['color'][ele] = data['color']
+        radius += data['radius']*eledata["occupancy"]
+        species_props["elements"][ele]["color"] = data["color"]
     species_props['radius'] = radius
     species_props.update(props)
     return species_props

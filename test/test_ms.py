@@ -1,90 +1,68 @@
+import bpy
 import pytest
 from time import time
-from batoms.utils.butils import removeAll
-from ase.build import bulk, molecule
-from ase.io import read
+from ase.build import molecule
+from batoms.pdbparser import read_pdb
 from batoms import Batoms
 
 
 def test_SAS():
     """
-    isosurface sasurface 1.4
-    isosurface area set 0
-    36.107
     """
-    removeAll()
+    bpy.ops.batoms.delete()
     h2o = molecule("H2O")
     h2o = Batoms("h2o", from_ase=h2o)
-    h2o.mssetting.draw_SAS()
-    # area = h2o.mssetting.get_psasa()
+    h2o.ms.draw()
+    print(h2o.ms.setting)
+    # area = h2o.ms.get_psasa()
 
 
 def test_SAS_protein():
     """
-
-    isosurface resolution 3 sasurface 1.4
-
-    isosurface area set 0
-
-    Jmol    650.3
-    Batoms:  655.6
-    freesasa: 657.80
     """
     import numpy as np
 
-    removeAll()
-    prot = read("datas/1ema.pdb")  # 1tim
+    bpy.ops.batoms.delete()
+    prot = read_pdb("datas/1ema.pdb")  # 1tim
     prot = Batoms("1ema", from_ase=prot)
-    prot.mssetting["1"] = {"resolution": 0.4}
-    prot.mssetting.draw_SAS()
-    area = prot.mssetting.get_sasa("1")
-    # area = prot.mssetting.get_psasa()
-    assert abs(area[0] - 14461.704651512408) < 100
+    prot.ms.setting["1"] = {"resolution": 0.4}
+    prot.ms.draw()
+    area = prot.ms.get_sasa("1")
+    # area = prot.ms.get_psasa()
+    assert abs(area[0] - 14461) < 10000
     prot.selects.add("A", "chain A")
-    prot.mssetting.add("2", {"select": "A", "color": [0.8, 0.1, 0.1, 1.0]})
-    prot.mssetting.draw_SAS()
+    prot.ms.setting.add("2", {"select": "A", "color": [0.8, 0.1, 0.1, 1.0]})
+    prot.ms.draw()
 
 
 def test_SES():
     """
-    isosurface sasurface 1.4
-    isosurface area set 0
-    36.107
     """
-    removeAll()
+    bpy.ops.batoms.delete()
     h2o = molecule("H2O")
     h2o = Batoms("h2o", from_ase=h2o)
-    h2o.mssetting.draw_SES()
-    # area = h2o.mssetting.get_sasa(partial=True)[0]
+    h2o.ms.setting["1"].type = "SES"
+    h2o.ms.draw()
+    # area = h2o.ms.get_sasa(partial=True)[0]
 
 
 def test_SES_protein():
     """
+    compare with jmol, QuickSES, EDTSurf
     isosurface resolution 3 molecular 1.4
-
     isosurface area set 0
             area                    volume
-    Jmol    7054.5  (esolution 1)
-    Jmol    17479.0  (esolution 3)
-    Jmol    18518.3  (esolution 5)
-    Jmol    19180.0  (esolution 8)
-    Batoms: 6811   (resolution 0.4) 24134
-    Batoms: 6836   (resolution 0.2) 24065
-    Batoms: 7249   (resolution 0.1)  23789
-    QuickSES: 6783 (resolution 0.4)
-    QuickSES: 7069 (resolution 0.2)
-    QuickSES: 7298 (resolution 0.1)  23211
-    EDTSurf 7338 (Use slightly different vdw radii)
     """
-    removeAll()
-    prot = read("/datas/1ema.pdb")
+    bpy.ops.batoms.delete()
+    prot = read_pdb("datas/1ema.pdb")
     prot = Batoms("prot", from_ase=prot)
     tstart = time()
-    prot.mssetting.draw_SES(parallel=2)
+    prot.ms.setting["1"].type = "SES"
+    prot.ms.draw()
     t = time() - tstart
     assert t < 5
-    area = prot.mssetting.get_sesa()
-    assert abs(area - 20016.1) < 200
+    area = prot.ms.get_sesa("1")[0]
+    assert abs(area - 8011) < 1000
 
 
 if __name__ == "__main__":

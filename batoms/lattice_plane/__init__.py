@@ -1,170 +1,63 @@
+"""Definition of the plane class.
+
+This module defines the plane object in the Batoms package.
+
 """
 
-Lattice Planes
-
-To insert lattice planes in structural models.
-"""
 import bpy
-from batoms.base.collection import Setting, tuple2string
-import numpy as np
-from time import time
-from batoms.utils import get_equivalent_indices
-from batoms.utils.butils import clean_coll_objects
-from batoms.draw import draw_cylinder, draw_surface_from_vertices
 import bmesh
+from time import time
+import numpy as np
+from batoms.base.object import BaseObject
+from batoms.lattice_plane.lattice_plane_setting import LatticePlaneSettings
+from batoms.draw import draw_cylinder, draw_surface_from_vertices
 
 
-class PlaneSetting(Setting):
-    """
-    PlaneSetting object
+class LatticePlane(BaseObject):
+    def __init__(self,
+                 label=None,
+                 location=np.array([0, 0, 0]),
+                 batoms=None,
+                 ):
+        """Plane Class
 
-    The PlaneSetting object store the polyhedra information.
-
-    Parameters:
-
-    label: str
-        The label define the batoms object that a Setting belong to.
-
-    """
-
-    def __init__(self, label, batoms=None, plane=None) -> None:
-        Setting.__init__(self, label, coll_name='%s_plane' % label)
-        self.name = 'bplane'
+        Args:
+            label (_type_, optional): _description_. Defaults to None.
+            location (_type_, optional): _description_. Defaults to np.array([0, 0, 0]).
+            batoms (_type_, optional): _description_. Defaults to None.
+        """
+        #
         self.batoms = batoms
-        if plane is not None:
-            for key, data in plane.items():
-                self[key] = data
+        self.label = label
+        name = 'plane'
+        BaseObject.__init__(self, label, name)
+        self.setting = LatticePlaneSettings(
+            self.label, parent=self)
 
-    @property
-    def no(self, ):
-        return self.batoms.get_spacegroup_number()
-
-    @no.setter
-    def no(self, no):
-        self.no = no
-
-    def __setitem__(self, index, setdict):
+    def build_materials(self, name, color, node_inputs=None,
+                        material_style='default'):
         """
-        Set properties
         """
-        name = tuple2string(index)
-        p = self.find(name)
-        if p is None:
-            p = self.collection.add()
-        p.indices = index
-        p.name = name
-        p.flag = True
-        for key, value in setdict.items():
-            setattr(p, key, value)
-        p.label = self.label
-        if p.symmetry:
-            setdict = p.as_dict()
-            indices = get_equivalent_indices(self.no, p.indices)
-            for index in indices:
-                name = tuple2string(index)
-                p1 = self.find(name)
-                if p1 is None:
-                    p1 = self.collection.add()
-                for key, value in setdict.items():
-                    setattr(p1, key, value)
-                p1.name = name
-                p1.indices = index
-                p1.label = self.label
-
-    def add(self, indices):
-        self[indices] = {'indices': indices}
-
-    def __repr__(self) -> str:
-        s = "-"*60 + "\n"
-        s = "Indices   distance  crystal   symmetry  slicing   boundary\n"
-        for p in self.collection:
-            s += "{0:10s}   {1:1.3f}   ".format(p.name, p.distance)
-            s += "{:10s}  {:10s}  {:10s}   {:10s} \n".format(
-                str(p.crystal), str(p.symmetry),
-                str(p.slicing),  str(p.boundary))
-        s += "-"*60 + "\n"
-        return s
-
-    def get_symmetry_indices(self):
-        if self.no == 1:
-            return
-        for p in self:
-            if p.symmetry:
-                indices = get_equivalent_indices(self.no, p.indices)
-                for index in indices:
-                    name = tuple2string(index)
-                    p1 = self.find(name)
-                    if p1 is None:
-                        p1 = self.collection.add()
-                        setdict = p.as_dict()
-                        for key, value in setdict.items():
-                            setattr(p1, key, value)
-                        p1.name = name
-                        p1.indices = index
-                        p1.label = self.label
-                        p1.flag = True
-
-    def build_crystal(self, bcell, origin=[0, 0, 0]):
-        """
-        Build crystal
-
-        no: Int
-            spacegroup number
-        """
-        self.get_symmetry_indices()
-        planes = {}
-        for p in self:
-            if not p.crystal:
-                continue
-            normal = np.dot(p.indices, bcell.reciprocal)
-            normal = normal/np.linalg.norm(normal)
-            point = p.distance*normal
-            planes[p.name] = {
-                'indices': p.indices,
-                'normal': normal,
-                'point': point,
-                'vertices': [],
-            }
-        # loop all planes, find the intersection point of three plane
-        keys = list(planes.keys())
-        n = len(keys)
-        vertices = []
-        for i in range(n):
-            for j in range(i + 1, n):
-                for k in range(j + 1, n):
-                    point = threePlaneIntersection([planes[keys[i]],
-                                                    planes[keys[j]],
-                                                    planes[keys[k]]])
-                    # remove point outside plane
-                    point = convexhull(planes, point)
-                    if point is not None:
-                        planes[keys[i]]['vertices'].append(point)
-                        planes[keys[j]]['vertices'].append(point)
-                        planes[keys[k]]['vertices'].append(point)
-        new_planes = {}
-        for name, plane in planes.items():
-            p = self[plane['indices']]
-            vertices, edges, faces = faces_from_vertices(
-                plane['vertices'], plane['normal'])
-            if len(vertices) >= 3:
-                vertices += np.array(origin)
-                new_planes[p.name] = self.get_plane_data(
-                    vertices, edges, faces, p)
-        self.crystal_planes = new_planes
-        return new_planes
+        from batoms.material import create_material
+        if name in bpy.data.materials:
+            mat = bpy.data.materials.get(name)
+            bpy.data.materials.remove(mat, do_unlink=True)
+        mat = create_material(name,
+                              color=color,
+                              node_inputs=node_inputs,
+                              material_style=material_style,
+                              backface_culling=False)
+        return mat
 
     def build_plane(self, bcell, include_center=False):
         """
         Build vertices, edges and faces of plane.
 
         """
-        self.get_symmetry_indices()
         cellEdges = bcell.edges
-        cellVerts = bcell.verts
+        cellVerts = bcell.local_positions
         planes = {}
-        for p in self:
-            if p.crystal:
-                continue
+        for p in self.setting:
             intersect_points = []
             normal = np.dot(p.indices, bcell.reciprocal)
             normal = normal/np.linalg.norm(normal)
@@ -341,16 +234,16 @@ class PlaneSetting(Setting):
                                 'size': size}
         return slicings
 
-    def build_boundary(self, indices, batoms=None):
+    def build_boundary(self, indices):
         """
         Remove vertices above the plane
         """
-        p = self[indices]
-        normal = np.dot(np.array(p.indices), batoms.cell.reciprocal)
+        p = self.setting[indices]
+        normal = np.dot(np.array(p.indices), self.batoms.cell.reciprocal)
         normal = normal/np.linalg.norm(normal)
         point = p.distance*normal
         # isosurface, plane
-        colls = batoms.coll.children.keys()
+        colls = self.batoms.coll.children.keys()
         for coll_name in colls:
             objs = bpy.data.collections.get(coll_name).all_objects.keys()
             if 'cell' in coll_name:
@@ -370,7 +263,7 @@ class PlaneSetting(Setting):
                 if len(index) == 0:
                     continue
                 if obj.batoms.type == 'BATOMS':
-                    batoms.delete(obj.batoms.batom.species, index)
+                    self.batoms.delete(obj.batoms.batom.species, index)
                 else:
                     bm = bmesh.new()
                     bm.from_mesh(obj.data)
@@ -379,8 +272,8 @@ class PlaneSetting(Setting):
                     bmesh.ops.delete(bm, geom=verts_select, context='VERTS')
                     bm.to_mesh(obj.data)
 
-    def draw_lattice_plane(self, no=None,
-                           cuts=None, cmap='bwr', include_center=False):
+    def draw(self, plane_name='ALL', no=None,
+             cuts=None, cmap='bwr', include_center=False):
         """Draw plane
         no: int
             spacegroup of structure, if None, no will be determined by
@@ -393,57 +286,48 @@ class PlaneSetting(Setting):
         include_center: bool
             include center of plane in the mesh
         """
+        from batoms.utils.butils import clean_coll_object_by_type
+        # delete old plane
+        clean_coll_object_by_type(self.batoms.coll, 'LATTICEPLANE')
         if no is not None:
             self.no = no
         planes = self.build_plane(
             self.batoms.cell, include_center=include_center)
-        clean_coll_objects(self.coll, 'plane')
         for species, plane in planes.items():
+            if plane_name.upper() != "ALL" and species != plane_name:
+                continue
             if plane['boundary']:
                 name = '%s_%s_%s' % (self.label, 'plane', species)
-                self.build_boundary(plane['indices'], batoms=self.batoms)
+                self.delete_obj(name)
+                self.build_boundary(plane['indices'])
                 bpy.context.view_layer.update()
             else:
                 name = '%s_%s_%s' % (self.label, 'plane', species)
-                draw_surface_from_vertices(name, plane,
-                                           coll=self.coll)
+                self.delete_obj(name)
+                obj = draw_surface_from_vertices(name, plane,
+                                                 coll=self.batoms.coll,
+                                                 )
+                mat = self.build_materials(name, color=plane['color'])
+                obj.data.materials.append(mat)
+                obj.parent = self.batoms.obj
+                obj.batoms.type = 'LATTICEPLANE'
+                obj.batoms.label = self.batoms.label
                 if plane['show_edge']:
                     name = '%s_%s_%s' % (self.label, 'plane_edge', species)
-                    draw_cylinder(name=name,
-                                  datas=plane['edges_cylinder'],
-                                  coll=self.coll)
+                    self.delete_obj(name)
+                    obj = draw_cylinder(name=name,
+                                        datas=plane['edges_cylinder'],
+                                        coll=self.batoms.coll,
+                                        )
+                    obj.parent = self.batoms.obj
+                    obj.batoms.type = 'LATTICEPLANE'
+                    obj.batoms.label = self.batoms.label
                 if plane['slicing']:
                     name = '%s_%s_%s' % (self.label, 'plane', species)
                     self.build_slicing(name, self.batoms.volume,
-                                       self.batoms.cell, cuts=cuts, cmap=cmap)
-
-    def draw_crystal_shape(self, no=None, origin=None):
-        """Draw crystal shape
-        no: int
-            spacegroup of structure, if None, no will be determined by
-            get_spacegroup_number()
-        origin: xyz vector
-            The center of cyrstal shape
-        """
-        if no is not None:
-            self.no = no
-        if origin is None:
-            origin = self.batoms.cell.origin
-        planes = self.build_crystal(self.batoms.cell, origin=origin)
-        clean_coll_objects(self.coll, 'crystal')
-        for species, plane in planes.items():
-            name = '%s_%s_%s' % (self.label, 'crystal', species)
-            draw_surface_from_vertices(name, plane,
-                                       coll=self.coll)
-            if plane['show_edge']:
-                name = '%s_%s_%s' % (self.label, 'crystal_edge', species)
-                draw_cylinder(name=name,
-                              datas=plane['edges_cylinder'],
-                              coll=self.coll)
-            if plane['boundary']:
-                name = '%s_%s_%s' % (self.label, 'plane', species)
-                self.build_boundary(plane['indices'], batoms=self)
-                bpy.context.view_layer.update()
+                                       self.batoms.cell,
+                                       cuts=cuts,
+                                       cmap=cmap)
 
 
 def save_image(data, filename, interpolation='bicubic'):

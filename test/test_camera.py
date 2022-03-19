@@ -1,7 +1,7 @@
-from batoms import Batoms
+import bpy
 import pytest
+from batoms import Batoms
 import numpy as np
-from batoms.utils.butils import removeAll
 from batoms.render import Camera
 from ase.build import fcc111
 
@@ -17,7 +17,7 @@ extras = dict(engine="cycles") if use_cycles else {}
 
 def test_camera():
     """ """
-    removeAll()
+    bpy.ops.batoms.delete()
     camera = Camera(label="h2o", name="1")
     assert isinstance(camera, Camera)
     # properties
@@ -29,7 +29,7 @@ def test_camera():
 
 
 def test_camera_ortho():
-    removeAll()
+    bpy.ops.batoms.delete()
     au111 = fcc111("Au", (4, 4, 4), vacuum=0)
     au111 = Batoms("au111", from_ase=au111)
     au111.cell[2, 2] += 10
@@ -43,7 +43,7 @@ def test_camera_ortho():
 
 
 def test_camera_persp():
-    removeAll()
+    bpy.ops.batoms.delete()
     au111 = fcc111("Au", (4, 10, 4), vacuum=0)
     au111 = Batoms("au111", from_ase=au111)
     au111.cell[2, 2] += 10

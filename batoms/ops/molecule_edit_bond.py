@@ -1,11 +1,10 @@
 import bpy
 from bpy.types import Operator
-from bpy_extras.object_utils import AddObjectHelper
 from bpy.props import (StringProperty,
                        IntProperty,
                        BoolProperty,
                        )
-import bmesh                       
+import bmesh
 from batoms import Batoms
 from ase.data import covalent_radii, chemical_symbols
 import numpy as np
@@ -58,13 +57,13 @@ def edit_bond(batoms, indices, order):
             # 2. no more old H will be remove
             dhi = dorder
             dhj = dorder
-          
+
     indices.extend(removeH)
     batoms.delete(indices)
     batoms.model_style = 1
 
 
-class MolecueEditBond(Operator, AddObjectHelper):
+class MolecueEditBond(Operator):
     bl_idname = "batoms.molecule_edit_bond"
     bl_label = "Edit bond"
     bl_options = {'REGISTER', 'UNDO'}
@@ -94,8 +93,8 @@ class MolecueEditBond(Operator, AddObjectHelper):
         if data.total_vert_sel > 0:
             bm = bmesh.from_edit_mesh(data)
             indices = [s.index for s in bm.select_history
-                if isinstance(s, bmesh.types.BMVert)]
-            self.report({'INFO'}, '%s atoms were replaced'%len(indices))
+                       if isinstance(s, bmesh.types.BMVert)]
+            self.report({'INFO'}, '%s atoms were replaced' % len(indices))
             batoms = Batoms(label=obj.batoms.label)
             edit_bond(batoms, indices, self.order)
             bpy.context.view_layer.objects.active = batoms.obj

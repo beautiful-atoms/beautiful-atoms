@@ -77,4 +77,4 @@ if __name__ == "__main__":
     test_ase_molecule()
     test_ase_bulk()
     test_ase_surface()
-    print("\n Batoms: All pass! \n")
+    print("\n Ops: All pass! \n")
