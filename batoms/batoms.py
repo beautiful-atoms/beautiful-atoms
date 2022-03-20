@@ -1706,7 +1706,7 @@ class Batoms(BaseCollection, ObjectGN):
         batoms.translate(translation)
         # self.hide = True
         return batoms
-    
+
     @property
     def draw_text(self):
         """draw_text object.
@@ -1716,7 +1716,7 @@ class Batoms(BaseCollection, ObjectGN):
         dns = bpy.app.driver_namespace
         if self.label in dns:
             return dns[self.label]
-        context = bpy.context             
+        context = bpy.context
         dns[self.label] = DrawText(context, self.label)
         return dns[self.label]
 
@@ -1725,7 +1725,7 @@ class Batoms(BaseCollection, ObjectGN):
         return self.coll.batoms.show_label
 
     @show_label.setter
-    def show_label(self, label = "species"):
+    def show_label(self, label="species"):
         self.coll.batoms.show_label = str(label)
         arrays = self.arrays
         positions = arrays["positions"]
@@ -1738,7 +1738,6 @@ class Batoms(BaseCollection, ObjectGN):
         elif label.lower() in arrays:
             texts = arrays[label]
         else:
-            raise Exception("%s does not have %s attribute"%(self.label, label))
+            raise Exception("%s does not have %s attribute" %
+                            (self.label, label))
         self.draw_text.add_handle(positions, texts)
-
-    

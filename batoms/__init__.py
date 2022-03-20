@@ -16,6 +16,7 @@ from batoms.batoms import Batoms
 import bpy
 from bpy.types import Collection, Object
 from bpy.props import PointerProperty
+import console_python
 from . import custom_property
 from .gui import (
     gui_batoms,
@@ -214,6 +215,23 @@ classes_ops = [
 
 addon_tools = []
 
+def console_hook():
+    """add batoms to namespace of python console
+    """
+    from batoms.utils.butils import read_batoms_list
+    import console_python
+    items = read_batoms_list()
+    for area in bpy.context.screen.areas:
+        if area.type == 'CONSOLE':
+            for region in area.regions:
+                if region.type == 'WINDOW':
+                    console, stdout, stderr = console_python.get_console(hash(region))
+                    for item in items:
+                        item = item.replace('-', '_')
+                        item = item.replace('.', '')
+                        if item[:1].isdigit():
+                            item = 'b_' + item
+                        console.locals[item] = Batoms(item)
 
 # handle the keymap
 wm = bpy.context.window_manager
@@ -267,6 +285,8 @@ def register():
     scene.pmgpanel = PointerProperty(type=gui_pymatgen.PymatgenProperties)
     scene.pubcpanel = PointerProperty(type=gui_pubchem.PubchemProperties)
     
+    console_python.execute.hooks.append((console_hook, ()))
+
 
 def unregister():
     
@@ -291,6 +311,7 @@ def unregister():
         bpy.utils.unregister_tool(gui_toolbar.MoleculeEditElement)
         bpy.utils.unregister_tool(gui_toolbar.MolecueEditBond)
 
+    console_python.execute.hooks.remove((console_hook, ()))
 
 if __name__ == "__main__":
 

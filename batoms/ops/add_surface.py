@@ -58,7 +58,7 @@ class BuildSurfaceFCC100(Operator):
 
     def execute(self, context):
         if self.label == '':
-            self.label = self.symbol
+            self.label = '%s100'%self.symbol
         a = None if self.a == 0 else self.a
         atoms = fcc100(self.symbol, size=self.size,
                        a=a,
@@ -110,7 +110,7 @@ class BuildSurfaceFCC110(Operator):
 
     def execute(self, context):
         if self.label == '':
-            self.label = self.symbol
+            self.label = '%s100'%self.symbol
         a = None if self.a == 0 else self.a
         atoms = fcc110(self.symbol, size=self.size,
                        a=a,
@@ -162,7 +162,7 @@ class BuildSurfaceFCC111(Operator):
 
     def execute(self, context):
         if self.label == '':
-            self.label = self.symbol
+            self.label = '%s111'%self.symbol
         a = None if self.a == 0 else self.a
         atoms = fcc111(self.symbol, size=self.size,
                        a=a,
@@ -210,7 +210,7 @@ class BuildSurfaceFCC211(Operator):
 
     def execute(self, context):
         if self.label == '':
-            self.label = self.symbol
+            self.label = '%s211'%self.symbol
         a = None if self.a == 0 else self.a
         atoms = fcc211(self.symbol, size=self.size,
                        a=a,
@@ -263,7 +263,7 @@ class BuildSurfaceFCC111Root(Operator):
 
     def execute(self, context):
         if self.label == '':
-            self.label = self.symbol
+            self.label = '%s111_root'%self.symbol
         a = None if self.a == 0 else self.a
         atoms = fcc111_root(self.symbol, size=self.size,
                             root=self.root,
@@ -315,7 +315,7 @@ class BuildSurfaceBCC100(Operator):
 
     def execute(self, context):
         if self.label == '':
-            self.label = self.symbol
+            self.label = '%s100'%self.symbol
         a = None if self.a == 0 else self.a
         atoms = bcc100(self.symbol, size=self.size,
                        a=a,
@@ -367,7 +367,7 @@ class BuildSurfaceBCC110(Operator):
 
     def execute(self, context):
         if self.label == '':
-            self.label = self.symbol
+            self.label = '%s110'%self.symbol
         a = None if self.a == 0 else self.a
         atoms = bcc110(self.symbol, size=self.size,
                        a=a,
@@ -419,7 +419,7 @@ class BuildSurfaceBCC111(Operator):
 
     def execute(self, context):
         if self.label == '':
-            self.label = self.symbol
+            self.label = '%s111'%self.symbol
         a = None if self.a == 0 else self.a
         atoms = bcc111(self.symbol, size=self.size,
                        a=a,
@@ -473,7 +473,7 @@ class BuildSurfaceBCC111Root(Operator):
 
     def execute(self, context):
         if self.label == '':
-            self.label = self.symbol
+            self.label = '%s111_root'%self.symbol
         a = None if self.a == 0 else self.a
         atoms = bcc111_root(self.symbol, size=self.size,
                             root=self.root,
@@ -530,7 +530,7 @@ class BuildSurfaceHCP0001(Operator):
 
     def execute(self, context):
         if self.label == '':
-            self.label = self.symbol
+            self.label = '%s0001'%self.symbol
         a = None if self.a == 0 else self.a
         c = None if self.c == 0 else self.c
         atoms = hcp0001(self.symbol, size=self.size,
@@ -589,7 +589,7 @@ class BuildSurfaceHCP10m10(Operator):
 
     def execute(self, context):
         if self.label == '':
-            self.label = self.symbol
+            self.label = '%s10m10'%self.symbol
         a = None if self.a == 0 else self.a
         c = None if self.c == 0 else self.c
         atoms = hcp10m10(self.symbol, size=self.size,
@@ -645,7 +645,7 @@ class BuildSurfaceHCP0001Root(Operator):
 
     def execute(self, context):
         if self.label == '':
-            self.label = self.symbol
+            self.label = '%s0001_root'%self.symbol
         a = None if self.a == 0 else self.a
         atoms = hcp0001_root(self.symbol, size=self.size,
                              root=self.root,
@@ -697,7 +697,7 @@ class BuildSurfaceDiamond100(Operator):
 
     def execute(self, context):
         if self.label == '':
-            self.label = self.symbol
+            self.label = '%s_100'%self.symbol
         a = None if self.a == 0 else self.a
         atoms = diamond100(self.symbol, size=self.size,
                            a=a,
@@ -749,7 +749,7 @@ class BuildSurfaceDiamond111(Operator):
 
     def execute(self, context):
         if self.label == '':
-            self.label = self.symbol
+            self.label = '%s_111'%self.symbol
         a = None if self.a == 0 else self.a
         atoms = diamond111(self.symbol, size=self.size,
                            a=a,
