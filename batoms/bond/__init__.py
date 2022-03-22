@@ -410,23 +410,31 @@ class Bonds(BaseCollection, ObjectGN):
             return
         pairs = np.concatenate((
             bondlists['species_index1'].reshape(-1, 1),
-            bondlists['species_index2'].reshape(-1, 1)), axis=1)
+            bondlists['species_index2'].reshape(-1, 1),
+            bondlists['order'].reshape(-1, 1),
+            bondlists['style'].reshape(-1, 1)), axis=1)
         pairs = np.unique(pairs, axis=0)
-        pairs = pairs.reshape(-1, 2)
+        pairs = pairs.reshape(-1, 4)
         for pair in pairs:
             sp1 = number2String(pair[0])
             sp2 = number2String(pair[1])
+            order = pair[2]
+            style = pair[3]
             sp = self.setting['%s-%s' % (sp1, sp2)]
-            self.add_geometry_node(sp.as_dict())
+            self.add_geometry_node(sp.as_dict(), order, style)
 
         print('Update geometry nodes for bonds: %s' % (time() - tstart))
 
-    def add_geometry_node(self, sp):
+    def add_geometry_node(self, sp, order=None, style=None):
         """
         add geometry node for each bond pair
         """
         from batoms.utils.butils import get_nodes_by_name
         # tstart = time()
+        if not order:
+            order = sp["order"]
+        if not style:
+            style = int(sp["style"])
         gn = self.gnodes
         GroupInput = gn.node_group.nodes[0]
         SetPosition = get_nodes_by_name(gn.node_group.nodes,
@@ -434,8 +442,6 @@ class Bonds(BaseCollection, ObjectGN):
         JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
                                          '%s_JoinGeometry' % self.label)
         #
-        order = sp['order']
-        style = int(sp['style'])
         name = 'bond_%s_%s_%s_%s' % (self.label, sp["name"], order, style)
         InstanceOnPoint = get_nodes_by_name(gn.node_group.nodes,
                                             'InstanceOnPoint_%s' % name,
@@ -572,18 +578,22 @@ class Bonds(BaseCollection, ObjectGN):
             return
         pairs = np.concatenate((
             bondlists['species_index1'].reshape(-1, 1),
-            bondlists['species_index2'].reshape(-1, 1)), axis=1)
+            bondlists['species_index2'].reshape(-1, 1),
+            bondlists['order'].reshape(-1, 1),
+            bondlists['style'].reshape(-1, 1)), axis=1)
         pairs = np.unique(pairs, axis=0)
-        pairs = pairs.reshape(-1, 2)
+        pairs = pairs.reshape(-1, 4)
         for pair in pairs:
             sp1 = number2String(pair[0])
             sp2 = number2String(pair[1])
+            order = pair[2]
+            style = pair[3]
+            order_style = '%s_%s' % (order, style)
             sp = self.setting['%s-%s' % (sp1, sp2)]
             sp = sp.as_dict()
-            order_style = '%s_%s' % (sp["order"], sp["style"])
             # update geometry node
             if self.setting.instancers[sp["name"]][order_style] is None:
-                self.setting.build_instancer(sp)
+                self.setting.build_instancer(sp, order, style)
                 self.add_geometry_node(sp)
             # update materials
             mat1 = self.setting.materials[sp["name"]]["%s_0" % (order_style)]
@@ -610,7 +620,7 @@ class Bonds(BaseCollection, ObjectGN):
                 self.setting.instancers[sp["name"]][order_style]
         print('update bond instancer: %s' % (time() - tstart))
 
-    def update(self, ):
+    def update(self, bondlists = None, orders = None):
         """
         Draw bonds.
         calculate bond in all farmes, and merge all bondlists
@@ -629,36 +639,38 @@ class Bonds(BaseCollection, ObjectGN):
         bond_datas = {}
         tstart = time()
         setting = self.setting.as_dict()
-        for f in range(nframe):
-            # print('update bond: ', f)
-            positions = frames[f, show, :]
-            # if len(frames_search) > 0:
-            #     positions_search = frames_search[f]
-            #     positions = positions + positions_search
-            bondlist, bonddatas, peciesBondDatas, molPeciesDatas = \
-                self.build_bondlists(species, positions, self.batoms.cell,
-                                     self.batoms.pbc, setting)
-            if array_b is not None:
-                bondlist = self.build_bondlists_with_boundary(
-                    array_b, bondlist, bonddatas,
-                    peciesBondDatas,
-                    molPeciesDatas)
-            # search molecule
-            # search bond
-            if self.show_search:
-                self.search_bond.update(
-                    bondlist, peciesBondDatas, molPeciesDatas,
-                    arrays, self.batoms.cell)
-            if f == 0:
-                bondlists = bondlist
-            else:
-                bondlists = np.append(bondlists, bondlist, axis=0)
-        bondlists = np.unique(bondlists, axis=0)
+        if bondlists is None:
+            for f in range(nframe):
+                # print('update bond: ', f)
+                positions = frames[f, show, :]
+                # if len(frames_search) > 0:
+                #     positions_search = frames_search[f]
+                #     positions = positions + positions_search
+                bondlist, bonddatas, peciesBondDatas, molPeciesDatas = \
+                    self.build_bondlists(species, positions, self.batoms.cell,
+                                        self.batoms.pbc, setting)
+                if array_b is not None:
+                    bondlist = self.build_bondlists_with_boundary(
+                        array_b, bondlist, bonddatas,
+                        peciesBondDatas,
+                        molPeciesDatas)
+                # search molecule
+                # search bond
+                if self.show_search:
+                    self.search_bond.update(
+                        bondlist, peciesBondDatas, molPeciesDatas,
+                        arrays, self.batoms.cell)
+                if f == 0:
+                    bondlists = bondlist
+                else:
+                    bondlists = np.append(bondlists, bondlist, axis=0)
+            bondlists = np.unique(bondlists, axis=0)
         bond_datas = self.calc_bond_data(species, frames[:, show, :],
-                                         self.batoms.cell, bondlist,
+                                         self.batoms.cell, bondlists,
                                          self.setting,
                                          arrays['model_style'][show])
-
+        if orders:
+            bond_datas.update({"order": orders})
         if len(bond_datas) == 0:
             return
         self.set_arrays(bond_datas)
@@ -1430,3 +1442,35 @@ class Bonds(BaseCollection, ObjectGN):
             # print(offsets[i], offset)
 
         return offsets
+
+    def auto_set_bond_order(self):
+        """Set bond order by pybel
+        #TODO support show, select
+        """
+        from openbabel import pybel
+        species = self.batoms.arrays['species']
+
+        mol = self.batoms.as_pybel(export_bonds=False)
+        bondlists = [[b.GetBeginAtom().GetIndex(),
+                        b.GetEndAtom().GetIndex(),
+                        0, 0, 0, 0, 0, 0, 0, 0]
+             for b in pybel.ob.OBMolBondIter(mol.OBMol)]
+        #TODO detect hydrogen bond
+        cutoff_dict = self.setting.cutoff_dict
+        nbond = len(bondlists)
+        remove = []
+        bondlists = np.array(bondlists)
+        for i in range(nbond):
+            b = bondlists[i]
+            if (species[b[0]], species[b[1]]) not in cutoff_dict:
+                # swtich bond
+                if (species[b[1]], species[b[0]]) in cutoff_dict:
+                    bondlists[i][0], bondlists[i][1] = bondlists[i][1], bondlists[i][0]
+                else:
+                    # remove bond
+                    remove.append(i)
+        np.delete(bondlists, remove)
+        orders = [b.GetBondOrder()
+            for b in pybel.ob.OBMolBondIter(mol.OBMol)]
+        self.update(bondlists, orders = orders)
+        

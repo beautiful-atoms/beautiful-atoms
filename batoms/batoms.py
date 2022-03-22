@@ -1693,16 +1693,17 @@ class Batoms(BaseCollection, ObjectGN):
             a.SetVector(arrays['positions'][i][0],
                         arrays['positions'][i][1],
                         arrays['positions'][i][2])
-        if export_bonds is None:
+        if export_bonds:
             bond_arrays = self.bonds.arrays
             nbond = len(bond_arrays)
             for i in range(nbond):
-                mol.AddBond(bond_arrays['atoms_index1'][i] + 1,
-                            bond_arrays['atoms_index2'][i] + 1,
+                mol.AddBond(int(bond_arrays['atoms_index1'][i]) + 1,
+                            int(bond_arrays['atoms_index2'][i]) + 1,
                             bond_arrays['order'][i])
         else:
             mol.ConnectTheDots()
             mol.PerceiveBondOrders()
+        mol = pybel.Molecule(mol)
         return mol
 
     def write(self, filename, local=True):
@@ -1781,7 +1782,6 @@ class Batoms(BaseCollection, ObjectGN):
         from openbabel import pybel
         from batoms.utils import read_from_pybel
         mol = self.as_pybel()
-        mol = pybel.Molecule(mol)
         mol.localopt(forcefield, steps)
         positions = []
         for atom in ob.OBMolAtomIter(mol.OBMol):
