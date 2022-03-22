@@ -13,7 +13,7 @@ from batoms.base.object import ObjectGN
 from batoms.ribbon.ribbon import Ribbon
 from batoms.utils.butils import object_mode, show_index, \
     get_nodes_by_name
-from batoms.utils import string2Number, read_from_ase, read_from_pymatgen
+from batoms.utils import string2Number, read_from_others
 import numpy as np
 from time import time
 
@@ -63,6 +63,7 @@ class Batoms(BaseCollection, ObjectGN):
                  color_style='0',
                  from_ase=None,
                  from_pymatgen=None,
+                 from_pybel=None,
                  metaball=False,
                  movie=True,
                  segments=None,
@@ -128,12 +129,10 @@ class Batoms(BaseCollection, ObjectGN):
         self.obj_name = label
         ObjectGN.__init__(self, label)
         BaseCollection.__init__(self, coll_name=label)
-        if from_ase is not None:
-            species, positions, attributes, cell, pbc, info = \
-                read_from_ase(from_ase)
-        if from_pymatgen is not None:
-            species, positions, attributes, cell, pbc, info = \
-                read_from_pymatgen(from_pymatgen)
+        if from_ase or from_pymatgen or from_pybel:
+            species, positions, attributes, cell, pbc, info = read_from_others(from_ase,
+                                                                           from_pymatgen,
+                                                                           from_pybel)
         if species is None and self.check_batoms(label):
             self.from_batoms(label)
         else:
@@ -1676,6 +1675,10 @@ class Batoms(BaseCollection, ObjectGN):
             return images[0]
         else:
             return images
+        
+    def ase_pybel(self):
+        ob = None
+        return ob
 
     def write(self, filename, local=True):
         """
