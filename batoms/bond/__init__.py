@@ -1443,7 +1443,7 @@ class Bonds(BaseCollection, ObjectGN):
 
         return offsets
 
-    def auto_set_bond_order(self):
+    def bond_order_auto_set(self):
         """Set bond order by pybel
         #TODO support show, select
         """

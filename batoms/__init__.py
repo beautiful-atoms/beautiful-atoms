@@ -190,6 +190,7 @@ classes_ops = [
     ops_bond.BondPairRemove,
     ops_bond.BondModify,
     ops_bond.BondDraw,
+    ops_bond.BondOrderAutoSet,
     ops_polyhedra.PolyhedraAdd,
     ops_polyhedra.PolyhedraRemove,
     ops_polyhedra.PolyhedraDraw,
