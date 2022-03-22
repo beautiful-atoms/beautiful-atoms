@@ -2,7 +2,7 @@ name: Build beautiful_atoms main image
 
 env:
   image_name: beautiful_atoms
-  TEST_TAG: beautiful_atoms:test
+  TEST_TAG: beautiful_atoms:tests
 
 on:
   push:
