@@ -6,7 +6,7 @@ from batoms.batoms import Batoms
 
 def test_ribbon():
     bpy.ops.batoms.delete()
-    atoms = read_pdb("datas/1ema.pdb")  # 1ema, 1tim, 4hhb
+    atoms = read_pdb("../tests/datas/1ema.pdb")  # 1ema, 1tim, 4hhb
     protein = Batoms("protein", from_ase=atoms)
     protein.ribbon.draw()
     sel1 = protein.selects.add("sel1", "sheet A-160-A-170")

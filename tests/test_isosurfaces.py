@@ -21,7 +21,7 @@ def test_slice():
     if skip_test:
         pytest.skip("Skip tests on cube files since $NOTEST_CUBE provided.")
     bpy.ops.batoms.delete()
-    h2o = read("../test/datas/h2o-homo.cube")
+    h2o = read("../tests/datas/h2o-homo.cube")
     h2o.isosurfaces.setting["1"] = {"level": -0.001}
     h2o.isosurfaces.setting["2"] = {"level": 0.001, "color": [0, 0, 0.8, 0.5]}
     h2o.isosurfaces.draw()
@@ -36,7 +36,7 @@ def test_diff():
     if skip_test:
         pytest.skip("Skip tests on cube files since $NOTEST_CUBE provided.")
     bpy.ops.batoms.delete()
-    h2o = read("datas/h2o-homo.cube", label = "h2o")
+    h2o = read("../tests/datas/h2o-homo.cube", label = "h2o")
     volume = h2o.volume
     h2o.volume = volume + 0.1
     assert np.allclose(h2o.volume, volume + 0.1)
