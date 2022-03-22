@@ -96,6 +96,7 @@ classes_ops = [
     add_object.AddMolecule,
     add_object.AddBulk,
     add_object.AddAtoms,
+    add_object.AddSmiles,
     add_surface.BuildSurfaceFCC100,
     add_surface.BuildSurfaceFCC110,
     add_surface.BuildSurfaceFCC111,

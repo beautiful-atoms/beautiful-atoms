@@ -32,6 +32,8 @@ class VIEW3D_MT_batoms_add(Menu):
                         text="Surface", icon='VIEW_ORTHO')
         layout.operator("batoms.root_surface_add",
                         text="Root Surface", icon='MOD_LATTICE')
+        layout.operator("batoms.smiles_add",
+                        text="Smiles", icon='MOD_LATTICE')
 
         layout.separator()
 

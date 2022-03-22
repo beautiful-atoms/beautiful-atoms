@@ -152,3 +152,31 @@ class AddAtoms(Operator):
         bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
+
+class AddSmiles(Operator):
+    bl_idname = "batoms.smiles_add"
+    bl_label = "Add Smiles"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = ("Add Smiles")
+
+    label: StringProperty(
+        name="Label", default='',
+        description="Label")
+
+    smiles: StringProperty(
+        name="smiles", default='CCO',
+        description="smiles")
+
+    def execute(self, context):
+        from openbabel import pybel
+        if self.label == '':
+            self.label = self.smiles
+        if self.label in bpy.data.collections:
+            self.label = "%s.001"%self.label
+        mol = pybel.readstring("smi", self.smiles)
+        mol.make3D(forcefield='mmff94', steps=100)
+        batoms = Batoms(label=self.label, from_pybel=mol)
+        batoms.model_style = 1
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
+        return {'FINISHED'}
