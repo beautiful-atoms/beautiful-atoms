@@ -4,6 +4,23 @@ from mathutils import Vector, Matrix
 import numpy as np
 
 
+def get_all_consoles():
+    """Get all consoles
+
+    Returns:
+        list: a list of consoles
+    """
+    from console_python import get_console
+    consoles = []
+    for area in bpy.context.screen.areas:
+        if area.type == 'CONSOLE':
+            # areas.append(area)
+            for region in area.regions:
+                if region.type == 'WINDOW':
+                    console, stdout, stderr = get_console(hash(region))
+                    consoles.append(console)
+    return consoles
+
 def object_mode():
     for object in bpy.data.objects:
         if object.mode == 'EDIT':
