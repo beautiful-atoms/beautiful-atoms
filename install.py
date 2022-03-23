@@ -204,6 +204,7 @@ def _run_process(commands, shell=False, print_cmd=True, cwd="."):
 
 def _blender_enable_plugin(blender_bin):
     """Use blender's internal libary to enable plugin (and save as user script)"""
+    blender_bin = str(blender_bin)
     commands = [blender_bin, "-b", "--python-expr", BLENDERPY_ENABLE_PLUGIN]
     _run_process(commands)
     return
@@ -211,6 +212,7 @@ def _blender_enable_plugin(blender_bin):
 
 def _blender_disable_plugin(blender_bin):
     """Use blender's internal libary to disable plugin (and save as user script)"""
+    blender_bin = str(blender_bin)
     commands = [blender_bin, "-b", "--python-expr", BLENDERPY_DISABLE_PLUGIN]
     _run_process(commands)
     return
@@ -332,61 +334,67 @@ def install(
     #       if python is real path --> move to _python
     # If the "_python" path exists and not empty, only replace it if is symlink
 
-    # Target part
-    overwrite = False
+
+    # Step 1: analyzing the factory python target
+    # Should only occur once. Check if factory python still works.
+    # Otherwise instruct the user to download and recover python
+
     if factory_python_target.is_dir():
+        # Empty of symlink factory python might be mistakenly created
+        # just delete them
         if _is_empty_dir(factory_python_target):
             os.rmdir(factory_python_target)
+        elif factory_python_target.is_symlink():
+            os.unlink(factory_python_target)
         else:
-            if factory_python_target.is_symlink():
-                os.unlink(factory_python_target)
-            else:
-                print(
-                    (
-                        f"Target path {factory_python_target.as_posix()} is not empty. "
-                        "This means you may have used the installation script already. "
+            print(
+                        (
+                            f"Target path {factory_python_target.as_posix()} is not empty. "
+                            "This means you may have used the installation script already. "
+                        )
                     )
-                )
-                try:
-                    old_py = next(factory_python_target.glob("bin/python*"))
-                except StopIteration:
-                    print("Old python binary not found, may be broken. Will overwrite.")
-                    old_py = None
-                    overwrite = True
-                if old_py:
-                    proc = subprocess.run([old_py, "-V"])
-                    if proc.returncode == 0:
-                        print("Old python binary is working. Will not overwrite.")
-                        overwrite = False
-                    else:
-                        overwrite = True
+            warn_corrupt = False
+            try:
+                old_py = next(factory_python_target.glob("bin/python*"))
+            except StopIteration:
+                print("Factory python binary not found.")
+                old_py = None
+                warn_corrupt = True
+            if old_py:
+                proc = subprocess.run([old_py, "-V"])
+                if proc.returncode != 0:
+                    print((f"Found factory python at {old_py.as_posix()} "
+                    "but it's not working"))
+                    warn_corrupt = True
+            # TODO: elaborate installation script
+            if warn_corrupt:
+                print((f"Backup of factory python at {factory_python_target.as_posix()} "
+                "is corrupt. Consider download a new version"
+                ))
     else:
         if factory_python_target.is_file():
             os.unlink(factory_python_target)
 
-    # At this stage the factory_python_target should be either removed or don't allow overwrite
-    if factory_python_target.exists() and overwrite:
-        # Should not happen
-        raise RuntimeError(
-            f"Cannot overwrite {factory_python_target.as_posix()}. Check permission?"
+    # Step 2: move source --> target
+    if not factory_python_target.exists():
+        # Move the source --> target and symlink conda prefix to factory source
+        # TODO: this is a bug
+        if factory_python_source.is_symlink():
+            origin = factory_python_source.readlink()
+            os.unlink(factory_python_source)
+            os.symlink(origin, factory_python_target)
+        elif factory_python_source.is_dir():
+            shutil.move(factory_python_source, factory_python_target)
+        else:
+            # source may not exist
+            pass
+        print(
+            f"Old python directory for blender moved to {factory_python_target.as_posix()}"
         )
-
-    # Move the source --> target and symlink conda prefix to factory source
-    # TODO: this is a bug
-    if factory_python_source.is_symlink():
-        origin = factory_python_source.readlink()
-        os.unlink(factory_python_source)
-        os.symlink(origin, factory_python_target)
-    elif factory_python_source.is_dir():
-        shutil.move(factory_python_source, factory_python_target)
-    else:
-        # source may not exist
-        pass
-    print(
-        f"Old python directory for blender moved to {factory_python_target.as_posix()}"
-    )
-    # finally, link the conda prefix of current environment
+    # Step 3: finally, link the conda prefix of current environment
     conda_prefix = Path(conda_vars["CONDA_PREFIX"]).resolve()
+    if factory_python_source.is_symlink():
+        os.unlink(factory_python_source)
     os.symlink(conda_prefix, factory_python_source)
     print(f"Created symlink {conda_prefix} --> {factory_python_source.as_posix()}")
 
