@@ -44,7 +44,7 @@ def test_polyhedra():
 
 def test_isosurface():
     bpy.ops.batoms.delete()
-    h2o = read("../test/datas/h2o-homo.cube")
+    h2o = read("../tests/datas/h2o-homo.cube")
     bpy.context.view_layer.objects.active = h2o.obj
     bpy.ops.surface.isosurface_draw()
     assert len(h2o.isosurfaces.setting) == 1

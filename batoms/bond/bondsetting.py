@@ -177,15 +177,19 @@ class BondSettings(Setting):
             for key, data in bondsetting.items():
                 self[key] = data
 
-    def build_materials(self, sp, node_inputs=None,
+    def build_materials(self, sp, order=None, style = None, node_inputs=None,
                         material_style='default'):
         """
         """
         from batoms.material import create_material
+        if not order:
+            order = sp["order"]
+        if not style:
+            style = int(sp["style"])
         colors = [sp['color1'], sp['color2']]
         for i in range(2):
             name = 'bond_%s_%s_%s_%s_%s' % (
-                self.label, sp['name'], sp['order'], sp['style'], i)
+                self.label, sp['name'], order, style, i)
             if name in bpy.data.materials:
                 mat = bpy.data.materials.get(name)
                 bpy.data.materials.remove(mat, do_unlink=True)
@@ -195,7 +199,7 @@ class BondSettings(Setting):
                             material_style=material_style,
                             backface_culling=True)
 
-    def build_instancer(self, sp, vertices=32, shade_smooth=True):
+    def build_instancer(self, sp, order=None, style=None, vertices=32, shade_smooth=True):
         """_summary_
 
         Args:
@@ -209,8 +213,10 @@ class BondSettings(Setting):
         from batoms.utils.butils import get_nodes_by_name
 
         # only build the needed one
-        order = sp['order']
-        style = int(sp['style'])
+        if not order:
+            order = sp["order"]
+        if not style:
+            style = int(sp["style"])
         name = 'bond_%s_%s_%s_%s' % (self.label, sp['name'], order, style)
         radius = sp['width']
         self.delete_obj(name)
@@ -232,7 +238,7 @@ class BondSettings(Setting):
         obj.hide_set(True)
         obj.hide_render = True
         #
-        self.build_materials(sp)
+        self.build_materials(sp, order, style)
         self.assign_materials(sp, order, style)
         # update geometry nodes
         ObjectInstancer = get_nodes_by_name(self.bonds.gnodes.node_group.nodes,

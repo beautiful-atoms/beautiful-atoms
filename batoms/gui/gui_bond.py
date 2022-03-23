@@ -20,6 +20,8 @@ class Bond_PT_prepare(Panel):
         layout = self.layout
         bbpanel = context.scene.bbpanel
 
+        layout.operator("bond.bond_order_auto_set", icon='MODIFIER_ON', text="Auto Set Bond Order")
+        layout.separator()
         layout.label(text="Bond style")
         col = layout.column()
         col.prop(bbpanel, "bond_style", expand=True)

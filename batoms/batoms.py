@@ -13,7 +13,7 @@ from batoms.base.object import ObjectGN
 from batoms.ribbon.ribbon import Ribbon
 from batoms.utils.butils import object_mode, show_index, \
     get_nodes_by_name
-from batoms.utils import string2Number, read_from_ase, read_from_pymatgen
+from batoms.utils import string2Number, read_from_others
 import numpy as np
 from time import time
 
@@ -63,6 +63,7 @@ class Batoms(BaseCollection, ObjectGN):
                  color_style='0',
                  from_ase=None,
                  from_pymatgen=None,
+                 from_pybel=None,
                  metaball=False,
                  movie=True,
                  segments=None,
@@ -128,12 +129,10 @@ class Batoms(BaseCollection, ObjectGN):
         self.obj_name = label
         ObjectGN.__init__(self, label)
         BaseCollection.__init__(self, coll_name=label)
-        if from_ase is not None:
-            species, positions, attributes, cell, pbc, info = \
-                read_from_ase(from_ase)
-        if from_pymatgen is not None:
-            species, positions, attributes, cell, pbc, info = \
-                read_from_pymatgen(from_pymatgen)
+        if from_ase or from_pymatgen or from_pybel:
+            species, positions, attributes, cell, pbc, info = read_from_others(from_ase,
+                                                                               from_pymatgen,
+                                                                               from_pybel)
         if species is None and self.check_batoms(label):
             self.from_batoms(label)
         else:
@@ -1677,6 +1676,36 @@ class Batoms(BaseCollection, ObjectGN):
         else:
             return images
 
+    def as_pybel(self, export_bonds=False):
+        """Convert an Batoms object to an OBMol object.
+
+        Returns:
+            OBMOL: OBMOL
+        """
+        from openbabel import pybel
+        from ase.data import atomic_numbers
+        mol = pybel.ob.OBMol()
+        arrays = self.arrays
+        natom = len(self)
+        for i in range(natom):
+            a = mol.NewAtom()
+            a.SetAtomicNum(atomic_numbers[arrays['elements'][i]])
+            a.SetVector(arrays['positions'][i][0],
+                        arrays['positions'][i][1],
+                        arrays['positions'][i][2])
+        if export_bonds:
+            bond_arrays = self.bonds.arrays
+            nbond = len(bond_arrays)
+            for i in range(nbond):
+                mol.AddBond(int(bond_arrays['atoms_index1'][i]) + 1,
+                            int(bond_arrays['atoms_index2'][i]) + 1,
+                            bond_arrays['order'][i])
+        else:
+            mol.ConnectTheDots()
+            mol.PerceiveBondOrders()
+        mol = pybel.Molecule(mol)
+        return mol
+
     def write(self, filename, local=True):
         """
         Save batoms to structure file.
@@ -1741,3 +1770,23 @@ class Batoms(BaseCollection, ObjectGN):
             raise Exception("%s does not have %s attribute" %
                             (self.label, label))
         self.draw_text.add_handle(positions, texts)
+
+    def optmize(self, forcefield="mmff94", steps=500):
+        """_summary_
+
+        Args:
+            forcefield (str, optional): _description_. Defaults to "mmff94".
+            steps (int, optional): _description_. Defaults to 500.
+        """
+        from openbabel import openbabel as ob
+        from openbabel import pybel
+        from batoms.utils import read_from_pybel
+        mol = self.as_pybel()
+        mol.localopt(forcefield, steps)
+        positions = []
+        for atom in ob.OBMolAtomIter(mol.OBMol):
+            positions.append([atom.GetX(), atom.GetY(), atom.GetZ()])
+        print(self.positions)
+        # species, positions, arrays, cell, pbc, info = read_from_pybel(mol)
+        self.positions = positions
+        print(self.positions)
