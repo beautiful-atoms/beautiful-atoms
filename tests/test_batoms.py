@@ -250,7 +250,8 @@ def test_make_real():
 
     bpy.ops.batoms.delete()
     h2o = Batoms("h2o", from_ase=molecule("H2O"))
-    h2o.make_real()
+    h2o.realize_instances = True
+    h2o.realize_instances = False
 
 
 if __name__ == "__main__":

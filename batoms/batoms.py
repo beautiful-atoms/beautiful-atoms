@@ -1144,13 +1144,7 @@ class Batoms(BaseCollection, ObjectGN):
         cell = np.array(
             [bcell.matrix_world @ bcell.data.vertices[i].co for i in range(3)])
         return cell
-
-    def make_real(self):
-        """ Make instancing object real
-        # TODO: add make real to geometry node
-        """
-        self.select = True
-        bpy.ops.object.duplicates_make_real()
+        
 
     def get_distances(self, i, indices, mic=False):
         """
@@ -1780,13 +1774,11 @@ class Batoms(BaseCollection, ObjectGN):
         """
         from openbabel import openbabel as ob
         from openbabel import pybel
-        from batoms.utils import read_from_pybel
+        # from batoms.utils import read_from_pybel
         mol = self.as_pybel()
         mol.localopt(forcefield, steps)
         positions = []
         for atom in ob.OBMolAtomIter(mol.OBMol):
             positions.append([atom.GetX(), atom.GetY(), atom.GetZ()])
-        print(self.positions)
         # species, positions, arrays, cell, pbc, info = read_from_pybel(mol)
         self.positions = positions
-        print(self.positions)

@@ -13,7 +13,7 @@ default_object_datas = {
 
 class BaseObject():
 
-    def __init__(self, obj_name, bobj_name = "batoms"):
+    def __init__(self, obj_name, bobj_name="batoms"):
         self.obj_name = obj_name
         self.bobj_name = bobj_name
 
@@ -161,7 +161,7 @@ class BaseObject():
             obj = bpy.data.materials.get(name)
             bpy.data.materials.remove(obj, do_unlink=True)
 
-    def update_mesh(self, obj = None):
+    def update_mesh(self, obj=None):
         import bmesh
         object_mode()
         if obj is None:
@@ -177,15 +177,15 @@ class BaseObject():
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.object.mode_set(mode='OBJECT')
 
-    def add_verts(self, count, obj = None):
+    def add_verts(self, count, obj=None):
         import bmesh
         object_mode()
         if obj is None:
             obj = self.obj
         obj.data.vertices.add(count)
         self.update_mesh(obj)
-    
-    def add_vertices_bmesh(self, count, obj = None):
+
+    def add_vertices_bmesh(self, count, obj=None):
         import bmesh
         import numpy as np
         object_mode()
@@ -200,7 +200,7 @@ class BaseObject():
         bm.to_mesh(obj.data)
         bm.clear()
 
-    def delete_vertices_bmesh(self, index=[], obj = None,):
+    def delete_vertices_bmesh(self, index=[], obj=None,):
         """
         delete verts
         """
@@ -216,6 +216,7 @@ class BaseObject():
         bm.to_mesh(obj.data)
         bm.clear()
 
+
 class ObjectGN(BaseObject):
     """
     Object with Geometry Node
@@ -228,7 +229,6 @@ class ObjectGN(BaseObject):
             self.obj_name = '%s_%s' % (label, name)
         else:
             self.obj_name = label
-        
 
     def build_object(self, arrays, attributes={}):
         self.set_attributes(attributes)
@@ -296,6 +296,43 @@ class ObjectGN(BaseObject):
         add geometry node for each bond pair
         """
         pass
+
+    @property
+    def realize_instances(self):
+        return self.get_realize_instances()
+
+    @realize_instances.setter
+    def realize_instances(self, state):
+        self.set_realize_instances(state)
+
+    def get_realize_instances(self):
+        return list(self.coll.batoms.realize_instances)
+
+    def set_realize_instances(self, realize_instances):
+        """ Make instancing object real
+        # TODO: add make real to geometry node
+        """
+        #
+        nodes = self.gnodes.node_group.nodes
+        RealizeInstances = get_nodes_by_name(self.gnodes.node_group.nodes,
+                                             '%s_RealizeInstances' % self.label,
+                                             'GeometryNodeRealizeInstances')
+        if not realize_instances:
+            # switch off
+            if len(RealizeInstances.outputs[0].links) > 0:
+                link = RealizeInstances.outputs[0].links[0]
+                self.gnodes.node_group.links.remove(link)
+            self.gnodes.node_group.links.new(
+                nodes['%s_JoinGeometry' % self.label].outputs[0],
+                nodes[1].inputs[0])
+        else:
+            self.gnodes.node_group.links.new(
+                nodes['%s_JoinGeometry' % self.label].outputs[0],
+                RealizeInstances.inputs[0])
+            self.gnodes.node_group.links.new(
+                RealizeInstances.outputs[0],
+                nodes[1].inputs[0])
+        self.gnodes.node_group.update_tag()
 
     def update(self, ):
         """
@@ -422,11 +459,11 @@ class ObjectGN(BaseObject):
         self.obj.data.vertices.foreach_get('co', local_positions)
         local_positions = local_positions.reshape((n, 3))
         return local_positions
-    
+
     @local_positions.setter
     def local_positions(self, local_positions):
         self.set_local_positions(local_positions)
-    
+
     def set_local_positions(self, local_positions):
         """
         Set local_positions to local vertices
@@ -484,7 +521,6 @@ class ObjectGN(BaseObject):
             'co', positions)
         self.obj.data.update()
         self.update_mesh(obj=object)
-        
 
     @property
     def nframe(self):
@@ -570,22 +606,21 @@ class ObjectGN(BaseObject):
                 # Add Keyframes, the last one is different
                 if i != nframe - 1:
                     add_keyframe_to_shape_key(sk, 'value',
-                                            [0, 1, 0],
-                                            [frame_start + i - 1,
-                                            frame_start + i,
-                                            frame_start + i + 1])
+                                              [0, 1, 0],
+                                              [frame_start + i - 1,
+                                                  frame_start + i,
+                                                  frame_start + i + 1])
                 else:
                     add_keyframe_to_shape_key(sk, 'value',
-                                            [0, 1],
-                                            [frame_start + i - 1,
-                                            frame_start + i])
+                                              [0, 1],
+                                              [frame_start + i - 1,
+                                                  frame_start + i])
             else:
                 sk = obj.data.shape_keys.key_blocks.get(name)
             # Use the local position here
             positions = frames[i]
             vertices = positions.reshape((nvert*3, 1))
             sk.data.foreach_set('co', vertices)
-            
 
     def __len__(self):
         return len(self.obj.data.vertices)
