@@ -1,4 +1,19 @@
 #!/usr/bin/env python3
+"""
+Universal installation script for batoms using anaconda or miniconda environment
+Installation can be as easy as following steps
+```
+conda create -n batoms git curl python
+conda activate batoms
+curl -O https://raw.githubusercontent.com/superstar54/beautiful-atoms/main/install.py
+python install.py
+```
+
+Alternatively, check what `install.py` can do by using
+```
+python install.py --help
+```
+"""
 import os
 from os.path import expanduser, expandvars
 import shutil
@@ -6,30 +21,32 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from distutils.version import LooseVersion
+
+# TODO: allow version control
+# TODO: windows privilege issue
+# TODO: complete install tutorial about the env variables
+# TODO: unit test workflow
 
 
-minimal_version = 3.0
-factory_python_directory = "_old_python"
-repo_name = "beautiful-atoms"
-repo_git = "https://github.com/superstar54/beautiful-atoms.git"
-install_script_path = (
-    "https://raw.githubusercontent.com/superstar54/beautiful-atoms/main/install.py"
-)
-plugin_name = "batoms"
+DEFAULT_GITHUB_ACCOUNT = "superstar54"
+DEFAULT_REPO_NAME = "beautiful-atoms"
+DEFAULT_PLUGIN_NAME = "batoms"
+DEFAULT_PLUGIN_PATH = f"scripts/addons_contrib/{DEFAULT_PLUGIN_NAME}"
 BLENDERPY_ENABLE_PLUGIN = f"""
 import bpy
 import addon_utils
-addon_utils.enable('{plugin_name}', default_set=True)
+addon_utils.enable('{DEFAULT_PLUGIN_NAME}', default_set=True)
 bpy.ops.wm.save_userpref()
-print('Successfully enabled plugin {plugin_name}')
+print('Successfully enabled plugin {DEFAULT_PLUGIN_NAME}')
 """
 
 BLENDERPY_DISABLE_PLUGIN = f"""
 import bpy
 import addon_utils
-addon_utils.disable('{plugin_name}', default_set=True, handle_error=None)
+addon_utils.disable('{DEFAULT_PLUGIN_NAME}', default_set=True, handle_error=None)
 bpy.ops.wm.save_userpref()
-print('Disabled plugin {plugin_name}')
+print('Disabled plugin {DEFAULT_PLUGIN_NAME}')
 """
 
 BLENDERPY_TEST_PLUGIN = f"""
@@ -45,17 +62,34 @@ try:
 except ImportError:
     print('batoms cleanly uninstalled.')
 """
+minimal_blender_version = "3.0"
+# The directory to move factory python from conda
+factory_python_directory = "_old_python"
+repo_name = os.environ.get("GITHUB_REPO", DEFAULT_REPO_NAME)
+account_name = os.environ.get("GITHUB_ACCOUNT", DEFAULT_GITHUB_ACCOUNT)
+
+repo_git = f"https://github.com/{account_name}/{repo_name}.git"
+install_script_path = (
+    f"https://raw.githubusercontent.com/{account_name}/{repo_name}/main/install.py"
+)
 
 
-def _get_default_locations(os_name, version=minimal_version):
+
+
+def _get_default_locations(os_name, version=minimal_blender_version):
+    """Get system specific default install locations of blender
+    """
     os_name = os_name.lower()
+    # Compare version
+    if LooseVersion(str(version)) < LooseVersion(str(minimal_blender_version)):
+        raise ValueError(f"Blender version {version} is not supported. Minimal requirement is {minimal_blender_version}")
     if os_name not in ["windows", "macos", "linux"]:
         raise ValueError(f"{os_name} is not valid.")
     default_locations = {
         "windows": ["%PROGRAMFILES%/Blender Foundation/Blender {version}/{version}"],
         "macos": [
             "/Applications/Blender.app/Contents/Resources/{version}",
-            "~/Applications/Blender.app/Contents/Resources/{version}",
+            "$HOME/Applications/Blender.app/Contents/Resources/{version}",
         ],
     }
     if os_name == "linux":
@@ -72,6 +106,7 @@ def _get_default_locations(os_name, version=minimal_version):
         ).absolute()
         if true_location.is_dir():
             matches.append(true_location)
+    # Multiple blender installation may occur on macos
     if len(matches) > 1:
         print(f"Multiple blender installations of version {version} exists:")
         for i, m in enumerate(matches):
@@ -92,19 +127,20 @@ def _get_default_locations(os_name, version=minimal_version):
     return match
 
 
-def _get_blender_bin(os_name, blender_root):
+def _get_blender_bin(os_name, blender_bundle_root):
     """Find the system-dependent blender binary file.
-    blender_root is the path looks like <root>/3.0/
+    blender_bundle_root contains the distribution bundle
+    and has the pattern <blender_root>/<version>/
     """
-    blender_root = Path(blender_root)
+    blender_bundle_root = Path(blender_bundle_root)
     if os_name == "windows":
-        blender_bin = blender_root.parent / "blender.exe"
+        blender_bin = blender_bundle_root.parent / "blender.exe"
     elif os_name == "linux":
-        blender_bin = blender_root.parent / "blender"
+        blender_bin = blender_bundle_root.parent / "blender"
     elif os_name == "macos":
         # Blender.app/Contents/MacOS/Blender
         # Blender.app/Contents/Resources/3.0
-        blender_bin = blender_root.parents[1] / "MacOS" / "Blender"
+        blender_bin = blender_bundle_root.parents[1] / "MacOS" / "Blender"
     else:
         raise NotImplementedError(f"Blender not supported for system {os_name}")
 
@@ -116,6 +152,7 @@ def _get_blender_bin(os_name, blender_root):
 
 
 def _get_os_name():
+    """Convient os name function"""
     p_ = sys.platform
     if p_ in ["win32"]:
         return "windows"
@@ -145,7 +182,7 @@ def _get_conda_variables():
 
 
 def _is_empty_dir(p):
-    """Determin if path is empty"""
+    """Determin if path has no child dirs"""
     p = Path(p)
     try:
         next(p.rglob("*"))
@@ -154,27 +191,35 @@ def _is_empty_dir(p):
         stat = True
     return stat
 
+def _run_process(commands, shell=False, print_cmd=True, cwd="."):
+    full_cmd = " ".join(commands)
+    if print_cmd:
+        print(" ".join(commands))
+    proc = subprocess.run(commands, shell=shell, cwd=cwd)
+    if proc.returncode == 0:
+        return proc.returncode
+    else:
+        raise RuntimeError(f"Running {full_cmd} returned error code {proc.stderr}")
+
 
 def _blender_enable_plugin(blender_bin):
     """Use blender's internal libary to enable plugin (and save as user script)"""
     commands = [blender_bin, "-b", "--python-expr", BLENDERPY_ENABLE_PLUGIN]
-    proc = subprocess.run(commands)
-    if proc.returncode != 0:
-        raise RuntimeError("Enable plugin failed with error {proc.stderr}")
+    _run_process(commands)
     return
 
 
 def _blender_disable_plugin(blender_bin):
     """Use blender's internal libary to disable plugin (and save as user script)"""
     commands = [blender_bin, "-b", "--python-expr", BLENDERPY_DISABLE_PLUGIN]
-    proc = subprocess.run(commands)
-    if proc.returncode != 0:
-        raise RuntimeError("Disable plugin failed with error {proc.stderr}")
+    _run_process(commands)
     return
 
 
 def gitclone(workdir=".", version="main", url=repo_git):
-    """Make a git clone to the directory"""
+    """Make a git clone to the directory
+    version can be a branch name or tag name
+    """
     workdir = Path(expanduser(expandvars(workdir)))
     clone_into = workdir / repo_name
     os.makedirs(clone_into, exist_ok=True)
@@ -188,12 +233,8 @@ def gitclone(workdir=".", version="main", url=repo_git):
         f"{url}",
         clone_into.as_posix(),
     ]
-    proc = subprocess.run(commands)
-    if proc.returncode == 0:
-        print(f"Cloned repo into directory {clone_into.as_posix()}")
-        return clone_into
-    else:
-        raise RuntimeError(f"Clone repo failed with error {proc.stderr}")
+    _run_process(commands)
+    print(f"Cloned repo into directory {clone_into.as_posix()}")
 
 
 def install(
@@ -201,20 +242,25 @@ def install(
     blender_bin,
     repo_path,
     factory_python_target=factory_python_directory,
-    plugin_path_target=f"scripts/addons_contrib/{plugin_name}",
+    plugin_path_target=DEFAULT_PLUGIN_PATH,
 ):
     """Copy the contents inside plugin_path to the target_directory"""
     blender_root = Path(blender_root)
     conda_env_file = repo_path / "env.yml"
-    plugin_path_source = repo_path / plugin_name
+    # plugin_path_source: dir of plugin in github repo
+    plugin_path_source = repo_path / DEFAULT_PLUGIN_NAME
+    # plugin_path_target: dir of plugin under blender root
     plugin_path_target = blender_root / plugin_path_target
+    # factory_python_source: (presumably) python shipped with blender
     factory_python_source = blender_root / "python"
+    # factory_python_target: dir to move factory python
     factory_python_target = blender_root / factory_python_target
 
     # Check conda environment status
     conda_vars = _get_conda_variables()
     print(conda_vars)
     # Give a warning about conda env
+    # TODO: allow direct install into another environment
     if conda_vars["CONDA_DEFAULT_ENV"] in ["base"]:
         print(
             (
@@ -242,31 +288,39 @@ def install(
         "--file",
         conda_env_file.as_posix(),
     ]
-    proc = subprocess.run(commands)
-    if proc.returncode != 0:
-        raise RuntimeError(f"Error updating conda env. Error is {proc.stderr}")
-    
+    _run_process(commands)
+    print("Finished install conda packages.")
+
     # Extra steps (windows only), replace the numpy version with pip's numpy
     # since python on windows comes with wheel this should be relatively straighforward
     # TODO: clean up series of commands
-    if _get_os_name() in ["windows",]:
+    if _get_os_name() in [
+        "windows",
+    ]:
+        print(("You're running on Windows. "
+               "We will try to use wheel provided by pip for Numpy "
+               "to resolve DLL not found issue."))
         commands = [
             "python",
             "-m",
             "pip",
             "uninstall",
+            "-y",
             "numpy",
         ]
-        subprocess.run(commands)
+        _run_process(commands)
+        print("Uninstalled conda-distributed Numpy.")
 
         commands = [
             "python",
             "-m",
             "pip",
             "install",
+            "-y",
             "numpy",
         ]
-        subprocess.run(commands)
+        _run_process(commands)
+        print("Reinstalled Numpy from pip wheel")
 
     # Symlink the conda env python --> `blender_root` / "python"
     # scenarios:
@@ -318,6 +372,7 @@ def install(
         )
 
     # Move the source --> target and symlink conda prefix to factory source
+    # TODO: this is a bug
     if factory_python_source.is_symlink():
         origin = factory_python_source.readlink()
         os.unlink(factory_python_source)
@@ -360,7 +415,7 @@ def uninstall(
     blender_root,
     blender_bin,
     factory_python_target=factory_python_directory,
-    plugin_path_target=f"scripts/addons_contrib/{plugin_name}",
+    plugin_path_target=f"scripts/addons_contrib/{DEFAULT_PLUGIN_NAME}",
 ):
     """Remove the plugin from target_directory and restore"""
     blender_root = Path(blender_root)
@@ -454,7 +509,7 @@ def main():
         ),
     )
     parser.add_argument(
-        "-v", "--version", default=minimal_version, help="Blender major version number"
+        "-v", "--version", default=minimal_blender_version, help="Blender major version number"
     )
     parser.add_argument(
         "-b",
