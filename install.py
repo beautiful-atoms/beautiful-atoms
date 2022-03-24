@@ -246,7 +246,9 @@ def install(
     factory_python_target=factory_python_directory,
     plugin_path_target=DEFAULT_PLUGIN_PATH,
 ):
-    """Copy the contents inside plugin_path to the target_directory"""
+    """Link current conda environment to blender's python root
+    Copy batoms plugin under repo_path to plugin directory 
+    """
     blender_root = Path(blender_root)
     conda_env_file = repo_path / "env.yml"
     # plugin_path_source: dir of plugin in github repo
@@ -260,7 +262,6 @@ def install(
 
     # Check conda environment status
     conda_vars = _get_conda_variables()
-    print(conda_vars)
     # Give a warning about conda env
     # TODO: allow direct install into another environment
     if conda_vars["CONDA_DEFAULT_ENV"] in ["base"]:
@@ -324,75 +325,64 @@ def install(
         _run_process(commands)
         print("Reinstalled Numpy from pip wheel")
 
-    # Symlink the conda env python --> `blender_root` / "python"
-    # scenarios:
-    # target _python is not empty:
-    #       if _python is symlink --> unlink _python
-    #       if _python is real path --> choose if overwrite
-    # source python:
-    #       if python is symlink --> link origin to _python if it does not exist (not likely from factory)
-    #       if python is real path --> move to _python
-    # If the "_python" path exists and not empty, only replace it if is symlink
+    # Installation logic follows the COMPAS project
+    # If the factory_python_target exists, restore factory python first
+    #    detect if the target is in a good state
+    # Move the factory_python_source to factory_python_target
+    # Symlink conda prefix to factory_python_source
+    # TODO: wrap the directory handling into another function
 
-
-    # Step 1: analyzing the factory python target
-    # Should only occur once. Check if factory python still works.
-    # Otherwise instruct the user to download and recover python
-
-    if factory_python_target.is_dir():
+    if factory_python_target.exists():
         # Empty of symlink factory python might be mistakenly created
         # just delete them
-        if _is_empty_dir(factory_python_target):
-            os.rmdir(factory_python_target)
-        elif factory_python_target.is_symlink():
-            os.unlink(factory_python_target)
+        exception_corrupt = False
+        if _is_empty_dir(factory_python_target) or factory_python_target.is_symlink():
+            exception_corrupt = True
         else:
-            print(
-                        (
-                            f"Target path {factory_python_target.as_posix()} is not empty. "
-                            "This means you may have used the installation script already. "
-                        )
-                    )
-            warn_corrupt = False
+            print(f"Target path {factory_python_target.as_posix()} exists.")
             try:
                 old_py = next(factory_python_target.glob("bin/python*"))
             except StopIteration:
                 print("Factory python binary not found.")
                 old_py = None
-                warn_corrupt = True
+                exception_corrupt = True
             if old_py:
                 proc = subprocess.run([old_py, "-V"])
                 if proc.returncode != 0:
                     print((f"Found factory python at {old_py.as_posix()} "
                     "but it's not working"))
-                    warn_corrupt = True
-            # TODO: elaborate installation script
-            if warn_corrupt:
-                print((f"Backup of factory python at {factory_python_target.as_posix()} "
-                "is corrupt. Consider download a new version"
-                ))
-    else:
-        if factory_python_target.is_file():
-            os.unlink(factory_python_target)
-
-    # Step 2: move source --> target
-    if not factory_python_target.exists():
-        # Move the source --> target and symlink conda prefix to factory source
-        # TODO: this is a bug
-        if factory_python_source.is_symlink():
-            origin = factory_python_source.readlink()
-            os.unlink(factory_python_source)
-            os.symlink(origin, factory_python_target)
-        elif factory_python_source.is_dir():
-            shutil.move(factory_python_source, factory_python_target)
+                    exception_corrupt = True
+        # TODO: improve error msg
+        if exception_corrupt:
+            raise RuntimeError(
+                (
+                    f"Backup of Blender's factory python at {factory_python_target.as_posix()} "
+                    "is corrupt. Please replace it with a copy."
+                )
+            )
         else:
-            # source may not exist
-            pass
-        print(
-            f"Old python directory for blender moved to {factory_python_target.as_posix()}"
-        )
+            if factory_python_source.exists():
+                if factory_python_source.is_symlink():
+                    os.unlink(factory_python_source)
+                elif factory_python_source.is_dir():
+                    raise OSError(f"{factory_python_source.as_posix()} is not symlink. Please backup its content and retry.")
+                else:
+                    os.unlink(factory_python_source)
+            os.rename(factory_python_target, factory_python_source)
+            print(f"Renamed {factory_python_target.as_posix()} to {factory_python_source.as_posix()}")
+    
+
+    # Step 2: rename soruce to target
+    if factory_python_target.exists():
+        raise RuntimeError(f"Something wrong. {factory_python_target.as_posix()} still exists.")
+    if (not factory_python_source.is_dir()) or (factory_python_source.is_symlink()):
+        raise RuntimeError(f"Something wrong. {factory_python_source.as_posix()} should be a real directory.")
+    os.rename(factory_python_source, factory_python_target)
+    print(f"Renamed {factory_python_source.as_posix()} to {factory_python_target.as_posix()}")
+    
     # Step 3: finally, link the conda prefix of current environment
     conda_prefix = Path(conda_vars["CONDA_PREFIX"]).resolve()
+    # Should not happen but just in case
     if factory_python_source.is_symlink():
         os.unlink(factory_python_source)
     os.symlink(conda_prefix, factory_python_source)
