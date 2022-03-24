@@ -32,7 +32,7 @@ def test_polyhedra_molecule():
 def test_polyhedra_crystal():
     from ase.io import read
     bpy.ops.batoms.delete()
-    tio2 = read("../test/datas/tio2.cif")
+    tio2 = read("../tests/datas/tio2.cif")
     tio2 = Batoms("tio2", from_ase=tio2)
     tio2.model_style = 2
     tio2 = tio2 * [3, 3, 3]

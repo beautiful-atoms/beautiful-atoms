@@ -23,7 +23,7 @@ def test_SAS_protein():
     import numpy as np
 
     bpy.ops.batoms.delete()
-    prot = read_pdb("datas/1ema.pdb")  # 1tim
+    prot = read_pdb("../tests/datas/1ema.pdb")  # 1tim
     prot = Batoms("1ema", from_ase=prot)
     prot.ms.setting["1"] = {"resolution": 0.4}
     prot.ms.draw()
@@ -54,7 +54,7 @@ def test_SES_protein():
             area                    volume
     """
     bpy.ops.batoms.delete()
-    prot = read_pdb("datas/1ema.pdb")
+    prot = read_pdb("../tests/datas/1ema.pdb")
     prot = Batoms("prot", from_ase=prot)
     tstart = time()
     prot.ms.setting["1"].type = "SES"

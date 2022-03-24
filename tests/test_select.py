@@ -21,7 +21,7 @@ def test_select():
 def test_select_protein():
     from batoms.pdbparser import read_pdb
     bpy.ops.batoms.delete()
-    atoms = read_pdb("datas/1ema.pdb")  # 1tim
+    atoms = read_pdb("../tests/datas/1ema.pdb")  # 1tim
     batoms = Batoms("protein", from_ase=atoms)
     batoms.ribbon.draw()
     sel1 = batoms.selects.add("sel1", np.where(batoms.arrays["types"] == "HETATM")[0])

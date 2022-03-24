@@ -93,7 +93,7 @@ class BondModify(Operator):
         description="style")
 
     show: BoolProperty(name="show", default=False,
-                            )
+                       )
     order: IntProperty(name="Bond order", default=1,
                        )
 
@@ -116,5 +116,18 @@ class BondModify(Operator):
             setattr(batoms.bonds[i], self.key, getattr(self, self.key))
         # batoms.draw()
         context.view_layer.objects.active = obj
-        bpy.ops.object.mode_set(mode = 'EDIT')
+        bpy.ops.object.mode_set(mode='EDIT')
+        return {'FINISHED'}
+
+
+class BondOrderAutoSet(OperatorBatoms):
+    bl_idname = "bond.bond_order_auto_set"
+    bl_label = "Set bond order"
+    bl_description = ("Set bond order to a Batoms")
+
+    def execute(self, context):
+        obj = context.object
+        batoms = Batoms(label=context.object.batoms.label)
+        batoms.bonds.bond_order_auto_set()
+        context.view_layer.objects.active = obj
         return {'FINISHED'}
