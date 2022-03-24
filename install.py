@@ -354,7 +354,10 @@ def _conda_update(
     print("Updating conda environment")
 
     conda_env_file = Path(conda_env_file)
-    with tempfile.NamedTemporaryFile(suffix=".yml") as ftemp:
+    # NamedTemporaryFile can only work on Windows if delete=False
+    # see https://stackoverflow.com/questions/55081022/python-tempfile-with-a-context-manager-on-windows-10-leads-to-permissionerror
+    tmp_del = False if _get_os_name() in ["windows"] else True
+    with tempfile.NamedTemporaryFile(suffix=".yml", delete=tmp_del) as ftemp:
         tmp_yml = ftemp.name
         old_env = open(conda_env_file, "r").readlines()
         with open(tmp_yml, "w") as fd:
