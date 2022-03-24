@@ -244,7 +244,42 @@ def _gitclone(workdir=".", version="main", url=repo_git):
     print(f"Cloned repo into directory {clone_into.as_posix()}")
 
 def _rename_dir(src, dst):
-    pass
+    """Rename dir from scr to dst use os.rename functionality if possible
+    """
+    src = Path(src)
+    dst = Path(dst)
+    if dst.exists():
+        if (dst.is_symlink()) or (dst.is_file()):
+            os.unlink(dst)
+        elif _is_empty_dir(dst):
+            os.rmdir(dst)
+        else:
+            raise OSError(f"Directory {dst.as_posix()} is not empty!")
+    try:
+        os.rename(src, dst)
+    except (OSError, PermissionError) as e:
+        # TODO: do something here
+        raise
+
+def _symlink_dir(src, dst):
+    """Make symlink from src to dst. 
+    If dst is an empty directory or simlink, simply remove and do symlink
+    """
+    src = Path(src)
+    dst = Path(dst)
+    if dst.exists():
+        if (dst.is_symlink()) or (dst.is_file()):
+            os.unlink(dst)
+        elif _is_empty_dir(dst):
+            os.rmdir(dst)
+        else:
+            raise OSError(f"Directory {dst.as_posix()} is not empty!")
+    try:
+        os.symlink(src, dst)
+    except (OSError, PermissionError) as e:
+        # TODO: do something here
+        raise
+
 
 
 def _conda_update(conda_env_file, conda_vars, env_name=None):
@@ -314,7 +349,7 @@ def _conda_update(conda_env_file, conda_vars, env_name=None):
             "-m",
             "pip",
             "install",
-            "-y",
+            "--no-input",
             "numpy",
         ]
         _run_process(commands)
@@ -538,7 +573,7 @@ def main():
         "-v", "--version", default=MIN_BLENDER_VER, help="Blender major version number"
     )
     parser.add_argument(
-        "-b",
+        "-t",
         "--plugin-version",
         default="main",
         help="Plugin version or git hash tag. Default to fetch main",
