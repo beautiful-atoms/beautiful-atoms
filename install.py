@@ -336,10 +336,7 @@ def install(blender_root, blender_bin, repo_path):
 
     # Check conda environment status
     conda_vars = _get_conda_variables()
-    # Give a warning about conda env
-    # TODO: allow direct install into another environment
-    _conda_update(conda_env_file, conda_vars)
-
+    
     # Installation logic follows the COMPAS project
     # If the factory_python_target exists, restore factory python first
     #    detect if the target is in a good state
@@ -415,6 +412,10 @@ def install(blender_root, blender_bin, repo_path):
         os.unlink(factory_python_source)
     os.symlink(conda_prefix, factory_python_source)
     print(f"Created symlink {conda_prefix} --> {factory_python_source.as_posix()}")
+
+    # Give a warning about conda env
+    # TODO: allow direct install into another environment
+    _conda_update(conda_env_file, conda_vars)
 
     # Shall we overwrite the target path?
     if not _is_empty_dir(plugin_path_target):
