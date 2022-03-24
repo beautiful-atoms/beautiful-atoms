@@ -2,7 +2,7 @@ name: Build beautiful_atoms main image
 
 env:
   image_name: beautiful_atoms
-  TEST_TAG: beautiful_atoms:test
+  TEST_TAG: beautiful_atoms:tests
 
 on:
   push:
@@ -56,7 +56,7 @@ jobs:
       #           cache-to: type=inline
       - name: Test local image
         run: |
-          docker run --rm -v $(pwd)/test:/workdir -e CI=1 ${{ env.TEST_TAG }} bash test_ci.sh
+          docker run --rm -v $(pwd)/tests:/workdir -e CI=1 ${{ env.TEST_TAG }} bash test_ci.sh
 
       - name: Push image
         uses: docker/build-push-action@v2

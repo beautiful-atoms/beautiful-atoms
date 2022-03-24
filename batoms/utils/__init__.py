@@ -3,6 +3,18 @@ import math
 from time import time
 
 
+def read_from_others(from_ase=None, from_pymatgen=None,
+                     from_pybel=None):
+    if from_ase is not None:
+        return read_from_ase(from_ase)
+    elif from_pymatgen is not None:
+        return read_from_pymatgen(from_pymatgen)
+    elif from_pybel is not None:
+        return read_from_pybel(from_pybel)
+    else:
+        return None
+
+
 def read_from_ase(atoms):
     """
     Import structure from ASE atoms.
@@ -51,6 +63,36 @@ def read_from_pymatgen(structure):
     positions = [structure[i].coords for i in range(natom)]
     info = {}
     return symbols, positions, attributes, cell, pbc, info
+
+
+def read_from_pybel(mol):
+    """
+    conda install openbabel -c conda-forge
+    Converts a pybel molecule to batoms.
+    Molecules have the following attributes: atoms, charge, data, dim, energy, exactmass, formula, molwt, spin, sssr, title and unitcell (if crystal data).
+
+    Atoms have the following attributes: atomicmass, atomicnum, coords, exactmass, formalcharge, heavyvalence, heterovalence, hyb, idx, implicitvalence, isotope, partialcharge, spin, type, valence, vector. The .coords attribute provides a tuple (x, y, z) of the atom’s coordinates. The remaining attributes are as for the Get methods of OBAtom.
+    """
+    from openbabel import pybel
+    from ase.data import chemical_symbols
+    number = []
+    positions = []
+    charges = []
+    elements = []
+    for atom in mol.atoms:
+        number.append(atom.atomicnum)
+        elements.append(chemical_symbols[atom.atomicnum])
+        positions.append(atom.coords)
+        charges.append(atom.formalcharge)
+    cell = mol.unitcell if hasattr(mol, "unitcell") else [0, 0, 0]
+    pbc = True if hasattr(mol, "unitcell") else False
+    species = elements.copy()
+    arrays = {'charges': charges}
+    bonds = [{'atoms': [b.GetBeginAtom().GetIndex(),
+                        b.GetEndAtom().GetIndex()],
+              'order': b.GetBondOrder()}
+             for b in pybel.ob.OBMolBondIter(mol.OBMol)]
+    return species, positions, arrays, cell, pbc, {'bonds': bonds}
 
 
 def string2Number(s):

@@ -65,7 +65,7 @@ def test_bonds_add():
 
 def test_bonds_search_bond_1():
     bpy.ops.batoms.delete()
-    mol = read("datas/anthraquinone.cif")
+    mol = read("../tests/datas/anthraquinone.cif")
     mol.boundary = 0.01
     mol.model_style = 1
     mol.bonds.show_search = True
@@ -76,7 +76,7 @@ def test_bonds_search_bond_1():
 
 def test_bonds_search_bond_2():
     bpy.ops.batoms.delete()
-    mof = read("datas/mof-5.cif")
+    mof = read("../tests/datas/mof-5.cif")
     mof.boundary = 0.01
     mof.bonds.setting[("Zn", "O")].polyhedra = True
     mof.model_style = 1
@@ -88,7 +88,7 @@ def test_bonds_search_bond_2():
 def test_bonds_search_bond_3():
     from ase.io import read
     bpy.ops.batoms.delete()
-    tio2 = read("../test/datas/tio2.cif", ":")
+    tio2 = read("../tests/datas/tio2.cif", ":")
     tio2 = Batoms("tio2", from_ase=tio2)
     tio2.boundary = 0.01
     tio2.model_style = 1

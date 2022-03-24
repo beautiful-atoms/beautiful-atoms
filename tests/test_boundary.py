@@ -29,7 +29,7 @@ def test_boundary_off_origin():
 def test_boundary_oxide():
     from ase.io import read
     bpy.ops.batoms.delete()
-    tio2 = read("../test/datas/tio2.cif", ":")
+    tio2 = read("../tests/datas/tio2.cif", ":")
     tio2 = Batoms("tio2", from_ase=tio2)
     tio2.boundary = 0.01
     assert len(tio2.boundary.obj.data.vertices) == 9
@@ -40,7 +40,7 @@ def test_boundary_oxide():
 def test_boundary_animation():
     from ase.io import read
     bpy.ops.batoms.delete()
-    tio2 = read("../test/datas/tio2_10.xyz", ":")
+    tio2 = read("../tests/datas/tio2_10.xyz", ":")
     tio2 = Batoms("tio2", from_ase=tio2)
     tio2.boundary = 0.01
     assert len(tio2.boundary.obj.data.vertices) == 9
