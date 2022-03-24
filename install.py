@@ -79,15 +79,14 @@ install_script_path = (
 )
 
 
-
-
 def _get_default_locations(os_name, version=MIN_BLENDER_VER):
-    """Get system specific default install locations of blender
-    """
+    """Get system specific default install locations of blender"""
     os_name = os_name.lower()
     # Compare version
     if LooseVersion(str(version)) < LooseVersion(str(MIN_BLENDER_VER)):
-        raise ValueError(f"Blender version {version} is not supported. Minimal requirement is {MINIMAL_BLENDER_VER}")
+        raise ValueError(
+            f"Blender version {version} is not supported. Minimal requirement is {MINIMAL_BLENDER_VER}"
+        )
     if os_name not in ["windows", "macos", "linux"]:
         raise ValueError(f"{os_name} is not valid.")
     default_locations = {
@@ -196,6 +195,7 @@ def _is_empty_dir(p):
         stat = True
     return stat
 
+
 def _run_process(commands, shell=False, print_cmd=True, cwd="."):
     full_cmd = " ".join(commands)
     if print_cmd:
@@ -252,7 +252,7 @@ def _conda_update(conda_env_file, conda_vars, env_name=None):
     conda_env_file = Path(conda_env_file)
     if env_name is None:
         env_name = conda_vars["CONDA_DEFAULT_ENV"]
-    
+
     if env_name in ["base"]:
         print(
             (
@@ -267,7 +267,7 @@ def _conda_update(conda_env_file, conda_vars, env_name=None):
                 "Abort. Please check the installation manual about how to activate an additional conda environment."
             )
             sys.exit(1)
-    
+
     # Install from the env.yaml
     print("Updating conda environment")
 
@@ -288,9 +288,13 @@ def _conda_update(conda_env_file, conda_vars, env_name=None):
     if _get_os_name() in [
         "windows",
     ]:
-        print(("You're running on Windows. "
-               "We will try to use wheel provided by pip for Numpy "
-               "to resolve DLL not found issue."))
+        print(
+            (
+                "You're running on Windows. "
+                "We will try to use wheel provided by pip for Numpy "
+                "to resolve DLL not found issue."
+            )
+        )
         commands = [
             "python",
             "-m",
@@ -315,14 +319,9 @@ def _conda_update(conda_env_file, conda_vars, env_name=None):
     return
 
 
-
-def install(
-    blender_root,
-    blender_bin,
-    repo_path
-):
+def install(blender_root, blender_bin, repo_path):
     """Link current conda environment to blender's python root
-    Copy batoms plugin under repo_path to plugin directory 
+    Copy batoms plugin under repo_path to plugin directory
     """
     blender_root = Path(blender_root)
     conda_env_file = repo_path / "env.yml"
@@ -340,9 +339,6 @@ def install(
     # Give a warning about conda env
     # TODO: allow direct install into another environment
     _conda_update(conda_env_file, conda_vars)
-    
-
-    
 
     # Installation logic follows the COMPAS project
     # If the factory_python_target exists, restore factory python first
@@ -368,8 +364,12 @@ def install(
             if old_py:
                 proc = subprocess.run([old_py, "-V"])
                 if proc.returncode != 0:
-                    print((f"Found factory python at {old_py.as_posix()} "
-                    "but it's not working"))
+                    print(
+                        (
+                            f"Found factory python at {old_py.as_posix()} "
+                            "but it's not working"
+                        )
+                    )
                     exception_corrupt = True
         # TODO: improve error msg
         if exception_corrupt:
@@ -384,21 +384,30 @@ def install(
                 if factory_python_source.is_symlink():
                     os.unlink(factory_python_source)
                 elif factory_python_source.is_dir():
-                    raise OSError(f"{factory_python_source.as_posix()} is not symlink. Please backup its content and retry.")
+                    raise OSError(
+                        f"{factory_python_source.as_posix()} is not symlink. Please backup its content and retry."
+                    )
                 else:
                     os.unlink(factory_python_source)
             os.rename(factory_python_target, factory_python_source)
-            print(f"Renamed {factory_python_target.as_posix()} to {factory_python_source.as_posix()}")
-    
+            print(
+                f"Renamed {factory_python_target.as_posix()} to {factory_python_source.as_posix()}"
+            )
 
     # Step 2: rename soruce to target
     if factory_python_target.exists():
-        raise RuntimeError(f"Something wrong. {factory_python_target.as_posix()} still exists.")
+        raise RuntimeError(
+            f"Something wrong. {factory_python_target.as_posix()} still exists."
+        )
     if (not factory_python_source.is_dir()) or (factory_python_source.is_symlink()):
-        raise RuntimeError(f"Something wrong. {factory_python_source.as_posix()} should be a real directory.")
+        raise RuntimeError(
+            f"Something wrong. {factory_python_source.as_posix()} should be a real directory."
+        )
     os.rename(factory_python_source, factory_python_target)
-    print(f"Renamed {factory_python_source.as_posix()} to {factory_python_target.as_posix()}")
-    
+    print(
+        f"Renamed {factory_python_source.as_posix()} to {factory_python_target.as_posix()}"
+    )
+
     # Step 3: finally, link the conda prefix of current environment
     conda_prefix = Path(conda_vars["CONDA_PREFIX"]).resolve()
     # Should not happen but just in case
@@ -482,6 +491,7 @@ def uninstall(
 
 
 def test_plugin(blender_bin):
+    blender_bin = str(blender_bin)
     commands = [
         blender_bin,
         "-b",
@@ -490,13 +500,12 @@ def test_plugin(blender_bin):
         "--python-expr",
         BLENDERPY_TEST_PLUGIN,
     ]
-    proc = subprocess.run(commands)
-    if proc.returncode != 0:
-        raise RuntimeError("Plugin test failed with error {proc.stderr}")
+    _run_process(commands)
     return
 
 
 def test_uninstall(blender_bin):
+    blender_bin = str(blender_bin)
     commands = [
         blender_bin,
         "-b",
@@ -505,9 +514,7 @@ def test_uninstall(blender_bin):
         "--python-expr",
         BLENDERPY_TEST_UNINSTALL,
     ]
-    proc = subprocess.run(commands)
-    if proc.returncode != 0:
-        raise RuntimeError("Uninstall test failed with error {proc.stderr}")
+    _run_process(commands)
     return
 
 
@@ -566,7 +573,9 @@ def main():
             if hasattr(args, "local_repo_path"):
                 repo_path = Path(expanduser(expandvars(args.local_repo_path)))
             else:
-                repo_path = _gitclone(workdir, version=args.plugin_version, url=repo_git)
+                repo_path = _gitclone(
+                    workdir, version=args.plugin_version, url=repo_git
+                )
             install(true_blender_root, true_blender_bin, repo_path)
             test_plugin(true_blender_bin)
 
