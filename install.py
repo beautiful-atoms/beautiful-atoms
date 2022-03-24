@@ -243,6 +243,9 @@ def _gitclone(workdir=".", version="main", url=repo_git):
     _run_process(commands)
     print(f"Cloned repo into directory {clone_into.as_posix()}")
 
+def _rename_dir(src, dst):
+    pass
+
 
 def _conda_update(conda_env_file, conda_vars, env_name=None):
     """Update conda environment using env file.
