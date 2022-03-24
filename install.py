@@ -15,6 +15,7 @@ python install.py --help
 ```
 """
 import os
+import re
 from os.path import expanduser, expandvars
 import shutil
 import subprocess
@@ -27,6 +28,9 @@ from distutils.version import LooseVersion
 # TODO: windows privilege issue
 # TODO: complete install tutorial about the env variables
 # TODO: unit test workflow
+# TODO: python && numpy version match
+# sys.version --> python version
+# numpy.__version__ --> numpy
 
 
 DEFAULT_GITHUB_ACCOUNT = "superstar54"
@@ -37,6 +41,14 @@ DEFAULT_PLUGIN_PATH = f"scripts/addons_contrib/{DEFAULT_PLUGIN_NAME}"
 MIN_BLENDER_VER = "3.0"
 PY_PATH = "python"
 PY_BACKUP_PATH = "_old_python"
+
+BLENDER_CHK_VERSION = """
+import sys
+import numpy
+print("Python Version: ", sys.version)
+print("Numpy Version: ", numpy.__version__)
+"""
+
 
 BLENDERPY_ENABLE_PLUGIN = f"""
 import bpy
@@ -168,6 +180,22 @@ def _get_os_name():
         raise NotImplementedError(f"Unsupported platform {p_}")
 
 
+def _get_factory_versions(blender_bin):
+    """Get the bundled python and numpy versions
+    This is only to be run BEFORE symlinking
+    """
+    blender_bin = str(blender_bin)
+    # First get blender python version
+    commands = [blender_bin, "-b", "--python-expr", BLENDER_CHK_VERSION]
+    proc = _run_process(commands, shell=False, capture_output=True)
+    output = proc.stdout.decode("ascii")
+    pat_py_version = f"Python\s+Version\:\s+(\d+\.\d+.\d+)"
+    pat_numpy_version = f"Numpy\s+Version\:\s+(\d+\.\d+.\d+)"
+    py_version = next(re.finditer(pat_py_version, output))[1]
+    numpy_version = next(re.finditer(pat_numpy_version, output))[1]
+    return py_version, numpy_version
+
+
 def is_conda():
     return "CONDA_PREFIX" in os.environ.keys()
 
@@ -196,13 +224,23 @@ def _is_empty_dir(p):
     return stat
 
 
-def _run_process(commands, shell=False, print_cmd=True, cwd="."):
+def _run_process(commands, shell=False, print_cmd=True, cwd=".", capture_output=False):
+    """Wrap around subprocess.run
+    Returns the process object
+    """
     full_cmd = " ".join(commands)
     if print_cmd:
         print(" ".join(commands))
-    proc = subprocess.run(commands, shell=shell, cwd=cwd)
+    if shell is False:
+        proc = subprocess.run(
+            commands, shell=shell, cwd=cwd, capture_output=capture_output
+        )
+    else:
+        proc = subprocess.run(
+            full_cmd, shell=shell, cwd=cwd, capture_output=capture_output
+        )
     if proc.returncode == 0:
-        return proc.returncode
+        return proc
     else:
         raise RuntimeError(f"Running {full_cmd} returned error code {proc.stderr}")
 
@@ -243,9 +281,9 @@ def _gitclone(workdir=".", version="main", url=repo_git):
     _run_process(commands)
     print(f"Cloned repo into directory {clone_into.as_posix()}")
 
+
 def _rename_dir(src, dst):
-    """Rename dir from scr to dst use os.rename functionality if possible
-    """
+    """Rename dir from scr to dst use os.rename functionality if possible"""
     src = Path(src)
     dst = Path(dst)
     if dst.exists():
@@ -261,8 +299,9 @@ def _rename_dir(src, dst):
         # TODO: do something here
         raise
 
+
 def _symlink_dir(src, dst):
-    """Make symlink from src to dst. 
+    """Make symlink from src to dst.
     If dst is an empty directory or simlink, simply remove and do symlink
     """
     src = Path(src)
@@ -281,13 +320,18 @@ def _symlink_dir(src, dst):
         raise
 
 
-
-def _conda_update(conda_env_file, conda_vars, env_name=None):
+def _conda_update(
+    conda_env_file, 
+    conda_vars, 
+    env_name=None, 
+    python_version=None, 
+    numpy_version=None
+):
     """Update conda environment using env file.
     If env_name is None, use default env
+    If provided python and numpy version, use a temp file to install
     if reinstall_numpy, use pip to reinstall numpy (windows only)
     """
-    conda_env_file = Path(conda_env_file)
     if env_name is None:
         env_name = conda_vars["CONDA_DEFAULT_ENV"]
 
@@ -309,17 +353,32 @@ def _conda_update(conda_env_file, conda_vars, env_name=None):
     # Install from the env.yaml
     print("Updating conda environment")
 
-    commands = [
-        conda_vars["CONDA_EXE"],
-        "env",
-        "update",
-        "-n",
-        env_name,
-        "--file",
-        conda_env_file.as_posix(),
-    ]
-    _run_process(commands)
-    print("Finished install conda packages.")
+    conda_env_file = Path(conda_env_file)
+    with tempfile.NamedTemporaryFile(suffix=".yml") as ftemp:
+        tmp_yml = ftemp.name
+        old_env = open(conda_env_file, "r").readlines()
+        with open(tmp_yml, "w") as fd:
+            for line in old_env:
+                if ("python" in line) and (python_version is not None):
+                    new_line = re.sub(r"python.*$", f"python={python_version}", line)
+                elif ("numpy" in line) and (numpy_version is not None):
+                    new_line = re.sub(r"numpy.*$", f"numpy={numpy_version}", line)
+                else:
+                    new_line = line
+                fd.write(new_line)
+        
+        commands = [
+            conda_vars["CONDA_EXE"],
+            "env",
+            "update",
+            "-n",
+            env_name,
+            "--file",
+            tmp_yml,
+            # conda_env_file.as_posix(),
+        ]
+        _run_process(commands)
+        print("Finished install conda packages.")
 
     # Extra steps (windows only), replace the numpy version with pip's numpy
     # since python on windows comes with wheel this should be relatively straighforward
@@ -344,13 +403,18 @@ def _conda_update(conda_env_file, conda_vars, env_name=None):
         _run_process(commands)
         print("Uninstalled conda-distributed Numpy.")
 
+        if numpy_version is not None:
+            numpy_str = f"numpy=={numpy_version}"
+        else:
+            # TODO: pin old numpy version
+            numpy_str = f"numpy==1.21.2"
         commands = [
             "python",
             "-m",
             "pip",
             "install",
             "--no-input",
-            "numpy",
+            numpy_str,
         ]
         _run_process(commands)
         print("Reinstalled Numpy from pip wheel")
@@ -374,7 +438,7 @@ def install(blender_root, blender_bin, repo_path):
 
     # Check conda environment status
     conda_vars = _get_conda_variables()
-    
+
     # Installation logic follows the COMPAS project
     # If the factory_python_target exists, restore factory python first
     #    detect if the target is in a good state
@@ -428,6 +492,10 @@ def install(blender_root, blender_bin, repo_path):
             print(
                 f"Renamed {factory_python_target.as_posix()} to {factory_python_source.as_posix()}"
             )
+    
+    # Step 1.1 check python and numpy version
+    factory_py_ver, factory_numpy_ver = _get_factory_versions(blender_bin)
+    print(factory_py_ver, factory_numpy_ver)
 
     # Step 2: rename soruce to target
     if factory_python_target.exists():
@@ -453,7 +521,7 @@ def install(blender_root, blender_bin, repo_path):
 
     # Give a warning about conda env
     # TODO: allow direct install into another environment
-    _conda_update(conda_env_file, conda_vars)
+    _conda_update(conda_env_file, conda_vars, python_version=factory_py_ver, numpy_version=factory_numpy_ver)
 
     # Shall we overwrite the target path?
     if not _is_empty_dir(plugin_path_target):
