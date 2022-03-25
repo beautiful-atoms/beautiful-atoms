@@ -1047,5 +1047,5 @@ default_polyhedras = {
     'Eu', 'Ta', 'Cm', 'Nb', 'Hf', 'La', 'Ce', 'Cf', 'D', 'U', 'Mn',
     'Si', 'Hg', 'Cu', 'Rb', 'K', 'Er', 'NH', 'Fe', 'Ge', 'Am', 'P',
     'Tm', 'Gd', 'Ga', 'Pm', 'Bi', 'Mg', 'Sc', 'Kr', 'Sb', 'Ir', 'Po',
-    'Bk', 'F', 'Ho', 'Nd', 'Cs', 'Np', 'Pt',
+    'Bk', 'F', 'Ho', 'Nd', 'Cs', 'Np', 'Pt', 'X',
 }
