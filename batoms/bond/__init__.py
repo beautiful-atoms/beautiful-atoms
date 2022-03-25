@@ -13,7 +13,7 @@ import numpy as np
 from batoms.base.object import ObjectGN
 from batoms.base.collection import BaseCollection
 from batoms.bond.bondsetting import BondSettings
-from batoms.search_bond import SearchBond, default_search_bond_datas
+from batoms.bond.search_bond import SearchBond, default_search_bond_datas
 # from pprint import pprint
 
 default_attributes = [
@@ -643,17 +643,17 @@ class Bonds(BaseCollection, ObjectGN):
             for f in range(nframe):
                 # print('update bond: ', f)
                 positions = frames[f, show, :]
-                # if len(frames_search) > 0:
-                #     positions_search = frames_search[f]
-                #     positions = positions + positions_search
+                # build bondlist for unit cell
                 bondlist, bonddatas, peciesBondDatas, molPeciesDatas = \
                     self.build_bondlists(species, positions, self.batoms.cell,
                                         self.batoms.pbc, setting)
+                # build bondlist for boundary atoms
                 if array_b is not None:
                     bondlist = self.build_bondlists_with_boundary(
                         array_b, bondlist, bonddatas,
                         peciesBondDatas,
                         molPeciesDatas)
+                    bondlist = self.check_boundary(bondlist)
                 # search molecule
                 # search bond
                 if self.show_search:
@@ -1002,7 +1002,8 @@ class Bonds(BaseCollection, ObjectGN):
                                     np.array(nlp).reshape(-1, 1)), axis=1)
         bondlists = bondlists.astype(int)
         # remove bond outside box for search0
-        bondlists = bondlists[search0]
+        # not now, we need all bonds here, and then add a final check.
+        # bondlists = bondlists[search0]
         # build bondatas, for each atom, save the bonds connect to it.
         argsort = bondlists[:, 0].argsort()
         bondlists = bondlists[argsort]
@@ -1261,6 +1262,33 @@ class Bonds(BaseCollection, ObjectGN):
         bondlists = np.unique(bondlists, axis=0)
         # search bond type 2
 
+        return bondlists
+    
+    def check_boundary(self, bondlists, eps = 1e-6):
+        """check boundary for bond search 0
+
+        Args:
+            eps (float): default 1e-6
+        """
+        from ase.geometry import complete_cell
+        arrays = self.batoms.arrays
+        positions = arrays['positions']
+        cell = self.batoms.cell
+        # get scaled positions
+        positions = np.linalg.solve(complete_cell(cell).T,
+                                positions.T).T
+        npositions = positions[bondlists[:, 1]] + bondlists[:, 5:8]
+        boundary = self.batoms.boundary.boundary
+        # boundary condition
+        mask1 = np.where((npositions[:, 0] > boundary[0][0] - eps) &
+                        (npositions[:, 0] < boundary[0][1] + eps) &
+                        (npositions[:, 1] > boundary[1][0] - eps) &
+                        (npositions[:, 1] < boundary[1][1] + eps) &
+                        (npositions[:, 2] > boundary[2][0] - eps) &
+                        (npositions[:, 2] < boundary[2][1] + eps), False, True)
+        mask2 = np.where(bondlists[:, 8] == 0, True, False)
+        mask = ~(mask1&mask2)
+        bondlists = bondlists[mask]
         return bondlists
 
     def search_molecule(self, natom, bondlists):

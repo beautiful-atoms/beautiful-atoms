@@ -233,7 +233,8 @@ def console_hook():
                         item = item.replace('.', '')
                         if item[:1].isdigit():
                             item = 'b_' + item
-                        console.locals[item] = Batoms(item)
+                        if item not in console.locals:
+                            console.locals[item] = Batoms(item)
 
 # handle the keymap
 wm = bpy.context.window_manager

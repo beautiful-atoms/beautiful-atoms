@@ -70,6 +70,7 @@ def search_boundary(atoms,
     c = np.ceil(boundary)
     ib = np.array([f[:, 0], c[:, 1]]).astype(int)
     M = np.product(ib[1] - ib[0] + 1)
+    # get scaled positions
     positions = np.linalg.solve(complete_cell(cell).T,
                                 positions.T).T
     n = len(positions)
