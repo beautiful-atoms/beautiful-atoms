@@ -97,7 +97,7 @@ def _get_default_locations(os_name, version=MIN_BLENDER_VER):
     # Compare version
     if LooseVersion(str(version)) < LooseVersion(str(MIN_BLENDER_VER)):
         raise ValueError(
-            f"Blender version {version} is not supported. Minimal requirement is {MINIMAL_BLENDER_VER}"
+            f"Blender version {version} is not supported. Minimal requirement is {MIN_BLENDER_VER}"
         )
     if os_name not in ["windows", "macos", "linux"]:
         raise ValueError(f"{os_name} is not valid.")
@@ -181,7 +181,7 @@ def _get_os_name():
 
 
 def _get_factory_versions(blender_bin):
-    """Get the bundled python and numpy versions
+    """Get the blender version, bundled python and numpy versions
     This is only to be run BEFORE symlinking
     """
     blender_bin = str(blender_bin)
@@ -189,11 +189,13 @@ def _get_factory_versions(blender_bin):
     commands = [blender_bin, "-b", "--python-expr", BLENDER_CHK_VERSION]
     proc = _run_process(commands, shell=False, capture_output=True)
     output = proc.stdout.decode("ascii")
-    pat_py_version = f"Python\s+Version\:\s+(\d+\.\d+.\d+)"
-    pat_numpy_version = f"Numpy\s+Version\:\s+(\d+\.\d+.\d+)"
+    pat_py_version = r"Python\s+Version\:\s+(\d+\.\d+.\d+)"
+    pat_numpy_version = r"Numpy\s+Version\:\s+(\d+\.\d+.\d+)"
+    pat_bl_version = r"Blender\s+(\d+\.\d+\.\d+)"
+    bl_version = next(re.finditer(pat_bl_version, output))[1]
     py_version = next(re.finditer(pat_py_version, output))[1]
     numpy_version = next(re.finditer(pat_numpy_version, output))[1]
-    return py_version, numpy_version
+    return bl_version, py_version, numpy_version
 
 
 def is_conda():
@@ -497,8 +499,8 @@ def install(blender_root, blender_bin, repo_path):
             )
     
     # Step 1.1 check python and numpy version
-    factory_py_ver, factory_numpy_ver = _get_factory_versions(blender_bin)
-    print(factory_py_ver, factory_numpy_ver)
+    blender_ver, factory_py_ver, factory_numpy_ver, = _get_factory_versions(blender_bin)
+    print(blender_ver, factory_py_ver, factory_numpy_ver)
 
     # Step 2: rename soruce to target
     if factory_python_target.exists():
@@ -673,12 +675,14 @@ def main():
         uninstall(true_blender_root, true_blender_bin)
         test_uninstall(true_blender_bin)
     else:
+        # TODO: allow non-conda installation for windows
         if not is_conda():
             print(
                 "The installation script should be run inside a conda environment. Abort."
             )
             sys.exit(1)
 
+        # TODO: allow direct installation at current place
         with tempfile.TemporaryDirectory() as workdir:
             if hasattr(args, "local_repo_path"):
                 repo_path = Path(expanduser(expandvars(args.local_repo_path)))
