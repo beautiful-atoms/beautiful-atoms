@@ -55,7 +55,7 @@ class AddMolecule(Operator):
             self.label = self.formula
         atoms = molecule(self.formula)
         if self.label in bpy.data.collections:
-            self.label = "%s.001" % self.label
+            self.label = "%s_001" % self.label
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.model_style = 1
         batoms.obj.select_set(True)
@@ -120,7 +120,7 @@ class AddBulk(Operator):
                      orthorhombic=self.orthorhombic,
                      cubic=self.cubic)
         if self.label in bpy.data.collections:
-            self.label = "%s.001" % self.label
+            self.label = "%s_001" % self.label
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
@@ -146,7 +146,7 @@ class AddAtoms(Operator):
             self.label = self.formula
         atoms = Atoms(self.formula)
         if self.label in bpy.data.collections:
-            self.label = "%s.001" % self.label
+            self.label = "%s_001" % self.label
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
@@ -172,7 +172,7 @@ class AddSmiles(Operator):
         if self.label == '':
             self.label = self.smiles
         if self.label in bpy.data.collections:
-            self.label = "%s.001" % self.label
+            self.label = "%s_001" % self.label
         mol = pybel.readstring("smi", self.smiles)
         mol.make3D(forcefield='mmff94', steps=100)
         batoms = Batoms(label=self.label, from_pybel=mol)
