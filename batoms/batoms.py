@@ -1638,7 +1638,7 @@ class Batoms(BaseCollection, ObjectGN):
 
     def draw_wireframe(self):
         mask = np.where(self.model_style == 3, True, False)
-        self.set_attribute_with_indices('show', mask, 0)
+        # self.set_attribute_with_indices('show', mask, 0)
         self.set_attribute_with_indices('scale', mask, 0.0001)
         # self.update(mask)
 
