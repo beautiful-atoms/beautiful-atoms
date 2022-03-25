@@ -75,6 +75,14 @@ class BondSetting():
     @polyhedra.setter
     def polyhedra(self, polyhedra):
         self.collection[self.name].polyhedra = polyhedra
+    
+    @property
+    def width(self):
+        return self.collection[self.name].width
+
+    @width.setter
+    def width(self, width):
+        self.collection[self.name].width = width
 
     @property
     def order(self):
@@ -137,9 +145,9 @@ class BondSetting():
 
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
-        s = 'Bondpair   min     max   Search_bond    Polyhedra  Order Style\n'
-        s += '{:10s} {:4.3f}   {:4.3f}    {:10s}   {:10s}  {}   {}\n'.format(
-            self.name, self.min, self.max, str(
+        s = 'Bondpair   min     max   width    Search_bond    Polyhedra  Order Style\n'
+        s += '{:10s} {:4.3f}   {:4.3f}  {:4.3f}   {:10s}   {:10s}  {}   {}\n'.format(
+            self.name, self.min, self.max, self.width, str(
                 self.search), str(self.polyhedra),
             self.order, self.style)
         s += '-'*60 + '\n'
