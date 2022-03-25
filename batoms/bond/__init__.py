@@ -13,7 +13,7 @@ import numpy as np
 from batoms.base.object import ObjectGN
 from batoms.base.collection import BaseCollection
 from batoms.bond.bondsetting import BondSettings
-from batoms.search_bond import SearchBond, default_search_bond_datas
+from batoms.bond.search_bond import SearchBond, default_search_bond_datas
 # from pprint import pprint
 
 default_attributes = [
@@ -643,12 +643,11 @@ class Bonds(BaseCollection, ObjectGN):
             for f in range(nframe):
                 # print('update bond: ', f)
                 positions = frames[f, show, :]
-                # if len(frames_search) > 0:
-                #     positions_search = frames_search[f]
-                #     positions = positions + positions_search
+                # build bondlist for unit cell
                 bondlist, bonddatas, peciesBondDatas, molPeciesDatas = \
                     self.build_bondlists(species, positions, self.batoms.cell,
                                         self.batoms.pbc, setting)
+                # build bondlist for boundary atoms
                 if array_b is not None:
                     bondlist = self.build_bondlists_with_boundary(
                         array_b, bondlist, bonddatas,
@@ -1269,7 +1268,7 @@ class Bonds(BaseCollection, ObjectGN):
         """check boundary for bond search 0
 
         Args:
-            bondlists (_type_): _description_
+            eps (float): default 1e-6
         """
         from ase.geometry import complete_cell
         arrays = self.batoms.arrays
