@@ -166,6 +166,18 @@ def _get_blender_bin(os_name, blender_bundle_root):
         )
     return blender_bin
 
+def _get_blender_py(blender_bin):
+    """Get the blender executable path from current blender binary
+    """
+    blender_bin = str(blender_bin)
+    commands = [blender_bin, "-b", "--python-expr", "import sys; print('Python binary: ', sys.executable)"]
+    proc = _run_process(commands, shell=False, capture_output=True)
+    output = proc.stdout.decode("ascii")
+    print(output)
+    pat = r"Python\s+binary\:\s+(.*)$"
+    py = next(re.finditer(pat, output, re.MULTILINE))[1]
+    py_path = Path(py.strip())
+    return py_path
 
 def _get_os_name():
     """Convient os name function"""
@@ -191,11 +203,22 @@ def _get_factory_versions(blender_bin):
     output = proc.stdout.decode("ascii")
     pat_py_version = r"Python\s+Version\:\s+(\d+\.\d+.\d+)"
     pat_numpy_version = r"Numpy\s+Version\:\s+(\d+\.\d+.\d+)"
-    pat_bl_version = r"Blender\s+(\d+\.\d+\.\d+)"
-    bl_version = next(re.finditer(pat_bl_version, output))[1]
     py_version = next(re.finditer(pat_py_version, output))[1]
     numpy_version = next(re.finditer(pat_numpy_version, output))[1]
-    return bl_version, py_version, numpy_version
+    return py_version, numpy_version
+
+def _get_blender_version(blender_bin):
+    """Parse blender's output to get the X.Y.Z version name
+    """
+    blender_bin = str(blender_bin)
+    # First get blender python version
+    commands = [blender_bin, "-b"]
+    proc = _run_process(commands, shell=False, capture_output=True)
+    output = proc.stdout.decode("ascii")
+    pat_bl_version = r"Blender\s+(\d+\.\d+\.\d+)"
+    bl_version = next(re.finditer(pat_bl_version, output))[1]
+    return bl_version
+
 
 
 def is_conda():
@@ -426,6 +449,20 @@ def _conda_update(
     return
 
 
+def _pip_install(blender_py):
+    """Temporary workaround for installation on windows and blender>=3.1.0
+    Try to install as many components as possible. Need specific version tweaks
+    Installation order:
+    1. factory numpy -- pinned
+    2. ase / scipy / matplotlib / scikit-image all come with wheel
+    3. install spglib with pip first, if no compiler found, try building from conda-forge's distribution
+    4. install pymatgen (>=2022.02)
+    5. install openbabel first, if no compiler found, skip
+    """
+    pass
+
+
+
 def install(blender_root, blender_bin, repo_path):
     """Link current conda environment to blender's python root
     Copy batoms plugin under repo_path to plugin directory
@@ -499,8 +536,8 @@ def install(blender_root, blender_bin, repo_path):
             )
     
     # Step 1.1 check python and numpy version
-    blender_ver, factory_py_ver, factory_numpy_ver, = _get_factory_versions(blender_bin)
-    print(blender_ver, factory_py_ver, factory_numpy_ver)
+    factory_py_ver, factory_numpy_ver, = _get_factory_versions(blender_bin)
+    print(factory_py_ver, factory_numpy_ver)
 
     # Step 2: rename soruce to target
     if factory_python_target.exists():
@@ -671,6 +708,10 @@ def main():
     true_blender_bin = _get_blender_bin(os_name, true_blender_root)
     print(f"Found blender binary at {true_blender_bin.as_posix()}")
     print(f"Choose blender directory at {true_blender_root.as_posix()}")
+
+    bl_ver = _get_blender_version(true_blender_bin)
+    bl_py = _get_blender_py(true_blender_bin)
+    print(bl_ver, bl_py)
     if args.uninstall:
         uninstall(true_blender_root, true_blender_bin)
         test_uninstall(true_blender_bin)
