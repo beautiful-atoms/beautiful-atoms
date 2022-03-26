@@ -1355,6 +1355,8 @@ class Batoms(BaseCollection, ObjectGN):
                 continue
             if obj.batoms.type == 'INSTANCER' or obj.batoms.type == 'VOLUME':
                 continue
+            if obj.hide_get():
+                continue
             n = len(obj.data.vertices)
             vertices = np.empty(n*3, dtype=np.float64)
             obj.data.vertices.foreach_get('co', vertices)
