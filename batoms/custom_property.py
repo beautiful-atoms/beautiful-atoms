@@ -230,6 +230,22 @@ class Bisosurface(bpy.types.PropertyGroup):
                                default=[1, 1, 0, 0.5],
                                )
 
+class Bcavity(bpy.types.PropertyGroup):
+    """
+    """
+    flag: BoolProperty(name="flag", default=False)
+    name: StringProperty(name="name")
+    label: StringProperty(name="label", default='')
+    min: FloatProperty(name="min", default=5)
+    max: FloatProperty(name="max", default=10)
+    resolution: FloatProperty(name="resolution", soft_min=0.5, soft_max=2,
+                              default=1.0)
+    color: FloatVectorProperty(name="color", size=4,
+                               subtype='COLOR',
+                               min=0, max=1,
+                               default=[1, 1, 0, 0.5],
+                               )
+
     def as_dict(self) -> dict:
         setdict = {
             'flag': self.flag,
@@ -662,6 +678,12 @@ class BatomsCollection(bpy.types.PropertyGroup):
 
     polyhedra_index: IntProperty(name="polyhedra_index",
                                  default=0)
+                                
+    bcavity: CollectionProperty(name='Bcavity',
+                                    type=Bcavity)
+
+    cavity_index: IntProperty(name="cavity_index",
+                                  default=1)
 
     bsheet: CollectionProperty(name='Bsheet',
                                type=Bsheet)
