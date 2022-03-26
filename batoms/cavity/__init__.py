@@ -8,7 +8,7 @@ import bpy
 from time import time
 import numpy as np
 from batoms.base.object import BaseObject
-from batoms.cavity.cavitysetting import cavitySettings
+from batoms.cavity.cavitysetting import CavitySettings
 
 
 class Cavity(BaseObject):
@@ -29,29 +29,11 @@ class Cavity(BaseObject):
         self.label = label
         name = 'cavity'
         BaseObject.__init__(self, label, name)
-        self.setting = cavitySettings(
+        self.resolution = 0.5
+        self.setting = CavitySettings(
             self.label, batoms=batoms, parent=self)
 
-    def build_cavity(self, cell):
-        volume = self.batoms.volume
-        cavity = {}
-        self.build_kdtree()
-        self.build_grid()
-        self.build_distances()
-        for cav in self.setting.collection:
-            name = cav.name
-            min = cav.min
-            max = cav.max
-            color = cav.color
-            verts, faces = self.find_cage_sphere(volume, cell, level)
-            cavity[name] = {'vertices': verts,
-                            'edges': [],
-                            'faces': faces,
-                            'color': color,
-                            'battr_inputs': {'cavity': cav.as_dict()}
-                            }
-        return cavity
-
+    
     def build_materials(self, name, color, node_inputs=None,
                         material_style='default'):
         """
@@ -98,10 +80,10 @@ class Cavity(BaseObject):
         >>> from ase.io import read
         >>> atoms = read('docs/source/_static/datas/mof-5.cif')
         """
-        from batoms.tools import find_cage_sphere
+        from batoms.tools import find_cage_spheres_2
         object_mode()
         self.clean_atoms_objects('ghost')
-        positions = find_cage_sphere(
+        positions = find_cage_spheres_2(
             self.cell, self.atoms.positions, radius, boundary=boundary)
         ba = Batom(self.label, 'X', positions, scale=radius*0.9,
                    material_style='default', bsdf_inputs=self.bsdf_inputs,
@@ -111,15 +93,14 @@ class Cavity(BaseObject):
         self.coll.children['%s_ghost' % self.label].objects.link(ba.batom)
         self.coll.children['%s_ghost' % self.label].objects.link(ba.instancer)
 
-    def build_kdtree(self):
+    def build_kdtree(self, positions):
         """
-        Algorithm:
-        Use KDTree to find the nearest atom for all vertices with
-        the power distance as metric.
+        
         """
         from scipy import spatial
         tstart = time()
-        self.kdtree = spatial.KDTree(self.batoms.positions)
+        self.kdtree = spatial.KDTree(positions)
+        self.kdtree_mesh = spatial.KDTree(self.meshgrids)
         print('KDTree positions: %s' % (time() - tstart))
     
     def query_distance(self, points, parallel = 1):
@@ -133,41 +114,38 @@ class Cavity(BaseObject):
         Algorithm:
         Use KDTree to query the tree for neighbors within a radius r.
         """
-        from scipy import spatial
         tstart = time()
-        # ----------------------------------------------------
-        tstart = time()
-        indices = self.kdtree.query_ball_point(points, radii)
+        indices = self.kdtree_mesh.query_ball_point(points, radii)
         print('KDTree query: %s' % (time() - tstart))
-        tstart = time()
-        indices = np.unique(np.concatenate(indices).astype(int))
-        print('array indices: %s' % (time() - tstart))
-        return indices
+        return indices[0]
 
-    def build_grid(self, resolution):
+    def build_grid(self, cell, resolution):
         """
         generate gridpoints
         """
-        from batoms.utils import build_grid
-        cell = self.batoms.cell.arrays
-        length = self.batoms.cell.length
+        length = cell.length
         npoint = [int(l/resolution) for l in length]
-        self.meshgrids, self.shape = build_grid([[0, 1], [0, 1], [0, 1]], resolution)
         grids = []
         for i in range(3):
-            grids.append(np.arange(0, 1, npoint[i]))
+            grids.append(np.arange(npoint[i])/npoint[i])
         x, y, z = np.meshgrid(grids[0], grids[1], grids[2],
                             indexing='ij')  # , sparse=True)
         meshgrids = np.c_[x.ravel(), y.ravel(), z.ravel()]
-        meshgrids = np.dot(meshgrids, cell)
-        dis, indices = self.query(meshgrids)
-        self.dis = dis
-        self.indices = indices
+        meshgrids = np.dot(meshgrids, cell.array)
+        self.meshgrids = meshgrids
+        self.shape = npoint
+    
 
-
-    def find_cage_sphere(self, min, max):
+    def build_cavity(self):
         """Find cage base on radius range and boundary range
-
+        Algorith:
+            1) build a meshgrid
+            2) calulated first neighbour distance by kdtree
+            3) find indices that d > min
+            4) reshape to indices (3d)
+            5) label by scipy.ndimage
+            6) check components (support periodic)
+            7) find minmum radius
         Args:
             cell (_type_): _description_
             positions (_type_): _description_
@@ -178,17 +156,173 @@ class Cavity(BaseObject):
         Returns:
             _type_: _description_
         """
-        # dists<3.0
-        dis = self.dis
-        imax = np.argmax(dis)
-        dis[imax]
-        indices = [[imax, dmax]]
-        mask = []
-        while dmax > min:
-            mask1 = self.query_radius()
-            mask.extend(mask1)
-            dis = dis[~mask]
-            imax = np.argmax(dis[~mask])
-            dmax = dis[imax]
-            indices.extend([imax, dmax])
-        return indices
+        arrays = self.batoms.arrays
+        cell = self.batoms.cell
+        self.build_grid(cell, self.resolution)
+        self.build_kdtree(arrays["positions"])
+        indices, distances = self.query_distance(self.meshgrids)
+        spheres = self.find_cage_spheres(distances, minRadius=5)
+        # cavities = {}
+        #     cavities[cav.name] = {'centers': [],
+        #                         'radii': [],
+        #                         'color': cav.color,
+        #                         # 'battr_inputs': {'cavities': cav.as_dict()}
+        #                         'min': cav.min,
+        #                         'max': cav.max,
+        #                         }
+        #     cavities['centers'].extend(s['center'])
+        #     cavities['radii'].extend(s['radius'])
+        return cavities
+
+    def find_cage_spheres(self, distances, minRadius):
+        """
+        Loop all sphere > min
+
+        Args:
+            distances (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        meshgrids = self.meshgrids
+        imax = np.argmax(distances)
+        dmax = distances[imax]
+        center = meshgrids[imax]
+        spheres = [[center, dmax]]
+        while dmax > minRadius:
+            n = len(distances)
+            mask = np.ones(n, dtype=bool)
+            indices1 = self.query_radius([center], [dmax])
+            mask[indices1] = False
+            distances = distances[mask]
+            meshgrids = meshgrids[mask]
+            imax = np.argmax(distances)
+            dmax = distances[imax]
+            center = meshgrids[imax]
+            print(center, dmax)
+            spheres.extend([center, dmax])
+        return spheres
+
+
+
+    def build_cavity_2(self):
+        """Find cage base on radius range and boundary range
+        Algorith:
+            1) build a meshgrid
+            2) calulated first neighbour distance by kdtree
+            3) find indices that d > min
+            4) reshape to indices (3d)
+            5) label by scipy.ndimage
+            6) check components (support periodic)
+            7) find minmum radius
+        Args:
+            cell (_type_): _description_
+            positions (_type_): _description_
+            radius (_type_): _description_
+            step (float, optional): _description_. Defaults to 1.0.
+            boundary (list, optional): _description_. Defaults to [[0, 1], [0, 1], [0, 1]].
+
+        Returns:
+            _type_: _description_
+        """
+        arrays = self.batoms.arrays
+        cell = self.batoms.cell
+        self.build_kdtree(arrays["positions"])
+        self.build_grid(cell, self.resolution)
+        indices, distance = self.query_distance(self.meshgrids)
+        cavities = {}
+        for cav in self.setting.collection:
+            cavities[cav.name] = {'centers': [],
+                                'radii': [],
+                                'color': cav.color,
+                                # 'battr_inputs': {'cavities': cav.as_dict()}
+                                'min': cav.min,
+                                'max': cav.max,
+                                }
+            s = self.find_cage_spheres_2(distance, radius=(cav.min + cav.max)/2)
+            cavities['centers'].extend(s['center'])
+            cavities['radii'].extend(s['radius'])
+        return cavities
+
+    def find_cage_spheres_2(self, distance, radius = 5):
+        """
+         Algorith:
+            1) build a meshgrid
+            2) calulated first neighbour distance by kdtree
+            3) find indices that d > min (e.g. 3)
+            4) reshape to indices (3d)
+            5) label by scipy.ndimage
+            6) check components (support periodic)
+            7) find minmum radius
+        """
+        from scipy import ndimage
+        from scipy import spatial
+        dis = distance.reshape(self.shape)
+        meshgrids = self.meshgrids.reshape((self.shape[0], self.shape[1], self.shape[2], 3))
+        mask = dis > radius
+        # check connected poits
+        labels, nb = ndimage.label(mask)
+        print(nb)
+        non_boundary_labels = self.find_cage_pbc_2(labels)
+        spheres = []
+        for l in non_boundary_labels:
+            mask = labels == l
+            points = meshgrids[mask, :]
+            center = np.mean(points, axis = 0)
+            d = spatial.distance.cdist([center], points)
+            dmax = np.max(d) + radius
+            print(l, center, dmax)
+            spheres.extend({'label': l, 'center': center, 'radius': dmax})
+        print(spheres)
+        return spheres
+
+
+    def find_cage_pbc_2(self, labels):
+        """_summary_
+
+        Args:
+            labels (_type_): _description_
+            nb (_type_): _description_
+        """
+        from scipy.sparse import csgraph, csr_matrix
+        neighbourList = []
+        tstart = time()
+        for i in range(labels.shape[0]):
+            for j in range(labels.shape[1]):
+                if labels[i, j, 0] > 0 and labels[i, j, -1] > 0:
+                    neighbourList.append([labels[i, j, 0], labels[i, j, -1], 0, 0, -1])
+        for i in range(labels.shape[0]):
+            for j in range(labels.shape[2]):
+                if labels[i, 0, j] > 0 and labels[i, -1, j] > 0:
+                    neighbourList.append([labels[i, 0, j], labels[i, -1, j], 0, -1, 0])
+        for i in range(labels.shape[1]):
+            for j in range(labels.shape[2]):
+                if labels[0, i, j] > 0 and labels[-1, i, j] > 0:
+                    neighbourList.append([labels[0, i, j], labels[-1, i, j], -1, 0, 0])
+        neighbourList = np.array(neighbourList)
+        neighbourList = np.unique(neighbourList, axis = 0)
+        print(neighbourList)
+        nlabel = np.max(labels) + 1
+        non_boundary_labels = list(set(range(1, nlabel)).difference(set(neighbourList[:, 0]).union(set(neighbourList[:, 1]))))
+        print("non_boundary_labels: ", non_boundary_labels)
+        # find connected component
+        # cageDatas = {}
+        # ai = neighbourList[:, 0]
+        # aj = neighbourList[:, 1]
+        # nlist = len(neighbourList)
+        # data = np.ones(nlist, dtype=int)
+        # matrix = csr_matrix((data, (ai, aj)), shape=(nlabel, nlabel))
+        # n_components, component_list = csgraph.connected_components(matrix)
+        # print(n_components)
+        # print(component_list)
+        # for i in range(n_components):
+        #     indices = np.where(component_list == i)[0]
+        #     n = len(indices)
+        #     if n < 2:
+        #         continue
+        #     cageDatas[i] = {'sub': []}
+        #     cageDatas[i]['indices'] = indices
+        #     cageDatas[i]['offsets'] = indices
+        print('find_cage_pbc_2: %s' % (time() - tstart))
+        return non_boundary_labels
+        

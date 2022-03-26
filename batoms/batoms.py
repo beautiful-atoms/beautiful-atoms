@@ -187,6 +187,7 @@ class Batoms(BaseCollection, ObjectGN):
         self._lattice_plane = None
         self._crystal_shape = None
         self._ms = None
+        self._cavity = None
         show_index()
         self.hideOneLevel()
 
@@ -1497,6 +1498,20 @@ class Batoms(BaseCollection, ObjectGN):
     @ms.setter
     def ms(self, ms):
         self._ms = ms
+    
+    @property
+    def cavity(self):
+        """cavity object."""
+        from batoms.cavity import Cavity
+        if self._cavity is not None:
+            return self._cavity
+        cavity = Cavity(self.label, batoms=self)
+        self.cavity = cavity
+        return cavity
+
+    @cavity.setter
+    def cavity(self, cavity):
+        self._cavity = cavity
 
     def get_arrays_with_boundary(self):
         """

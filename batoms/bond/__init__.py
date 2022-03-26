@@ -1109,6 +1109,7 @@ class Bonds(BaseCollection, ObjectGN):
                 continue
             molDatas[i] = {'sub': []}
             molDatas[i]['indices'] = indices
+            # TODO: check here 
             molDatas[i]['offsets'] = indices
         # without crossed bond, small pecies of molDatas
         mask = np.where((bondlists1[:, 2:5] != bondlists1[:, 5:8]).any(axis=1),

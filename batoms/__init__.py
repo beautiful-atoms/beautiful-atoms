@@ -77,6 +77,7 @@ classes_prop = [
     custom_property.Bbond,
     custom_property.Bpolyhedra,
     custom_property.Bisosurface,
+    custom_property.Bcavity,
     custom_property.Bvolume,
     custom_property.Bplane,
     custom_property.Blight,
@@ -88,7 +89,7 @@ classes_prop = [
     custom_property.Bselect,
     custom_property.Bms,
     custom_property.BatomsCollection,
-    custom_property.BatomsObject
+    custom_property.BatomsObject,
 ]
 
 classes_ops = [
