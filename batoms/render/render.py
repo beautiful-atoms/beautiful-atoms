@@ -57,8 +57,7 @@ class Render(BaseCollection):
         BaseCollection.__init__(self, coll_name=self.coll_name)
         self.batoms = batoms
         self.camera_name = '%s_camera' % self.label
-        bpy.context.preferences.addons["cycles"].preferences.compute_device_type  \
-            = compute_device_type
+        self.compute_device_type = compute_device_type
         coll = bpy.data.collections.get(self.coll_name)
         # load from collection
         self.output = output
@@ -123,6 +122,20 @@ class Render(BaseCollection):
         elif engine.upper() == 'CYCLES':
             self.scene.cycles.use_denoising = True
         self.scene.render.engine = engine.upper()
+    
+    @property
+    def compute_device_type(self):
+        return self.get_compute_device_type()
+
+    @compute_device_type.setter
+    def compute_device_type(self, compute_device_type):
+        self.set_compute_device_type(compute_device_type)
+
+    def get_compute_device_type(self):
+        return bpy.context.preferences.addons["cycles"].preferences.compute_device_type
+
+    def set_compute_device_type(self, compute_device_type):
+        bpy.context.preferences.addons["cycles"].preferences.compute_device_type = compute_device_type.upper()
 
     @property
     def viewport(self):
