@@ -14,6 +14,7 @@ Alternatively, check what `install.py` can do by using
 python install.py --help
 ```
 """
+from distutils import command
 import os
 import re
 from os.path import expanduser, expandvars
@@ -449,17 +450,84 @@ def _conda_update(
     return
 
 
-def _pip_install(blender_py):
+def _conda_cache_move(condition, conda_vars, blender_python_root):
+    """Install relevant package (spglib) in conda environment and move to python's site-packages
+    This is A DANGEROUS WORKAROUND as it can silently break many things. 
+    Only to use until the conda environment bug in blender fixed.
+    blender_python_root looks like <root>/<3.x>/python
+    """
+    # Step 1: search latest spglib available for the py version
+    commands = ["conda", "search", "-c", "conda-forge", str(condition)]
+    proc = _run_process(commands, capture_output=True)
+    out = proc.stdout.decode("utf-8")
+    name, version, build, channel = out.split("\n").strip().split()
+    conda_url = (
+        "https://anaconda.org/conda-forge/{name}/{version}/"
+        "download/win-64/{name}-{version}-{build}.tar.bz2"
+        ).format(name=name, version=version, build=build)
+    # Step 2: do a temp install of spglib into conda environment
+    commands = ["conda", "install", "--no-deps", conda_url]
+    _run_process(commands)
+    print(f"Installed conda package from {conda_url}")
+
+    # Step 3: copy the site-packages contents
+    lib_conda = Path(conda_vars["CONDA_PREFIX"]) / "Lib" / "site-packages"
+    lib_pip = Path(blender_python_root) / "lib" / "site-packages"
+    match_dirs = lib_conda.glob("spglib*")
+    for dir in match_dirs:
+        name = dir.name
+        shutil.copytree(dir, lib_pip / name, dirs_exist_ok=True)
+    return
+    
+
+def _pip_install(blender_py, blender_python_root, factory_py_ver, conda_vars):
     """Temporary workaround for installation on windows and blender>=3.1.0
     Try to install as many components as possible. Need specific version tweaks
     Installation order:
     1. factory numpy -- pinned
-    2. ase / scipy / matplotlib / scikit-image all come with wheel
-    3. install spglib with pip first, if no compiler found, try building from conda-forge's distribution
+    2. install spglib with pip first, if no compiler found, try building from conda-forge's distribution
+    3. ase / scipy / matplotlib / scikit-image all come with wheel
     4. install pymatgen (>=2022.02)
     5. install openbabel first, if no compiler found, skip
     """
-    pass
+    blender_py = str(blender_py)
+    pip_prefix = [blender_py, "-m", "pip"]
+    # Step 1: check numpy installation
+    commands = pip_prefix + ["show", "numpy"]
+    proc = _run_process(commands, shell=False, capture_output=True)
+    if "Name: numpy" not in proc.stdout.decode("ascii"):
+        raise RuntimeError("Cannot find package numpy. Your bundle python may be corrupt.")
+    
+    # Step 2: install spglib
+    commands = pip_prefix + ["install", "--no-input", "spglib"]
+    try:
+        proc = _run_process(commands, shell=False, capture_output=True)
+    except RuntimeError:
+        print("Building spglib from source failed. We'll try to install from conda-distruted lib.")
+        # abbrevate version, i.e. 3.10 --> py310
+        abbrev_py_ver = "py" + "".join(factory_py_ver.split(".")[:2])
+        _conda_cache_move(condition="spglib=*={abbrev_py_ver}", conda_vars=conda_vars, blender_python_root=blender_python_root)
+    # check spglib installation
+    commands = pip_prefix + ["show", "spglib"]
+    proc = _run_process(commands, shell=False, capture_output=True)
+    if "Name: spglib" not in proc.stdout.decode("ascii"):
+        # TODO: improve error msg
+        raise RuntimeError("Spglib installation failed.")
+    
+    # Step 3: install ase pymatgen etc.
+    commands = pip_prefix + ["install", "--no-input", "ase>=3.21.0", "pymatgen<=2022.03", "scikit-image"]
+    proc = _run_process(commands)
+
+    # Step 4: install openbabel (only if compiler exists)
+    commands = pip_prefix + ["install", "--no-input", "openbabel"]
+    try:
+        proc = _run_process(commands)
+    except RuntimeError as e:
+        print("Cannot install openbabel. You need to have a working compiler on windows. The installation will continue but some functionalities in beautiful_atoms may not be working.")
+        
+    
+        
+
 
 
 
