@@ -11,6 +11,17 @@ from bpy.props import (StringProperty,
                        CollectionProperty,
                        )
 
+class Base(bpy.types.PropertyGroup):
+
+    material_style: EnumProperty(
+        name="material_style",
+        description="Structural models",
+        items=(('default', "default", "default"),
+               ('metallic', "metallic", "metallic"),
+               ('plastic', "plastic", "plastic"),
+               ('ceramic', "ceramic", "ceramic"),
+               ('mirror', "mirror", "mirror")),
+        default='default')
 
 class Belement(bpy.types.PropertyGroup):
     name: StringProperty(name="name", default='H')
@@ -94,7 +105,7 @@ class Bcell(bpy.types.PropertyGroup):
     show_unit_cell: BoolProperty(name="show_unit_cell", default=True)
 
 
-class Bbond(bpy.types.PropertyGroup):
+class Bbond(Base):
     """
     """
     flag: BoolProperty(name="flag", default=False)
@@ -178,7 +189,7 @@ class Bbond(bpy.types.PropertyGroup):
         return s
 
 
-class Bpolyhedra(bpy.types.PropertyGroup):
+class Bpolyhedra(Base):
     """
     """
     flag: BoolProperty(name="flag", default=False)
@@ -217,7 +228,7 @@ class Bpolyhedra(bpy.types.PropertyGroup):
         return s
 
 
-class Bisosurface(bpy.types.PropertyGroup):
+class Bisosurface(Base):
     """
     """
     flag: BoolProperty(name="flag", default=False)
@@ -230,7 +241,7 @@ class Bisosurface(bpy.types.PropertyGroup):
                                default=[1, 1, 0, 0.5],
                                )
 
-class Bcavity(bpy.types.PropertyGroup):
+class Bcavity(Base):
     """
     """
     flag: BoolProperty(name="flag", default=False)
@@ -246,12 +257,15 @@ class Bcavity(bpy.types.PropertyGroup):
                                default=[1, 1, 0, 0.5],
                                )
 
+    
+
     def as_dict(self) -> dict:
         setdict = {
             'flag': self.flag,
             'min': self.min,
             'max': self.max,
             'name': self.name,
+            'material_style': self.material_style,
             'color': self.color[:],
         }
         return setdict
@@ -265,7 +279,7 @@ class Bcavity(bpy.types.PropertyGroup):
         return s
 
 
-class Bplane(bpy.types.PropertyGroup):
+class Bplane(Base):
     """
     """
     flag: BoolProperty(name="flag", default=False)
@@ -297,6 +311,7 @@ class Bplane(bpy.types.PropertyGroup):
             'flag': self.flag,
             'label': self.label,
             'name': self.name,
+            'material_style': self.material_style,
             'color': self.color[:],
             'indices': self.indices,
             'distance': self.distance,
@@ -368,7 +383,7 @@ class Brender(bpy.types.PropertyGroup):
     padding: FloatVectorProperty(name="padding", default=[1, 1, 1, 1], size=4)
 
 
-class Bsheet(bpy.types.PropertyGroup):
+class Bsheet(Base):
     """
     """
     flag: BoolProperty(name="flag", default=False)
@@ -413,7 +428,7 @@ class Bsheet(bpy.types.PropertyGroup):
         return s
 
 
-class Bhelix(bpy.types.PropertyGroup):
+class Bhelix(Base):
     """
     """
     flag: BoolProperty(name="flag", default=False)
@@ -458,7 +473,7 @@ class Bhelix(bpy.types.PropertyGroup):
         return s
 
 
-class Bturn(bpy.types.PropertyGroup):
+class Bturn(Base):
     """
     """
     flag: BoolProperty(name="flag", default=False)
@@ -501,7 +516,7 @@ class Bturn(bpy.types.PropertyGroup):
         return s
 
 
-class Bms(bpy.types.PropertyGroup):
+class Bms(Base):
     """
     """
     flag: BoolProperty(name="flag", default=False)

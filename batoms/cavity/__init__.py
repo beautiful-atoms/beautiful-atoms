@@ -40,6 +40,8 @@ class Cavity(ObjectGN):
                  cavity_datas=None,
                  location=np.array([0, 0, 0]),
                  batoms=None,
+                 resolution = 1,
+                 mimRadius = 4,
                  ):
         """Cavity Class
 
@@ -53,7 +55,8 @@ class Cavity(ObjectGN):
         self.label = label
         name = 'cavity'
         ObjectGN.__init__(self, label, name)
-        self.resolution = 1
+        self.resolution = resolution
+        self.minRadius = mimRadius
         flag = self.load()
         if not flag and cavity_datas is not None:
             self.build_object(cavity_datas)
@@ -153,7 +156,7 @@ class Cavity(ObjectGN):
         self.build_grid(cell, self.resolution)
         self.build_kdtree(arrays["positions"])
         indices, distances = self.query_distance(self.meshgrids)
-        spheres = self.find_cage_spheres(distances, minRadius=5)
+        spheres = self.find_cage_spheres(distances)
         spheres = self.check_sphere_boundary(spheres, cell)
         spheres = self.refine_spheres(spheres)
         cavities = {}
@@ -188,7 +191,7 @@ class Cavity(ObjectGN):
                         'show': show})
         return spheres
 
-    def find_cage_spheres(self, distances, minRadius):
+    def find_cage_spheres(self, distances):
         """
         Loop all sphere > min
 
@@ -204,7 +207,7 @@ class Cavity(ObjectGN):
         center = meshgrids[imax]
         centers = []
         radii = []
-        while dmax > minRadius:
+        while dmax > self.minRadius:
             centers.append(center)
             radii.append(dmax)
             n = len(distances)
@@ -276,7 +279,7 @@ class Cavity(ObjectGN):
         # print('spheres after refine: ', spheres)
         return spheres
 
-    def build_object(self, arrays, location=[0, 0, 0]):
+    def build_object(self, cavity_datas, attributes = {}):
         """Build the main Batoms object
 
         Args:
@@ -287,23 +290,36 @@ class Cavity(ObjectGN):
             location (list, optional):
                 Location of the object. Defaults to [0, 0, 0].
         """
+        if len(cavity_datas['centers'].shape) == 2:
+            self._frames = {'centers': np.array([cavity_datas['centers']]),
+                            }
+            centers = cavity_datas['centers']
+        elif len(cavity_datas['centers'].shape) == 3:
+            self._frames = {'centers': cavity_datas['centers'],
+                            }
+            centers = cavity_datas['centers'][0]
+        else:
+            raise Exception('Shape of centers is wrong!')
+        attributes.update({
+            'species_index': cavity_datas['species_index'],
+            'show': cavity_datas['show'],
+            'scale': cavity_datas['scale'],
+            })
         name = self.obj_name
         self.delete_obj(name)
         mesh = bpy.data.meshes.new(name)
-        centers = arrays.pop('centers')
         # Add attributes
         for attribute in default_attributes:
             mesh.attributes.new(
                 name=attribute[0], type=attribute[1], domain='POINT')
         obj = bpy.data.objects.new(name, mesh)
         obj.data.from_pydata(centers, [], [])
-        obj.location = location
         obj.batoms.type = 'CAVITY'
         obj.batoms.label = self.batoms.label
         self.batoms.coll.objects.link(obj)
         # add cell object as its child
         obj.parent = self.batoms.obj
-        self.set_attributes(arrays)
+        self.set_attributes(attributes)
         self.build_geometry_node()
 
     def build_geometry_node(self):
@@ -391,6 +407,12 @@ class Cavity(ObjectGN):
         gn.node_group.links.new(InstanceOnPoint.outputs['Instances'],
                                 JoinGeometry.inputs['Geometry'])
 
+    def update_geometry_node_instancer(self):
+        """
+        """
+        for sp in self.setting.collection:
+            self.setting.build_instancer(sp.as_dict())
+
     def set_arrays(self, arrays):
         """
         """
@@ -409,6 +431,7 @@ class Cavity(ObjectGN):
         self.set_attributes({'scale': arrays['scale']})
         self.set_attributes({'show': arrays['show']})
         self.update_mesh()
+        self.update_geometry_node_instancer()
 
     def set_frames(self, frames=None, frame_start=0, only_basis=False):
         if frames is None:

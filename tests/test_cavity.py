@@ -29,6 +29,19 @@ def test_cavity():
     tio2.get_image([0, 1, 0], output="mof-5.png", **extras)
 
 
+def test_cavity_zsm():
+    from batoms.bio.bio import read
+    bpy.ops.batoms.delete()
+    mof = read("../tests/datas/zsm-5.cif")
+    mof.boundary = 0.01
+    mof.cavity.resolution = 1
+    # mof.cavity.build_cavity()
+    mof *= [2, 1, 1]
+    mof.cavity.draw()
+    if use_cycles:
+        set_cycles_res(mof)
+    mof.get_image([0, 1, 0], output="mof-5.png", **extras)
+
 def test_cavity_mof():
     from batoms.bio.bio import read
     bpy.ops.batoms.delete()

@@ -103,8 +103,7 @@ class CavitySettings(Setting):
         self.parent.add_geometry_node(sp['name'], obj)
         return obj
 
-    def build_materials(self, sp, node_inputs=None,
-                        material_style='default'):
+    def build_materials(self, sp, node_inputs=None):
         """
         """
         from batoms.material import create_material
@@ -116,6 +115,6 @@ class CavitySettings(Setting):
         mat = create_material(name,
                         color=sp['color'],
                         node_inputs=node_inputs,
-                        material_style=material_style,
+                        material_style=sp['material_style'],
                         backface_culling=True)
         return mat

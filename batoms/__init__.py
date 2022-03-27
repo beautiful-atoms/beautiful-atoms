@@ -35,6 +35,7 @@ from .gui import (
     ui_list_lattice_plane,
     ui_list_crystal_shape,
     ui_list_isosurface,
+    ui_list_cavity,
     ui_list_ms,
     view3d_mt_batoms_add,
 )
@@ -51,6 +52,7 @@ from .ops import (
     ops_batoms,
     ops_species,
     ops_surface,
+    ops_cavity,
     measure,
     manual_mapping,
     ops_bond,
@@ -180,6 +182,9 @@ classes_ops = [
     ui_list_isosurface.BATOMS_MT_isosurface_context_menu,
     ui_list_isosurface.BATOMS_UL_isosurface,
     ui_list_isosurface.BATOMS_PT_isosurface,
+    ui_list_cavity.BATOMS_MT_cavity_context_menu,
+    ui_list_cavity.BATOMS_UL_cavity,
+    ui_list_cavity.BATOMS_PT_cavity,
     ui_list_ms.BATOMS_MT_ms_context_menu,
     ui_list_ms.BATOMS_UL_ms,
     ui_list_ms.BATOMS_PT_ms,
@@ -212,6 +217,9 @@ classes_ops = [
     ops_surface.IsosurfaceRemove,
     ops_surface.IsosurfaceDraw,
     ops_surface.IsosurfaceModify,
+    ops_cavity.CavityAdd,
+    ops_cavity.CavityRemove,
+    ops_cavity.CavityDraw,
 ]
 # classes_ops.extend(classes_ops)
 #
