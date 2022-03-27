@@ -102,6 +102,7 @@ class BATOMS_PT_isosurface(Panel):
             col = layout.column()
             sub = col.column(align=True)
             sub.prop(kb, "level", text="Level")
+            col.prop(kb, "material_style", text="material_style")
             col.prop(kb, "color",  text="color")
             col.separator()
             op = layout.operator("surface.isosurface_draw",

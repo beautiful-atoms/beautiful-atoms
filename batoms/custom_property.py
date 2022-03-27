@@ -11,6 +11,7 @@ from bpy.props import (StringProperty,
                        CollectionProperty,
                        )
 
+
 class Base(bpy.types.PropertyGroup):
 
     material_style: EnumProperty(
@@ -22,6 +23,7 @@ class Base(bpy.types.PropertyGroup):
                ('ceramic', "ceramic", "ceramic"),
                ('mirror', "mirror", "mirror")),
         default='default')
+
 
 class Belement(bpy.types.PropertyGroup):
     name: StringProperty(name="name", default='H')
@@ -39,7 +41,7 @@ class Belement(bpy.types.PropertyGroup):
         return setdict
 
 
-class Bspecies(bpy.types.PropertyGroup):
+class Bspecies(Base):
     name: StringProperty(name="name", default='H')
     species: StringProperty(name="species", default='H')
     elements: CollectionProperty(name='Belements',
@@ -64,6 +66,8 @@ class Bspecies(bpy.types.PropertyGroup):
         setdict = {
             'species': self.species,
             'name': self.name,
+            'material_style': self.material_style,
+            'color': self.color[:],
             'scale': self.scale,
             'elements': self.element_dict,
         }
@@ -165,6 +169,7 @@ class Bbond(Base):
             'max': self.max,
             'search': self.search,
             'polyhedra': self.polyhedra,
+            'material_style': self.material_style,
             'color1': self.color1[:],
             'color2': self.color2[:],
             'width': self.width,
@@ -259,7 +264,8 @@ class Bisosurface(Base):
             self.name, self.level, self.color[0], self.color[1], self.color[2], self.color[3])
         s += '-'*60 + '\n'
         return s
-        
+
+
 class Bcavity(Base):
     """
     """
@@ -711,12 +717,12 @@ class BatomsCollection(bpy.types.PropertyGroup):
 
     polyhedra_index: IntProperty(name="polyhedra_index",
                                  default=0)
-                                
+
     bcavity: CollectionProperty(name='Bcavity',
-                                    type=Bcavity)
+                                type=Bcavity)
 
     cavity_index: IntProperty(name="cavity_index",
-                                  default=0)
+                              default=0)
 
     bsheet: CollectionProperty(name='Bsheet',
                                type=Bsheet)
@@ -737,7 +743,7 @@ class BatomsCollection(bpy.types.PropertyGroup):
                                  type=Bspecies)
 
     species_index: IntProperty(name="species_index",
-                               default=1)
+                               default=0)
 
     bms: CollectionProperty(name='Bms',
                             type=Bms)

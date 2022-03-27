@@ -112,6 +112,7 @@ class BATOMS_PT_bond_pairs(Panel):
             col.prop(kb, "style", text="Style")
             col.prop(kb, "order", text="Order")
             col.prop(kb, "polyhedra",  text="Polyhedra")
+            col.prop(kb, "material_style", text="material_style")
             col.prop(kb, "color1",  text="color1")
             col.prop(kb, "color2",  text="color2")
             op = layout.operator("bond.draw", icon='GREASEPENCIL', text="Draw")

@@ -112,7 +112,7 @@ class Species(BaseObject):
             obj.hide_set(True)
             obj.hide_render = True
         #
-        self.build_materials()
+        self.build_materials(material_style = sp.material_style)
         self.assign_materials()
         self.color = sp.color
         bpy.context.view_layer.update()

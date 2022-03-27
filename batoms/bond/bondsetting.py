@@ -246,7 +246,7 @@ class BondSettings(Setting):
         obj.hide_set(True)
         obj.hide_render = True
         #
-        self.build_materials(sp, order, style)
+        self.build_materials(sp, order, style, material_style=sp['material_style'])
         self.assign_materials(sp, order, style)
         # update geometry nodes
         ObjectInstancer = get_nodes_by_name(self.bonds.gnodes.node_group.nodes,

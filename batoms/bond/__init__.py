@@ -595,16 +595,9 @@ class Bonds(BaseCollection, ObjectGN):
             if self.setting.instancers[sp["name"]][order_style] is None:
                 self.setting.build_instancer(sp, order, style)
                 self.add_geometry_node(sp)
-            # update materials
-            mat1 = self.setting.materials[sp["name"]]["%s_0" % (order_style)]
-            mat2 = self.setting.materials[sp["name"]]["%s_1" % (order_style)]
-            color1 = mat1.node_tree.nodes[0].inputs[0].default_value[:]
-            color2 = mat2.node_tree.nodes[0].inputs[0].default_value[:]
-            if not np.allclose(sp["color1"], color1) or \
-                    not np.allclose(sp["color2"], color2):
-                print("change materials: %s" % sp["name"])
-                self.setting.build_materials(sp)
-                self.setting.assign_materials(sp, sp["order"], sp["style"])
+            #always update materials
+            self.setting.build_materials(sp, material_style=sp['material_style'])
+            self.setting.assign_materials(sp, sp["order"], sp["style"])
             # compare radius
             if not np.isclose(sp["width"], 
                     self.setting.instancers[sp["name"]][order_style].batoms.bond.width):

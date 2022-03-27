@@ -104,6 +104,7 @@ class BATOMS_PT_ms(Panel):
             sub.prop(kb, "probe", text="Probe")
             sub.prop(kb, "resolution", text="Resolution")
             sub.prop(kb, "select", text="Select")
+            col.prop(kb, "material_style", text="material_style")
             col.prop(kb, "color",  text="color")
             col.separator()
             op = layout.operator(
