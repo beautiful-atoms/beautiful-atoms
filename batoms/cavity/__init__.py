@@ -1,20 +1,43 @@
-"""Definition of the cavity class.
+"""Definition of the Cavity class.
 
-This module defines the cavity object in the Batoms package.
+This module defines the Cavity object in the Batoms package.
 
 """
 
 import bpy
 from time import time
 import numpy as np
-from batoms.base.object import BaseObject
+from batoms.base.object import ObjectGN
 from batoms.cavity.cavitysetting import CavitySettings
 from scipy import spatial
+from batoms.utils.butils import object_mode, get_nodes_by_name
+from batoms.utils import string2Number
+
+default_attributes = [
+    ['species_index', 'INT'],
+    ['species', 'STRING'],
+    ['show', 'BOOLEAN'],
+    ['scale', 'FLOAT'],
+]
+
+default_GroupInput = [
+    ['species_index', 'NodeSocketInt'],
+    ['show', 'NodeSocketBool'],
+    ['scale', 'NodeSocketFloat'],
+]
+
+default_cavity_datas = {
+    'species_index': np.ones(0, dtype=int),
+    'centers': np.zeros((1, 0, 3)),
+    'show': np.zeros(0, dtype=int),
+    'scale': np.ones(0, dtype=float),
+}
 
 
-class Cavity(BaseObject):
+class Cavity(ObjectGN):
     def __init__(self,
                  label=None,
+                 cavity_datas=None,
                  location=np.array([0, 0, 0]),
                  batoms=None,
                  ):
@@ -29,12 +52,17 @@ class Cavity(BaseObject):
         self.batoms = batoms
         self.label = label
         name = 'cavity'
-        BaseObject.__init__(self, label, name)
-        self.resolution = 0.5
-        self.setting = CavitySettings(
-            self.label, batoms=batoms, parent=self)
+        ObjectGN.__init__(self, label, name)
+        self.resolution = 1
+        flag = self.load()
+        if not flag and cavity_datas is not None:
+            self.build_object(cavity_datas)
+            self.setting = CavitySettings(
+                self.label, batoms=batoms, parent=self)
+        else:
+            self.setting = CavitySettings(
+                self.label, batoms=batoms, parent=self)
 
-    
     def build_materials(self, name, color, node_inputs=None,
                         material_style='default'):
         """
@@ -50,70 +78,29 @@ class Cavity(BaseObject):
                               backface_culling=False)
         return mat
 
-    def draw(self, cavity_name='ALL'):
+    def draw(self):
         """Draw cavity.
         """
-        from batoms.draw import draw_surface_from_vertices
-        from batoms.utils.butils import clean_coll_object_by_type
         # delete old cavity
-        cavities = self.build_cavity()
-        for name, data in cavities.items():
-            if cavity_name.upper() != "ALL" and name.name != cavity_name:
-                continue
-            name = '%s_%s_%s' % (self.label, 'cavity', name)
-            mat = self.build_materials(name, data['color'])
-            for i in range(len(data['centers'])):
-                name1 = "%s_%s"%(name, i)
-                self.delete_obj(name1)
-                bpy.ops.mesh.primitive_uv_sphere_add(location = data['centers'][i],
-                                                    radius=data['radii'][i])
-                obj = bpy.context.view_layer.objects.active
-                obj.name = name1
-                obj.data.name = name1
-                obj.batoms.atom.radius = data['radii'][i]
-                obj.batoms.type = 'CAVITY'
-                obj.batoms.label = self.label
-                bpy.ops.object.shade_smooth()
-                obj.parent = self.batoms.obj
-                # material
-                obj.data.materials.append(mat)
-
-    def draw_cavity_sphere(self, radius, boundary=[[0, 1], [0, 1], [0, 1]]):
-        """
-        cavity
-        for porous materials
-        >>> from ase.io import read
-        >>> atoms = read('docs/source/_static/datas/mof-5.cif')
-        """
-        from batoms.tools import find_cage_spheres_2
-        object_mode()
-        self.clean_atoms_objects('ghost')
-        positions = find_cage_spheres_2(
-            self.cell, self.atoms.positions, radius, boundary=boundary)
-        ba = Batom(self.label, 'X', positions, scale=radius*0.9,
-                   material_style='default', bsdf_inputs=self.bsdf_inputs,
-                   color_style=self.color_style)
-
-        # ba.color = [ba.color[0], ba.color[1], ba.color[2], 0.8]
-        self.coll.children['%s_ghost' % self.label].objects.link(ba.batom)
-        self.coll.children['%s_ghost' % self.label].objects.link(ba.instancer)
+        cavity_datas = self.build_cavity()
+        self.set_arrays(cavity_datas)
 
     def build_kdtree(self, positions):
         """
-        
+
         """
         from scipy import spatial
         tstart = time()
         self.kdtree = spatial.KDTree(positions)
         self.kdtree_mesh = spatial.KDTree(self.meshgrids)
-        print('KDTree positions: %s' % (time() - tstart))
-    
-    def query_distance(self, points, parallel = 1):
+        # print('KDTree positions: %s' % (time() - tstart))
+
+    def query_distance(self, points, parallel=1):
         tstart = time()
         distance, indices = self.kdtree.query(points, workers=parallel)
-        print('KDTree query: %s' % (time() - tstart))
+        # print('KDTree query: %s' % (time() - tstart))
         return indices, distance
-    
+
     def query_radius(self, meshgrids, points, radii, k=1):
         """
         Algorithm:
@@ -135,23 +122,21 @@ class Cavity(BaseObject):
         for i in range(3):
             grids.append(np.arange(npoint[i])/npoint[i])
         x, y, z = np.meshgrid(grids[0], grids[1], grids[2],
-                            indexing='ij')  # , sparse=True)
+                              indexing='ij')  # , sparse=True)
         meshgrids = np.c_[x.ravel(), y.ravel(), z.ravel()]
         meshgrids = np.dot(meshgrids, cell.array)
         self.meshgrids = meshgrids
         self.shape = npoint
-    
 
     def build_cavity(self):
         """Find cage base on radius range and boundary range
         Algorith:
             1) build a meshgrid
             2) calulated first neighbour distance by kdtree
-            3) find indices that d > min
-            4) reshape to indices (3d)
-            5) label by scipy.ndimage
-            6) check components (support periodic)
-            7) find minmum radius
+            3) find the max distance (max radius sphere)
+            4) remove meshgrid within this sphere, 
+            5) find next max radius, ..., untill radius < minRadius
+            6) remove all spheres contact with boundary
         Args:
             cell (_type_): _description_
             positions (_type_): _description_
@@ -170,8 +155,10 @@ class Cavity(BaseObject):
         indices, distances = self.query_distance(self.meshgrids)
         spheres = self.find_cage_spheres(distances, minRadius=5)
         spheres = self.check_sphere_boundary(spheres, cell)
+        spheres = self.refine_spheres(spheres)
         cavities = {}
         # init setting if not exist
+        ns = len(spheres['centers'])
         color_names = list(basic_colors.keys())
         ic = 0
         for r in spheres['radii']:
@@ -180,23 +167,26 @@ class Cavity(BaseObject):
                 if r > cav.min and r < cav.max:
                     has_r = True
             if not has_r:
-                cav = {'min': np.floor(r), 'max': np.ceil(r), 'color': basic_colors[color_names[ic]]}
-                self.setting['%s_%s'%(cav['min'], cav['max'])] = cav
+                name = len(self.setting.collection)
+                cav = {'min': np.floor(r), 'max': np.ceil(
+                    r), 'color': basic_colors[color_names[ic]]}
+                self.setting[name] = cav
                 ic += 1
                 if ic == len(color_names):
-                    ic =0
-            
-        for cav in self.setting.collection:
-            indices = np.where((spheres['radii'] > cav.min) & (spheres['radii'] < cav.max))[0]
-            cavities[cav.name] = {'centers': spheres['centers'][indices],
-                                'radii': spheres['radii'][indices],
-                                'color': cav.color,
-                                # 'battr_inputs': {'cavities': cav.as_dict()}
-                                'min': cav.min,
-                                'max': cav.max,
-                                }
-        # print(cavities)
-        return cavities
+                    ic = 0
+        species_index = np.zeros(ns, dtype = int)
+        show = np.ones(ns, dtype=int)
+        ncollection = len(self.setting.collection)
+        for i in range(ncollection):
+            cav = self.setting.collection[i]
+            indices = np.where((spheres['radii'] > cav.min) & (
+                spheres['radii'] < cav.max))[0]
+            species_index[indices] = string2Number(cav.name)
+        spheres.update({'centers': np.array([spheres['centers']]),
+                        'species_index': species_index,
+                        'scale': spheres['radii'],
+                        'show': show})
+        return spheres
 
     def find_cage_spheres(self, distances, minRadius):
         """
@@ -229,7 +219,7 @@ class Cavity(BaseObject):
             center = meshgrids[imax]
             # print(center, dmax)
         spheres = {'centers': np.array(centers), 'radii': np.array(radii)}
-        print('spheres: ', spheres)
+        # print('spheres: ', spheres)
         return spheres
 
     def check_sphere_boundary(self, spheres0, cell):
@@ -245,7 +235,7 @@ class Cavity(BaseObject):
 
         dis = pointCellDistance(spheres0['centers'], cell)
         # print('pointCellDistance: ', d)
-        
+
         ns = len(spheres0['centers'])
         for i in range(ns):
             dmin = np.min(dis[:, :, i])
@@ -254,127 +244,178 @@ class Cavity(BaseObject):
                 centers.append(spheres0['centers'][i])
                 radii.append(spheres0['radii'][i])
         spheres = {'centers': np.array(centers), 'radii': np.array(radii)}
-        print('spheres after check: ', spheres)
+        # print('spheres after check boundary: ', spheres)
         return spheres
 
+    def refine_spheres(self, spheres):
+        """Refine centers of spheres
 
-    def build_cavity_2(self):
-        """Find cage base on radius range and boundary range
-        Algorith:
-            1) build a meshgrid
-            2) calulated first neighbour distance by kdtree
-            3) find indices that d > min
-            4) reshape to indices (3d)
-            5) label by scipy.ndimage
-            6) check components (support periodic)
-            7) find minmum radius
         Args:
-            cell (_type_): _description_
-            positions (_type_): _description_
-            radius (_type_): _description_
-            step (float, optional): _description_. Defaults to 1.0.
-            boundary (list, optional): _description_. Defaults to [[0, 1], [0, 1], [0, 1]].
-
-        Returns:
-            _type_: _description_
+            spheres (_type_): _description_
         """
-        arrays = self.batoms.arrays
-        cell = self.batoms.cell
-        self.build_kdtree(arrays["positions"])
-        self.build_grid(cell, self.resolution)
-        indices, distance = self.query_distance(self.meshgrids)
-        cavities = {}
-        for cav in self.setting.collection:
-            cavities[cav.name] = {'centers': [],
-                                'radii': [],
-                                'color': cav.color,
-                                # 'battr_inputs': {'cavities': cav.as_dict()}
-                                'min': cav.min,
-                                'max': cav.max,
-                                }
-            s = self.find_cage_spheres_2(distance, radius=(cav.min + cav.max)/2)
-            cavities['centers'].extend(s['center'])
-            cavities['radii'].extend(s['radius'])
-        return cavities
-
-    def find_cage_spheres_2(self, distance, radius = 5):
-        """
-         Algorith:
-            1) build a meshgrid
-            2) calulated first neighbour distance by kdtree
-            3) find indices that d > min (e.g. 3)
-            4) reshape to indices (3d)
-            5) label by scipy.ndimage
-            6) check components (support periodic)
-            7) find minmum radius
-        """
-        from scipy import ndimage
-        dis = distance.reshape(self.shape)
-        meshgrids = self.meshgrids.reshape((self.shape[0], self.shape[1], self.shape[2], 3))
-        mask = dis > radius
-        # check connected poits
-        labels, nb = ndimage.label(mask)
-        print(nb)
-        non_boundary_labels = self.find_cage_pbc_2(labels)
-        spheres = []
-        for l in non_boundary_labels:
-            mask = labels == l
-            points = meshgrids[mask, :]
-            center = np.mean(points, axis = 0)
-            d = spatial.distance.cdist([center], points)
-            dmax = np.max(d) + radius
-            print(l, center, dmax)
-            spheres.extend({'label': l, 'center': center, 'radius': dmax})
-        print(spheres)
+        n = len(spheres['centers'])
+        if n == 0:
+            return spheres
+        # grid
+        npoint = [5, 5, 5]
+        grids = []
+        for i in range(3):
+            grid = np.arange(-npoint[i], npoint[i] + 1) / \
+                npoint[i]*self.resolution/2
+            grids.append(grid)
+        x, y, z = np.meshgrid(grids[0], grids[1], grids[2],
+                              indexing='ij')  # , sparse=True)
+        meshgrids0 = np.c_[x.ravel(), y.ravel(), z.ravel()]
+        for i in range(n):
+            center = spheres['centers'][i]
+            meshgrids = meshgrids0 + center
+            indices, distances = self.query_distance(meshgrids)
+            imax = np.argmax(distances)
+            spheres['centers'][i] = meshgrids[imax]
+            spheres['radii'][i] = max(1, distances[imax] - 2)
+        # print('spheres after refine: ', spheres)
         return spheres
 
-
-    def find_cage_pbc_2(self, labels):
-        """_summary_
+    def build_object(self, arrays, location=[0, 0, 0]):
+        """Build the main Batoms object
 
         Args:
-            labels (_type_): _description_
-            nb (_type_): _description_
+            label (str):
+                Name of the object
+            arrays (array):
+                arrays of properties for each atoms
+            location (list, optional):
+                Location of the object. Defaults to [0, 0, 0].
         """
-        from scipy.sparse import csgraph, csr_matrix
-        neighbourList = []
-        tstart = time()
-        for i in range(labels.shape[0]):
-            for j in range(labels.shape[1]):
-                if labels[i, j, 0] > 0 and labels[i, j, -1] > 0:
-                    neighbourList.append([labels[i, j, 0], labels[i, j, -1], 0, 0, -1])
-        for i in range(labels.shape[0]):
-            for j in range(labels.shape[2]):
-                if labels[i, 0, j] > 0 and labels[i, -1, j] > 0:
-                    neighbourList.append([labels[i, 0, j], labels[i, -1, j], 0, -1, 0])
-        for i in range(labels.shape[1]):
-            for j in range(labels.shape[2]):
-                if labels[0, i, j] > 0 and labels[-1, i, j] > 0:
-                    neighbourList.append([labels[0, i, j], labels[-1, i, j], -1, 0, 0])
-        neighbourList = np.array(neighbourList)
-        neighbourList = np.unique(neighbourList, axis = 0)
-        print(neighbourList)
-        nlabel = np.max(labels) + 1
-        non_boundary_labels = list(set(range(1, nlabel)).difference(set(neighbourList[:, 0]).union(set(neighbourList[:, 1]))))
-        print("non_boundary_labels: ", non_boundary_labels)
-        # find connected component
-        # cageDatas = {}
-        # ai = neighbourList[:, 0]
-        # aj = neighbourList[:, 1]
-        # nlist = len(neighbourList)
-        # data = np.ones(nlist, dtype=int)
-        # matrix = csr_matrix((data, (ai, aj)), shape=(nlabel, nlabel))
-        # n_components, component_list = csgraph.connected_components(matrix)
-        # print(n_components)
-        # print(component_list)
-        # for i in range(n_components):
-        #     indices = np.where(component_list == i)[0]
-        #     n = len(indices)
-        #     if n < 2:
-        #         continue
-        #     cageDatas[i] = {'sub': []}
-        #     cageDatas[i]['indices'] = indices
-        #     cageDatas[i]['offsets'] = indices
-        print('find_cage_pbc_2: %s' % (time() - tstart))
-        return non_boundary_labels
-        
+        name = self.obj_name
+        self.delete_obj(name)
+        mesh = bpy.data.meshes.new(name)
+        centers = arrays.pop('centers')
+        # Add attributes
+        for attribute in default_attributes:
+            mesh.attributes.new(
+                name=attribute[0], type=attribute[1], domain='POINT')
+        obj = bpy.data.objects.new(name, mesh)
+        obj.data.from_pydata(centers, [], [])
+        obj.location = location
+        obj.batoms.type = 'CAVITY'
+        obj.batoms.label = self.batoms.label
+        self.batoms.coll.objects.link(obj)
+        # add cell object as its child
+        obj.parent = self.batoms.obj
+        self.set_attributes(arrays)
+        self.build_geometry_node()
+
+    def build_geometry_node(self):
+        """Geometry node for instancing sphere on vertices!
+        """
+        name = 'GeometryNodes_%s' % self.obj_name
+        modifier = self.obj.modifiers.new(name=name, type='NODES')
+        modifier.node_group.name = name
+        inputs = modifier.node_group.inputs
+        GroupInput = modifier.node_group.nodes[0]
+        GroupOutput = modifier.node_group.nodes[1]
+        # add new output sockets
+        for att in default_GroupInput:
+            GroupInput.outputs.new(type=att[1], name=att[0])
+            inputs.new(att[1], att[0])
+            id = inputs[att[0]].identifier
+            modifier['%s_use_attribute' % id] = True
+            modifier['%s_attribute_name' % id] = att[0]
+        gn = modifier
+        # print(gn.name)
+        JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
+                                         '%s_JoinGeometry' % self.label,
+                                         'GeometryNodeJoinGeometry')
+        SeparateGeometry = \
+            get_nodes_by_name(gn.node_group.nodes,
+                              '%s_SeparateGeometry' % self.label,
+                              'GeometryNodeSeparateGeometry')
+        gn.node_group.links.new(GroupInput.outputs['Geometry'],
+                                SeparateGeometry.inputs['Geometry'])
+        gn.node_group.links.new(GroupInput.outputs[2],
+                                SeparateGeometry.inputs['Selection'])
+        gn.node_group.links.new(SeparateGeometry.outputs[0],
+                                JoinGeometry.inputs['Geometry'])
+        gn.node_group.links.new(JoinGeometry.outputs['Geometry'],
+                                GroupOutput.inputs['Geometry'])
+
+    def add_geometry_node(self, spname, instancer):
+        """Add geometry node for each species
+
+        Args:
+            spname (str):
+                Name of the species
+            instancer (bpy.data.object):
+                Object to be instanced
+        """
+        from batoms.utils.butils import compareNodeType
+        gn = self.gnodes
+        GroupInput = gn.node_group.nodes[0]
+        JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
+                                         '%s_JoinGeometry' % self.label,
+                                         'GeometryNodeJoinGeometry')
+        CompareSpecies = get_nodes_by_name(gn.node_group.nodes,
+                                           'CompareFloats_%s_%s' % (
+                                               self.label, spname),
+                                           compareNodeType)
+        CompareSpecies.operation = 'EQUAL'
+        # CompareSpecies.data_type = 'INT'
+        CompareSpecies.inputs[1].default_value = string2Number(spname)
+        InstanceOnPoint = get_nodes_by_name(gn.node_group.nodes,
+                                            'InstanceOnPoint_%s_%s' % (
+                                                self.label, spname),
+                                            'GeometryNodeInstanceOnPoints')
+        ObjectInfo = get_nodes_by_name(gn.node_group.nodes,
+                                       'ObjectInfo_%s_%s' % (
+                                           self.label, spname),
+                                       'GeometryNodeObjectInfo')
+        ObjectInfo.inputs['Object'].default_value = instancer
+        BoolShow = get_nodes_by_name(gn.node_group.nodes,
+                                     'BooleanMath_%s_%s_1' % (
+                                         self.label, spname),
+                                     'FunctionNodeBooleanMath')
+        #
+        gn.node_group.links.new(GroupInput.outputs['Geometry'],
+                                InstanceOnPoint.inputs['Points'])
+        gn.node_group.links.new(GroupInput.outputs[1],
+                                CompareSpecies.inputs[0])
+        gn.node_group.links.new(GroupInput.outputs[2], BoolShow.inputs[0])
+        gn.node_group.links.new(GroupInput.outputs[3],
+                                InstanceOnPoint.inputs['Scale'])
+        gn.node_group.links.new(CompareSpecies.outputs[0], BoolShow.inputs[1])
+        gn.node_group.links.new(BoolShow.outputs['Boolean'],
+                                InstanceOnPoint.inputs['Selection'])
+        gn.node_group.links.new(ObjectInfo.outputs['Geometry'],
+                                InstanceOnPoint.inputs['Instance'])
+        gn.node_group.links.new(InstanceOnPoint.outputs['Instances'],
+                                JoinGeometry.inputs['Geometry'])
+
+    def set_arrays(self, arrays):
+        """
+        """
+        # if len(arrays['positions']) == 0:
+        #     return
+        attributes = self.attributes
+        # same length
+        dnvert = len(arrays['species_index']) - \
+            len(attributes['species_index'])
+        if dnvert > 0:
+            self.add_vertices_bmesh(dnvert)
+        elif dnvert < 0:
+            self.delete_vertices_bmesh(-dnvert)
+        self.set_frames(arrays)
+        self.set_attributes({'species_index': arrays['species_index']})
+        self.set_attributes({'scale': arrays['scale']})
+        self.set_attributes({'show': arrays['show']})
+        self.update_mesh()
+
+    def set_frames(self, frames=None, frame_start=0, only_basis=False):
+        if frames is None:
+            frames = self._frames
+        nframe = len(frames['centers'])
+        if nframe == 0:
+            return
+        name = '%s_cavity' % (self.label)
+        obj = self.obj
+        self.set_obj_frames(name, obj, frames['centers'])

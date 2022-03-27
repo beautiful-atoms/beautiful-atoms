@@ -486,6 +486,7 @@ class Batoms(BaseCollection, ObjectGN):
         self.set_attributes({'show': arrays['show']})
         self.set_attributes({'model_style': arrays['model_style']})
         self.set_attributes({'select': arrays['select']})
+        self.update_mesh()
 
     @property
     def label(self):
@@ -1502,10 +1503,11 @@ class Batoms(BaseCollection, ObjectGN):
     @property
     def cavity(self):
         """cavity object."""
-        from batoms.cavity import Cavity
+        from batoms.cavity import Cavity, default_cavity_datas
         if self._cavity is not None:
             return self._cavity
-        cavity = Cavity(self.label, batoms=self)
+        cavity = Cavity(self.label, cavity_datas=default_cavity_datas.copy(),
+        batoms=self)
         self.cavity = cavity
         return cavity
 
