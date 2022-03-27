@@ -550,19 +550,22 @@ def _pip_uninstall(blender_py, conda_vars):
 
 
 
-def install(blender_root, blender_bin, repo_path):
+def install(parameters):
     """Link current conda environment to blender's python root
     Copy batoms plugin under repo_path to plugin directory
     """
-    blender_root = Path(blender_root)
+    local_parameters = parameters.copy()
+    blender_root = Path(local_parameters["blender_root"])
+    repo_path = Path(local_parameters["repo_path"])
     conda_env_file = repo_path / "env.yml"
     # plugin_path_source: dir of plugin in github repo
-    plugin_path_source = repo_path / DEFAULT_PLUGIN_NAME
     # plugin_path_target: dir of plugin under blender root
+    plugin_path_source = repo_path / DEFAULT_PLUGIN_NAME
     plugin_path_target = blender_root / DEFAULT_PLUGIN_PATH
+
     # factory_python_source: (presumably) python shipped with blender
-    factory_python_source = blender_root / PY_PATH
     # factory_python_target: dir to move factory python
+    factory_python_source = blender_root / PY_PATH
     factory_python_target = blender_root / PY_BACKUP_PATH
 
     # Check conda environment status
@@ -673,12 +676,11 @@ def install(blender_root, blender_bin, repo_path):
     return
 
 
-def uninstall(
-    blender_root,
-    blender_bin,
-):
+def uninstall(parameters):
     """Remove the plugin from target_directory and restore"""
-    blender_root = Path(blender_root)
+    local_parameters = parameters.copy()
+    blender_root = Path(local_parameters["blender_root"])
+    blender_bin = Path(local_parameters["blender_bin"])
     plugin_path_target = blender_root / DEFAULT_PLUGIN_PATH
     factory_python_source = blender_root / PY_PATH
     factory_python_target = blender_root / PY_BACKUP_PATH
@@ -771,6 +773,7 @@ def main():
     parser.add_argument(
         "-v", "--version", default=MIN_BLENDER_VER, help="Blender major version number"
     )
+    # TODO: to be implemented later
     parser.add_argument(
         "-t",
         "--plugin-version",
@@ -788,7 +791,7 @@ def main():
     )
     parser.add_argument(
         "-n",
-        "--conda-environment-name",
+        "--conda-env-name",
         default=None,
         help="Conda environment to install dependencies other than current environment."
     )
@@ -808,32 +811,55 @@ def main():
         true_blender_root = _get_default_locations(os_name, version=args.version)
     true_blender_bin = _get_blender_bin(os_name, true_blender_root)
     print(f"Found blender binary at {true_blender_bin.as_posix()}")
-    print(f"Choose blender directory at {true_blender_root.as_posix()}")
+    print(f"      blender bundle root at {true_blender_root.as_posix()}")
 
-    bl_ver = _get_blender_version(true_blender_bin)
-    bl_py = _get_blender_py(true_blender_bin)
-    print(bl_ver, bl_py)
+    # Parameters can be provided to install / uninstall methods at this time
+    parameters = dict(blender_root=true_blender_root, 
+                      blender_bin=true_blender_bin, 
+                      blender_version=_get_blender_version(true_blender_bin),
+                      os_name=os_name,
+                      use_pip=args.use_pip,
+                      repo_path = Path(expanduser(expandvars(args.local_repo_path))),
+                      custom_conda_env = args.conda_env_name,
+                      )
+
+    # Uninstallation does not need information about current environment
     if args.uninstall:
-        uninstall(true_blender_root, true_blender_bin)
-        test_uninstall(true_blender_bin)
-    else:
-        # TODO: allow non-conda installation for windows
-        if not is_conda():
-            print(
-                "The installation script should be run inside a conda environment. Abort."
-            )
-            sys.exit(1)
+        uninstall(parameters)
+        test_uninstall(parameters)
+        return
 
-        # TODO: allow direct installation at current place
-        with tempfile.TemporaryDirectory() as workdir:
-            if hasattr(args, "local_repo_path"):
-                repo_path = Path(expanduser(expandvars(args.local_repo_path)))
-            else:
-                repo_path = _gitclone(
-                    workdir, version=args.plugin_version, url=repo_git
-                )
-            install(true_blender_root, true_blender_bin, repo_path)
-            test_plugin(true_blender_bin)
+
+    # Cannot install without conda if pip install is enabled
+    if (not is_conda()) and (args.use_pip is False):
+        print(
+            "The installation script should be run inside a conda environment. Abort."
+        )
+        sys.exit(1)
+    
+    # Sanity check. pip install only recommended for windows
+    if (os_name not in ["windows"]) and args.use_pip:
+        print(
+            (
+            "Install dependencies via pip is only recommended for windows."
+            " Please remove the --use-pip flag and try again"
+            )
+        )
+        sys.exit(1)
+
+    # TODO: allow change tag during installation
+    # with tempfile.TemporaryDirectory() as workdir:
+    #     if hasattr(args, "local_repo_path"):
+    #         repo_path = Path(expanduser(expandvars(args.local_repo_path)))
+    #     else:
+    #         repo_path = _gitclone(
+    #             workdir, version=args.plugin_version, url=repo_git
+    #         )
+    #     install(true_blender_root, true_blender_bin, repo_path)
+    #     test_plugin(true_blender_bin)
+    
+    install(parameters)
+    test_plugin(parameters)
 
 
 if __name__ == "__main__":
