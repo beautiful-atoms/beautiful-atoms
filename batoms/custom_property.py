@@ -600,6 +600,7 @@ class BatomsCollection(bpy.types.PropertyGroup):
                ('LATTICEPLANE', "LatticePlane", "LatticePlane"),
                ('ISOSURFACE', "Isosurface", "Isosurface"),
                ('MS', "MS", "Molecular Surface"),
+               ('CAVITY', "CAVITY", "Cavity"),
                ),
         default='OTHER')
 
@@ -729,6 +730,7 @@ class BatomsObject(bpy.types.PropertyGroup):
                ('LATTICEPLANE', "LatticePlane", "LatticePlane"),
                ('ISOSURFACE', "Isosurface", "Isosurface"),
                ('MS', "MS", "Molecular Surface"),
+               ('CAVITY', "CAVITY", "Cavity"),
                ),
         default='OTHER')
     # obj

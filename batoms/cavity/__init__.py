@@ -9,6 +9,7 @@ from time import time
 import numpy as np
 from batoms.base.object import BaseObject
 from batoms.cavity.cavitysetting import CavitySettings
+from scipy import spatial
 
 
 class Cavity(BaseObject):
@@ -55,23 +56,27 @@ class Cavity(BaseObject):
         from batoms.draw import draw_surface_from_vertices
         from batoms.utils.butils import clean_coll_object_by_type
         # delete old cavity
-        clean_coll_object_by_type(self.batoms.coll, 'cavity')
-        cavity = self.build_cavity(self.batoms.cell)
-        for name, cavity_data in cavity.items():
+        cavities = self.build_cavity()
+        for name, data in cavities.items():
             if cavity_name.upper() != "ALL" and name.name != cavity_name:
                 continue
             name = '%s_%s_%s' % (self.label, 'cavity', name)
-            self.delete_obj(name)
-            obj = draw_surface_from_vertices(name,
-                                             datas=cavity_data,
-                                             coll=self.batoms.coll,
-                                             )
-            obj.batoms.type = 'cavity'
-            obj.batoms.label = self.label
-            obj.parent = self.batoms.obj
-            # material
-            mat = self.build_materials(name, cavity_data['color'])
-            obj.data.materials.append(mat)
+            mat = self.build_materials(name, data['color'])
+            for i in range(len(data['centers'])):
+                name1 = "%s_%s"%(name, i)
+                self.delete_obj(name1)
+                bpy.ops.mesh.primitive_uv_sphere_add(location = data['centers'][i],
+                                                    radius=data['radii'][i])
+                obj = bpy.context.view_layer.objects.active
+                obj.name = name1
+                obj.data.name = name1
+                obj.batoms.atom.radius = data['radii'][i]
+                obj.batoms.type = 'CAVITY'
+                obj.batoms.label = self.label
+                bpy.ops.object.shade_smooth()
+                obj.parent = self.batoms.obj
+                # material
+                obj.data.materials.append(mat)
 
     def draw_cavity_sphere(self, radius, boundary=[[0, 1], [0, 1], [0, 1]]):
         """
@@ -109,14 +114,15 @@ class Cavity(BaseObject):
         print('KDTree query: %s' % (time() - tstart))
         return indices, distance
     
-    def query_radius(self, points, radii, k=1):
+    def query_radius(self, meshgrids, points, radii, k=1):
         """
         Algorithm:
         Use KDTree to query the tree for neighbors within a radius r.
         """
         tstart = time()
-        indices = self.kdtree_mesh.query_ball_point(points, radii)
-        print('KDTree query: %s' % (time() - tstart))
+        kdtree_mesh = spatial.KDTree(meshgrids)
+        indices = kdtree_mesh.query_ball_point(points, radii)
+        # print('KDTree query: %s' % (time() - tstart))
         return indices[0]
 
     def build_grid(self, cell, resolution):
@@ -156,22 +162,40 @@ class Cavity(BaseObject):
         Returns:
             _type_: _description_
         """
+        from batoms.data import basic_colors
         arrays = self.batoms.arrays
         cell = self.batoms.cell
         self.build_grid(cell, self.resolution)
         self.build_kdtree(arrays["positions"])
         indices, distances = self.query_distance(self.meshgrids)
         spheres = self.find_cage_spheres(distances, minRadius=5)
-        # cavities = {}
-        #     cavities[cav.name] = {'centers': [],
-        #                         'radii': [],
-        #                         'color': cav.color,
-        #                         # 'battr_inputs': {'cavities': cav.as_dict()}
-        #                         'min': cav.min,
-        #                         'max': cav.max,
-        #                         }
-        #     cavities['centers'].extend(s['center'])
-        #     cavities['radii'].extend(s['radius'])
+        spheres = self.check_sphere_boundary(spheres, cell)
+        cavities = {}
+        # init setting if not exist
+        color_names = list(basic_colors.keys())
+        ic = 0
+        for r in spheres['radii']:
+            has_r = False
+            for cav in self.setting.collection:
+                if r > cav.min and r < cav.max:
+                    has_r = True
+            if not has_r:
+                cav = {'min': np.floor(r), 'max': np.ceil(r), 'color': basic_colors[color_names[ic]]}
+                self.setting['%s_%s'%(cav['min'], cav['max'])] = cav
+                ic += 1
+                if ic == len(color_names):
+                    ic =0
+            
+        for cav in self.setting.collection:
+            indices = np.where((spheres['radii'] > cav.min) & (spheres['radii'] < cav.max))[0]
+            cavities[cav.name] = {'centers': spheres['centers'][indices],
+                                'radii': spheres['radii'][indices],
+                                'color': cav.color,
+                                # 'battr_inputs': {'cavities': cav.as_dict()}
+                                'min': cav.min,
+                                'max': cav.max,
+                                }
+        # print(cavities)
         return cavities
 
     def find_cage_spheres(self, distances, minRadius):
@@ -188,21 +212,50 @@ class Cavity(BaseObject):
         imax = np.argmax(distances)
         dmax = distances[imax]
         center = meshgrids[imax]
-        spheres = [[center, dmax]]
+        centers = []
+        radii = []
         while dmax > minRadius:
+            centers.append(center)
+            radii.append(dmax)
             n = len(distances)
             mask = np.ones(n, dtype=bool)
-            indices1 = self.query_radius([center], [dmax])
+            indices1 = self.query_radius(meshgrids, [center], [dmax])
+            mask[imax] = False
             mask[indices1] = False
             distances = distances[mask]
             meshgrids = meshgrids[mask]
             imax = np.argmax(distances)
             dmax = distances[imax]
             center = meshgrids[imax]
-            print(center, dmax)
-            spheres.extend([center, dmax])
+            # print(center, dmax)
+        spheres = {'centers': np.array(centers), 'radii': np.array(radii)}
+        print('spheres: ', spheres)
         return spheres
 
+    def check_sphere_boundary(self, spheres0, cell):
+        """Remove sphere contact with boundary
+        distance to cell < radius
+        """
+        from batoms.neighborlist import pointCellDistance
+        centers = []
+        radii = []
+        if len(spheres0['centers']) == 0:
+            spheres = {'centers': np.array(centers), 'radii': np.array(radii)}
+            return spheres
+
+        dis = pointCellDistance(spheres0['centers'], cell)
+        # print('pointCellDistance: ', d)
+        
+        ns = len(spheres0['centers'])
+        for i in range(ns):
+            dmin = np.min(dis[:, :, i])
+            # print(dmin, spheres0['radii'][i])
+            if dmin > spheres0['radii'][i]:
+                centers.append(spheres0['centers'][i])
+                radii.append(spheres0['radii'][i])
+        spheres = {'centers': np.array(centers), 'radii': np.array(radii)}
+        print('spheres after check: ', spheres)
+        return spheres
 
 
     def build_cavity_2(self):
@@ -256,7 +309,6 @@ class Cavity(BaseObject):
             7) find minmum radius
         """
         from scipy import ndimage
-        from scipy import spatial
         dis = distance.reshape(self.shape)
         meshgrids = self.meshgrids.reshape((self.shape[0], self.shape[1], self.shape[2], 3))
         mask = dis > radius
