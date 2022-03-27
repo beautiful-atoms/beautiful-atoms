@@ -248,13 +248,13 @@ class Bcavity(Base):
     name: StringProperty(name="name")
     label: StringProperty(name="label", default='')
     min: FloatProperty(name="min", default=5)
-    max: FloatProperty(name="max", default=10)
+    max: FloatProperty(name="max", default=6)
     resolution: FloatProperty(name="resolution", soft_min=0.5, soft_max=2,
                               default=1.0)
     color: FloatVectorProperty(name="color", size=4,
                                subtype='COLOR',
                                min=0, max=1,
-                               default=[1, 1, 0, 0.5],
+                               default=[1, 1, 0, 1.0],
                                )
 
     def as_dict(self) -> dict:
@@ -716,7 +716,7 @@ class BatomsCollection(bpy.types.PropertyGroup):
                                     type=Bcavity)
 
     cavity_index: IntProperty(name="cavity_index",
-                                  default=1)
+                                  default=0)
 
     bsheet: CollectionProperty(name='Bsheet',
                                type=Bsheet)

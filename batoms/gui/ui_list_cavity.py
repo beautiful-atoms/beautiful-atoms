@@ -107,5 +107,5 @@ class BATOMS_PT_cavity(Panel):
             sub.prop(kb, "material_style", text="material_style")
             col.prop(kb, "color",  text="color")
             col.separator()
-            op = layout.operator("surface.cavity_draw",
-                                 icon='GREASEPENCIL', text="Draw")
+        op = layout.operator("surface.cavity_draw",
+                             icon='GREASEPENCIL', text="Draw")
