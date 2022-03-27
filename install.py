@@ -525,6 +525,20 @@ def _pip_install(blender_py, blender_python_root, factory_py_ver, conda_vars):
     except RuntimeError as e:
         print("Cannot install openbabel. You need to have a working compiler on windows. The installation will continue but some functionalities in beautiful_atoms may not be working.")
         
+
+def _pip_uninstall(blender_py, conda_vars):
+    """uninstall pip components (windows only)
+    """
+    blender_py = str(blender_py)
+    pip_prefix = [blender_py, "-m", "pip"]
+    # not exhaustive, but should be the most dependent ones
+    # TODO: cleanup the dependencies
+    commands = pip_prefix + ["uninstall", "-y", "ase", "scipy", "matplotlib",
+                             "spglib", "scikit-image", "plotly", "Pillow", "openbabel", "mpmath", "monty",
+                            "latexcodec", "pybtex", "networkx", "pandas"]
+    _run_process(commands)
+    return
+        
     
         
 
