@@ -105,6 +105,7 @@ class BATOMS_PT_crystal_shapes(Panel):
             # sub.prop(kb, "scale", text="Scale")
             col.prop(kb, "symmetry",  text="Symmetry")
             col.prop(kb, "show_edge",  text="Show edge")
+            col.prop(kb, "material_style", text="material_style")
             col.prop(kb, "color",  text="color")
             op = layout.operator("plane.crystal_shape_draw",
                                  icon='GREASEPENCIL', text="Draw")

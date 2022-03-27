@@ -88,6 +88,7 @@ class LatticePlane(BaseObject):
                      'edges': edges,
                      'faces': faces,
                      'color': p.color,
+                     'material_style': p.material_style,
                      'indices': p.indices,
                      'edges_cylinder': {'lengths': [], 'centers': [],
                                         'normals': [], 'vertices': 6,
@@ -307,7 +308,8 @@ class LatticePlane(BaseObject):
                 obj = draw_surface_from_vertices(name, plane,
                                                  coll=self.batoms.coll,
                                                  )
-                mat = self.build_materials(name, color=plane['color'])
+                mat = self.build_materials(name, color=plane['color'],
+                                           material_style=plane['material_style'])
                 obj.data.materials.append(mat)
                 obj.parent = self.batoms.obj
                 obj.batoms.type = 'LATTICEPLANE'

@@ -36,16 +36,14 @@ class Isosurface(BaseObject):
         volume = self.batoms.volume
         isosurface = {}
         for iso in self.setting.collection:
-            name = iso.name
-            level = iso.level
-            color = iso.color
-            verts, faces = calc_isosurface(volume, cell, level)
-            isosurface[name] = {'vertices': verts,
-                                'edges': [],
-                                'faces': faces,
-                                'color': color,
-                                'battr_inputs': {'isosurface': iso.as_dict()}
-                                }
+            verts, faces = calc_isosurface(volume, cell, iso.level)
+            isosurface[iso.name] = {'vertices': verts,
+                                    'edges': [],
+                                    'faces': faces,
+                                    'material_style': iso.material_style,
+                                    'color': iso.color,
+                                    'battr_inputs': {'isosurface': iso.as_dict()}
+                                    }
         return isosurface
 
     def build_materials(self, name, color, node_inputs=None,
@@ -84,7 +82,9 @@ class Isosurface(BaseObject):
             obj.batoms.label = self.label
             obj.parent = self.batoms.obj
             # material
-            mat = self.build_materials(name, isosurface_data['color'])
+            mat = self.build_materials(name, isosurface_data['color'],
+                                       material_style=isosurface['material_style'],
+                                       )
             obj.data.materials.append(mat)
 
 

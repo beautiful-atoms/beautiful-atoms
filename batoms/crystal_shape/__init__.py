@@ -102,6 +102,7 @@ class CrystalShape(BaseObject):
             plane = {'vertices': vertices,
                      'edges': edges,
                      'faces': faces,
+                     'material_style': p.material_style,
                      'color': p.color,
                      'indices': p.indices,
                      'edges_cylinder': {'lengths': [], 'centers': [],
@@ -149,7 +150,8 @@ class CrystalShape(BaseObject):
             obj = draw_surface_from_vertices(name, plane,
                                              coll=self.batoms.coll,
                                              )
-            mat = self.build_materials(name, color=plane['color'])
+            mat = self.build_materials(name, color=plane['color'],
+                                       material_style=plane['material_style'])
             obj.data.materials.append(mat)
             obj.parent = self.batoms.obj
             obj.batoms.type = 'CRYSTALSHAPE'

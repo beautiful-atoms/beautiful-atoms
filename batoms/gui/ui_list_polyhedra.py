@@ -101,6 +101,7 @@ class BATOMS_PT_polyhedra(Panel):
             row = layout.row()
             col = layout.column()
             sub = col.column(align=True)
+            col.prop(kb, "material_style", text="material_style")
             sub.prop(kb, "color", text="Color")
             # col.prop(kb, "show_edge",  text="Show edge")
             # col.prop(kb, "width",  text="Width")

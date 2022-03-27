@@ -161,6 +161,7 @@ class MS(BaseObject):
             volume, 5, spacing=self.get_space(resolution),
             origin=self.box_origin)
         isosurface['color'] = ms.color
+        isosurface['material_style'] = ms.material_style
         print('Vertices: %s' % len(isosurface['vertices']))
         sas_name = '%s_%s_sas' % (self.label, ms.name)
         self.delete_obj(sas_name)
@@ -170,7 +171,9 @@ class MS(BaseObject):
                                          datas=isosurface,
                                          coll=coll,
                                          )
-        mat = self.build_materials(sas_name, color=isosurface['color'])
+        mat = self.build_materials(sas_name, color=isosurface['color'],
+                                   material_style=isosurface['material_style'],
+                                   )
         obj.data.materials.append(mat)
         obj.parent = self.batoms.obj
         obj.batoms.type = 'MS'
@@ -239,6 +242,7 @@ class MS(BaseObject):
         isosurface = self.calc_isosurface(
             volume, 5, self.get_space(resolution), origin=self.box_origin)
         isosurface['color'] = ms.color
+        isosurface['material_style'] = ms.material_style
         print('Vertices: %s' % len(isosurface['vertices']))
         ses_name = '%s_%s_ses' % (self.label, ms.name)
         self.delete_obj(ses_name)
@@ -248,7 +252,9 @@ class MS(BaseObject):
                                          datas=isosurface,
                                          coll=coll,
                                          )
-        mat = self.build_materials(ses_name, color=isosurface['color'])
+        mat = self.build_materials(ses_name, color=isosurface['color'],
+                                   material_style=isosurface['material_style'],
+                                   )
         obj.data.materials.append(mat)
         obj.parent = self.batoms.obj
         obj.batoms.type = 'MS'

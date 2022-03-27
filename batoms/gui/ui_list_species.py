@@ -102,6 +102,7 @@ class BATOMS_PT_species(Panel):
             col = layout.column()
             sub = col.column(align=True)
             # sub.prop(kb, "radius_style", text="Radius_style")
+            col.prop(kb, "material_style", text="material_style")
             sub.prop(kb, "color", text="Color")
             col.prop(kb, "scale",  text="Scale")
             op = layout.operator("batoms.species_update",
