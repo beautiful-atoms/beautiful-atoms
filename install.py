@@ -757,6 +757,8 @@ def test_uninstall(blender_bin):
 def main():
     import argparse
 
+    curdir = Path(__file__).parent.resolve()
+
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "blender_root",
@@ -778,10 +780,22 @@ def main():
     parser.add_argument(
         "-p",
         "--local-repo-path",
+        default=curdir,
         help="Path of local path for the repo, such as use git cloned.",
     )
     parser.add_argument(
         "--uninstall", action="store_true", help="Uninstall plugin in blender_root"
+    )
+    parser.add_argument(
+        "-n",
+        "--conda-environment-name",
+        default=None,
+        help="Conda environment to install dependencies other than current environment."
+    )
+    parser.add_argument(
+        "--use-pip",
+        action="store_true",
+        help="Use pip install instead of conda environment. Only recommended on windows."
     )
     args = parser.parse_args()
     print(args)
