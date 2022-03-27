@@ -83,7 +83,7 @@ class Isosurface(BaseObject):
             obj.parent = self.batoms.obj
             # material
             mat = self.build_materials(name, isosurface_data['color'],
-                                       material_style=isosurface['material_style'],
+                                       material_style=isosurface_data['material_style'],
                                        )
             obj.data.materials.append(mat)
 
