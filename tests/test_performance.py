@@ -10,7 +10,7 @@ def test_position():
     tstart = time()
     au = bulk("Au", cubic=True)
     au = Batoms(label="au", from_ase=au, segments=[6, 6])
-    au.repeat([10, 10, 20])
+    au.repeat([10, 10, 10])
     au.repeat([5, 5, 5])
     t = time() - tstart
     assert t < 100
