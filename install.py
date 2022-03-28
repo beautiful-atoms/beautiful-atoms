@@ -867,10 +867,10 @@ def main():
                 )
             )
             sys.exit(1)
-    elif (os_name in ["windows"]) and (parameters["blender_version"] != "3.0"):
+    elif (os_name in ["windows"]) and (LooseVersion(parameters["blender_version"]) <=  LooseVersion("3.0.1")):
         print(
             (
-                "Conda install currently only tested stable for Blender==3.0. "
+                "Conda install currently only tested stable for Blender<=3.0.1 "
                 "Please add --use-pip for your windows installation."
             )
         )
