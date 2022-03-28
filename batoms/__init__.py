@@ -58,6 +58,7 @@ from .ops import (
     ops_bond,
     ops_polyhedra,
     ops_plane,
+    ops_render,
     )
 
 from .ops import classes_ops
@@ -144,7 +145,6 @@ classes_ops = [
     gui_plane.AddButton,
     gui_render.Render_PT_prepare,
     gui_render.RenderProperties,
-    gui_render.AddButton,
     gui_pymatgen.Pymatgen_PT_prepare,
     gui_pymatgen.PymatgenProperties,
     gui_pymatgen.Search,
@@ -220,6 +220,7 @@ classes_ops = [
     ops_cavity.CavityAdd,
     ops_cavity.CavityRemove,
     ops_cavity.CavityDraw,
+    ops_render.RenderAdd
 ]
 # classes_ops.extend(classes_ops)
 #
