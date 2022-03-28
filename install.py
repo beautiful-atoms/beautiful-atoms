@@ -39,7 +39,8 @@ DEFAULT_REPO_NAME = "beautiful-atoms"
 DEFAULT_PLUGIN_NAME = "batoms"
 DEFAULT_PLUGIN_PATH = f"scripts/addons_contrib/{DEFAULT_PLUGIN_NAME}"
 
-MIN_BLENDER_VER = "3.0"
+ALLOWED_BLENDER_VERSIONS = ["3.0", "3.1"]
+
 PY_PATH = "python"
 PY_BACKUP_PATH = "_old_python"
 
@@ -92,14 +93,16 @@ install_script_path = (
 )
 
 
-def _get_default_locations(os_name, version=MIN_BLENDER_VER):
-    """Get system specific default install locations of blender"""
+def _get_default_locations(os_name):
+    """Get system specific default install locations of blender.
+    Choose multiple possible
+    """
     os_name = os_name.lower()
     # Compare version
-    if LooseVersion(str(version)) < LooseVersion(str(MIN_BLENDER_VER)):
-        raise ValueError(
-            f"Blender version {version} is not supported. Minimal requirement is {MIN_BLENDER_VER}"
-        )
+    # if LooseVersion(str(version)) < LooseVersion(str(MIN_BLENDER_VER)):
+        # raise ValueError(
+            # f"Blender version {version} is not supported. Minimal requirement is {MIN_BLENDER_VER}"
+        # )
     if os_name not in ["windows", "macos", "linux"]:
         raise ValueError(f"{os_name} is not valid.")
     default_locations = {
@@ -112,20 +115,21 @@ def _get_default_locations(os_name, version=MIN_BLENDER_VER):
     if os_name == "linux":
         raise NotImplementedError(
             (
-                "Version search in linux is not supported."
+                "Automatic discovery of blender on Linux is not supported."
                 " Please provide the full path to the blender installation location."
             )
         )
     matches = []
     for l in default_locations[os_name]:
-        true_location = Path(
-            expandvars(expanduser(l.format(version=version)))
-        ).absolute()
-        if true_location.is_dir():
-            matches.append(true_location)
+        for version in ALLOWED_BLENDER_VERSIONS:
+            true_location = Path(
+                expandvars(expanduser(l.format(version=version)))
+            ).absolute()
+            if true_location.is_dir():
+                matches.append(true_location)
     # Multiple blender installation may occur on macos
     if len(matches) > 1:
-        print(f"Multiple blender installations of version {version} exists:")
+        print(f"Multiple blender installations exists:")
         for i, m in enumerate(matches):
             print(f"{i}: {m.as_posix()}")
         choice = int(input("Choose one (default 0): ") or "0")
@@ -137,7 +141,7 @@ def _get_default_locations(os_name, version=MIN_BLENDER_VER):
     if match is None:
         raise FileNotFoundError(
             (
-                f"No corresponding blender of version {version} on {os_name} found. "
+                f"Cannot find Blender>=3.0 in default installation locations. "
                 "Please specify the full path to the blender installation location."
             )
         )
@@ -556,6 +560,7 @@ def install(parameters):
     """
     local_parameters = parameters.copy()
     blender_root = Path(local_parameters["blender_root"])
+    blender_bin = Path(local_parameters["blender_bin"])
     repo_path = Path(local_parameters["repo_path"])
     conda_env_file = repo_path / "env.yml"
     # plugin_path_source: dir of plugin in github repo
@@ -593,8 +598,9 @@ def install(parameters):
                 old_py = None
                 exception_corrupt = True
             if old_py:
-                proc = subprocess.run([old_py, "-V"])
-                if proc.returncode != 0:
+                try:
+                    _run_process([str(old_py), "-V"])
+                except RuntimeError:
                     print(
                         (
                             f"Found factory python at {old_py.as_posix()} "
@@ -627,35 +633,42 @@ def install(parameters):
     
     # Step 1.1 check python and numpy version
     factory_py_ver, factory_numpy_ver, = _get_factory_versions(blender_bin)
+    blender_py = _get_blender_py(blender_bin)
+
     print(factory_py_ver, factory_numpy_ver)
 
-    # Step 2: rename soruce to target
-    if factory_python_target.exists():
-        raise RuntimeError(
-            f"Something wrong. {factory_python_target.as_posix()} still exists."
+    # Step 2. cond 1: use pip
+    if parameters["use_pip"]:
+        _pip_install(blender_py, factory_python_source, factory_py_ver, conda_vars)
+    
+    else:
+        # Step 2: cond2: rename soruce to target
+        if factory_python_target.exists():
+            raise RuntimeError(
+                f"Something wrong. {factory_python_target.as_posix()} still exists."
+            )
+        if (not factory_python_source.is_dir()) or (factory_python_source.is_symlink()):
+            raise RuntimeError(
+                f"Something wrong. {factory_python_source.as_posix()} should be a real directory."
+            )
+        os.rename(factory_python_source, factory_python_target)
+        print(
+            f"Renamed {factory_python_source.as_posix()} to {factory_python_target.as_posix()}"
         )
-    if (not factory_python_source.is_dir()) or (factory_python_source.is_symlink()):
-        raise RuntimeError(
-            f"Something wrong. {factory_python_source.as_posix()} should be a real directory."
-        )
-    os.rename(factory_python_source, factory_python_target)
-    print(
-        f"Renamed {factory_python_source.as_posix()} to {factory_python_target.as_posix()}"
-    )
 
-    # Step 3: finally, link the conda prefix of current environment
-    conda_prefix = Path(conda_vars["CONDA_PREFIX"]).resolve()
-    # Should not happen but just in case
-    if factory_python_source.is_symlink():
-        os.unlink(factory_python_source)
-    os.symlink(conda_prefix, factory_python_source)
-    print(f"Created symlink {conda_prefix} --> {factory_python_source.as_posix()}")
+        # Step 2-1: link the conda prefix of current environment
+        conda_prefix = Path(conda_vars["CONDA_PREFIX"]).resolve()
+        # Should not happen but just in case
+        if factory_python_source.is_symlink():
+            os.unlink(factory_python_source)
+        os.symlink(conda_prefix, factory_python_source)
+        print(f"Created symlink {conda_prefix} --> {factory_python_source.as_posix()}")
 
-    # Give a warning about conda env
-    # TODO: allow direct install into another environment
-    _conda_update(conda_env_file, conda_vars, python_version=factory_py_ver, numpy_version=factory_numpy_ver)
+        # Give a warning about conda env
+        # TODO: allow direct install into another environment
+        _conda_update(conda_env_file, conda_vars, python_version=factory_py_ver, numpy_version=factory_numpy_ver)
 
-    # Shall we overwrite the target path?
+    # Step 4: install plugin
     if not _is_empty_dir(plugin_path_target):
         print(
             f"Target plugin installtion directory {plugin_path_target.as_posix()} is not empty."
@@ -684,7 +697,11 @@ def uninstall(parameters):
     plugin_path_target = blender_root / DEFAULT_PLUGIN_PATH
     factory_python_source = blender_root / PY_PATH
     factory_python_target = blender_root / PY_BACKUP_PATH
+
+    conda_vars = _get_conda_variables()
     _blender_disable_plugin(blender_bin)
+    # if parameters["use_pip"]:
+    #     _pip_uninstall()
     if plugin_path_target.is_symlink():
         os.unlink(plugin_path_target)
     elif plugin_path_target.is_dir():
@@ -696,11 +713,17 @@ def uninstall(parameters):
 
     # _old_python not found, ignore
     if not factory_python_target.exists():
-        print(
-            f"Backup of factory blender python path {factory_python_target.as_posix()} does not exist. Ignore"
-        )
+        if parameters["use_pip"]:
+            blender_py = _get_blender_py(blender_bin)
+            _pip_uninstall(blender_py, conda_vars)
+        else:
+            print(
+                f"Backup of factory blender python path {factory_python_target.as_posix()} does not exist. Ignore"
+            )
         return
     else:
+        if parameters["use_pip"]:
+            raise RuntimeError("Uninstall via pip cannot be performed when bundled python moved to another location. Abort")
         if factory_python_source.is_dir():
             if not _is_empty_dir(factory_python_source):
                 if factory_python_source.is_symlink():
@@ -728,8 +751,8 @@ def uninstall(parameters):
     return
 
 
-def test_plugin(blender_bin):
-    blender_bin = str(blender_bin)
+def test_plugin(parameters):
+    blender_bin = str(parameters["blender_bin"])
     commands = [
         blender_bin,
         "-b",
@@ -742,8 +765,8 @@ def test_plugin(blender_bin):
     return
 
 
-def test_uninstall(blender_bin):
-    blender_bin = str(blender_bin)
+def test_uninstall(parameters):
+    blender_bin = str(parameters["blender_bin"])
     commands = [
         blender_bin,
         "-b",
@@ -770,9 +793,6 @@ def main():
             "If not provided, infer from os-dependent directories."
         ),
     )
-    parser.add_argument(
-        "-v", "--version", default=MIN_BLENDER_VER, help="Blender major version number"
-    )
     # TODO: to be implemented later
     parser.add_argument(
         "-t",
@@ -784,7 +804,7 @@ def main():
         "-p",
         "--local-repo-path",
         default=curdir,
-        help="Path of local path for the repo, such as use git cloned.",
+        help="Path to root of the beautiful-atoms repo. Default is the same level as install.py",
     )
     parser.add_argument(
         "--uninstall", action="store_true", help="Uninstall plugin in blender_root"
@@ -808,7 +828,7 @@ def main():
     if args.blender_root:
         true_blender_root = Path(expanduser(expandvars(args.blender_root)))
     else:
-        true_blender_root = _get_default_locations(os_name, version=args.version)
+        true_blender_root = _get_default_locations(os_name)
     true_blender_bin = _get_blender_bin(os_name, true_blender_root)
     print(f"Found blender binary at {true_blender_bin.as_posix()}")
     print(f"      blender bundle root at {true_blender_root.as_posix()}")
