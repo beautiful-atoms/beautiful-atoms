@@ -867,7 +867,7 @@ def main():
                 )
             )
             sys.exit(1)
-    elif (os_name in ["windows"]) and (LooseVersion(parameters["blender_version"]) <=  LooseVersion("3.0.1")):
+    elif (os_name in ["windows"]) and (LooseVersion(parameters["blender_version"]) >  LooseVersion("3.0.1")):
         print(
             (
                 "Conda install currently only tested stable for Blender<=3.0.1 "
