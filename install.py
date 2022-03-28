@@ -858,11 +858,20 @@ def main():
         sys.exit(1)
     
     # Sanity check. pip install only recommended for windows
-    if (os_name not in ["windows"]) and args.use_pip:
+    if args.use_pip:
+        if os_name not in ["windows"]:
+            print(
+                (
+                "Install dependencies via pip is only recommended for windows."
+                " Please remove the --use-pip flag and try again"
+                )
+            )
+            sys.exit(1)
+    elif (os_name in ["windows"]) and (parameters["blender_version"] != "3.0"):
         print(
             (
-            "Install dependencies via pip is only recommended for windows."
-            " Please remove the --use-pip flag and try again"
+                "Conda install currently only tested stable for Blender==3.0. "
+                "Please add --use-pip for your windows installation."
             )
         )
         sys.exit(1)
