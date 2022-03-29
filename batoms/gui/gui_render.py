@@ -8,7 +8,7 @@ from bpy.props import (
     FloatProperty,
 )
 from batoms.render.render import Render
-
+from batoms import Batoms
 
 class Render_PT_prepare(Panel):
     bl_label = "Render"
@@ -23,9 +23,10 @@ class Render_PT_prepare(Panel):
         repanel = context.scene.repanel
 
         layout = self.layout
-        # row = layout.row()
-        layout.prop(repanel, "viewport")
-        layout.prop(repanel, "light_direction")
+        col = layout.column()
+        # row = col.row(align=True)
+        col.prop(repanel, "viewport")
+        col.prop(repanel, "light_direction")
         layout.prop(repanel, "resolution")
         layout.prop(repanel, "scale")
         layout.prop(repanel, "distance")
@@ -56,11 +57,13 @@ class RenderProperties(bpy.types.PropertyGroup):
     viewport: FloatVectorProperty(
         name="Viewport", size=3, default=(0, 0, 1),
         soft_min = -1, soft_max = 1,
+        subtype = "XYZ",
         description="Miller viewport for the render", update=Callback_modify_viewport)
     
     light_direction: FloatVectorProperty(
         name="Light direction", size=3, default=(0, 0, 1),
         soft_min = -1, soft_max = 1,
+        subtype = "XYZ",
         description="Light direction for the render", update=Callback_modify_light_direction)
     
 
