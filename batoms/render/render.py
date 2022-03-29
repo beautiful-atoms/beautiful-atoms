@@ -64,6 +64,9 @@ class Render(BaseCollection):
         if coll and coll.batoms.brender.flag:
             self.lights = Lights(label)
             self.camera = Camera(label)
+            coll.batoms.brender.viewport = viewport
+            coll.batoms.brender.animation = animation
+            coll.batoms.brender.run_render = run_render
         else:
             self.set_collection(viewport, animation=animation,
                                 run_render=run_render)
@@ -197,6 +200,14 @@ class Render(BaseCollection):
     @run_render.setter
     def run_render(self, run_render):
         self.coll.batoms.brender.run_render = run_render
+    
+    @property
+    def animation(self):
+        return self.coll.batoms.brender.animation
+
+    @animation.setter
+    def animation(self, animation):
+        self.coll.batoms.brender.animation = animation
 
     @property
     def studiolight(self):
