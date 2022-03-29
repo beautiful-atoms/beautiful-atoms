@@ -138,6 +138,7 @@ dmypy.json
 *.pdb
 *.cif
 *.poscar
+*.x3d
 
 #test/
 .vscode/*

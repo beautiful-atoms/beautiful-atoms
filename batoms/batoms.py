@@ -1801,3 +1801,19 @@ class Batoms(BaseCollection, ObjectGN):
             positions.append([atom.GetX(), atom.GetY(), atom.GetZ()])
         # species, positions, arrays, cell, pbc, info = read_from_pybel(mol)
         self.positions = positions
+
+    def export_mesh(self, filename):
+        # remove shape key
+        self.realize_instances = True
+        bpy.context.view_layer.objects.active = self.obj
+        bpy.ops.object.shape_key_remove(all=True)
+        bpy.ops.object.modifier_apply(modifier=self.gnodes.name)
+        if filename.endswith('.x3d'):
+            bpy.ops.export_scene.x3d(filepath = filename, use_selection = True)
+        elif filename.endswith('.obj') or filename.endswith('.mtl'):
+            bpy.ops.export_scene.x3d(filepath = filename, use_selection = True)
+        else:
+            raise('File format %s is not supported.'%filename)
+        
+
+        
