@@ -317,6 +317,16 @@ class Species(BaseObject):
                 node.inputs['Alpha'].default_value = color[3]
 
     @property
+    def material_style(self):
+        return self.data.material_style
+    
+    @material_style.setter
+    def material_style(self, material_style):
+        self.data.material_style = material_style
+        self.build_materials(material_style = material_style)
+        self.assign_materials()
+
+    @property
     def radius(self):
         return self.get_radius()
 
