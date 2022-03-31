@@ -78,7 +78,7 @@ jobs:
           curl -O ${URL} && 7z x blender-*-macos-x64.dmg -o$HOME/Applications/ -y
           ls $HOME/Applications/Blender/Blender.app
           echo "BLENDER_ROOT=$HOME/Applications/Blender/Blender.app/Contents/Resources/${MAJ_VER}" >> $GITHUB_ENV
-          # chmod -R u+x ../Blender/Blender.app
+          chmod -R u+x $HOME/Applications/Blender/Blender.app
           $HOME/Applications/Blender/Blender.app/Contents/MacOS/Blender -b
           $HOME/Applications/Blender/Blender.app/Contents/MacOS/Blender -b --python-expr "print('ok')"
           ls "$HOME/Library/Application Support/Blender/${MAJ_VER}/config/"
