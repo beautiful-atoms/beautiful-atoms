@@ -40,7 +40,7 @@ jobs:
           MAJ_VER=${VER%.*}
           echo $VER $MAJ_VER
           URL="${BLENDER_DOWN_URL}/Blender${MAJ_VER}/blender-${VER}-linux-x64.tar.xz"
-          curl -O ${URL} && tar -xvf blender-*-linux-x64.tar.xz -C ../blender
+          mkdir -p ../blender && curl -O ${URL} && tar -xvf blender-*-linux-x64.tar.xz -C ../blender
           ls ../blender
 
 
