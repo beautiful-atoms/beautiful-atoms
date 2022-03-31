@@ -1489,7 +1489,7 @@ class Bonds(BaseCollection, ObjectGN):
         mol = self.batoms.as_pybel(export_bonds=False)
         bondlists = [[b.GetBeginAtom().GetIndex(),
                         b.GetEndAtom().GetIndex(),
-                        0, 0, 0, 0, 0, 0, 0, 0]
+                        0, 0, 0, 0, 0, 0, 0, 0, 0]
              for b in pybel.ob.OBMolBondIter(mol.OBMol)]
         #TODO detect hydrogen bond
         cutoff_dict = self.setting.cutoff_dict
