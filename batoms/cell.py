@@ -29,7 +29,7 @@ class Bcell(ObjectGN):
                       [3, 5], [2, 6], [7, 5], [7, 6],
                       [0, 2], [3, 6], [1, 5], [4, 7]
                       ]
-        self.width = 0.1
+        self.width = 0.03
         self.color = color
         if array is not None:
             self.build_object(array, location)

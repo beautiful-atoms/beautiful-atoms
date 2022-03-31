@@ -35,6 +35,7 @@ from .gui import (
     ui_list_lattice_plane,
     ui_list_crystal_shape,
     ui_list_isosurface,
+    ui_list_cavity,
     ui_list_ms,
     view3d_mt_batoms_add,
 )
@@ -51,11 +52,13 @@ from .ops import (
     ops_batoms,
     ops_species,
     ops_surface,
+    ops_cavity,
     measure,
     manual_mapping,
     ops_bond,
     ops_polyhedra,
     ops_plane,
+    ops_render,
     )
 
 from .ops import classes_ops
@@ -77,6 +80,7 @@ classes_prop = [
     custom_property.Bbond,
     custom_property.Bpolyhedra,
     custom_property.Bisosurface,
+    custom_property.Bcavity,
     custom_property.Bvolume,
     custom_property.Bplane,
     custom_property.Blight,
@@ -88,7 +92,7 @@ classes_prop = [
     custom_property.Bselect,
     custom_property.Bms,
     custom_property.BatomsCollection,
-    custom_property.BatomsObject
+    custom_property.BatomsObject,
 ]
 
 classes_ops = [
@@ -141,7 +145,6 @@ classes_ops = [
     gui_plane.AddButton,
     gui_render.Render_PT_prepare,
     gui_render.RenderProperties,
-    gui_render.AddButton,
     gui_pymatgen.Pymatgen_PT_prepare,
     gui_pymatgen.PymatgenProperties,
     gui_pymatgen.Search,
@@ -179,6 +182,9 @@ classes_ops = [
     ui_list_isosurface.BATOMS_MT_isosurface_context_menu,
     ui_list_isosurface.BATOMS_UL_isosurface,
     ui_list_isosurface.BATOMS_PT_isosurface,
+    ui_list_cavity.BATOMS_MT_cavity_context_menu,
+    ui_list_cavity.BATOMS_UL_cavity,
+    ui_list_cavity.BATOMS_PT_cavity,
     ui_list_ms.BATOMS_MT_ms_context_menu,
     ui_list_ms.BATOMS_UL_ms,
     ui_list_ms.BATOMS_PT_ms,
@@ -211,6 +217,10 @@ classes_ops = [
     ops_surface.IsosurfaceRemove,
     ops_surface.IsosurfaceDraw,
     ops_surface.IsosurfaceModify,
+    ops_cavity.CavityAdd,
+    ops_cavity.CavityRemove,
+    ops_cavity.CavityDraw,
+    ops_render.RenderAdd
 ]
 # classes_ops.extend(classes_ops)
 #
@@ -233,7 +243,8 @@ def console_hook():
                         item = item.replace('.', '')
                         if item[:1].isdigit():
                             item = 'b_' + item
-                        console.locals[item] = Batoms(item)
+                        if item not in console.locals:
+                            console.locals[item] = Batoms(item)
 
 # handle the keymap
 wm = bpy.context.window_manager

@@ -104,6 +104,7 @@ class BATOMS_PT_lattice_planes(Panel):
             sub.prop(kb, "distance", text="Distance")
             sub.prop(kb, "scale", text="Scale")
             col.prop(kb, "show_edge",  text="Show edge")
+            col.prop(kb, "material_style", text="material_style")
             col.prop(kb, "color",  text="color")
             op = layout.operator("plane.lattice_plane_draw",
                                  icon='GREASEPENCIL', text="Draw")

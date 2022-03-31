@@ -1,6 +1,5 @@
 import bpy
 import pytest
-from batoms.utils.butils import removeAll
 from batoms.batoms import Batoms
 from ase.build import molecule, bulk
 from batoms.bio.bio import read
@@ -61,6 +60,21 @@ def test_bonds_add():
     assert len(au.bonds.setting) == 0
     au.bonds.setting.add(("Au", "Au"))
     assert len(au.bonds.setting) == 1
+
+
+
+def test_bonds_search_bond_0():
+    from batoms.bio.bio import read
+    bpy.ops.batoms.delete()
+    tio2 = read("../tests/datas/tio2.cif")
+    tio2.bonds.setting[('Ti', 'O')].search = 0
+    tio2.model_style = 1
+    tio2.boundary = 0.01
+    assert len(tio2.bonds) == 14
+    tio2.bonds.show_search = True
+    if use_cycles:
+        set_cycles_res(tio2)
+    tio2.get_image([1, -0.3, 0.1], output="bonds_search_0.png", **extras)
 
 
 def test_bonds_search_bond_1():

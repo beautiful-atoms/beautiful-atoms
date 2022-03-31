@@ -112,7 +112,7 @@ class Species(BaseObject):
             obj.hide_set(True)
             obj.hide_render = True
         #
-        self.build_materials()
+        self.build_materials(material_style = sp.material_style)
         self.assign_materials()
         self.color = sp.color
         bpy.context.view_layer.update()
@@ -315,6 +315,16 @@ class Species(BaseObject):
                 node.inputs['Base Color'].default_value = color
             if 'Alpha' in node.inputs:
                 node.inputs['Alpha'].default_value = color[3]
+
+    @property
+    def material_style(self):
+        return self.data.material_style
+    
+    @material_style.setter
+    def material_style(self, material_style):
+        self.data.material_style = material_style
+        self.build_materials(material_style = material_style)
+        self.assign_materials()
 
     @property
     def radius(self):
