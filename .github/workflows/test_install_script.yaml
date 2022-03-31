@@ -69,12 +69,10 @@ jobs:
           MAJ_VER=${VER%.*}
           echo $VER $MAJ_VER
           URL="${BLENDER_DOWN_URL}/Blender${MAJ_VER}/blender-${VER}-macos-x64.dmg"
-          curl -O ${URL} && 7z x blender-*-macos-x64.dmg -o$HOME/Applications/ -y
-          ls $HOME/Applications/Blender/Blender.app
-          echo "BLENDER_ROOT=$HOME/Applications/Blender/Blender.app/Contents/Resources/${MAJ_VER}" >> $GITHUB_ENV
-          chmod -R u+x $HOME/Applications/Blender/Blender.app
-          $HOME/Applications/Blender/Blender.app/Contents/MacOS/Blender -b
-          $HOME/Applications/Blender/Blender.app/Contents/MacOS/Blender -b --python-expr "import bpy; bpy.ops.wm.save_userpref()"
+          curl -O ${URL} && 7z x blender-*-macos-x64.dmg -o../ -y
+          cp -r ../Blender/Blender.app $HOME/Applications/
+          echo "BLENDER_ROOT=$HOME/Applications/Blender.app/Contents/Resources/${MAJ_VER}" >> $GITHUB_ENV
+          chmod -R u+x $HOME/Applications/Blender.app
           ls "$HOME/Library/Application Support/Blender/${MAJ_VER}/config/"
       - name: Run installation script
         run: |
