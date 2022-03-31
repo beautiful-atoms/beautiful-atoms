@@ -724,10 +724,10 @@ def install(parameters):
         
         #### Temp debug purpose
         print("Test bpy import after symlinking")
-        commands = [blender_bin, "-b", "--python-expr", "import bpy; print('bpy')"]
+        commands = [str(blender_bin), "-b", "--python-expr", "import bpy; print('bpy')"]
         _run_process(commands)
 
-        commands = [blender_bin, "-b", "--python-expr", "import addon_utils; print('addon can load')"]
+        commands = [str(blender_bin), "-b", "--python-expr", "import addon_utils; print('addon can load')"]
         _run_process(commands)
 
 
