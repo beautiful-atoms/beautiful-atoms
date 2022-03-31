@@ -407,7 +407,7 @@ def _conda_update(
             print(
                 "Abort. Please check the installation manual about how to activate an additional conda environment."
             )
-            sys.exit(1)
+            sys.exit(0)
 
     # Install from the env.yaml
     print("Updating conda environment")
@@ -703,7 +703,7 @@ def install(parameters):
         choice = str(input("Overwrite? [y/N]") or "N").lower().startswith("y")
         if not choice:
             print("Abort.")
-            sys.exit(1)
+            sys.exit(0)
         else:
             if plugin_path_target.is_symlink():
                 os.unlink(plugin_path_target)
@@ -781,7 +781,34 @@ def uninstall(parameters):
     return
 
 
-
+def check_python_conflict():
+    """Detect if the python interpreter used to run the installation script
+    is the same as the python executable in current environment
+    """
+    current_py = sys.executable
+    env_py = shutil.which("python")
+    if env_py is None:
+        # Does not have a python interpreter in current environment, safe.
+        return
+    if Path(current_py).resolve().samefile(Path(env_py)):
+        print((
+        "You're running install.py script using python interpreter:\n"
+        f"{current_py}\n"
+        "It may be updated during the install / uninstall process and causing issues. "
+        "We recommend using another python interpreter for install.py, such as: \n"
+        "$CONDA_PYTHON_EXE install.py [options]"
+        ))
+        choice = str(input("Continue? [y/N]") or "N").lower().startswith("y")
+        if not choice:
+            # TODO: update installation instruction
+            print(
+                "Abort."
+            )
+            sys.exit(0)
+        else:
+            return
+    else:
+        return
 
 
 def main():
@@ -828,7 +855,11 @@ def main():
     args = parser.parse_args()
     print(args)
     os_name = _get_os_name()
-    # TODO: version compare!
+
+    # When installing on linux / macos using conda method, makesure python interpreters do not conflict
+    if os_name not in ["windows"]:
+        check_python_conflict()
+
     # Use blender_root supplied to commandline if exists, otherwise try to guess
     if args.blender_root:
         true_blender_root = Path(expanduser(expandvars(args.blender_root)))
@@ -858,7 +889,7 @@ def main():
                     "To uninstall batoms depedencies on windows, please add the --use-pip tag to the script."
                 )
             )
-            sys.exit(1)
+            sys.exit(0)
         uninstall(parameters)
         _blender_test_uninstall(parameters)
         return
@@ -868,7 +899,7 @@ def main():
         print(
             "The installation script should be run inside a conda environment. Abort."
         )
-        sys.exit(1)
+        sys.exit(0)
 
     # Sanity check. pip install only recommended for windows
     if args.use_pip:
@@ -879,7 +910,7 @@ def main():
                     " Please remove the --use-pip flag and try again"
                 )
             )
-            sys.exit(1)
+            sys.exit(0)
     elif os_name in ["windows"]:
         print(
             (
@@ -888,7 +919,7 @@ def main():
                 "Please add the --use-pip flag to installation script. "
             )
         )
-        sys.exit(1)
+        sys.exit(0)
 
     # TODO: allow change tag during installation
     # with tempfile.TemporaryDirectory() as workdir:
