@@ -285,7 +285,7 @@ def _run_process(commands, shell=False, print_cmd=True, cwd=".", capture_output=
     else:
         raise RuntimeError(f"Running {full_cmd} returned error code {proc.returncode}")
 
-def _run_blender_multiline_expr(blender_bin, expr):
+def _run_blender_multiline_expr(blender_bin, expr, **kwargs):
     blender_bin = str(blender_bin)
     tmp_del = False if _get_os_name() in ["windows"] else True
     with tempfile.NamedTemporaryFile(suffix=".py", delete=tmp_del) as py_file:
@@ -299,29 +299,29 @@ def _run_blender_multiline_expr(blender_bin, expr):
             "--python",
             py_file.name,
         ]
-        _run_process(commands, print_cmd=False)
+        _run_process(commands, print_cmd=False, **kwargs)
     return
 
 def _blender_enable_plugin(blender_bin):
     """Use blender's internal libary to enable plugin (and save as user script)"""
-    _run_blender_multiline_expr(blender_bin, BLENDERPY_ENABLE_PLUGIN)
+    _run_blender_multiline_expr(blender_bin, BLENDERPY_ENABLE_PLUGIN, shell=True)
     return
 
 
 def _blender_disable_plugin(blender_bin):
     """Use blender's internal libary to disable plugin (and save as user script)"""
-    _run_blender_multiline_expr(blender_bin, BLENDERPY_DISABLE_PLUGIN)
+    _run_blender_multiline_expr(blender_bin, BLENDERPY_DISABLE_PLUGIN, shell=True)
     return
 
 def _blender_test_plugin(parameters):
     blender_bin = str(parameters["blender_bin"])
-    _run_blender_multiline_expr(blender_bin, BLENDERPY_TEST_PLUGIN)
+    _run_blender_multiline_expr(blender_bin, BLENDERPY_TEST_PLUGIN, shell=True)
     return
 
 
 def _blender_test_uninstall(parameters):
     blender_bin = str(parameters["blender_bin"])
-    _run_blender_multiline_expr(blender_bin, BLENDERPY_TEST_UNINSTALL)
+    _run_blender_multiline_expr(blender_bin, BLENDERPY_TEST_UNINSTALL, shell=True)
     return
 
 def _gitclone(workdir=".", version="main", url=repo_git):
