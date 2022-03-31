@@ -670,11 +670,11 @@ class BondSettings(Setting):
         if pair in default_bonds:
             search = default_bonds[pair][0]
             polyhedra = default_bonds[pair][1]
-            bondtype = str(default_bonds[pair][2])
+            bondtype = default_bonds[pair][2]
         else:
             search = 1
             polyhedra = 0
-            bondtype = '0'
+            bondtype = 0
         bond = {
             'label': self.label,
             'species1': sp1,
@@ -691,7 +691,7 @@ class BondSettings(Setting):
             'type': bondtype,
         }
         # special for hydrogen bond
-        if bondtype == '1':
+        if bondtype == 1:
             bond['min'] = 1.5
             bond['max'] = 2.5
             bond['search'] = 0

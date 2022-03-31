@@ -45,6 +45,7 @@ def bondlist_kdtree(quantities, species0, positions0, cell, pbc,
     j = []
     k = []
     p = []
+    t = []
     for pair, data in bonddatas.items():
         if len(data) == 0:
             continue
@@ -68,10 +69,12 @@ def bondlist_kdtree(quantities, species0, positions0, cell, pbc,
         n = len(i1)
         k1 = [setting[pair]['search']]*n
         p1 = [setting[pair]['polyhedra']]*n
+        t1 = [setting[pair]['type']]*n
         i.extend(i1)
         j.extend(j1)
         k.extend(k1)
         p.extend(p1)
+        t.extend(t1)
     # offsets
     offsets_i = array1['offsets'][i]
     offsets_j = array2['offsets'][j]
@@ -82,6 +85,7 @@ def bondlist_kdtree(quantities, species0, positions0, cell, pbc,
     j = array2['indices'][j]
     k = np.array(k)
     p = np.array(p)
+    t = np.array(t)
     # Remove all self-interaction.
     if not self_interaction:
         mask = np.where((i == j) &
@@ -93,6 +97,7 @@ def bondlist_kdtree(quantities, species0, positions0, cell, pbc,
         j = j[mask]
         k = k[mask]
         p = p[mask]
+        t = t[mask]
         distances = distances[mask]
         offsets_i = offsets_i[mask]
         offsets_j = offsets_j[mask]
@@ -107,6 +112,8 @@ def bondlist_kdtree(quantities, species0, positions0, cell, pbc,
             retvals += [k]
         elif q == 'p':
             retvals += [p]
+        elif q == 't':
+            retvals += [t]
         elif q == 'd':
             retvals += [distances]
         elif q == 'S':

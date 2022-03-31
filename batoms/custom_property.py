@@ -133,6 +133,7 @@ class Bbond(Base):
         min=0, max=1,
         default=(0.6, 0.2, 0, 1))
     width: FloatProperty(name="width", default=0.10)
+    scale: FloatProperty(name="scale", default=1.0)
     order: IntProperty(name="order", default=1)
     segments: IntProperty(name="segments", default=16)
     order_offset: FloatProperty(name="order_offset", default=0.1)
@@ -144,14 +145,7 @@ class Bbond(Base):
                ('2', "Dashed line", ""),
                ('3', "Spring", "Spring")),
         default='1')
-    type: EnumProperty(
-        name="type",
-        description="bond type",
-        items=(('0', "Normal", ""),
-               ('1', "Hydrogen", ""),
-               ('2', "Aromaticity", ""),
-               ),
-        default='0')
+    type: IntProperty(name="type", default=0)
 
     @property
     def name(self) -> str:
@@ -175,7 +169,8 @@ class Bbond(Base):
             'width': self.width,
             'order': self.order,
             'order_offset': self.order_offset,
-            'style': self.style
+            'style': self.style,
+            'type': self.type,
         }
         if reversed:
             setdict['name'] = '%s-%s' % (self.species2, self.species1)
@@ -680,6 +675,7 @@ class BatomsCollection(bpy.types.PropertyGroup):
     show_label: StringProperty(name="show_label", default="Index")
 
     show_search: BoolProperty(name="show_search", default=False)
+    show_hydrogen_bond: BoolProperty(name="show_hydrogen_bond", default=False)
 
     wrap: BoolVectorProperty(name="wrap", default=[
                              False, False, False], size=3)
