@@ -53,8 +53,11 @@ print("Numpy Version: ", numpy.__version__)
 
 
 BLENDERPY_ENABLE_PLUGIN = f"""
+print('start')
 import bpy
+print('bpy can import')
 import addon_utils
+print('add on can import')
 print('Searching addons from: ', addon_utils.paths())
 print(addon_utils.check('batoms'))
 addon_utils.enable('{DEFAULT_PLUGIN_NAME}', default_set=True)
@@ -718,6 +721,15 @@ def install(parameters):
             os.unlink(factory_python_source)
         os.symlink(conda_prefix, factory_python_source)
         print(f"Created symlink {conda_prefix} --> {factory_python_source.as_posix()}")
+        
+        #### Temp debug purpose
+        print("Test bpy import after symlinking")
+        commands = [blender_bin, "-b", "--python-expr", "import bpy; print('bpy')"]
+        _run_process(commands)
+
+        commands = [blender_bin, "-b", "--python-expr", "import addon_utils; print('addon can load')"]
+        _run_process(commands)
+
 
         # Give a warning about conda env
         # TODO: allow direct install into another environment
