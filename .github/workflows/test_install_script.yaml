@@ -78,6 +78,7 @@ jobs:
           curl -O ${URL} && 7z x blender-*-macos-x64.dmg -o../ -y
           ls ../Blender/Blender.app
           echo "BLENDER_ROOT=../Blender/Blender.app/Contents/Resources/${MAJ_VER}" >> $GITHUB_ENV
+          ls -algh ../Blender/Blender.app/Contents/MacOS/Blender
       - name: Run installation script
         run: |
           echo Currently install in $(pwd)
@@ -114,7 +115,7 @@ jobs:
   #         MAJ_VER=${VER%.*}
   #         echo $VER $MAJ_VER
   #         URL="${BLENDER_DOWN_URL}/Blender${MAJ_VER}/blender-${VER}-windows-x64.zip"
-  #         curl -O ${URL} && 7z x blender-*-macos-x64.dmg -o../ -y
+  #         curl -O ${URL} && unzip  x blender-*-windows-x64.zip -d ..
   #         ls ../Blender/Blender.app
   #         echo "BLENDER_ROOT=../Blender.app/Contents/Resources/${MAJ_VER}" >> $GITHUB_ENV
   #     - name: Run installation script
