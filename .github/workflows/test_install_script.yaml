@@ -1,5 +1,5 @@
 # Test the batoms plugin using test
-name: Test batoms blender plugin
+name: Test installation script
 
 on:
   push:
