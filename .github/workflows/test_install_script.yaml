@@ -87,6 +87,7 @@ jobs:
           echo Currently install in $(pwd)
           echo Use blender root ${BLENDER_ROOT}
           python install.py ${BLENDER_ROOT}
+          $HOME/Applications/Blender/Blender.app/Contents/MacOS/Blender -b --python-expr "import bpy; import batoms"
       - name: Run uninstallation script
         run: |
           python install.py --uninstall ${BLENDER_ROOT}

@@ -737,7 +737,7 @@ def install(parameters):
     shutil.copytree(plugin_path_source, plugin_path_target)
     print(f"Plugin copied to {plugin_path_target.as_posix()}.")
 
-    _blender_enable_plugin(blender_bin)
+    # _blender_enable_plugin(blender_bin)
     return
 
 
