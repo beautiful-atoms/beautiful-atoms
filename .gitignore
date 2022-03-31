@@ -141,6 +141,7 @@ dmypy.json
 *.x3d
 *.obj
 *.mtl
+*.fbx
 
 #test/
 .vscode/*
