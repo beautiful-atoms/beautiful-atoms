@@ -6,7 +6,7 @@ This module defines the polyhedras object in the Batoms package.
 
 import bpy
 from time import time
-from batoms.utils.butils import object_mode, compareNodeType
+from batoms.utils.butils import object_mode, compareNodeType, get_nodes_by_name
 from batoms.utils import string2Number
 import numpy as np
 from batoms.base.object import ObjectGN
@@ -296,6 +296,37 @@ class Polyhedras(ObjectGN):
         gn.node_group.links.new(setMaterialIndex.outputs['Geometry'],
                                 GroupOutput.inputs['Geometry'])
 
+    def set_realize_instances(self, realize_instances):
+        """ Make instancing object real
+        # TODO: add make real to geometry node
+        """
+        #
+        i = len(self.setting.collection) - 1
+        sp = self.setting.collection[i]
+        setMaterialIndex = get_nodes_by_name(self.gnodes.node_group.nodes,
+                                            '%s_setMaterialIndex_%s' % (
+                                                self.label, sp["species"]),
+                                            'GeometryNodeSetMaterialIndex')
+
+        nodes = self.gnodes.node_group.nodes
+        RealizeInstances = get_nodes_by_name(self.gnodes.node_group.nodes,
+                                             '%s_RealizeInstances' % self.label,
+                                             'GeometryNodeRealizeInstances')
+        if not realize_instances:
+            # switch off
+            if len(RealizeInstances.outputs[0].links) > 0:
+                link = RealizeInstances.outputs[0].links[0]
+                self.gnodes.node_group.links.remove(link)
+            self.gnodes.node_group.links.new(setMaterialIndex.outputs[0],
+                nodes[1].inputs[0])
+        else:
+            self.gnodes.node_group.links.new(setMaterialIndex.outputs[0],
+                RealizeInstances.inputs[0])
+            self.gnodes.node_group.links.new(
+                RealizeInstances.outputs[0],
+                nodes[1].inputs[0])
+        self.gnodes.node_group.update_tag()
+        
     def update(self, ):
         """Draw polyhedras.
         calculate bond in all farmes, and save
@@ -345,7 +376,6 @@ class Polyhedras(ObjectGN):
         Make sure all species has a geometry node flow 
         and the material are updated.
         """
-        from batoms.utils.butils import get_nodes_by_name
         tstart = time()
         for sp in self.setting:
             sp = sp.as_dict()
