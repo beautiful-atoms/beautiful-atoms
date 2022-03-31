@@ -75,7 +75,7 @@ jobs:
           ls $HOME/Applications
           echo "BLENDER_ROOT=$HOME/Applications/Blender.app/Contents/Resources/${MAJ_VER}" >> $GITHUB_ENV
           chmod -R u+x $HOME/Applications/Blender.app
-          ls "$HOME/Library/Application Support/Blender/${MAJ_VER}/config/"
+          # ls "$HOME/Library/Application Support/Blender/${MAJ_VER}/config/"
       - name: Run installation script
         run: |
           echo Currently install in $(pwd)
