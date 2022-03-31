@@ -415,42 +415,42 @@ def _conda_update(
 
     # Extra steps (windows only), replace the numpy version with pip's numpy
     # since python on windows comes with wheel this should be relatively straighforward
-    if _get_os_name() in [
-        "windows",
-    ]:
-        print(
-            (
-                "You're running on Windows. "
-                "We will try to use wheel provided by pip for Numpy "
-                "to resolve DLL not found issue."
-            )
-        )
-        commands = [
-            "python",
-            "-m",
-            "pip",
-            "uninstall",
-            "-y",
-            "numpy",
-        ]
-        _run_process(commands)
-        print("Uninstalled conda-distributed Numpy.")
+    # if _get_os_name() in [
+    #     "windows",
+    # ]:
+    #     print(
+    #         (
+    #             "You're running on Windows. "
+    #             "We will try to use wheel provided by pip for Numpy "
+    #             "to resolve DLL not found issue."
+    #         )
+    #     )
+    #     commands = [
+    #         "python",
+    #         "-m",
+    #         "pip",
+    #         "uninstall",
+    #         "-y",
+    #         "numpy",
+    #     ]
+    #     _run_process(commands)
+    #     print("Uninstalled conda-distributed Numpy.")
 
-        if numpy_version is not None:
-            numpy_str = f"numpy=={numpy_version}"
-        else:
-            # TODO: pin old numpy version
-            numpy_str = f"numpy==1.21.2"
-        commands = [
-            "python",
-            "-m",
-            "pip",
-            "install",
-            "--no-input",
-            numpy_str,
-        ]
-        _run_process(commands)
-        print("Reinstalled Numpy from pip wheel")
+    #     if numpy_version is not None:
+    #         numpy_str = f"numpy=={numpy_version}"
+    #     else:
+    #         # TODO: pin old numpy version
+    #         numpy_str = f"numpy==1.21.2"
+    #     commands = [
+    #         "python",
+    #         "-m",
+    #         "pip",
+    #         "install",
+    #         "--no-input",
+    #         numpy_str,
+    #     ]
+    #     _run_process(commands)
+    #     print("Reinstalled Numpy from pip wheel")
     return
 
 
