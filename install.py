@@ -68,13 +68,13 @@ bpy.ops.wm.save_userpref()
 print('Disabled plugin {DEFAULT_PLUGIN_NAME}')
 """
 
-BLENDERPY_TEST_PLUGIN = f"""
+BLENDERPY_TEST_PLUGIN = """
 from batoms import Batoms
 b = Batoms('O', ['O'], [[0, 0, 0]])
 print('Test plugin import successful.')
 """
 
-BLENDERPY_TEST_UNINSTALL = f"""
+BLENDERPY_TEST_UNINSTALL = """
 try:
     from batoms import Batoms
     raise Exception('batoms plugin still exists.')
@@ -283,8 +283,14 @@ def _run_process(commands, shell=False, print_cmd=True, cwd=".", capture_output=
 def _blender_enable_plugin(blender_bin):
     """Use blender's internal libary to enable plugin (and save as user script)"""
     blender_bin = str(blender_bin)
-    commands = [blender_bin, "-b", "--python-expr", 
-                "--python-exit-code", "1" , BLENDERPY_ENABLE_PLUGIN]
+    commands = [
+        blender_bin,
+        "-b",
+        "--python-exit-code",
+        "1",
+        "--python-expr",
+        BLENDERPY_ENABLE_PLUGIN,
+    ]
     _run_process(commands, print_cmd=False)
     return
 
@@ -292,8 +298,14 @@ def _blender_enable_plugin(blender_bin):
 def _blender_disable_plugin(blender_bin):
     """Use blender's internal libary to disable plugin (and save as user script)"""
     blender_bin = str(blender_bin)
-    commands = [blender_bin, "-b", "--python-expr", 
-                "--python-exit-code", "1" ,BLENDERPY_DISABLE_PLUGIN]
+    commands = [
+        blender_bin,
+        "-b",
+        "--python-exit-code",
+        "1",
+        "--python-expr",
+        BLENDERPY_DISABLE_PLUGIN,
+    ]
     _run_process(commands, print_cmd=False)
     return
 
