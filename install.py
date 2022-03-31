@@ -100,9 +100,9 @@ def _get_default_locations(os_name):
     os_name = os_name.lower()
     # Compare version
     # if LooseVersion(str(version)) < LooseVersion(str(MIN_BLENDER_VER)):
-        # raise ValueError(
-            # f"Blender version {version} is not supported. Minimal requirement is {MIN_BLENDER_VER}"
-        # )
+    # raise ValueError(
+    # f"Blender version {version} is not supported. Minimal requirement is {MIN_BLENDER_VER}"
+    # )
     if os_name not in ["windows", "macos", "linux"]:
         raise ValueError(f"{os_name} is not valid.")
     default_locations = {
@@ -171,11 +171,16 @@ def _get_blender_bin(os_name, blender_bundle_root):
         )
     return blender_bin
 
+
 def _get_blender_py(blender_bin):
-    """Get the blender executable path from current blender binary
-    """
+    """Get the blender executable path from current blender binary"""
     blender_bin = str(blender_bin)
-    commands = [blender_bin, "-b", "--python-expr", "import sys; print('Python binary: ', sys.executable)"]
+    commands = [
+        blender_bin,
+        "-b",
+        "--python-expr",
+        "import sys; print('Python binary: ', sys.executable)",
+    ]
     proc = _run_process(commands, shell=False, capture_output=True)
     output = proc.stdout.decode("ascii")
     print(output)
@@ -183,6 +188,7 @@ def _get_blender_py(blender_bin):
     py = next(re.finditer(pat, output, re.MULTILINE))[1]
     py_path = Path(py.strip())
     return py_path
+
 
 def _get_os_name():
     """Convient os name function"""
@@ -212,9 +218,9 @@ def _get_factory_versions(blender_bin):
     numpy_version = next(re.finditer(pat_numpy_version, output))[1]
     return py_version, numpy_version
 
+
 def _get_blender_version(blender_bin):
-    """Parse blender's output to get the X.Y.Z version name
-    """
+    """Parse blender's output to get the X.Y.Z version name"""
     blender_bin = str(blender_bin)
     # First get blender python version
     commands = [blender_bin, "-b"]
@@ -223,7 +229,6 @@ def _get_blender_version(blender_bin):
     pat_bl_version = r"Blender\s+(\d+\.\d+\.\d+)"
     bl_version = next(re.finditer(pat_bl_version, output))[1]
     return bl_version
-
 
 
 def is_conda():
@@ -351,11 +356,7 @@ def _symlink_dir(src, dst):
 
 
 def _conda_update(
-    conda_env_file, 
-    conda_vars, 
-    env_name=None, 
-    python_version=None, 
-    numpy_version=None
+    conda_env_file, conda_vars, env_name=None, python_version=None, numpy_version=None
 ):
     """Update conda environment using env file.
     If env_name is None, use default env
@@ -399,7 +400,7 @@ def _conda_update(
                 else:
                     new_line = line
                 fd.write(new_line)
-        
+
         commands = [
             conda_vars["CONDA_EXE"],
             "env",
@@ -456,7 +457,7 @@ def _conda_update(
 
 def _conda_cache_move(condition, conda_vars, blender_python_root):
     """Install relevant package (spglib) in conda environment and move to python's site-packages
-    This is A DANGEROUS WORKAROUND as it can silently break many things. 
+    This is A DANGEROUS WORKAROUND as it can silently break many things.
     Only to use until the conda environment bug in blender fixed.
     blender_python_root looks like <root>/<3.x>/python
     """
@@ -464,13 +465,13 @@ def _conda_cache_move(condition, conda_vars, blender_python_root):
     commands = ["conda", "search", "-c", "conda-forge", str(condition)]
     proc = _run_process(commands, capture_output=True)
     lines = [l for l in proc.stdout.decode("utf-8").split("\n") if len(l) > 1]
-    
+
     # Choose the newest version
     name, version, build, channel = lines[-1].strip().split()
     conda_url = (
         "https://anaconda.org/conda-forge/{name}/{version}/"
         "download/win-64/{name}-{version}-{build}.tar.bz2"
-        ).format(name=name, version=version, build=build)
+    ).format(name=name, version=version, build=build)
     # Step 2: do a temp install of spglib into conda environment
     commands = ["conda", "install", "--no-deps", conda_url]
     _run_process(commands)
@@ -483,7 +484,8 @@ def _conda_cache_move(condition, conda_vars, blender_python_root):
     for dir in match_dirs:
         name = dir.name
         shutil.copytree(dir, lib_pip / name, dirs_exist_ok=True)
-    return    
+    return
+
 
 def _pip_install(blender_py, blender_python_root, factory_py_ver, conda_vars):
     """Temporary workaround for installation on windows and blender>=3.1.0
@@ -501,28 +503,42 @@ def _pip_install(blender_py, blender_python_root, factory_py_ver, conda_vars):
     commands = pip_prefix + ["show", "numpy"]
     proc = _run_process(commands, shell=False, capture_output=True)
     if "Name: numpy" not in proc.stdout.decode("ascii"):
-        raise RuntimeError("Cannot find package numpy. Your bundle python may be corrupt.")
-    
+        raise RuntimeError(
+            "Cannot find package numpy. Your bundle python may be corrupt."
+        )
+
     # Step 2: install spglib
     commands = pip_prefix + ["install", "--no-input", "spglib"]
     try:
         proc = _run_process(commands, shell=False, capture_output=True)
     except RuntimeError:
-        print("Building spglib from source failed. We'll try to install from conda-distruted lib.")
+        print(
+            "Building spglib from source failed. We'll try to install from conda-distruted lib."
+        )
         # abbrevate version, i.e. 3.10 --> py310
         abbrev_py_ver = "py" + "".join(factory_py_ver.split(".")[:2])
         condition = f"spglib=*={abbrev_py_ver}*"
         print(condition)
-        _conda_cache_move(condition=condition, conda_vars=conda_vars, blender_python_root=blender_python_root)
+        _conda_cache_move(
+            condition=condition,
+            conda_vars=conda_vars,
+            blender_python_root=blender_python_root,
+        )
     # check spglib installation
     commands = pip_prefix + ["show", "spglib"]
     proc = _run_process(commands, shell=False, capture_output=True)
     if "Name: spglib" not in proc.stdout.decode("ascii"):
         # TODO: improve error msg
         raise RuntimeError("Spglib installation failed.")
-    
+
     # Step 3: install ase pymatgen etc.
-    commands = pip_prefix + ["install", "--no-input", "ase>=3.21.0", "pymatgen<=2022.03", "scikit-image"]
+    commands = pip_prefix + [
+        "install",
+        "--no-input",
+        "ase>=3.21.0",
+        "pymatgen<=2022.03",
+        "scikit-image",
+    ]
     proc = _run_process(commands)
 
     # Step 4: install openbabel (only if compiler exists)
@@ -530,28 +546,39 @@ def _pip_install(blender_py, blender_python_root, factory_py_ver, conda_vars):
     try:
         proc = _run_process(commands)
     except RuntimeError as e:
-        print("Cannot install openbabel. You need to have a working compiler on windows. The installation will continue but some functionalities in beautiful_atoms may not be working.")
-    
+        print(
+            "Cannot install openbabel. You need to have a working compiler on windows. The installation will continue but some functionalities in beautiful_atoms may not be working."
+        )
+
     return
-        
+
 
 def _pip_uninstall(blender_py, conda_vars):
-    """uninstall pip components (windows only)
-    """
+    """uninstall pip components (windows only)"""
     blender_py = str(blender_py)
     pip_prefix = [blender_py, "-m", "pip"]
     # not exhaustive, but should be the most dependent ones
     # TODO: cleanup the dependencies
-    commands = pip_prefix + ["uninstall", "-y", "ase", "scipy", "matplotlib",
-                             "spglib", "scikit-image", "plotly", "Pillow", "openbabel", "mpmath", "monty",
-                            "latexcodec", "pybtex", "networkx", "pandas"]
+    commands = pip_prefix + [
+        "uninstall",
+        "-y",
+        "ase",
+        "scipy",
+        "matplotlib",
+        "spglib",
+        "scikit-image",
+        "plotly",
+        "Pillow",
+        "openbabel",
+        "mpmath",
+        "monty",
+        "latexcodec",
+        "pybtex",
+        "networkx",
+        "pandas",
+    ]
     _run_process(commands)
     return
-        
-    
-        
-
-
 
 
 def install(parameters):
@@ -630,9 +657,12 @@ def install(parameters):
             print(
                 f"Renamed {factory_python_target.as_posix()} to {factory_python_source.as_posix()}"
             )
-    
+
     # Step 1.1 check python and numpy version
-    factory_py_ver, factory_numpy_ver, = _get_factory_versions(blender_bin)
+    (
+        factory_py_ver,
+        factory_numpy_ver,
+    ) = _get_factory_versions(blender_bin)
     blender_py = _get_blender_py(blender_bin)
 
     print(factory_py_ver, factory_numpy_ver)
@@ -640,7 +670,7 @@ def install(parameters):
     # Step 2. cond 1: use pip
     if parameters["use_pip"]:
         _pip_install(blender_py, factory_python_source, factory_py_ver, conda_vars)
-    
+
     else:
         # Step 2: cond2: rename soruce to target
         if factory_python_target.exists():
@@ -666,7 +696,12 @@ def install(parameters):
 
         # Give a warning about conda env
         # TODO: allow direct install into another environment
-        _conda_update(conda_env_file, conda_vars, python_version=factory_py_ver, numpy_version=factory_numpy_ver)
+        _conda_update(
+            conda_env_file,
+            conda_vars,
+            python_version=factory_py_ver,
+            numpy_version=factory_numpy_ver,
+        )
 
     # Step 4: install plugin
     if not _is_empty_dir(plugin_path_target):
@@ -723,7 +758,9 @@ def uninstall(parameters):
         return
     else:
         if parameters["use_pip"]:
-            raise RuntimeError("Uninstall via pip cannot be performed when bundled python moved to another location. Abort")
+            raise RuntimeError(
+                "Uninstall via pip cannot be performed when bundled python moved to another location. Abort"
+            )
         if factory_python_source.is_dir():
             if not _is_empty_dir(factory_python_source):
                 if factory_python_source.is_symlink():
@@ -813,12 +850,12 @@ def main():
         "-n",
         "--conda-env-name",
         default=None,
-        help="Conda environment to install dependencies other than current environment."
+        help="Conda environment to install dependencies other than current environment.",
     )
     parser.add_argument(
         "--use-pip",
         action="store_true",
-        help="Use pip install instead of conda environment. Only recommended on windows."
+        help="Use pip install instead of conda environment. Only recommended on windows.",
     )
     args = parser.parse_args()
     print(args)
@@ -834,21 +871,28 @@ def main():
     print(f"      blender bundle root at {true_blender_root.as_posix()}")
 
     # Parameters can be provided to install / uninstall methods at this time
-    parameters = dict(blender_root=true_blender_root, 
-                      blender_bin=true_blender_bin, 
-                      blender_version=_get_blender_version(true_blender_bin),
-                      os_name=os_name,
-                      use_pip=args.use_pip,
-                      repo_path = Path(expanduser(expandvars(args.local_repo_path))),
-                      custom_conda_env = args.conda_env_name,
-                      )
+    parameters = dict(
+        blender_root=true_blender_root,
+        blender_bin=true_blender_bin,
+        blender_version=_get_blender_version(true_blender_bin),
+        os_name=os_name,
+        use_pip=args.use_pip,
+        repo_path=Path(expanduser(expandvars(args.local_repo_path))),
+        custom_conda_env=args.conda_env_name,
+    )
 
     # Uninstallation does not need information about current environment
     if args.uninstall:
+        if (parameters["os_name"] in ["windows"]) and (parameters["use_pip"] is False):
+            print(
+                (
+                    "To uninstall batoms depedencies on windows, please add the --use-pip tag to the script."
+                )
+            )
+            sys.exit(1)
         uninstall(parameters)
         test_uninstall(parameters)
         return
-
 
     # Cannot install without conda if pip install is enabled
     if (not is_conda()) and (args.use_pip is False):
@@ -856,22 +900,23 @@ def main():
             "The installation script should be run inside a conda environment. Abort."
         )
         sys.exit(1)
-    
+
     # Sanity check. pip install only recommended for windows
     if args.use_pip:
         if os_name not in ["windows"]:
             print(
                 (
-                "Install dependencies via pip is only recommended for windows."
-                " Please remove the --use-pip flag and try again"
+                    "Install dependencies via pip is only recommended for windows."
+                    " Please remove the --use-pip flag and try again"
                 )
             )
             sys.exit(1)
-    elif (os_name in ["windows"]) and (LooseVersion(parameters["blender_version"]) >  LooseVersion("3.0.1")):
+    elif os_name in ["windows"]:
         print(
             (
-                "Conda install currently only tested stable for Blender<=3.0.1 "
-                "Please add --use-pip for your windows installation."
+                "Conda install currently not working for Blender>=3.0 "
+                "due to a bug in anaconda https://github.com/ContinuumIO/anaconda-issues/issues/11994.\n"
+                "Please add the --use-pip flag to installation script. "
             )
         )
         sys.exit(1)
@@ -886,7 +931,7 @@ def main():
     #         )
     #     install(true_blender_root, true_blender_bin, repo_path)
     #     test_plugin(true_blender_bin)
-    
+
     install(parameters)
     test_plugin(parameters)
 
