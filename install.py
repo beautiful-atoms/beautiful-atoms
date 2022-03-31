@@ -691,9 +691,10 @@ def install(parameters):
         factory_py_ver,
         factory_numpy_ver,
     ) = _get_factory_versions(blender_bin)
+    blender_version = _get_blender_version(blender_bin)
     blender_py = _get_blender_py(blender_bin)
 
-    print(factory_py_ver, factory_numpy_ver)
+    print(blender_version, factory_py_ver, factory_numpy_ver)
 
     # Step 2. cond 1: use pip
     if parameters["use_pip"]:
@@ -756,7 +757,8 @@ def install(parameters):
                 shutil.rmtree(plugin_path_target)
     shutil.copytree(plugin_path_source, plugin_path_target)
     print(f"Plugin copied to {plugin_path_target.as_posix()}.")
-
+    # commands = [str(blender_bin), "-b", "--python-expr", "import addon_utils; print('addon can load')"]
+    # _run_process(commands)
     _blender_enable_plugin(blender_bin)
     return
 
@@ -883,10 +885,11 @@ def main():
     print(f"      blender bundle root at {true_blender_root.as_posix()}")
 
     # Parameters can be provided to install / uninstall methods at this time
+    # Do not process any information regarding blender version / python version
     parameters = dict(
         blender_root=true_blender_root,
         blender_bin=true_blender_bin,
-        blender_version=_get_blender_version(true_blender_bin),
+        # blender_version=_get_blender_version(true_blender_bin),
         os_name=os_name,
         use_pip=args.use_pip,
         repo_path=Path(expanduser(expandvars(args.local_repo_path))),
