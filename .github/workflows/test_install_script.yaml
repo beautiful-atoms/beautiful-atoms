@@ -16,42 +16,78 @@ env:
   BLENDER_DOWN_URL: "https://mirror.clarkson.edu/blender/release"
 
 jobs:
-  install-linux:
+  # install-linux:
+  #   defaults:
+  #     run:
+  #       shell: bash -l {0}
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       blender_ver: ["3.0.1", "3.1.0"]
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: conda-incubator/setup-miniconda@v2
+  #       with:
+  #         activate-environment: batoms
+  #     - name: Install basic tools
+  #       run: |
+  #         conda install -c conda-forge git curl python
+  #     - name: Download portable blender
+  #       run: |
+  #         echo Currently install in $(pwd)
+  #         VER=${{ matrix.blender_ver }}
+  #         MAJ_VER=${VER%.*}
+  #         echo $VER $MAJ_VER
+  #         URL="${BLENDER_DOWN_URL}/Blender${MAJ_VER}/blender-${VER}-linux-x64.tar.xz"
+  #         mkdir -p ../blender && curl -O ${URL} && tar -xvf blender-*-linux-x64.tar.xz -C ../blender
+  #         echo "BLENDER_ROOT=../blender/blender-${VER}-linux-x64/${MAJ_VER}" >> $GITHUB_ENV
+  #     - name: Run installation script
+  #       run: |
+  #         echo Currently install in $(pwd)
+  #         echo Use blender root ${BLENDER_ROOT}
+  #         conda info
+  #         conda list
+  #         python install.py ${BLENDER_ROOT}
+  #     - name: Run uninstallation script
+  #       run: |
+  #         python install.py --uninstall ${BLENDER_ROOT}
+  
+  install-macos:
     defaults:
       run:
         shell: bash -l {0}
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     strategy:
       matrix:
         blender_ver: ["3.0.1", "3.1.0"]
-
     steps:
       - uses: actions/checkout@v2
       - uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: batoms
-      - name: Install basic tools
-        run: |
-          conda install -c conda-forge git curl python
+      # - name: Install basic tools
+      #   run: |
+      #     conda install -c conda-forge git curl python
       - name: Download portable blender
         run: |
           echo Currently install in $(pwd)
           VER=${{ matrix.blender_ver }}
           MAJ_VER=${VER%.*}
           echo $VER $MAJ_VER
-          URL="${BLENDER_DOWN_URL}/Blender${MAJ_VER}/blender-${VER}-linux-x64.tar.xz"
-          mkdir -p ../blender && curl -O ${URL} && tar -xvf blender-*-linux-x64.tar.xz -C ../blender
-          echo "BLENDER_ROOT=../blender/blender-${VER}-linux-x64/${MAJ_VER}" >> $GITHUB_ENV
-      - name: Run installation script
-        run: |
-          echo Currently install in $(pwd)
-          echo Use blender root ${BLENDER_ROOT}
-          conda info
-          conda list
-          python install.py ${BLENDER_ROOT}
-      - name: Run uninstallation script
-        run: |
-          python install.py --uninstall ${BLENDER_ROOT}
+          URL="${BLENDER_DOWN_URL}/Blender${MAJ_VER}/blender-${VER}-macos-x64.dmg"
+          hdiutil attach blender-*-macos-x64.dmg
+          # mkdir -p ../blender && curl -O ${URL} && tar -xvf blender-*-linux-x64.tar.xz -C ../blender
+          # echo "BLENDER_ROOT=../blender/blender-${VER}-linux-x64/${MAJ_VER}" >> $GITHUB_ENV
+      # - name: Run installation script
+      #   run: |
+      #     echo Currently install in $(pwd)
+      #     echo Use blender root ${BLENDER_ROOT}
+      #     conda info
+      #     conda list
+      #     python install.py ${BLENDER_ROOT}
+      # - name: Run uninstallation script
+      #   run: |
+      #     python install.py --uninstall ${BLENDER_ROOT}
           
 
 
