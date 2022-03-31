@@ -1090,7 +1090,7 @@ class Bonds(BaseCollection, ObjectGN):
         """
         from scipy.sparse import csgraph, csr_matrix
         molPeciesDatas = {}
-        peciesBondLists = np.zeros((0, 10), dtype=int)
+        peciesBondLists = np.zeros((0, 11), dtype=int)
         # search type 2
         k = bondlists[:, 8]
         indices = np.where(k == 2)[0]
@@ -1162,7 +1162,7 @@ class Bonds(BaseCollection, ObjectGN):
         # print('dist_matrix: ', dist_matrix)
         # print('predecessors: ', predecessors)
         dist_matrix = dist_matrix.astype(int)
-        mollist = np.zeros(10, dtype=int)
+        mollist = np.zeros(11, dtype=int)
         for i, data in molDatas.items():
             indices = data['sub']
             n = len(indices)
