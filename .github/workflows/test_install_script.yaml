@@ -78,7 +78,9 @@ jobs:
           curl -O ${URL} && 7z x blender-*-macos-x64.dmg -o../ -y
           ls ../Blender/Blender.app
           echo "BLENDER_ROOT=../Blender/Blender.app/Contents/Resources/${MAJ_VER}" >> $GITHUB_ENV
-          ls -algh ../Blender/Blender.app/Contents/MacOS/Blender
+          chmod +x -R ../Blender/Blender.app/
+          ../Blender/Blender.app/Contents/MacOS/Blender -b
+          ../Blender/Blender.app/Contents/MacOS/Blender -b --python-expr "print('ok')"
       - name: Run installation script
         run: |
           echo Currently install in $(pwd)
