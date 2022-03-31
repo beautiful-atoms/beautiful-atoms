@@ -145,14 +145,7 @@ class Bbond(Base):
                ('2', "Dashed line", ""),
                ('3', "Spring", "Spring")),
         default='1')
-    type: EnumProperty(
-        name="type",
-        description="bond type",
-        items=(('0', "Normal", ""),
-               ('1', "Hydrogen", ""),
-               ('2', "Aromaticity", ""),
-               ),
-        default='0')
+    type: IntProperty(name="type", default=0)
 
     @property
     def name(self) -> str:
@@ -177,7 +170,7 @@ class Bbond(Base):
             'order': self.order,
             'order_offset': self.order_offset,
             'style': self.style,
-            'type': int(self.type[0]),
+            'type': self.type,
         }
         if reversed:
             setdict['name'] = '%s-%s' % (self.species2, self.species1)
