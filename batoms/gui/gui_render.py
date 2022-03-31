@@ -31,6 +31,7 @@ class Render_PT_prepare(Panel):
         if list(repanel.camera_type)[0] == 'ORTHO':
             layout.prop(repanel, "scale")
         else:
+            layout.prop(repanel, "camera_lens")
             layout.prop(repanel, "distance")
         layout.prop(repanel, "resolution")
         layout.separator()
@@ -51,6 +52,10 @@ class RenderProperties(bpy.types.PropertyGroup):
     def Callback_modify_camera_type(self, context):
         repanel = bpy.context.scene.repanel
         modify_camera_attr(context, 'type', list(repanel.camera_type)[0])
+
+    def Callback_modify_camera_lens(self, context):
+        repanel = bpy.context.scene.repanel
+        modify_camera_attr(context, 'lens', repanel.camera_lens)
 
     def Callback_modify_light_direction(self, context):
         repanel = bpy.context.scene.repanel
@@ -112,6 +117,11 @@ class RenderProperties(bpy.types.PropertyGroup):
         name="Distance", default=3,
         description="distance from origin", update=Callback_modify_distance)
 
+    camera_lens: FloatProperty(
+        name="Lens", default=100,
+        soft_min = 1, soft_max = 100,
+        description="camera_lens", update=Callback_modify_camera_lens)
+
 
 def modify_render_attr(context, key, value):
     from batoms.batoms import Batoms
@@ -135,8 +145,10 @@ def modify_camera_attr(context, key, value):
     from batoms.batoms import Batoms
     if context.object and context.object.batoms.type != 'OTHER':
         batoms = Batoms(label=context.object.batoms.label)
-        if key.upper() == 'SCALE':
+        if key == 'scale':
             batoms.render.camera.set_ortho_scale(value)
+        elif key in ['lens']:
+            setattr(batoms.render.camera, key, value)
         else:
             setattr(batoms.render.camera, key, value)
             batoms.render.init()
