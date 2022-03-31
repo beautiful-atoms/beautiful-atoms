@@ -41,6 +41,11 @@ jobs:
           echo $VER $MAJ_VER
           URL="${BLENDER_DOWN_URL}/Blender${MAJ_VER}/blender-${VER}-linux-x64.tar.xz"
           mkdir -p ../blender && curl -O ${URL} && tar -xvf blender-*-linux-x64.tar.xz -C ../blender
-          ls ../blender
+          export BLENDER_ROOT="../blender/blender-${VER}-linux-x64/${MAJ_VER}"
+      - name: Run installation script
+        run: |
+          echo Currently install in $(pwd)
+          echo Use blender root ${BLENDER_ROOT}
+          
 
 
