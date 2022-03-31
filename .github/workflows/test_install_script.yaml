@@ -86,8 +86,6 @@ jobs:
         run: |
           echo Currently install in $(pwd)
           echo Use blender root ${BLENDER_ROOT}
-          conda info
-          conda list
           python install.py ${BLENDER_ROOT}
       - name: Run uninstallation script
         run: |

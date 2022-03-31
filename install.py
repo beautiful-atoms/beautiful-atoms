@@ -55,7 +55,10 @@ print("Numpy Version: ", numpy.__version__)
 BLENDERPY_ENABLE_PLUGIN = f"""
 import bpy
 import addon_utils
+print('Searching addons from: ', addon_utils.paths())
+print(addon_utils.check('batoms'))
 addon_utils.enable('{DEFAULT_PLUGIN_NAME}', default_set=True)
+print(addon_utils.check('batoms'))
 bpy.ops.wm.save_userpref()
 print('Successfully enabled plugin {DEFAULT_PLUGIN_NAME}')
 """
