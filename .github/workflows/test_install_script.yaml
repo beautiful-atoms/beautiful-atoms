@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
   
 env:
-  BLENDER_DOWN_URL: "https://mirror.clarkson.edu/blender/release/"
+  BLENDER_DOWN_URL: "https://mirror.clarkson.edu/blender/release"
 
 jobs:
   install-linux:
@@ -39,4 +39,8 @@ jobs:
           VER=${{ matrix.blender_ver }}
           MAJ_VER=${VER%.*}
           echo $VER $MAJ_VER
-          # Blender3.0/blender-3.0.1-linux-x64.tar.xz
+          URL="${BLENDER_DOWN_URL}/Blender${MAJ_VER}/blender-${VER}-linux-x64.tar.xz"
+          curl -O ${URL} && tar -xvf blender-*-linux-x64.tar.xz
+          ls blender_*
+
+
