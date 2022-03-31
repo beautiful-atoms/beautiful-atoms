@@ -62,12 +62,12 @@ jobs:
         blender_ver: ["3.0.1", "3.1.0"]
     steps:
       - uses: actions/checkout@v2
-      - uses: conda-incubator/setup-miniconda@v2
-        with:
-          activate-environment: batoms
-      - name: Install basic tools
-        run: |
-          conda install -c conda-forge git curl python
+      # - uses: conda-incubator/setup-miniconda@v2
+      #   with:
+      #     activate-environment: batoms
+      # - name: Install basic tools
+      #   run: |
+      #     conda install -c conda-forge git curl python
       - name: Download portable blender
         run: |
           echo Currently install in $(pwd)
@@ -75,22 +75,23 @@ jobs:
           MAJ_VER=${VER%.*}
           echo $VER $MAJ_VER
           URL="${BLENDER_DOWN_URL}/Blender${MAJ_VER}/blender-${VER}-macos-x64.dmg"
-          curl -O ${URL} && 7z x blender-*-macos-x64.dmg -o../ -y
-          ls ../Blender/Blender.app
-          echo "BLENDER_ROOT=../Blender/Blender.app/Contents/Resources/${MAJ_VER}" >> $GITHUB_ENV
-          chmod -R u+x ../Blender/Blender.app
-          ../Blender/Blender.app/Contents/MacOS/Blender -b
-          ../Blender/Blender.app/Contents/MacOS/Blender -b --python-expr "print('ok')"
-      - name: Run installation script
-        run: |
-          echo Currently install in $(pwd)
-          echo Use blender root ${BLENDER_ROOT}
-          conda info
-          conda list
-          python install.py ${BLENDER_ROOT}
-      - name: Run uninstallation script
-        run: |
-          python install.py --uninstall ${BLENDER_ROOT}
+          curl -O ${URL} && 7z x blender-*-macos-x64.dmg -o$HOME/Applications/ -y
+          ls $HOME/Applications/Blender/Blender.app
+          echo "BLENDER_ROOT=$HOME/Applications/Blender/Blender.app/Contents/Resources/${MAJ_VER}" >> $GITHUB_ENV
+          # chmod -R u+x ../Blender/Blender.app
+          $HOME/Applications/Blender/Blender.app/Contents/MacOS/Blender -b
+          $HOME/Applications/Blender/Blender.app/Contents/MacOS/Blender -b --python-expr "print('ok')"
+          ls "$HOME/Library/Application Support/Blender/${MAJ_VER}/config/"
+      # - name: Run installation script
+      #   run: |
+      #     echo Currently install in $(pwd)
+      #     echo Use blender root ${BLENDER_ROOT}
+      #     conda info
+      #     conda list
+      #     python install.py ${BLENDER_ROOT}
+      # - name: Run uninstallation script
+      #   run: |
+      #     python install.py --uninstall ${BLENDER_ROOT}
 
   # install-windows:
   #   defaults:
