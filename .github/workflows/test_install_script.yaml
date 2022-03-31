@@ -27,12 +27,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      # - uses: conda-incubator/setup-miniconda@v2
-      #   with:
-      #     activate-environment: batoms
-      # - name: Install basic tools
-      #   run: |
-      #     conda install -c conda-forge git curl python
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: batoms
+      - name: Install basic tools
+        run: |
+          conda install -c conda-forge git curl python
       - name: Download portable blender
         run: |
           echo Currently install in $(pwd)
@@ -46,6 +46,7 @@ jobs:
         run: |
           echo Currently install in $(pwd)
           echo Use blender root ${BLENDER_ROOT}
+          python install.py ${BLENDER_ROOT}
           
 
 
