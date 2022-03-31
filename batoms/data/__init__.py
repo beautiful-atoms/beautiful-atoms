@@ -4,6 +4,26 @@ Todo: add ionic_radii
 """
 from ase.data.colors import jmol_colors, cpk_colors
 from ase.data import covalent_radii, vdw_radii
+
+basic_colors = {
+'Red': (1.0, 0.0, 0.0, 1),
+'Lime': (0.0, 1.0, 0.0, 1),
+'Blue': (0.0, 0.0, 1.0, 1),
+'Yellow': (1.0, 1.0, 0.0, 1),
+'Cyan': (0.0, 1.0, 1.0, 1),
+'Magenta': (1.0, 0.0, 1.0, 1),
+'Silver': (0.7529411764705882, 0.7529411764705882, 0.7529411764705882, 1),
+'Gray': (0.5019607843137255, 0.5019607843137255, 0.5019607843137255, 1),
+'Maroon': (0.5019607843137255, 0.0, 0.0, 1),
+'Olive': (0.5019607843137255, 0.5019607843137255, 0.0, 1),
+'Green': (0.0, 0.5019607843137255, 0.0, 1),
+'Purple': (0.5019607843137255, 0.0, 0.5019607843137255, 1),
+'Teal': (0.0, 0.5019607843137255, 0.5019607843137255, 1),
+'Navy': (0.0, 0.0, 0.5019607843137255, 1),
+}
+
+
+
 vdw_radii.flags.writeable = True
 
 covalent_radii[0] = 1.0
@@ -1047,5 +1067,5 @@ default_polyhedras = {
     'Eu', 'Ta', 'Cm', 'Nb', 'Hf', 'La', 'Ce', 'Cf', 'D', 'U', 'Mn',
     'Si', 'Hg', 'Cu', 'Rb', 'K', 'Er', 'NH', 'Fe', 'Ge', 'Am', 'P',
     'Tm', 'Gd', 'Ga', 'Pm', 'Bi', 'Mg', 'Sc', 'Kr', 'Sb', 'Ir', 'Po',
-    'Bk', 'F', 'Ho', 'Nd', 'Cs', 'Np', 'Pt',
+    'Bk', 'F', 'Ho', 'Nd', 'Cs', 'Np', 'Pt', 'X',
 }

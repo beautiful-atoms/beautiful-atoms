@@ -187,6 +187,7 @@ class Batoms(BaseCollection, ObjectGN):
         self._lattice_plane = None
         self._crystal_shape = None
         self._ms = None
+        self._cavity = None
         show_index()
         self.hideOneLevel()
 
@@ -485,6 +486,7 @@ class Batoms(BaseCollection, ObjectGN):
         self.set_attributes({'show': arrays['show']})
         self.set_attributes({'model_style': arrays['model_style']})
         self.set_attributes({'select': arrays['select']})
+        self.update_mesh()
 
     @property
     def label(self):
@@ -1355,6 +1357,8 @@ class Batoms(BaseCollection, ObjectGN):
                 continue
             if obj.batoms.type == 'INSTANCER' or obj.batoms.type == 'VOLUME':
                 continue
+            if obj.hide_get():
+                continue
             n = len(obj.data.vertices)
             vertices = np.empty(n*3, dtype=np.float64)
             obj.data.vertices.foreach_get('co', vertices)
@@ -1497,6 +1501,21 @@ class Batoms(BaseCollection, ObjectGN):
     @ms.setter
     def ms(self, ms):
         self._ms = ms
+    
+    @property
+    def cavity(self):
+        """cavity object."""
+        from batoms.cavity import Cavity, default_cavity_datas
+        if self._cavity is not None:
+            return self._cavity
+        cavity = Cavity(self.label, cavity_datas=default_cavity_datas.copy(),
+        batoms=self)
+        self.cavity = cavity
+        return cavity
+
+    @cavity.setter
+    def cavity(self, cavity):
+        self._cavity = cavity
 
     def get_arrays_with_boundary(self):
         """
@@ -1638,7 +1657,7 @@ class Batoms(BaseCollection, ObjectGN):
 
     def draw_wireframe(self):
         mask = np.where(self.model_style == 3, True, False)
-        self.set_attribute_with_indices('show', mask, 0)
+        # self.set_attribute_with_indices('show', mask, 0)
         self.set_attribute_with_indices('scale', mask, 0.0001)
         # self.update(mask)
 

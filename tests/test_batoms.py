@@ -74,6 +74,7 @@ def test_batoms_species():
     # elements
     h2o.species["H"].elements = {"H": 0.5, "O": 0.4}
     assert len(h2o["H"].elements) == 3
+    h2o["H"].material_style = "mirror"
     # species X
     h2o.replace([0], "X")
     h2o["X"].color = [0.8, 0.8, 0.0, 0.3]
@@ -106,7 +107,7 @@ def test_batoms_transform():
     assert np.isclose(h2o.positions[0], np.array([0, 0, 2.40])).all()
     h2o.mirror("Z")
     assert np.isclose(h2o.positions[0], np.array([0, 0, 1.6])).all()
-    # h2o.rotate(90, 'Z')
+    # h2o.rotate(90, "Z")
     # assert np.isclose(h2o.positions[0], np.array([0.76, 0, -2.2])).all()
 
 
