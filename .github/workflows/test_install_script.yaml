@@ -11,6 +11,9 @@ on:
       - main
       - develop
   workflow_dispatch:
+  
+env:
+  BLENDER_DOWN_URL: "https://mirror.clarkson.edu/blender/release/"
 
 jobs:
   install-linux:
@@ -24,12 +27,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - uses: conda-incubator/setup-miniconda@v2
-        with:
-          activate-environment: batoms
-      - name: Install basic tools
-        run: |
-          conda install -c conda-forge git curl python
-      # - name: Download portable blender
+      # - uses: conda-incubator/setup-miniconda@v2
+      #   with:
+      #     activate-environment: batoms
+      # - name: Install basic tools
       #   run: |
-      #     https://download.blender.org/release/Blender3.0/blender-3.0.1-linux-x64.tar.xz
+      #     conda install -c conda-forge git curl python
+      - name: Download portable blender
+        run: |
+          echo Currently install in $(pwd)
+          VER=${{ matrix.blender_ver }}
+          MAJ_VER=${VER%.*}
+          echo $VER $MAJ_VER
+          # Blender3.0/blender-3.0.1-linux-x64.tar.xz
