@@ -282,36 +282,44 @@ def _run_process(commands, shell=False, print_cmd=True, cwd=".", capture_output=
     else:
         raise RuntimeError(f"Running {full_cmd} returned error code {proc.returncode}")
 
+def _run_blender_multiline_expr(blender_bin, expr):
+    blender_bin = str(blender_bin)
+    tmp_del = False if _get_os_name() in ["windows"] else True
+    with tempfile.NamedTemporaryFile(suffix=".py", delete=tmp_del) as py_file:
+        with open(py_file.name, "w") as fd:
+            fd.writelines(expr)
+        commands = [
+            blender_bin,
+            "-b",
+            "--python-exit-code",
+            "1",
+            "--python",
+            py_file.name,
+        ]
+        _run_process(commands, print_cmd=False)
+    return
 
 def _blender_enable_plugin(blender_bin):
     """Use blender's internal libary to enable plugin (and save as user script)"""
-    blender_bin = str(blender_bin)
-    commands = [
-        blender_bin,
-        "-b",
-        "--python-exit-code",
-        "1",
-        "--python-expr",
-        BLENDERPY_ENABLE_PLUGIN,
-    ]
-    _run_process(commands, print_cmd=False)
+    _run_blender_multiline_expr(blender_bin, BLENDERPY_ENABLE_PLUGIN)
     return
 
 
 def _blender_disable_plugin(blender_bin):
     """Use blender's internal libary to disable plugin (and save as user script)"""
-    blender_bin = str(blender_bin)
-    commands = [
-        blender_bin,
-        "-b",
-        "--python-exit-code",
-        "1",
-        "--python-expr",
-        BLENDERPY_DISABLE_PLUGIN,
-    ]
-    _run_process(commands, print_cmd=False)
+    _run_blender_multiline_expr(blender_bin, BLENDERPY_DISABLE_PLUGIN)
     return
 
+def _blender_test_plugin(parameters):
+    blender_bin = str(parameters["blender_bin"])
+    _run_blender_multiline_expr(blender_bin, BLENDERPY_TEST_PLUGIN)
+    return
+
+
+def _blender_test_uninstall(parameters):
+    blender_bin = str(parameters["blender_bin"])
+    _run_blender_multiline_expr(blender_bin, BLENDERPY_TEST_UNINSTALL)
+    return
 
 def _gitclone(workdir=".", version="main", url=repo_git):
     """Make a git clone to the directory
@@ -737,7 +745,7 @@ def install(parameters):
     shutil.copytree(plugin_path_source, plugin_path_target)
     print(f"Plugin copied to {plugin_path_target.as_posix()}.")
 
-    # _blender_enable_plugin(blender_bin)
+    _blender_enable_plugin(blender_bin)
     return
 
 
@@ -805,32 +813,7 @@ def uninstall(parameters):
     return
 
 
-def test_plugin(parameters):
-    blender_bin = str(parameters["blender_bin"])
-    commands = [
-        blender_bin,
-        "-b",
-        "--python-exit-code",
-        "1",
-        "--python-expr",
-        BLENDERPY_TEST_PLUGIN,
-    ]
-    _run_process(commands)
-    return
 
-
-def test_uninstall(parameters):
-    blender_bin = str(parameters["blender_bin"])
-    commands = [
-        blender_bin,
-        "-b",
-        "--python-exit-code",
-        "1",
-        "--python-expr",
-        BLENDERPY_TEST_UNINSTALL,
-    ]
-    _run_process(commands)
-    return
 
 
 def main():
@@ -908,7 +891,7 @@ def main():
             )
             sys.exit(1)
         uninstall(parameters)
-        test_uninstall(parameters)
+        _blender_test_uninstall(parameters)
         return
 
     # Cannot install without conda if pip install is enabled
@@ -950,7 +933,7 @@ def main():
     #     test_plugin(true_blender_bin)
 
     install(parameters)
-    test_plugin(parameters)
+    _blender_test_plugin(parameters)
 
 
 if __name__ == "__main__":
