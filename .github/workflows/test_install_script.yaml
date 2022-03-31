@@ -33,20 +33,22 @@ jobs:
       - name: Install basic tools
         run: |
           conda install -c conda-forge git curl python
-      - name: Download portable blender
-        run: |
-          echo Currently install in $(pwd)
-          VER=${{ matrix.blender_ver }}
-          MAJ_VER=${VER%.*}
-          echo $VER $MAJ_VER
-          URL="${BLENDER_DOWN_URL}/Blender${MAJ_VER}/blender-${VER}-linux-x64.tar.xz"
-          mkdir -p ../blender && curl -O ${URL} && tar -xvf blender-*-linux-x64.tar.xz -C ../blender
-          echo "BLENDER_ROOT=../blender/blender-${VER}-linux-x64/${MAJ_VER}" >> $GITHUB_ENV
+      # - name: Download portable blender
+      #   run: |
+      #     echo Currently install in $(pwd)
+      #     VER=${{ matrix.blender_ver }}
+      #     MAJ_VER=${VER%.*}
+      #     echo $VER $MAJ_VER
+      #     URL="${BLENDER_DOWN_URL}/Blender${MAJ_VER}/blender-${VER}-linux-x64.tar.xz"
+      #     mkdir -p ../blender && curl -O ${URL} && tar -xvf blender-*-linux-x64.tar.xz -C ../blender
+      #     echo "BLENDER_ROOT=../blender/blender-${VER}-linux-x64/${MAJ_VER}" >> $GITHUB_ENV
       - name: Run installation script
         run: |
           echo Currently install in $(pwd)
           echo Use blender root ${BLENDER_ROOT}
-          python install.py ${BLENDER_ROOT}
+          conda info
+          conda list
+          # python install.py ${BLENDER_ROOT}
           
 
 
