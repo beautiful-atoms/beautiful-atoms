@@ -49,6 +49,9 @@ jobs:
           conda info
           conda list
           python install.py ${BLENDER_ROOT}
+      - name: Run uninstallation script
+        run: |
+          python install.py --uninstall ${BLENDER_ROOT}
           
 
 
