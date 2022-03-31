@@ -117,19 +117,19 @@ jobs:
   #         MAJ_VER=${VER%.*}
   #         echo $VER $MAJ_VER
   #         URL="${BLENDER_DOWN_URL}/Blender${MAJ_VER}/blender-${VER}-windows-x64.zip"
-  #         curl -O ${URL} && unzip  x blender-*-windows-x64.zip -d ..
-  #         ls ../Blender/Blender.app
-  #         echo "BLENDER_ROOT=../Blender.app/Contents/Resources/${MAJ_VER}" >> $GITHUB_ENV
+  #         curl -O ${URL} && unzip  x blender-*-windows-x64.zip -d ../
+  #         ls ../blender-${VER}-windows-x64/${MAJ_VER}
+  #         echo "BLENDER_ROOT=..../blender-${VER}-windows-x64/${MAJ_VER}" >> $GITHUB_ENV
   #     - name: Run installation script
   #       run: |
   #         echo Currently install in $(pwd)
   #         echo Use blender root ${BLENDER_ROOT}
   #         conda info
   #         conda list
-  #         python install.py ${BLENDER_ROOT}
+  #         python install.py --use-pip ${BLENDER_ROOT}
   #     - name: Run uninstallation script
   #       run: |
-  #         python install.py --uninstall ${BLENDER_ROOT}
+  #         python install.py --uninstall --use-pip ${BLENDER_ROOT}
 
 
           

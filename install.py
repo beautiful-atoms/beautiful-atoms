@@ -277,22 +277,24 @@ def _run_process(commands, shell=False, print_cmd=True, cwd=".", capture_output=
     if proc.returncode == 0:
         return proc
     else:
-        raise RuntimeError(f"Running {full_cmd} returned error code {proc.stderr}")
+        raise RuntimeError(f"Running {full_cmd} returned error code {proc.returncode}")
 
 
 def _blender_enable_plugin(blender_bin):
     """Use blender's internal libary to enable plugin (and save as user script)"""
     blender_bin = str(blender_bin)
-    commands = [blender_bin, "-b", "--python-expr", BLENDERPY_ENABLE_PLUGIN]
-    _run_process(commands)
+    commands = [blender_bin, "-b", "--python-expr", 
+                "--python-exit-code", "1" , BLENDERPY_ENABLE_PLUGIN]
+    _run_process(commands, print_cmd=False)
     return
 
 
 def _blender_disable_plugin(blender_bin):
     """Use blender's internal libary to disable plugin (and save as user script)"""
     blender_bin = str(blender_bin)
-    commands = [blender_bin, "-b", "--python-expr", BLENDERPY_DISABLE_PLUGIN]
-    _run_process(commands)
+    commands = [blender_bin, "-b", "--python-expr", 
+                "--python-exit-code", "1" ,BLENDERPY_DISABLE_PLUGIN]
+    _run_process(commands, print_cmd=False)
     return
 
 
