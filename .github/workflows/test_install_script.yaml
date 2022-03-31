@@ -41,7 +41,7 @@ jobs:
           echo $VER $MAJ_VER
           URL="${BLENDER_DOWN_URL}/Blender${MAJ_VER}/blender-${VER}-linux-x64.tar.xz"
           mkdir -p ../blender && curl -O ${URL} && tar -xvf blender-*-linux-x64.tar.xz -C ../blender
-          export BLENDER_ROOT="../blender/blender-${VER}-linux-x64/${MAJ_VER}"
+          echo "BLENDER_ROOT=../blender/blender-${VER}-linux-x64/${MAJ_VER}" >> $GITHUB_ENV
       - name: Run installation script
         run: |
           echo Currently install in $(pwd)
