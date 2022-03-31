@@ -47,7 +47,7 @@ class PolyhedraSettings(Setting):
                         color=sp['color'],
                         node_inputs=node_inputs,
                         material_style=material_style,
-                        backface_culling=True)
+                        backface_culling=False)
         return mat
 
     def __setitem__(self, index, setdict):
