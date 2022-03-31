@@ -111,7 +111,7 @@ jobs:
           MAJ_VER=${VER%.*}
           echo $VER $MAJ_VER
           URL="${BLENDER_DOWN_URL}/Blender${MAJ_VER}/blender-${VER}-windows-x64.zip"
-          curl -O ${URL} && unzip  x blender-*-windows-x64.zip -d ../
+          curl -O ${URL} && unzip blender-*-windows-x64.zip -d ../
           ls ../blender-${VER}-windows-x64/${MAJ_VER}
           echo "BLENDER_ROOT=..../blender-${VER}-windows-x64/${MAJ_VER}" >> $GITHUB_ENV
       - name: Run installation script
