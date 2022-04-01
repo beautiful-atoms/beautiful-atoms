@@ -452,7 +452,9 @@ def _conda_cache_move(condition, conda_vars, blender_python_root):
     blender_python_root looks like <root>/<3.x>/python
     """
     # Step 1: search latest spglib available for the py version
-    commands = ["conda", "search", "-c", "conda-forge", str(condition)]
+    conda_bin = conda_vars["CONDA_EXE"]
+    print("Conda bin at: ", conda_bin)
+    commands = [conda_bin, "search", "-c", "conda-forge", str(condition)]
     proc = _run_process(commands, capture_output=True)
     lines = [l for l in proc.stdout.decode("utf-8").split("\n") if len(l) > 1]
 
@@ -463,7 +465,7 @@ def _conda_cache_move(condition, conda_vars, blender_python_root):
         "download/win-64/{name}-{version}-{build}.tar.bz2"
     ).format(name=name, version=version, build=build)
     # Step 2: do a temp install of spglib into conda environment
-    commands = ["conda", "install", "--no-deps", conda_url]
+    commands = [conda_bin, "install", "--no-deps", conda_url]
     _run_process(commands)
     print(f"Installed conda package from {conda_url}")
 
