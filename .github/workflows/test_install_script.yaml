@@ -113,15 +113,24 @@ jobs:
           curl -O ${URL} && unzip blender-*-windows-x64.zip -d ../
           ls ../blender-${VER}-windows-x64/${MAJ_VER}
           echo "BLENDER_ROOT=../blender-${VER}-windows-x64/${MAJ_VER}" >> $GITHUB_ENV
-      - name: Run installation script
+      # - name: Run installation script
+      #   run: |
+      #     echo "Use blender root" $env:BLENDER_ROOT
+      #     conda info
+      #     conda list
+      #     python install.py --use-pip $env:BLENDER_ROOT
+      # - name: Run uninstallation script
+      #   run: |
+      #     python install.py --uninstall --use-pip $env:BLENDER_ROOT
+      - name: Copy blender to program files
+        shell: bash -l {0}
         run: |
-          echo "Use blender root" $env:BLENDER_ROOT
-          conda info
-          conda list
-          python install.py --use-pip $env:BLENDER_ROOT
-      - name: Run uninstallation script
-        run: |
-          python install.py --uninstall --use-pip $env:BLENDER_ROOT
+          VER=${{ matrix.blender_ver }}
+          MAJ_VER=${VER%.*}
+          mkdir -p "/c/Program Files/Blender Foundation/Blender ${MAJ_VER}"
+          cp -r ../blender-${VER}-windows-x64/ "/c/Program Files/Blender Foundation/Blender ${MAJ_VER}/"
+      
+
 
 
           

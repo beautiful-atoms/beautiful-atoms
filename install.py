@@ -796,7 +796,7 @@ def check_python_conflict():
         print((
         "You're running install.py script using python interpreter:\n"
         f"{current_py}\n"
-        "It may be updated during the install / uninstall process and causing issues. "
+        "It may be updated during the install process and causing issues. "
         "We recommend using another python interpreter for install.py, such as: \n"
         "$CONDA_PYTHON_EXE install.py [options]"
         ))
@@ -859,7 +859,7 @@ def main():
     os_name = _get_os_name()
 
     # When installing on linux / macos using conda method, makesure python interpreters do not conflict
-    if os_name not in ["windows"]:
+    if (os_name not in ["windows"]) and (args.uninstall is False):
         check_python_conflict()
 
     # Use blender_root supplied to commandline if exists, otherwise try to guess
