@@ -415,7 +415,16 @@ class Bcell(ObjectGN):
             coll = self.batoms.coll
         else:
             coll = bpy.data.collections["Collection"]
-        draw_cylinder(name=name,
+        obj = draw_cylinder(name=name,
                       datas=cell_cylinder,
                       coll=coll
                       )
+        if self.batoms is not None:
+            obj.parent = self.batoms.obj
+
+    @property
+    def obj_cylinder(self):
+        obj = bpy.data.objects.get('%s_cylinder'%self.obj_name)
+        if obj is None:
+            raise KeyError('%s object is not exist.' % self.obj_name)
+        return obj
