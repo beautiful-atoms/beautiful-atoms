@@ -103,15 +103,16 @@ jobs:
       - uses: actions/checkout@v2
       - uses: conda-incubator/setup-miniconda@v2
       - name: Download portable blender
+        shell: bash -l {0}
         run: |
           echo Currently install in $(pwd)
           VER=${{ matrix.blender_ver }}
           MAJ_VER=${VER%.*}
           echo $VER $MAJ_VER
           URL="${BLENDER_DOWN_URL}/Blender${MAJ_VER}/blender-${VER}-windows-x64.zip"
-          curl -O ${URL} && unzip blender-*-windows-x64.zip -d ..\
-          ls ..\blender-${VER}-windows-x64\${MAJ_VER}
-          echo "BLENDER_ROOT=..\blender-${VER}-windows-x64\${MAJ_VER}" >> $env:GITHUB_ENV
+          curl -O ${URL} && unzip blender-*-windows-x64.zip -d ../
+          ls ../blender-${VER}-windows-x64/${MAJ_VER}
+          echo "BLENDER_ROOT=../blender-${VER}-windows-x64/${MAJ_VER}" >> $GITHUB_ENV
       - name: Run installation script
         run: |
           echo "Use blender root" $env:BLENDER_ROOT
