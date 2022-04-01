@@ -128,7 +128,7 @@ jobs:
           VER=${{ matrix.blender_ver }}
           MAJ_VER=${VER%.*}
           mkdir -p "/c/Program Files/Blender Foundation/Blender ${MAJ_VER}"
-          cp -r ../blender-${VER}-windows-x64/ "/c/Program Files/Blender Foundation/Blender ${MAJ_VER}/"
+          cp -r ../blender-${VER}-windows-x64/* "/c/Program Files/Blender Foundation/Blender ${MAJ_VER}/"
           ls "/c/Program Files/Blender Foundation/Blender ${MAJ_VER}/"
       - name: Run installation script with auto path infer
         run: |
