@@ -138,10 +138,3 @@ jobs:
       - name: Run uninstallation script with auto path infer
         run: |
           python install.py --uninstall --use-pip
-      
-
-
-
-          
-
-
