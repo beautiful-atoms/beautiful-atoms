@@ -10,6 +10,12 @@ except ImportError:
     pytest_blender_unactive = False
 
 
+if '3.1.0' in bpy.app.version_string:
+    blender31 = False
+else:
+    blender31 = True
+
+
 @pytest.mark.skipif(
     pytest_blender_unactive,
     reason="Requires testing loading the pytest-blender plugin.",
@@ -247,12 +253,57 @@ def test_get_geometry():
 
 def test_make_real():
     from ase.build import molecule
-    from batoms.utils.butils import removeAll
-
     bpy.ops.batoms.delete()
     h2o = Batoms("h2o", from_ase=molecule("H2O"))
     h2o.realize_instances = True
     h2o.realize_instances = False
+
+
+@pytest.mark.skipif(
+    blender31,
+    reason="Requires Blender >= 3.1.",
+)
+def test_export_mesh_x3d():
+    from ase.build import molecule
+    from batoms import Batoms
+    from batoms.bio.bio import read
+    bpy.ops.batoms.delete()
+    c2h6so = Batoms("c2h6so", from_ase=molecule("C2H6SO"))
+    c2h6so.cell = [3, 3, 3]
+    c2h6so.model_style = 1
+    c2h6so.export_mesh("c2h6so.x3d", with_cell=True, with_bond=True)
+    bpy.ops.batoms.delete()
+    tio2 = read("../tests/datas/tio2.cif")
+    tio2.boundary = 0.01
+    tio2.model_style = 2
+    tio2.bonds.show_search = True
+    tio2.export_mesh("tio2.x3d", with_cell=True,
+                     with_polyhedra=True,
+                     with_boundary=True,
+                     with_search_bond=True,
+                     with_bond=True)
+
+
+def test_export_mesh_obj():
+    from ase.build import molecule
+    from batoms import Batoms
+    from batoms.bio.bio import read
+    bpy.ops.batoms.delete()
+    c2h6so = Batoms("c2h6so", from_ase=molecule("C2H6SO"))
+    c2h6so.cell = [3, 3, 3]
+    c2h6so.model_style = 1
+    c2h6so.export_mesh("c2h6so.obj", with_cell=True, with_bond=True)
+    bpy.ops.batoms.delete()
+    tio2 = read("../tests/datas/tio2.cif")
+    tio2.boundary = 0.01
+    tio2.model_style = 2
+    tio2.bonds.show_search = True
+    tio2.export_mesh("tio2.obj", with_cell=True,
+                     with_polyhedra=True,
+                     with_boundary=True,
+                     with_search_bond=True,
+                     with_bond=True)
+
 
 
 if __name__ == "__main__":

@@ -1146,7 +1146,6 @@ class Batoms(BaseCollection, ObjectGN):
         cell = np.array(
             [bcell.matrix_world @ bcell.data.vertices[i].co for i in range(3)])
         return cell
-        
 
     def get_distances(self, i, indices, mic=False):
         """
@@ -1501,7 +1500,7 @@ class Batoms(BaseCollection, ObjectGN):
     @ms.setter
     def ms(self, ms):
         self._ms = ms
-    
+
     @property
     def cavity(self):
         """cavity object."""
@@ -1509,7 +1508,7 @@ class Batoms(BaseCollection, ObjectGN):
         if self._cavity is not None:
             return self._cavity
         cavity = Cavity(self.label, cavity_datas=default_cavity_datas.copy(),
-        batoms=self)
+                        batoms=self)
         self.cavity = cavity
         return cavity
 
@@ -1801,3 +1800,47 @@ class Batoms(BaseCollection, ObjectGN):
             positions.append([atom.GetX(), atom.GetY(), atom.GetZ()])
         # species, positions, arrays, cell, pbc, info = read_from_pybel(mol)
         self.positions = positions
+
+    def export_mesh(self, filename, with_cell=False,
+                    with_polyhedra=False,
+                    with_bond=False,
+                    with_boundary=False,
+                    with_search_bond=False):
+        """_summary_
+        ctmviewer
+
+        Args:
+            filename (_type_): _description_
+
+        """
+        # remove shape key
+        self.realize_instances = True
+        objs = [self.obj]
+        if with_cell:
+            self.cell.draw()
+            self.cell.obj_cylinder.select_set(True)
+        if with_bond:
+            self.bonds.realize_instances = True
+            objs.insert(0, self.bonds.obj)
+        if with_boundary:
+            self.boundary.realize_instances = True
+            objs.insert(0, self.boundary.obj)
+        if with_search_bond:
+            self.bonds.search_bond.realize_instances = True
+            objs.insert(0, self.bonds.search_bond.obj)
+        if with_polyhedra:
+            self.polyhedras.realize_instances = True
+            objs.insert(0, self.polyhedras.obj)
+        for obj in objs:
+            bpy.context.view_layer.objects.active = obj
+            bpy.ops.object.shape_key_remove(all=True)
+            bpy.ops.object.modifier_apply(modifier=obj.modifiers[0].name)
+            obj.select_set(True)
+        if filename.endswith('.x3d'):
+            bpy.ops.export_scene.x3d(filepath=filename, use_selection=True)
+        elif filename.endswith('.obj') or filename.endswith('.mtl'):
+            bpy.ops.export_scene.obj(filepath=filename, use_selection=True)
+        elif filename.endswith('.fbx'):
+            bpy.ops.export_scene.fbx(filepath=filename, use_selection=True)
+        else:
+            raise('File format %s is not supported.' % filename)

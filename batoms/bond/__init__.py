@@ -838,6 +838,15 @@ class Bonds(BaseCollection, ObjectGN):
             self._search_bond = None
         else:
             self.update()
+    
+    @property
+    def show_hydrogen_bond(self):
+        return self.setting.coll.batoms.show_hydrogen_bond
+
+    @show_hydrogen_bond.setter
+    def show_hydrogen_bond(self, show_hydrogen_bond):
+        self.setting.coll.batoms.show_hydrogen_bond = show_hydrogen_bond
+        self.update()
 
     def __getitem__(self, index):
         """Return a subset of the Bbond.
@@ -977,8 +986,9 @@ class Bonds(BaseCollection, ObjectGN):
         # nlj: index2
         # nlk: search bond style
         # nlp: polyhedra
+        # nlt: bond type: hydrogen bond
         # nlSj: offset of atoms in nlj
-        nli, nlj, nlk, nlp, nlSj = bondlist_kdtree('ijkpS', species,
+        nli, nlj, nlk, nlp, nlt, nlSj = bondlist_kdtree('ijkptS', species,
                                                    positions, cell,
                                                    pbc, setting)
         nb = len(nli)
@@ -992,7 +1002,9 @@ class Bonds(BaseCollection, ObjectGN):
         bondlists = np.concatenate((np.array([nli, nlj]).T,
                                     np.array(nlSi, dtype=int), np.array(nlSj),
                                     np.array(nlk).reshape(-1, 1),
-                                    np.array(nlp).reshape(-1, 1)), axis=1)
+                                    np.array(nlp).reshape(-1, 1),
+                                    np.array(nlt).reshape(-1, 1)),
+                                    axis=1)
         bondlists = bondlists.astype(int)
         # remove bond outside box for search0
         # not now, we need all bonds here, and then add a final check.
@@ -1033,7 +1045,7 @@ class Bonds(BaseCollection, ObjectGN):
         # for each pecies, save its neighbour and offset
         for i in range(m):
             data = peciesBondLists[indices[i]: indices[i + 1]]
-            data = data.reshape(-1, 10)
+            data = data.reshape(-1, 11)
             data[:, 5:8] *= -1
             data[:, [0, 1]] = data[:, [1, 0]]
             peciesBondDatas[u[i]] = data
@@ -1078,7 +1090,7 @@ class Bonds(BaseCollection, ObjectGN):
         """
         from scipy.sparse import csgraph, csr_matrix
         molPeciesDatas = {}
-        peciesBondLists = np.zeros((0, 10), dtype=int)
+        peciesBondLists = np.zeros((0, 11), dtype=int)
         # search type 2
         k = bondlists[:, 8]
         indices = np.where(k == 2)[0]
@@ -1125,7 +1137,7 @@ class Bonds(BaseCollection, ObjectGN):
         n = len(bondlists2)
         ai = bondlists2[:, 0].astype(int)
         aj = bondlists2[:, 1].astype(int)
-        peciesBondLists = np.zeros((n, 10), dtype=int)
+        peciesBondLists = np.zeros((n, 11), dtype=int)
         molBondDicts = {}
         for i in range(n):
             # molDatasId = component_list1[bondlists2[i, 0]]
@@ -1150,7 +1162,7 @@ class Bonds(BaseCollection, ObjectGN):
         # print('dist_matrix: ', dist_matrix)
         # print('predecessors: ', predecessors)
         dist_matrix = dist_matrix.astype(int)
-        mollist = np.zeros(10, dtype=int)
+        mollist = np.zeros(11, dtype=int)
         for i, data in molDatas.items():
             indices = data['sub']
             n = len(indices)
@@ -1319,6 +1331,8 @@ class Bonds(BaseCollection, ObjectGN):
         todo: support frame for positions and offsets.
         """
         tstart = time()
+        if not self.show_hydrogen_bond:
+            bondlists = bondlists[bondlists[:, 10] != 1]
         # properties
         atoms_index1 = np.array(bondlists[:, 0], dtype=int)
         atoms_index2 = np.array(bondlists[:, 1], dtype=int)
@@ -1475,7 +1489,7 @@ class Bonds(BaseCollection, ObjectGN):
         mol = self.batoms.as_pybel(export_bonds=False)
         bondlists = [[b.GetBeginAtom().GetIndex(),
                         b.GetEndAtom().GetIndex(),
-                        0, 0, 0, 0, 0, 0, 0, 0]
+                        0, 0, 0, 0, 0, 0, 0, 0, 0]
              for b in pybel.ob.OBMolBondIter(mol.OBMol)]
         #TODO detect hydrogen bond
         cutoff_dict = self.setting.cutoff_dict
