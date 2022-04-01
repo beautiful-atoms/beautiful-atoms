@@ -304,24 +304,24 @@ def _run_blender_multiline_expr(blender_bin, expr, **kwargs):
 
 def _blender_enable_plugin(blender_bin):
     """Use blender's internal libary to enable plugin (and save as user script)"""
-    _run_blender_multiline_expr(blender_bin, BLENDERPY_ENABLE_PLUGIN, shell=True)
+    _run_blender_multiline_expr(blender_bin, BLENDERPY_ENABLE_PLUGIN)
     return
 
 
 def _blender_disable_plugin(blender_bin):
     """Use blender's internal libary to disable plugin (and save as user script)"""
-    _run_blender_multiline_expr(blender_bin, BLENDERPY_DISABLE_PLUGIN, shell=True)
+    _run_blender_multiline_expr(blender_bin, BLENDERPY_DISABLE_PLUGIN)
     return
 
 def _blender_test_plugin(parameters):
     blender_bin = str(parameters["blender_bin"])
-    _run_blender_multiline_expr(blender_bin, BLENDERPY_TEST_PLUGIN, shell=True)
+    _run_blender_multiline_expr(blender_bin, BLENDERPY_TEST_PLUGIN)
     return
 
 
 def _blender_test_uninstall(parameters):
     blender_bin = str(parameters["blender_bin"])
-    _run_blender_multiline_expr(blender_bin, BLENDERPY_TEST_UNINSTALL, shell=True)
+    _run_blender_multiline_expr(blender_bin, BLENDERPY_TEST_UNINSTALL)
     return
 
 def _gitclone(workdir=".", version="main", url=repo_git):
