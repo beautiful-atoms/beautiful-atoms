@@ -129,6 +129,15 @@ jobs:
           MAJ_VER=${VER%.*}
           mkdir -p "/c/Program Files/Blender Foundation/Blender ${MAJ_VER}"
           cp -r ../blender-${VER}-windows-x64/ "/c/Program Files/Blender Foundation/Blender ${MAJ_VER}/"
+          ls "/c/Program Files/Blender Foundation/Blender ${MAJ_VER}/"
+      - name: Run installation script with auto path infer
+        run: |
+          conda info
+          conda list
+          python install.py --use-pip
+      - name: Run uninstallation script with auto path infer
+        run: |
+          python install.py --uninstall --use-pip
       
 
 
