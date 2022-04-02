@@ -310,6 +310,7 @@ def _run_process(commands, shell=False, print_cmd=True, cwd=".", capture_output=
     else:
         raise RuntimeError(f"Running {full_cmd} returned error code {proc.returncode}")
 
+
 def _run_blender_multiline_expr(blender_bin, expr, **kwargs):
     blender_bin = str(blender_bin)
     tmp_del = False if _get_os_name() in ["windows"] else True
@@ -327,6 +328,7 @@ def _run_blender_multiline_expr(blender_bin, expr, **kwargs):
         _run_process(commands, print_cmd=False, **kwargs)
     return
 
+
 def _blender_enable_plugin(blender_bin):
     """Use blender's internal libary to enable plugin (and save as user script)"""
     _run_blender_multiline_expr(blender_bin, BLENDERPY_ENABLE_PLUGIN)
@@ -337,6 +339,7 @@ def _blender_disable_plugin(blender_bin):
     """Use blender's internal libary to disable plugin (and save as user script)"""
     _run_blender_multiline_expr(blender_bin, BLENDERPY_DISABLE_PLUGIN)
     return
+
 
 def _blender_test_plugin(parameters):
     if parameters["dependency_only"] is False:
@@ -351,6 +354,7 @@ def _blender_test_uninstall(parameters):
     blender_bin = str(parameters["blender_bin"])
     _run_blender_multiline_expr(blender_bin, BLENDERPY_TEST_UNINSTALL)
     return
+
 
 def _gitclone(workdir=".", version="main", url=repo_git):
     """Make a git clone to the directory
@@ -439,9 +443,15 @@ def _conda_update(
 
     # Install from the env.yaml
     print("Updating conda environment")
-    blender_py_ver = python_version if python_version is not None else DEFAULT_BLENDER_PY_VER
-    blender_numpy_ver = numpy_version if numpy_version is not None else DEFAULT_BLENDER_NUMPY_VER
-    env_file_content = ENV_YAML.format(blender_py_ver=blender_py_ver, blender_numpy_ver=blender_numpy_ver)
+    blender_py_ver = (
+        python_version if python_version is not None else DEFAULT_BLENDER_PY_VER
+    )
+    blender_numpy_ver = (
+        numpy_version if numpy_version is not None else DEFAULT_BLENDER_NUMPY_VER
+    )
+    env_file_content = ENV_YAML.format(
+        blender_py_ver=blender_py_ver, blender_numpy_ver=blender_numpy_ver
+    )
 
     # NamedTemporaryFile can only work on Windows if delete=False
     # see https://stackoverflow.com/questions/55081022/python-tempfile-with-a-context-manager-on-windows-10-leads-to-permissionerror
@@ -708,8 +718,7 @@ def install(parameters):
             os.unlink(factory_python_source)
         os.symlink(conda_prefix, factory_python_source)
         print(f"Created symlink {conda_prefix} --> {factory_python_source.as_posix()}")
-        
-        
+
         # Give a warning about conda env
         # TODO: allow direct install into another environment
         _conda_update(
@@ -723,7 +732,7 @@ def install(parameters):
     if parameters["dependency_only"]:
         print("Install dependency only. Batoms plugin will not be copied.")
         return
-    
+
     if not _is_empty_dir(plugin_path_target):
         print(
             f"Target plugin installtion directory {plugin_path_target.as_posix()} is not empty."
@@ -737,10 +746,21 @@ def install(parameters):
                 os.unlink(plugin_path_target)
             else:
                 shutil.rmtree(plugin_path_target)
-    
+
     shutil.copytree(plugin_path_source, plugin_path_target)
     print(f"Plugin copied to {plugin_path_target.as_posix()}.")
     _blender_enable_plugin(blender_bin)
+    _blender_test_plugin(parameters)
+    print(
+        (
+            "Beautiful-atoms and its dependencies have been successfully installed in your Blender distribution.\n"
+            "If you want to add additional python packages, activate the conda environment first:\n"
+            "\n"
+            "$ conda activate --prefix {env_pref}\n"
+            "\n"
+            "And use conda or pip for the installation. Happy coding!"
+        ).format(env_pref=conda_vars["CONDA_PREFIX"])
+    )
     return
 
 
@@ -771,9 +791,15 @@ def uninstall(parameters):
         if parameters["use_pip"]:
             blender_py = _get_blender_py(blender_bin)
             _pip_uninstall(blender_py, conda_vars)
+            print(
+                "Beautiful-atoms and its dependencies have been successfully uninstalled!"
+            )
         else:
             print(
-                f"Backup of factory blender python path {factory_python_target.as_posix()} does not exist. Ignore"
+                f"Backup of factory blender python path {factory_python_target.as_posix()} does not exist. Ignore."
+            )
+            print(
+                "It seems beautiful-atoms has already been uninstalled from your Blender distribution."
             )
         return
     else:
@@ -805,6 +831,17 @@ def uninstall(parameters):
             os.symlink(origin, factory_python_source)
         else:
             shutil.move(factory_python_target, factory_python_source)
+    _blender_test_uninstall(parameters)
+    print(
+        (
+            "Beautiful-atoms uninstallation finished.\n"
+            "If you don't need to reuse the conda environment, remove it by:\n"
+            "\n"
+            "$ conda deactivate\n"
+            "$ conda env remove --prefix {env_pref}\n"
+            "\n"
+        ).format(env_pref=conda_vars["CONDA_PREFIX"])
+    )
     return
 
 
@@ -818,19 +855,19 @@ def check_python_conflict():
         # Does not have a python interpreter in current environment, safe.
         return
     if Path(current_py).resolve().samefile(Path(env_py)):
-        print((
-        "You're running install.py script using python interpreter:\n"
-        f"{current_py}\n"
-        "It may be updated during the install process and causing issues. "
-        "We recommend using another python interpreter for install.py, such as: \n"
-        "$CONDA_PYTHON_EXE install.py [options]"
-        ))
+        print(
+            (
+                "You're running install.py script using python interpreter:\n"
+                f"{current_py}\n"
+                "It may be updated during the install process and causing issues. "
+                "We recommend using another python interpreter for install.py, such as: \n"
+                "$CONDA_PYTHON_EXE install.py [options]"
+            )
+        )
         choice = str(input("Continue? [y/N]") or "N").lower().startswith("y")
         if not choice:
             # TODO: update installation instruction
-            print(
-                "Abort."
-            )
+            print("Abort.")
             sys.exit(0)
         else:
             return
@@ -882,8 +919,10 @@ def main():
     parser.add_argument(
         "--dependency-only",
         action="store_true",
-        help=("Install dependencies but not copying batoms plugin. "
-        "Should only be used for building docker images.")
+        help=(
+            "Install dependencies but not copying batoms plugin. "
+            "Should only be used for building docker images."
+        ),
     )
     args = parser.parse_args()
     print(args)
@@ -925,7 +964,6 @@ def main():
             )
             sys.exit(0)
         uninstall(parameters)
-        _blender_test_uninstall(parameters)
         return
 
     # Cannot install without conda if pip install is enabled
@@ -967,7 +1005,6 @@ def main():
     #     test_plugin(true_blender_bin)
 
     install(parameters)
-    _blender_test_plugin(parameters)
 
 
 if __name__ == "__main__":
