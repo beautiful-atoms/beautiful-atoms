@@ -38,11 +38,36 @@ DEFAULT_GITHUB_ACCOUNT = "superstar54"
 DEFAULT_REPO_NAME = "beautiful-atoms"
 DEFAULT_PLUGIN_NAME = "batoms"
 DEFAULT_PLUGIN_PATH = f"scripts/addons_contrib/{DEFAULT_PLUGIN_NAME}"
+DEFAULT_BLENDER_PY_VER = "3.10.2"
+DEFAULT_BLENDER_NUMPY_VER = "1.22.0"
 
 ALLOWED_BLENDER_VERSIONS = ["3.0", "3.1"]
 
 PY_PATH = "python"
 PY_BACKUP_PATH = "_old_python"
+
+
+# Adding an embedded YAML file for better portability
+ENV_YAML = """
+name: beautiful_atoms
+channels:
+  - conda-forge
+  - anaconda
+  - defaults
+dependencies:
+  - git
+  - curl
+  - python={blender_py_ver}
+  - numpy={blender_numpy_ver}
+  - pymatgen>=2020.12
+  - ase>=3.21.0
+  - openbabel>=3.1.1
+  - scikit-image
+  - spglib
+  - pip
+  - pip:
+    - batoms-api
+"""
 
 BLENDER_CHK_VERSION = """
 import sys
@@ -314,9 +339,12 @@ def _blender_disable_plugin(blender_bin):
     return
 
 def _blender_test_plugin(parameters):
-    blender_bin = str(parameters["blender_bin"])
-    _run_blender_multiline_expr(blender_bin, BLENDERPY_TEST_PLUGIN)
-    return
+    if parameters["dependency_only"] is False:
+        blender_bin = str(parameters["blender_bin"])
+        _run_blender_multiline_expr(blender_bin, BLENDERPY_TEST_PLUGIN)
+        return
+    else:
+        print("Skip plugin test.")
 
 
 def _blender_test_uninstall(parameters):
@@ -411,23 +439,17 @@ def _conda_update(
 
     # Install from the env.yaml
     print("Updating conda environment")
+    blender_py_ver = python_version if python_version is not None else DEFAULT_BLENDER_PY_VER
+    blender_numpy_ver = numpy_version if numpy_version is not None else DEFAULT_BLENDER_NUMPY_VER
+    env_file_content = ENV_YAML.format(blender_py_ver=blender_py_ver, blender_numpy_ver=blender_numpy_ver)
 
-    conda_env_file = Path(conda_env_file)
     # NamedTemporaryFile can only work on Windows if delete=False
     # see https://stackoverflow.com/questions/55081022/python-tempfile-with-a-context-manager-on-windows-10-leads-to-permissionerror
     tmp_del = False if _get_os_name() in ["windows"] else True
     with tempfile.NamedTemporaryFile(suffix=".yml", delete=tmp_del) as ftemp:
         tmp_yml = ftemp.name
-        old_env = open(conda_env_file, "r").readlines()
         with open(tmp_yml, "w") as fd:
-            for line in old_env:
-                if ("python" in line) and (python_version is not None):
-                    new_line = re.sub(r"python.*$", f"python={python_version}", line)
-                elif ("numpy" in line) and (numpy_version is not None):
-                    new_line = re.sub(r"numpy.*$", f"numpy={numpy_version}", line)
-                else:
-                    new_line = line
-                fd.write(new_line)
+            fd.writelines(env_file_content.lstrip())
 
         commands = [
             conda_vars["CONDA_EXE"],
@@ -698,6 +720,10 @@ def install(parameters):
         )
 
     # Step 4: install plugin
+    if parameters["dependency_only"]:
+        print("Install dependency only. Batoms plugin will not be copied.")
+        return
+    
     if not _is_empty_dir(plugin_path_target):
         print(
             f"Target plugin installtion directory {plugin_path_target.as_posix()} is not empty."
@@ -711,10 +737,9 @@ def install(parameters):
                 os.unlink(plugin_path_target)
             else:
                 shutil.rmtree(plugin_path_target)
+    
     shutil.copytree(plugin_path_source, plugin_path_target)
     print(f"Plugin copied to {plugin_path_target.as_posix()}.")
-    # commands = [str(blender_bin), "-b", "--python-expr", "import addon_utils; print('addon can load')"]
-    # _run_process(commands)
     _blender_enable_plugin(blender_bin)
     return
 
@@ -854,6 +879,12 @@ def main():
         action="store_true",
         help="Use pip install instead of conda environment. Only recommended on windows.",
     )
+    parser.add_argument(
+        "--dependency-only",
+        action="store_true",
+        help=("Install dependencies but not copying batoms plugin. "
+        "Should only be used for building docker images.")
+    )
     args = parser.parse_args()
     print(args)
     os_name = _get_os_name()
@@ -881,6 +912,7 @@ def main():
         use_pip=args.use_pip,
         repo_path=Path(expanduser(expandvars(args.local_repo_path))),
         custom_conda_env=args.conda_env_name,
+        dependency_only=args.dependency_only,
     )
 
     # Uninstallation does not need information about current environment
