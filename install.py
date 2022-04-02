@@ -677,7 +677,8 @@ def install(parameters):
                     )
                 else:
                     os.unlink(factory_python_source)
-            os.rename(factory_python_target, factory_python_source)
+            # os.rename(factory_python_target, factory_python_source)
+            shutil.move(factory_python_target, factory_python_source)
             print(
                 f"Renamed {factory_python_target.as_posix()} to {factory_python_source.as_posix()}"
             )
@@ -706,7 +707,8 @@ def install(parameters):
             raise RuntimeError(
                 f"Something wrong. {factory_python_source.as_posix()} should be a real directory."
             )
-        os.rename(factory_python_source, factory_python_target)
+        shutil.move(factory_python_source, factory_python_target)
+        # os.rename(factory_python_source, factory_python_target)
         print(
             f"Renamed {factory_python_source.as_posix()} to {factory_python_target.as_posix()}"
         )
