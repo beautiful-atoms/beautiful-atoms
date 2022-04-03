@@ -414,6 +414,19 @@ def _symlink_dir(src, dst):
         # TODO: do something here
         raise
 
+def _replace_conda_env(python_version=None, numpy_version=None):
+    """Replace the env.yml with actual python and numpy versions
+    """
+    blender_py_ver = (
+        python_version if python_version is not None else DEFAULT_BLENDER_PY_VER
+    )
+    blender_numpy_ver = (
+        numpy_version if numpy_version is not None else DEFAULT_BLENDER_NUMPY_VER
+    )
+    env_file_content = ENV_YAML.format(
+        blender_py_ver=blender_py_ver, blender_numpy_ver=blender_numpy_ver
+    )
+    return env_file_content
 
 def _conda_update(
     conda_env_file, conda_vars, env_name=None, python_version=None, numpy_version=None
@@ -443,22 +456,14 @@ def _conda_update(
 
     # Install from the env.yaml
     print("Updating conda environment")
-    blender_py_ver = (
-        python_version if python_version is not None else DEFAULT_BLENDER_PY_VER
-    )
-    blender_numpy_ver = (
-        numpy_version if numpy_version is not None else DEFAULT_BLENDER_NUMPY_VER
-    )
-    env_file_content = ENV_YAML.format(
-        blender_py_ver=blender_py_ver, blender_numpy_ver=blender_numpy_ver
-    )
-
+    
     # NamedTemporaryFile can only work on Windows if delete=False
     # see https://stackoverflow.com/questions/55081022/python-tempfile-with-a-context-manager-on-windows-10-leads-to-permissionerror
     tmp_del = False if _get_os_name() in ["windows"] else True
     with tempfile.NamedTemporaryFile(suffix=".yml", delete=tmp_del) as ftemp:
         tmp_yml = ftemp.name
         with open(tmp_yml, "w") as fd:
+            env_file_content = _replace_conda_env(python_version, numpy_version)
             fd.writelines(env_file_content.lstrip())
 
         commands = [
@@ -693,6 +698,15 @@ def install(parameters):
 
     print(blender_version, factory_py_ver, factory_numpy_ver)
 
+    # If need to output the env yaml only, do it now
+    # print(parameters["generate_env_file"])
+    if parameters["generate_env_file"] is not None:
+        env_file_name = Path(parameters["generate_env_file"])
+        with open(env_file_name, "w") as fd:
+            fd.writelines(_replace_conda_env(factory_py_ver, factory_numpy_ver))
+        print(f"Conda env exported to {env_file_name.as_posix()}. Exit.")
+        sys.exit(0)
+
     # Step 2. cond 1: use pip
     if parameters["use_pip"]:
         _pip_install(blender_py, factory_python_source, factory_py_ver, conda_vars)
@@ -926,6 +940,14 @@ def main():
             "Should only be used for building docker images."
         ),
     )
+    parser.add_argument(
+        "--generate-env-file",
+        nargs="?",
+        const="env.yml",
+        help=(
+            "Only print the dependency as a env.yml to local dir without any installation."
+        )
+    )
     args = parser.parse_args()
     print(args)
     os_name = _get_os_name()
@@ -954,6 +976,7 @@ def main():
         repo_path=Path(expanduser(expandvars(args.local_repo_path))),
         custom_conda_env=args.conda_env_name,
         dependency_only=args.dependency_only,
+        generate_env_file=args.generate_env_file,
     )
 
     # Uninstallation does not need information about current environment
