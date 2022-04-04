@@ -38,12 +38,13 @@ RUN wget --quiet https://repo.continuum.io/miniconda/Miniconda3-py39_${MINICONDA
 ADD ./ /tmp
 
 RUN . ${CONDA_DIR}/bin/activate &&\
-    yes | python install.py --generate-env-file ./env.yml ${BLENDER_PATH}
+    yes | python install.py --generate-env-file ./env.yml ${BLENDER_PATH} &&\
+    rm -rf ${BLENDER_PATH}/python &&\
+    ln -s ${CONDA_DIR} ${BLENDER_PATH}/python
     
 
 RUN conda env update -n base --file ./env.yml &&\
     conda clean --all -f -y &&\
-     rm -rf ${BLENDER_PATH}/_old_python &&\
      rm -rf /tmp/*
 
 
