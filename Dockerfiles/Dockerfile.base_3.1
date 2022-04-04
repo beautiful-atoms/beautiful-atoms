@@ -1,0 +1,101 @@
+# Base image for the blender environment. Used for CD/CI test and debug
+# Dockerfile adapted from https://github.com/nytimes/rd-blender-docker
+# To build the Docker image, create the build from root directory:
+# docker build . -f Dockerfiles/Dockerfile.base_3.0 -t luciusm/blender_env:3.0
+
+FROM nytimes/blender:3.1-gpu-ubuntu18.04
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+
+
+# Enviorment variables
+ENV CONDA_DIR="/opt/conda"
+ENV PATH="${CONDA_DIR}/bin:${PATH}"
+
+
+# Install miniconda 4.11.0 (minimal support py 3.10)
+ENV MINICONDA_VERSION=4.11.0 \
+    MINICONDA_MD5=4e2f31e0b2598634c80daa12e4981647 \
+    CONDA_VERSION=4.12.0 \
+    PYTHON_VERSION=3.10.2
+
+
+WORKDIR /tmp
+RUN wget --quiet https://repo.continuum.io/miniconda/Miniconda3-py39_${MINICONDA_VERSION}-Linux-x86_64.sh && \
+    echo "${MINICONDA_MD5} *Miniconda3-py39_${MINICONDA_VERSION}-Linux-x86_64.sh" | md5sum -c - && \
+    /bin/bash Miniconda3-py39_${MINICONDA_VERSION}-Linux-x86_64.sh -f -b -p $CONDA_DIR && \
+    rm Miniconda3-py39_${MINICONDA_VERSION}-Linux-x86_64.sh && \
+    conda config --system --prepend channels conda-forge && \
+    conda config --system --set show_channel_urls true && \
+    conda install --quiet --yes \
+                  -c conda-forge \
+                  conda=${CONDA_VERSION} \
+		  python=$PYTHON_VERSION \
+		  pip &&\
+    conda update --all --quiet --yes &&\
+    conda clean --all -f -y
+
+ADD ./ /tmp
+
+RUN . ${CONDA_DIR}/bin/activate &&\
+    yes | python install.py --generate-env-file ./env.yml ${BLENDER_PATH}
+    
+
+RUN conda env update -n base --file ./env.yml &&\
+    conda clean --all -f -y &&\
+     rm -rf ${BLENDER_PATH}/_old_python &&\
+     rm -rf /tmp/*
+    
+
+# RUN env | grep CONDA && exit 1
+# Running in a base env, always select yes
+# RUN conda init bash && \
+#RUN conda create -n batoms && conda init bash
+
+#RUN ["/bin/bash", "-c", "conda init bash"]
+
+
+# Simulate a new SHELL with activated batoms
+# RUN ["/bin/bash", "-c", ". ~/.bashrc && 
+
+#RUN . ${CONDA_DIR}/bin/activate batoms &&\
+ #     yes | $CONDA_PYTHON_EXE install.py --dependency-only ${BLENDER_PATH}
+
+#RUN conda clean --all -f -y &&\
+ #    rm -rf ${BLENDER_PATH}/_old_python &&\
+ #    rm -rf /tmp/* &&\
+ #    cd /opt/conda/lib/python3.10/site-packages
+     
+
+# yes | $CONDA_PYTHON_EXE /tmp/install.py \
+#   -p /tmp \
+#  --dependency-only ${BLENDER_PATH}
+# # Install conda dependencies. Consider using env.yaml instead
+# RUN conda install python=3.9.7 \
+#                   pymatgen>=2020.12 \
+#                   ase>=3.21.0 \
+#                   openbabel>=3.1.1 \
+#                   scikit-image \
+#                   spglib
+
+# Don't need the _old_python directory 
+# RUN rm -rf ${BLENDER_PATH}/python && \
+# ln -s ${CONDA_DIR} ${BLENDER_PATH}/python
+
+# Set the working directory
+ARG B_USER="blender"
+ARG B_UID="1000"
+ARG B_GID="100"
+ENV HOME=/home/${B_USER}
+
+
+# Add user
+RUN useradd -m -s /bin/bash -N -u $B_UID $B_USER && \
+    mkdir -p /workdir && \
+    chmod g+w /etc/passwd && \
+    chown -R ${B_UID}:${B_GID} ${HOME} &&\
+    chown -R ${B_UID}:${B_GID} /workdir
+
+
+USER ${B_UID}
+SHELL ["/bin/bash", "-c"]
+WORKDIR /workdir
