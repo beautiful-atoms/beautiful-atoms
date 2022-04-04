@@ -3,15 +3,15 @@ name: Test installation script
 
 on:
   push:
-    branches: 
+    branches:
       - main
       - develop
   pull_request:
-    branches: 
+    branches:
       - main
       - develop
   workflow_dispatch:
-  
+
 env:
   BLENDER_DOWN_URL: "https://mirror.clarkson.edu/blender/release"
 
@@ -48,7 +48,7 @@ jobs:
       - name: Run uninstallation script
         run: |
           $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
-  
+
   install-macos:
     defaults:
       run:
