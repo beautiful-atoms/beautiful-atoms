@@ -143,7 +143,7 @@ class LatticePlane(BaseObject):
         # make mesh by subdivided
         bmesh.ops.subdivide_edges(bm,
                                   edges=bm.edges,
-                                  cuts=cuts,
+                                  cuts=int(cuts),
                                   use_grid_fill=True,
                                   )
         bm.to_mesh(me)

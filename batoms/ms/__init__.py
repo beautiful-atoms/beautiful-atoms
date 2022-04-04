@@ -632,7 +632,7 @@ class MS(BaseObject):
                         (lengths > eps/2/number_cuts), True, False)
         # print(eps, lengths[2608], mask[2608])
         self.batoms_mesh(self.ses_obj, mask, mode='EDGE')
-        bpy.ops.mesh.subdivide(number_cuts=number_cuts,
+        bpy.ops.mesh.subdivide(number_cuts=int(number_cuts),
                                smoothness=0, fractal_along_normal=0)
         # return
         bpy.ops.object.mode_set(mode='OBJECT')
