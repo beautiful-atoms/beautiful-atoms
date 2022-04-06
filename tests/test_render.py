@@ -29,6 +29,14 @@ def test_render():
     assert render.resolution == [200, 200]
 
 
+def test_render_gpu():
+    bpy.ops.batoms.delete()
+    h2o = molecule("H2O")
+    h2o = Batoms("h2o", from_ase=h2o)
+    h2o.render.init()
+    h2o.render.gpu = True
+
+
 def test_render_init():
     bpy.ops.batoms.delete()
     h2o = molecule("H2O")
