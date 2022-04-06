@@ -17,6 +17,8 @@ extras = dict(engine="cycles") if use_cycles else {}
 
 def test_bonds():
     bpy.ops.batoms.delete()
+    from batoms.batoms import Batoms
+    from ase.build import molecule
     c2h6so = molecule("C2H6SO")
     c2h6so = Batoms("c2h6so", from_ase=c2h6so)
     c2h6so.model_style = 1

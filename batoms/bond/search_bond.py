@@ -369,7 +369,12 @@ class SearchBond(ObjectGN):
         if len(offsets) != n:
             raise ValueError('offsets has wrong shape %s != %s.' %
                              (len(offsets), n))
+        if n == 0:
+            return
         offsets = offsets.reshape((n*3, 1))
+        if self.obj_o.data.shape_keys is None and len(self) > 0:
+            base_name = "Basis_%s"%self.obj_o.name
+            self.obj_o.shape_key_add(name=base_name)
         self.obj_o.data.shape_keys.key_blocks[0].data.foreach_set(
             'co', offsets)
         self.obj_o.data.update()

@@ -22,6 +22,7 @@ else:
 )
 def test_empty():
     """Create an empty Batoms object"""
+    from batoms import Batoms
     bpy.ops.batoms.delete()
     h2o = Batoms("h2o")
     assert len(h2o) == 0
@@ -30,6 +31,7 @@ def test_empty():
 def test_batoms_molecule():
     """Create a Batoms object from scratch"""
     bpy.ops.batoms.delete()
+    from batoms import Batoms
     h2o = Batoms(
         "h2o",
         species=["O", "H", "H"],

@@ -19,7 +19,7 @@ class Render(BaseCollection):
                  run_render=True,
                  resolution=[1000, 758],
                  transparent=True,
-                 compute_device_type='CUDA',
+                #  compute_device_type='CUDA',
                  studiolight='Default',
                  samples=64,
                  ):
@@ -45,7 +45,8 @@ class Render(BaseCollection):
         transparent: bool
         resolution: list of 2 ints
         compute_device_type: str
-            enum in ['CUDA', 'OPENGL']
+            enum in ['NONE', 'CUDA', 'OPENGL', 'METAL', 'OPTIX'], depending
+            on computer.
         studiolight: str
             enum in ['Default', 'basic.sl', 'outdoor.sl',
                     'paint.sl', 'rim.sl', 'studio.sl']
@@ -57,7 +58,7 @@ class Render(BaseCollection):
         BaseCollection.__init__(self, coll_name=self.coll_name)
         self.batoms = batoms
         self.camera_name = '%s_camera' % self.label
-        self.compute_device_type = compute_device_type
+        # self.compute_device_type = compute_device_type
         coll = bpy.data.collections.get(self.coll_name)
         # load from collection
         self.output = output
@@ -189,9 +190,17 @@ class Render(BaseCollection):
         self.coll.batoms.brender.gpu = gpu
         if gpu:
             self.scene.cycles.device = 'GPU'
-            bpy.context.preferences.addons["cycles"].preferences.get_devices()
-            for device in bpy.context.preferences.addons["cycles"].preferences.devices:
+            # bpy.context.preferences.addons["cycles"].preferences.get_devices()
+            cprefs = bpy.context.preferences.addons["cycles"].preferences
+            for device in cprefs.devices:
                 device["use"] = 1  # Using all devices, include GPU and CPU
+            # auto set compute_device_type, depend on the computer
+            for compute_device_type in ('METAL', 'CUDA', 'OPENCL', 'NONE'):
+                try:
+                    cprefs.compute_device_type = compute_device_type
+                    break
+                except TypeError:
+                    pass
 
     @property
     def run_render(self):

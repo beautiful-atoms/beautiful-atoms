@@ -215,6 +215,16 @@ class BaseObject():
         bmesh.ops.delete(bm, geom=verts_select, context='VERTS')
         bm.to_mesh(obj.data)
         bm.clear()
+    
+    @property
+    def shape_keys(self):
+        base_name = "Basis_%s"%self.obj_name
+        if self.obj.data.shape_keys is None and len(self) > 0:
+            sk = self.obj.shape_key_add(name=base_name)
+        return self.obj.data.shape_keys
+    
+    def __len__(self):
+        return len(self.obj.data.vertices)
 
 
 class ObjectGN(BaseObject):
@@ -241,16 +251,6 @@ class ObjectGN(BaseObject):
         if obj is None:
             flag = False
         return flag
-
-    @property
-    def obj(self):
-        return self.get_obj()
-
-    def get_obj(self):
-        obj = bpy.data.objects.get(self.obj_name)
-        if obj is None:
-            raise KeyError('%s object is not exist.' % self.obj_name)
-        return obj
 
     @property
     def gnodes(self):
@@ -471,11 +471,15 @@ class ObjectGN(BaseObject):
         object_mode()
         from batoms.utils import local2global
         natom = len(self)
-        if len(local_positions) != natom:
+        n = len(local_positions)
+        if n != natom:
             raise ValueError('local_positions has wrong shape %s != %s.' %
-                             (len(local_positions), natom))
+                             (n, natom))
+        # no shape key for empty mesh
+        if natom == 0:
+            return
         local_positions = local_positions.reshape((natom*3, 1))
-        self.obj.data.shape_keys.key_blocks[0].data.foreach_set(
+        self.shape_keys.key_blocks[0].data.foreach_set(
             'co', local_positions)
         self.obj.data.update()
         bpy.context.view_layer.objects.active = self.obj
@@ -506,9 +510,13 @@ class ObjectGN(BaseObject):
         object_mode()
         from batoms.utils import local2global
         natom = len(self)
-        if len(positions) != natom:
+        nposition = len(positions)
+        if nposition != natom:
             raise ValueError('positions has wrong shape %s != %s.' %
-                             (len(positions), natom))
+                             (nposition, natom))
+        # no shape key for empty mesh
+        if natom == 0:
+            return
         positions = local2global(positions,
                                  np.array(self.obj.matrix_world),
                                  reversed=True)
@@ -517,7 +525,7 @@ class ObjectGN(BaseObject):
         # I don't know why 'Basis' shape keys is not updated when editing mesh,
         # so we edit the 'Basis' shape keys directly.
         # self.obj.data.vertices.foreach_set('co', positions)
-        self.obj.data.shape_keys.key_blocks[0].data.foreach_set(
+        self.shape_keys.key_blocks[0].data.foreach_set(
             'co', positions)
         self.obj.data.update()
         self.update_mesh(obj=object)
@@ -583,6 +591,9 @@ class ObjectGN(BaseObject):
         nframe = len(centers)
         if nframe == 0:
             return
+        # shape key should not be add for empty mesh
+        if len(frames[0]) == 0:
+            return
         # name = '%s_bond%s'%(self.label, sp)
         # obj = bpy.data.objects.get(name)
         base_name = 'Basis_%s' % (name)
@@ -621,9 +632,6 @@ class ObjectGN(BaseObject):
             positions = frames[i]
             vertices = positions.reshape((nvert*3, 1))
             sk.data.foreach_set('co', vertices)
-
-    def __len__(self):
-        return len(self.obj.data.vertices)
 
     def delete_obj(self, name):
         if name in bpy.data.objects:

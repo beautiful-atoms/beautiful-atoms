@@ -767,6 +767,8 @@ class Bonds(BaseCollection, ObjectGN):
         if len(offsets[0]) != n:
             raise ValueError('offsets has wrong shape %s != %s.' %
                              (len(offsets[0]), n))
+        if n == 0:
+            return
         for i in range(4):
             vertices = offsets[i].reshape((n*3, 1))
             objs[i].data.vertices.foreach_set('co', vertices)
@@ -974,7 +976,7 @@ class Bonds(BaseCollection, ObjectGN):
 
         """
         from batoms.neighborlist import bondlist_kdtree
-        bondlists = np.zeros((0, 10), dtype=int)
+        bondlists = np.zeros((0, 11), dtype=int)
         bonddatas = {}
         if len(setting) == 0:
             return bondlists, bonddatas, {}, {}
