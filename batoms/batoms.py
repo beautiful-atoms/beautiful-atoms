@@ -258,6 +258,7 @@ class Batoms(BaseCollection, ObjectGN):
         # add new output sockets
         for att in default_GroupInput:
             GroupInput.outputs.new(type=att[1], name=att[0])
+        for att in default_GroupInput:
             inputs.new(att[1], att[0])
             id = inputs[att[0]].identifier
             modifier['%s_use_attribute' % id] = True
