@@ -78,7 +78,7 @@ class Bcell(ObjectGN):
     def build_geometry_node(self):
         """
         """
-        from batoms.utils.butils import get_nodes_by_name
+        from batoms.utils.butils import get_nodes_by_name, compareNodeType
         name = 'GeometryNodes_%s_cell' % self.label
         modifier = self.obj.modifiers.new(name=name, type='NODES')
         modifier.node_group.name = name
@@ -169,16 +169,11 @@ class Bcell(ObjectGN):
                                             '%s_SetPosition_%s' % (
                                                 self.label, i),
                                             'GeometryNodeSetPosition')
-            if '3.1.0' in bpy.app.version_string:
-                CompareSelect = get_nodes_by_name(gn.node_group.nodes,
-                                                  'select_%s_%s' % (
-                                                      self.label, i),
-                                                  'FunctionNodeCompare')
-            else:
-                CompareSelect = get_nodes_by_name(gn.node_group.nodes,
-                                                  'select_%s_%s' % (
-                                                      self.label, i),
-                                                  'FunctionNodeCompareFloats')
+            CompareSelect = get_nodes_by_name(gn.node_group.nodes,
+                                              'select_%s_%s' % (
+                                                  self.label, i),
+                                              compareNodeType)
+
             CompareSelect.operation = 'EQUAL'
             CompareSelect.inputs[1].default_value = i + 4
             gn.node_group.links.new(
@@ -272,16 +267,16 @@ class Bcell(ObjectGN):
         """
         In this case, the origin is translated to vertices[0].
         While the orientation is reserved. 
-        
+
         Returns:
             (3x3 local_array): The array of cell.
         """
         positions = self.local_positions
         local_array = np.array([positions[1] - positions[0],
-                         positions[2] - positions[0],
-                         positions[3] - positions[0]])
+                                positions[2] - positions[0],
+                                positions[3] - positions[0]])
         return local_array
-    
+
     @property
     def array(self):
         return self.get_array()
@@ -290,7 +285,7 @@ class Bcell(ObjectGN):
         """
         In this case, the origin is translated to vertices[0].
         While the orientation is reserved. 
-        
+
         Returns:
             (3x3 array): The array of cell.
         """
@@ -308,14 +303,14 @@ class Bcell(ObjectGN):
         """
         """
         positions = np.array([[0, 0, 0],
-                          [1, 0, 0],
-                          [0, 1, 0],
-                          [0, 0, 1],
-                          [1, 1, 0],
-                          [1, 0, 1],
-                          [0, 1, 1],
-                          [1, 1, 1],
-                          ])
+                              [1, 0, 0],
+                              [0, 1, 0],
+                              [0, 0, 1],
+                              [1, 1, 0],
+                              [1, 0, 1],
+                              [0, 1, 1],
+                              [1, 1, 1],
+                              ])
         positions = np.dot(positions, array)
         return positions
 
@@ -416,15 +411,15 @@ class Bcell(ObjectGN):
         else:
             coll = bpy.data.collections["Collection"]
         obj = draw_cylinder(name=name,
-                      datas=cell_cylinder,
-                      coll=coll
-                      )
+                            datas=cell_cylinder,
+                            coll=coll
+                            )
         if self.batoms is not None:
             obj.parent = self.batoms.obj
 
     @property
     def obj_cylinder(self):
-        obj = bpy.data.objects.get('%s_cylinder'%self.obj_name)
+        obj = bpy.data.objects.get('%s_cylinder' % self.obj_name)
         if obj is None:
             raise KeyError('%s object is not exist.' % self.obj_name)
         return obj

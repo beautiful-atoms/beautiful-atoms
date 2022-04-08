@@ -324,7 +324,7 @@ def hideOneLevel():
 
 
 # ========================================================
-if '3.1.0' in bpy.app.version_string:
+if bpy.app.version_string > '3.1.0':
     compareNodeType = 'FunctionNodeCompare'
 else:
     compareNodeType = 'FunctionNodeCompareFloats'
