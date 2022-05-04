@@ -672,6 +672,7 @@ class BatomsCollection(bpy.types.PropertyGroup):
         default='0')
 
     show_unit_cell: BoolProperty(name="show_unit_cell", default=True)
+    show_axes: BoolProperty(name="show_axes", default=True)
     show_label: StringProperty(name="show_label", default="Index")
 
     show_search: BoolProperty(name="show_search", default=False)

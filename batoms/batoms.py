@@ -424,7 +424,7 @@ class Batoms(BaseCollection, ObjectGN):
         """
         self.coll_name = label
         self.obj_name = label
-        self._cell = Bcell(label=label)
+        self._cell = Bcell(label=label, batoms = self)
         self._species = Bspecies(label, label, {}, self)
         self.selects = Selects(label, self)
 
