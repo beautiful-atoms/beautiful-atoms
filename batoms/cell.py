@@ -33,8 +33,8 @@ class Bcell(ObjectGN):
         self.color = color
         if array is not None:
             self.build_object(array, location)
-        if self.show_axes:
-            self.show_axes = True
+        # if self.show_axes:
+            # self.show_axes = True
 
     def build_object(self, array, location):
         """
@@ -425,7 +425,8 @@ class Bcell(ObjectGN):
         if obj is None:
             raise KeyError('%s object is not exist.' % self.obj_name)
         return obj
-    
+
+
     @property
     def draw_crystal_axes(self):
         """draw_crystal_axes object.

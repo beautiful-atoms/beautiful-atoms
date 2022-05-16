@@ -5,6 +5,7 @@ import gpu
 from gpu_extras.batch import batch_for_shader
 import numpy as np
 
+
 class DrawText:
     def __init__(self, context, label):
         self.label = label
@@ -37,7 +38,6 @@ class DrawText:
             delattr(self, "_handle_label")
 
 
-
 class DrawCrystalAxes:
     def __init__(self, context, label):
         self.label = label
@@ -53,7 +53,7 @@ class DrawCrystalAxes:
         font_id = 0
         n = len(cell)
         origin = view3d_utils.location_3d_to_region_2d(
-                region, rv3d, [0, 0, 0], default=None)
+            region, rv3d, [0, 0, 0], default=None)
         for i in range(3):
             color = [0, 0, 0, 1]
             color[i] = 1
@@ -77,7 +77,6 @@ class DrawCrystalAxes:
             # restore opengl defaults
             gpu.state.line_width_set(1.0)
             gpu.state.blend_set('NONE')
-
 
     def add_handle(self, cell):
         self._handle_label = bpy.types.SpaceView3D.draw_handler_add(
