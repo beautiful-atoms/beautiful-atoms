@@ -442,7 +442,10 @@ class Bcell(ObjectGN):
 
     @property
     def show_axes(self):
-        return self.batoms.coll.batoms.show_axes
+        if self.batoms is not None:
+            return self.batoms.coll.batoms.show_axes
+        else:
+            return False
 
     @show_axes.setter
     def show_axes(self, show_axes):

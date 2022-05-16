@@ -45,11 +45,13 @@ def unregister():
     # class
     custom_property.unregister_class()
     ops.unregister_class()
+    gui.unregister_class()
     modal.unregister_class()
     # manual
     ops.unregister_manual_map()
     # menu
     ops.unregister_menu()
+    gui.unregister_menu()
     # keymap
     gui.unregister_keymap()
     # hook
