@@ -16,11 +16,15 @@ from batoms.batoms import Batoms
 import bpy
 from . import (
     custom_property,
+    install_dependencies,
     ops,
     gui,
     console,
     modal,
 )
+
+# install pip dependencies
+install_dependencies.install()
 
 
 def register():
