@@ -20,6 +20,7 @@ from batoms.batoms import Batoms
 
 
 from . import (
+    preferences,
     custom_property,
     install_dependencies,
     ops,
@@ -31,6 +32,9 @@ from . import (
 
 
 def register():
+    # dependencies
+    install_dependencies.register_class()
+    preferences.register_class()
     # class
     custom_property.register_class()
     # class
@@ -49,6 +53,9 @@ def register():
 
 
 def unregister():
+    # dependencies
+    install_dependencies.unregister_class()
+    preferences.unregister_class()
     # class
     custom_property.unregister_class()
     ops.unregister_class()
