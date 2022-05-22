@@ -1680,7 +1680,7 @@ class Batoms(BaseCollection, ObjectGN):
                           cell=self.cell, pbc=self.pbc)
             if with_attribute:
                 for name, array in arrays.items():
-                    if name in ['elements', 'positions']:
+                    if name in ['elements', 'positions', 'numbers']:
                         continue
                     atoms.set_array(name, np.array(array))
             images.append(atoms)
