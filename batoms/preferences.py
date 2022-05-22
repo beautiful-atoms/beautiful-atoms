@@ -1,11 +1,25 @@
+"""
+
+0) update batoms
+1) set custom file folder.
+2) set custom windows
+
+"""
+
 import bpy
 from bpy.types import AddonPreferences
 from bpy.props import (
     BoolProperty,
 )
 from . import install_dependencies
+import pathlib
 
 
+cwd = pathlib.Path().resolve()
+
+DEFAULT_GITHUB_ACCOUNT = "superstar54"
+DEFAULT_REPO_NAME = "beautiful-atoms"
+DEFAULT_PLUGIN_NAME = "batoms"
 
 bpy.context.preferences.view.use_translate_new_dataname = False
 bpy.context.preferences.inputs.use_rotate_around_active = True
@@ -20,6 +34,10 @@ bpy.context.preferences.inputs.use_mouse_emulate_3_button = True
 # set python console
 
 # bpy.context.window.workspace = bpy.data.workspaces['UV Editing']
+
+
+
+
 
 class BatomsAddonPreferences(AddonPreferences):
     bl_idname = __package__
@@ -65,6 +83,15 @@ class BatomsAddonPreferences(AddonPreferences):
     def draw(self, context):
         layout = self.layout
 
+        layout.label(text="Welcome to Batoms!")
+        # Check Blender version
+        if bpy.app.version_string < '3.0.0':
+            box = layout.box().column()
+            box.label(text="Warning: Batoms need Blender version > 3.0.0.")
+
+        box = layout.box().column()
+        row = box.row(align=True)
+        row.operator("batoms.update", icon="FILE_REFRESH")
         row = layout.row()
         col = row.column()
         col.label(text="Dependencies:")
@@ -114,9 +141,10 @@ class BatomsAddonPreferences(AddonPreferences):
             self.has_openbabel = True
             col.prop(self, "has_openbabel", text="openbabel")
 
-
+from . import install
     
-classes = [BatomsAddonPreferences]
+classes = [BatomsAddonPreferences, 
+install.BatomsUpdateButton]
 
 def register_class():
     from bpy.utils import register_class
