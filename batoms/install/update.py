@@ -33,8 +33,8 @@ def gitclone(workdir=".", version="main", url=repo_git):
     """
     import shutil
     import pathlib
-    workdir = pathlib.Path(__file__).parent.resolve()
-    addon_dir = os.path.dirname(workdir)
+    batoms_dir = os.path.dirname(pathlib.Path(__file__).parent.resolve())
+    addon_dir = os.path.dirname(batoms_dir)
     clone_into = os.path.join(addon_dir, repo_name)
     if os.path.exists(clone_into) and os.path.isdir(clone_into):
         shutil.rmtree(clone_into)
@@ -56,12 +56,11 @@ def gitclone(workdir=".", version="main", url=repo_git):
         print("Faild to clone")
     #
     src = os.path.join(clone_into, "batoms")
-    dst = os.path.dirname(workdir)
-    if os.path.exists(workdir) and os.path.isdir(workdir):
-        print("Remove old Batoms folder {}".format(workdir))
-        shutil.rmtree(workdir)
-    print("Move {} to {}".format(src, dst))
-    shutil.move(src, dst)
+    if os.path.exists(batoms_dir) and os.path.isdir(batoms_dir):
+        print("Remove old Batoms folder {}".format(batoms_dir))
+        shutil.rmtree(batoms_dir)
+    print("Move {} to {}".format(src, addon_dir))
+    shutil.move(src, addon_dir)
 
 class BatomsUpdateButton(bpy.types.Operator):
     """Update Batoms"""
