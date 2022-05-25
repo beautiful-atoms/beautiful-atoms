@@ -27,7 +27,6 @@ def install_pip():
     subprocess.call(cmd)
     # upgrade
     cmd = [sys.executable, "-m", "pip", "install", "--upgrade", "pip"]
-    cmd = [sys.executable, "-m", "pip", "install", "wheel"]
     subprocess.call(cmd)
     if not has_pip():
         print("pip cannot be installed, please install pip manually.")
@@ -53,8 +52,8 @@ def install():
 
 
 
-class Batoms_install_package(Operator):
-    bl_idname = "batoms.install_package"
+class BatomsInstallPackage(Operator):
+    bl_idname = "batoms.pip_install_package"
     bl_label = "pip install"
     bl_description = ("Install pip dependencies")
 
@@ -76,14 +75,19 @@ class Batoms_install_package(Operator):
             return {"CANCELLED"}
         return {"FINISHED"}
 
-classes = [Batoms_install_package]
+
+classes = [
+    BatomsInstallPackage,
+]
 
 def register_class():
     from bpy.utils import register_class
     for cls in classes:
         register_class(cls)
+    
 
 def unregister_class():
     from bpy.utils import unregister_class
     for cls in reversed(classes):
         unregister_class(cls)
+    

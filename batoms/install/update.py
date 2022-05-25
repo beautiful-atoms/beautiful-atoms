@@ -22,7 +22,7 @@ DEFAULT_PLUGIN_NAME = "batoms"
 
 repo_git = f"https://github.com/{account_name}/{repo_name}.git"
 
-def run(cmds):
+def subprocess_run(cmds):
     try:
         p = subprocess.Popen(cmds,
             stdout=subprocess.PIPE,
@@ -35,15 +35,15 @@ def run(cmds):
     return False
 
 def has_git():
-    return run(['git','--version'])
+    return subprocess_run(['git','--version'])
 
 def gitclone(workdir=".", version="main", url=repo_git):
     """Make a git clone to the directory
     version can be a branch name or tag name
     """
     import shutil
-    import batoms
-    workdir = batoms.__path__[0]
+    import pathlib
+    workdir = pathlib.Path(__file__).parent.resolve()
     # workdir = pathlib.Path().resolve()
     addon_dir = os.path.dirname(workdir)
     clone_into = os.path.join(addon_dir, repo_name)
@@ -60,17 +60,19 @@ def gitclone(workdir=".", version="main", url=repo_git):
         f"{url}",
         clone_into,
     ]
-    if run(commands):
+    # flag = subprocess_run(commands)
+    flag = True
+    if flag:
         print(f"Cloned repo into directory {clone_into}")
     else:
         print("Faild to clone")
     #
     src = os.path.join(clone_into, "batoms")
     dst = os.path.dirname(workdir)
-    if os.path.exists(workdir) and os.path.isdir(workdir):
-        shutil.rmtree(workdir)
+    # if os.path.exists(workdir) and os.path.isdir(workdir):
+        # shutil.rmtree(workdir)
     print(src, dst)
-    shutil.move(src, dst)
+    # shutil.move(src, dst)
 
 class BatomsUpdateButton(bpy.types.Operator):
     """Update Batoms"""
@@ -86,19 +88,3 @@ class BatomsUpdateButton(bpy.types.Operator):
         gitclone()
         return {"FINISHED"}
 
-classes = [BatomsUpdateButton]
-
-def register_class():
-    from bpy.utils import register_class
-    for cls in classes:
-        register_class(cls)
-
-def unregister_class():
-    from bpy.utils import unregister_class
-    for cls in reversed(classes):
-        unregister_class(cls)
-
-if __name__ == "__main__":
-    print(has_git())
-    gitclone()
-    

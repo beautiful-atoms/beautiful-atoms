@@ -13,8 +13,8 @@ rendering atomic structures using blender.""",
 }
 
 # install pip dependencies
-from . import install_dependencies
-install_dependencies.install()
+from .install import pip_dependencies
+pip_dependencies.install()
 
 from batoms.batoms import Batoms
 
@@ -22,7 +22,7 @@ from batoms.batoms import Batoms
 from . import (
     preferences,
     custom_property,
-    install_dependencies,
+    pip_dependencies,
     ops,
     gui,
     console,
@@ -33,7 +33,7 @@ from . import (
 
 def register():
     # dependencies
-    install_dependencies.register_class()
+    pip_dependencies.register_class()
     preferences.register_class()
     # class
     custom_property.register_class()
@@ -54,7 +54,7 @@ def register():
 
 def unregister():
     # dependencies
-    install_dependencies.unregister_class()
+    pip_dependencies.unregister_class()
     preferences.unregister_class()
     # class
     custom_property.unregister_class()
