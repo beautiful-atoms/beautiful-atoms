@@ -24,21 +24,47 @@ dependencies = {"ase": "ase",
                 }
 
 
-# bpy.context.window.workspace = bpy.data.workspaces['UV Editing']
+DEFAULT_GITHUB_ACCOUNT = "superstar54"
+DEFAULT_REPO_NAME = "beautiful-atoms"
+DEFAULT_PLUGIN_NAME = "batoms"
+
+
+class BatomsDefaultPreference(bpy.types.Operator):
+    """Update Batoms"""
+    bl_idname = "batoms.use_batoms_preference"
+    bl_label = "Use defatul preference of Batoms"
+    bl_description = "Use startup file of Batoms"
+
+    def execute(self, context):
+        bpy.context.preferences.view.use_translate_new_dataname = False
+        bpy.context.preferences.inputs.use_rotate_around_active = True
+        bpy.context.preferences.inputs.use_zoom_to_mouse = True
+        # For laptop
+        bpy.context.preferences.inputs.use_emulate_numpad = True
+        # For laptop without mouse
+        bpy.context.preferences.inputs.use_mouse_emulate_3_button = True
+        # bpy.context.window.workspace = bpy.data.workspaces['UV Editing']
+        return {'FINISHED'}
 
 class BatomsDefaultStartup(bpy.types.Operator):
     """Update Batoms"""
     bl_idname = "batoms.use_batoms_startup"
     bl_label = "Use startup file of Batoms"
-    bl_description = "Use startup file of Batoms"
+    bl_description = "Use defatul startup of Batoms"
 
     def execute(self, context):
-        if not has_git():
-            self.report({"ERROR"}, "Please install Git first.")
-            print("Please install Git first.")
-            return {"CANCELLED"}
-        gitclone()
-        return {"FINISHED"}
+        import sys, os
+        import pathlib
+        addon_dir = pathlib.Path(__file__).parent.resolve()
+        blend_dir = os.path.join(addon_dir, "data/startup.blend")
+        print(blend_dir)
+        bpy.ops.wm.open_mainfile(filepath=blend_dir, load_ui=True, use_scripts=True) 
+        bpy.ops.wm.save_homefile()
+        self.report({"INFO"}, "Load default startup successfully!")
+        # todo open preference again.
+        # bpy.ops.screen.userpref_show('INVOKE_DEFAULT')
+        # bpy.ops.preferences.addon_show(module="batoms")
+        return {'FINISHED'}
 
 class BatomsAddonPreferences(AddonPreferences):
     bl_idname = __package__
@@ -101,6 +127,11 @@ class BatomsAddonPreferences(AddonPreferences):
         row = box.row(align=True)
         row.operator("batoms.update", icon="FILE_REFRESH")
         layout.separator()
+        #
+        layout.operator("batoms.use_batoms_startup", icon="FILE_REFRESH")
+        layout.operator("batoms.use_batoms_preference", icon="FILE_REFRESH")
+        layout.separator()
+
         row = layout.row()
         col = row.column()
         col.label(text="Dependencies:")
@@ -120,7 +151,9 @@ class BatomsAddonPreferences(AddonPreferences):
         box.label(text="Custom Settings")
         box.prop(self, "batoms_setting_path")
 
-classes = [BatomsAddonPreferences,
+classes = [BatomsDefaultPreference,
+            BatomsDefaultStartup,
+            BatomsAddonPreferences,
            update.BatomsUpdateButton,
            ]
 
