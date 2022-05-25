@@ -73,6 +73,7 @@ class BatomsInstallPackage(Operator):
         if not has_module(self.modname):
             self.report({"WARNING"}, "Cannot install package: {}".format(self.package))
             return {"CANCELLED"}
+        self.report({"INFO"}, "Install package {} successfully!".format(self.package))
         return {"FINISHED"}
 
 

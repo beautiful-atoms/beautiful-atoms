@@ -43,6 +43,7 @@ class BatomsDefaultPreference(bpy.types.Operator):
         # For laptop without mouse
         bpy.context.preferences.inputs.use_mouse_emulate_3_button = True
         # bpy.context.window.workspace = bpy.data.workspaces['UV Editing']
+        self.report({"INFO"}, "Set default preferences successfully!")
         return {'FINISHED'}
 
 class BatomsDefaultStartup(bpy.types.Operator):

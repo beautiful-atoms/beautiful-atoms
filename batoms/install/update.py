@@ -58,8 +58,9 @@ def gitclone(workdir=".", version="main", url=repo_git):
     src = os.path.join(clone_into, "batoms")
     dst = os.path.dirname(workdir)
     if os.path.exists(workdir) and os.path.isdir(workdir):
+        print("Remove old Batoms folder {}".format(workdir))
         shutil.rmtree(workdir)
-    # print(src, dst)
+    print("Move {} to {}".format(src, dst))
     shutil.move(src, dst)
 
 class BatomsUpdateButton(bpy.types.Operator):
@@ -74,5 +75,6 @@ class BatomsUpdateButton(bpy.types.Operator):
             print("Please install Git first.")
             return {"CANCELLED"}
         gitclone()
+        self.report({"INFO"}, "Update to the latest version successfully!")
         return {"FINISHED"}
 
