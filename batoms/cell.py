@@ -33,6 +33,8 @@ class Bcell(ObjectGN):
         self.color = color
         if array is not None:
             self.build_object(array, location)
+        # if self.show_axes:
+            # self.show_axes = True
 
     def build_object(self, array, location):
         """
@@ -423,3 +425,33 @@ class Bcell(ObjectGN):
         if obj is None:
             raise KeyError('%s object is not exist.' % self.obj_name)
         return obj
+
+
+    @property
+    def draw_crystal_axes(self):
+        """draw_crystal_axes object.
+        Shoud be a global variable.
+        """
+        from batoms.draw.draw_screen import DrawCrystalAxes
+        dns = bpy.app.driver_namespace
+        name = "{}_crystal_axes".format(self.label)
+        if self.label in dns:
+            return dns[self.label]
+        context = bpy.context
+        dns[name] = DrawCrystalAxes(context, name)
+        return dns[name]
+
+    @property
+    def show_axes(self):
+        if self.batoms is not None:
+            return self.batoms.coll.batoms.show_axes
+        else:
+            return False
+
+    @show_axes.setter
+    def show_axes(self, show_axes):
+        self.batoms.coll.batoms.show_axes = show_axes
+        positions = self.array
+        self.draw_crystal_axes.remove_handle()
+        if show_axes:
+            self.draw_crystal_axes.add_handle(positions)

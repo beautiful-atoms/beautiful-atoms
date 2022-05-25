@@ -10,7 +10,7 @@ from bpy.props import (StringProperty,
                        PointerProperty,
                        CollectionProperty,
                        )
-
+from bpy.types import Collection, Object
 
 class Base(bpy.types.PropertyGroup):
 
@@ -672,6 +672,7 @@ class BatomsCollection(bpy.types.PropertyGroup):
         default='0')
 
     show_unit_cell: BoolProperty(name="show_unit_cell", default=True)
+    show_axes: BoolProperty(name="show_axes", default=True)
     show_label: StringProperty(name="show_label", default="Index")
 
     show_search: BoolProperty(name="show_search", default=False)
@@ -788,3 +789,52 @@ class BatomsObject(bpy.types.PropertyGroup):
                            type=Blight)
     camera: PointerProperty(name='Bcamera',
                             type=Bcamera)
+
+
+
+
+classes = [
+    Belement,
+    Bspecies,
+    Batom,
+    Bcell,
+    Bbond,
+    Bpolyhedra,
+    Bisosurface,
+    Bcavity,
+    Bvolume,
+    Bplane,
+    Blight,
+    Bcamera,
+    Brender,
+    Bsheet,
+    Bhelix,
+    Bturn,
+    Bselect,
+    Bms,
+    BatomsCollection,
+    BatomsObject,
+]
+
+
+
+
+def register_class():
+    from bpy.utils import register_class
+    for cls in classes:
+        register_class(cls)
+    
+    Collection.batoms = PointerProperty(name='Batoms',
+                                        type=BatomsCollection)
+    Object.batoms = PointerProperty(name='Batoms',
+                                    type=BatomsObject)
+    
+
+def unregister_class():
+    from bpy.utils import unregister_class
+    for cls in reversed(classes):
+        unregister_class(cls)
+    
+    del Collection.batoms
+    del Object.batoms
+    
