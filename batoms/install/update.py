@@ -59,8 +59,8 @@ def gitclone(workdir=".", version="main", url=repo_git):
     if os.path.exists(batoms_dir) and os.path.isdir(batoms_dir):
         print("Remove old Batoms folder {}".format(batoms_dir))
         shutil.rmtree(batoms_dir)
-    print("Move {} to {}".format(src, addon_dir))
-    shutil.move(src, addon_dir)
+    print("Move {} to {}".format(src, batoms_dir))
+    shutil.move(src, batoms_dir)
 
 class BatomsUpdateButton(bpy.types.Operator):
     """Update Batoms"""
