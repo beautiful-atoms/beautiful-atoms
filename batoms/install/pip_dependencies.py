@@ -11,6 +11,7 @@ dependencies = {"ase": "ase",
 
 
 def has_pip():
+    # check pip exist or not
     return not subprocess.call([sys.executable, "-m", "pip", "--version"])
 
 def has_module(modname):
@@ -21,7 +22,6 @@ def has_module(modname):
         return False
 
 def install_pip():
-    # check pip exist or not
     # if not exist
     cmd = [sys.executable, "-m", "ensurepip", "--upgrade"]
     subprocess.call(cmd)

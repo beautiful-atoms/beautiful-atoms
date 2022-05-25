@@ -1,19 +1,9 @@
 """
-
-0) update batoms
-1) set custom file folder.
-2) set custom windows
-
+update batoms
 """
 
 import bpy
-from bpy.types import AddonPreferences
-from bpy.props import (
-    BoolProperty,
-)
-import pathlib
 import subprocess
-import sys
 import os
 
 account_name = "superstar54"
@@ -44,10 +34,8 @@ def gitclone(workdir=".", version="main", url=repo_git):
     import shutil
     import pathlib
     workdir = pathlib.Path(__file__).parent.resolve()
-    # workdir = pathlib.Path().resolve()
     addon_dir = os.path.dirname(workdir)
     clone_into = os.path.join(addon_dir, repo_name)
-    print(clone_into)
     if os.path.exists(clone_into) and os.path.isdir(clone_into):
         shutil.rmtree(clone_into)
     commands = [
@@ -60,7 +48,7 @@ def gitclone(workdir=".", version="main", url=repo_git):
         f"{url}",
         clone_into,
     ]
-    # flag = subprocess_run(commands)
+    flag = subprocess_run(commands)
     flag = True
     if flag:
         print(f"Cloned repo into directory {clone_into}")
@@ -69,10 +57,10 @@ def gitclone(workdir=".", version="main", url=repo_git):
     #
     src = os.path.join(clone_into, "batoms")
     dst = os.path.dirname(workdir)
-    # if os.path.exists(workdir) and os.path.isdir(workdir):
-        # shutil.rmtree(workdir)
-    print(src, dst)
-    # shutil.move(src, dst)
+    if os.path.exists(workdir) and os.path.isdir(workdir):
+        shutil.rmtree(workdir)
+    # print(src, dst)
+    shutil.move(src, dst)
 
 class BatomsUpdateButton(bpy.types.Operator):
     """Update Batoms"""

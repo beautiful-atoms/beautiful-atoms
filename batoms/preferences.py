@@ -1,9 +1,9 @@
 """
 
-0) update batoms
 1) set custom file folder.
-2) set custom windows
-
+2) use default startup of batoms.
+3) use default preferences of batoms.
+#TODO  batoms_setting_path_update
 """
 
 import bpy
@@ -13,7 +13,6 @@ from bpy.props import (
     StringProperty,
 )
 from batoms.install.pip_dependencies import has_module
-import pathlib
 from batoms.install import update
 
 dependencies = {"ase": "ase",
@@ -57,7 +56,6 @@ class BatomsDefaultStartup(bpy.types.Operator):
         import pathlib
         addon_dir = pathlib.Path(__file__).parent.resolve()
         blend_dir = os.path.join(addon_dir, "data/startup.blend")
-        print(blend_dir)
         bpy.ops.wm.open_mainfile(filepath=blend_dir, load_ui=True, use_scripts=True) 
         bpy.ops.wm.save_homefile()
         self.report({"INFO"}, "Load default startup successfully!")
@@ -168,3 +166,4 @@ def unregister_class():
     from bpy.utils import unregister_class
     for cls in reversed(classes):
         unregister_class(cls)
+
