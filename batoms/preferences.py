@@ -43,6 +43,11 @@ class BatomsDefaultPreference(bpy.types.Operator):
         # For laptop without mouse
         bpy.context.preferences.inputs.use_mouse_emulate_3_button = True
         # bpy.context.window.workspace = bpy.data.workspaces['UV Editing']
+        # theme
+        bpy.context.preferences.themes[0].view_3d.space.gradients.background_type = "LINEAR"
+        bpy.context.preferences.themes[0].view_3d.space.gradients.high_gradient = (0.9, 0.9, 0.9)
+        bpy.context.preferences.themes[0].view_3d.space.gradients.gradient = (0.5, 0.5, 0.5)
+        bpy.ops.wm.save_userpref()
         self.report({"INFO"}, "Set default preferences successfully!")
         return {'FINISHED'}
 

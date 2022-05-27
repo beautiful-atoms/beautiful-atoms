@@ -20,7 +20,10 @@ def subprocess_run(cmds):
         stdout, stderr = p.communicate()
         if p.returncode == 0:
             return True
+        else:
+            print(stdout, stderr)
     except (OSError, Exception) as exception:
+        print(exception)
         return False
     return False
 
