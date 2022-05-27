@@ -48,6 +48,9 @@ jobs:
       - name: Run uninstallation script
         run: |
           $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
+      - name: Run installation script with startup and preferences
+        run: |
+          $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT}  --use-startup --use-preferences
 
   install-macos:
     defaults:
@@ -87,6 +90,9 @@ jobs:
       - name: Run installation script with auto path infer
         run: |
           $CONDA_PYTHON_EXE install.py
+      - name: Run installation script with startup and preferences
+        run: |
+          $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} --use-startup --use-preferences
       - name: Run uninstallation script with auto path infer
         run: |
           $CONDA_PYTHON_EXE install.py --uninstall
@@ -135,6 +141,9 @@ jobs:
           conda info
           conda list
           python install.py --use-pip
+      - name: Run installation script with startup and preferences
+        run: |
+          python install.py --use-pip $env:BLENDER_ROOT --use-startup --use-preferences
       - name: Run uninstallation script with auto path infer
         run: |
           python install.py --uninstall --use-pip
