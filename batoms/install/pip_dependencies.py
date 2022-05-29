@@ -36,14 +36,15 @@ def install_wheel():
 
 
 def install_module(package, modname):
-    if not has_pip():
-        install_pip()
     if not has_module(modname):
+        if not has_pip():
+            install_pip()
         cmd = [sys.executable, "-m", "pip",
                 "install", "--upgrade", package]
         subprocess.call(cmd)
-    else:
         print("package {0} installed.".format(package))
+    # else:
+        # print("package {0} installed.".format(package))
     return has_module(modname)
 
 def install():
