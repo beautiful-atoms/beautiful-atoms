@@ -20,6 +20,7 @@ from . import (
     ui_list_isosurface,
     ui_list_cavity,
     ui_list_ms,
+    ui_list_magres,
     view3d_mt_batoms_add,
 )
 
@@ -74,6 +75,9 @@ classes = [
     ui_list_ms.BATOMS_MT_ms_context_menu,
     ui_list_ms.BATOMS_UL_ms,
     ui_list_ms.BATOMS_PT_ms,
+    ui_list_magres.BATOMS_MT_magres_context_menu,
+    ui_list_magres.BATOMS_UL_magres,
+    ui_list_magres.BATOMS_PT_magres,
 ]
 
 def register_class():
