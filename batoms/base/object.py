@@ -413,6 +413,16 @@ class ObjectGN(BaseObject):
         return attributes
 
     def set_attributes(self, attributes):
+        """Set attributes
+        An attribute is a generic term to describe data stored per-element 
+        in a geometry data-block. For example, every vertex can have an 
+        associated number or vector. 
+        
+        class bpy.types.Attribute
+
+        Args:
+            attributes (dict): attributes bound to every atoms
+        """
         # tstart = time()
         me = self.obj.data
         for key, data in attributes.items():
@@ -427,7 +437,9 @@ class ObjectGN(BaseObject):
                 elif np.issubdtype(dtype, str):
                     dtype = 'STRING'
                 else:
-                    raise KeyError('%s is not supported.' % dtype)
+                    # raise KeyError('%s is not supported.' % dtype)
+                    print('Attribute: {}, {} is not supported.'.format(key, dtype))
+                    continue
                 att = me.attributes.new(name=key, type=dtype, domain='POINT')
             if att.data_type == 'STRING':
                 nvert = len(me.vertices)
