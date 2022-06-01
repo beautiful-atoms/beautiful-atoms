@@ -227,6 +227,7 @@ class Batoms(BaseCollection, ObjectGN):
             location (list, optional):
                 Location of the object. Defaults to [0, 0, 0].
         """
+        from batoms.attribute import Attributes
         self.delete_obj(label)
         mesh = bpy.data.meshes.new(label)
         # Add attributes

@@ -92,6 +92,56 @@ class Batom(bpy.types.PropertyGroup):
         default='0')
 
 
+class Battribute(Base):
+    """
+    """
+    flag: BoolProperty(name="flag", default=False)
+    name: StringProperty(name="name")
+    label: StringProperty(name="label", default='batoms')
+    type: EnumProperty(
+        name="type",
+        description="data type",
+        items=(('FLOAT', "FLOAT", "Floating-point value"),
+               ('INT', "INT", "32-bit integer"),
+               ("FLOAT_VECTOR", "FLOAT_VECTOR", "Vector – 3D vector with floating-point values."),
+               ("FLOAT_COLOR", "FLOAT_COLOR", "Color – RGBA color with floating-point values."),
+               ("BYTE_COLOR", "BYTE_COLOR", "Byte Color – RGBA color with 8-bit values."),
+               ("STRING", "STRING", "String – Text string."),
+               ("BOOLEAN", "BOOLEAN", "Boolean – True or false."),
+               ("FLOAT2", "FLOAT2", "2D Vector – 2D vector with floating-point values."),
+               ),
+        default='FLOAT')
+    domain: EnumProperty(
+        name="domain",
+        description="Domain",
+        items=(('POINT', "POINT", ""),
+               ('EDGE', "EDGE", ""),
+               ("FACE", "FACE", ""),
+               ),
+        default='FLOAT')
+    dimension: IntProperty(name="index", default=1)
+    shape: IntVectorProperty(name="shape", soft_min=0, size=32)
+
+    def as_dict(self) -> dict:
+        setdict = {
+            'flag': self.flag,
+            'label': self.label,
+            'name': self.name,
+            'color': self.color[:],
+            'probe': self.probe,
+            'resolution': self.resolution,
+            'select': self.select,
+        }
+        return setdict
+
+    def __repr__(self) -> str:
+        s = '-'*60 + '\n'
+        s = 'Name   select     probe   resolution    color  \n'
+        s += '{:6s}  {:6s}  {:1.3f}  {:1.3f}  [{:1.2f}  {:1.2f}  {:1.2f}   {:1.2f}] \n'.format(
+            self.name, self.select, self.probe, self.resolution, self.color[0], self.color[1], self.color[2], self.color[3])
+        s += '-'*60 + '\n'
+        return s
+        
 class Bsite(bpy.types.PropertyGroup):
     """
     """
@@ -839,6 +889,8 @@ class BatomsObject(bpy.types.PropertyGroup):
                            type=Blight)
     camera: PointerProperty(name='Bcamera',
                             type=Bcamera)
+    battribute: CollectionProperty(name='Battribute',
+                                 type=Battribute)
 
 
 

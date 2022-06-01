@@ -27,7 +27,7 @@ class MagresSetting(Setting):
         scale: float
             length of the largest tensor principal component [angstroms], default is 3.
         """
-        Setting.__init__(self, label)
+        Setting.__init__(self, label, coll_name=label)
         self.label = label
         self.name = 'bmagres'
         self.scale = scale

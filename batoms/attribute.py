@@ -1,59 +1,51 @@
+"""
+
+"""
+import bpy
 import numpy as np
+from time import time
+from batoms.base.collection import Setting
 
 
+class Attributes(Setting):
+    def __init__(self, label, parent
+                 ) -> None:
+        """Attributes object
+        The Attributes object store the attributes information.
 
+        Parameters:
 
-class Attribute:
-    def __init__(self, name, dtype = None, shape = (1),
-                domain = "POINT",
-                array = None,
-                batoms = None) -> None:
-        self.name = name
-        self.shape = shape
-        self.domain = domain
-        self.batoms = batoms
-        self.dtype = dtype
-        self.array = np.array(array)
-        self.shape = self.array.shape
-        self.subatt = {}
-        self.scatter()
+        label: str
+            The label define the batoms object that
+            a Setting belong to.
+        """
+        Setting.__init__(self, label)
+        self.label = label
+        self.name = 'battributes'
+        self.parent = parent
+
+    def add(self, name, datas={}):
+        self[name] = datas
+
+    def set_collection(self, label):
+        """
+        """
+        if not bpy.data.collections.get(label):
+            coll = bpy.data.collections.new(label)
+            self.parent.batoms.coll.children.link(coll)
+            coll.batoms.type = 'ATTRIBUTE'
+            coll.batoms.label = label
+
+    def __repr__(self) -> str:
+        s = "-"*60 + "\n"
+        s = "name  type domain dimension    shape\n"
+        for att in self.collection:
+            s += "{:4s}   {:6s}   {:6s}   {:}   [".format(
+                att.name, att.type, att.domain, att.dimension)
+            for i in range(att.dimension):
+                s += "  {}  ".format(att.shape[i])
+            s += "]"
+        s += "-"*60 + "\n"
+        return s
     
-    def scatter(self):
-        self.subatt = {}
-        if len(self.shape) == 1:
-            if self.dtype is None:
-                self.dtype = self.get_dtype(self.array[0])
-            self.subatt["{}".format(self.name)] = self.array
-        if len(self.shape) == 2:
-            if self.dtype is None:
-                self.dtype = self.get_dtype(self.array[0][0])
-            for i in range(self.shape[1]):
-                self.subatt["{}{}".format(self.name, i)] = self.array[:, i]
-        if len(self.shape) == 3:
-            if self.dtype is None:
-                self.dtype = self.get_dtype(self.array[0][0][0])
-            for i in range(self.shape[1]):
-                for j in range(self.shape[2]):
-                    self.subatt["{}{}{}".format(self.name, i, j)] = self.array[:, i, j]
-
-    def gather(self):
-        pass
-
-    
-    def get_dtype(self, data):
-        dtype = type(data)
-        if np.issubdtype(dtype, int):
-            dtype = 'INT'
-        elif np.issubdtype(dtype, float):
-            dtype = 'FLOAT'
-        elif np.issubdtype(dtype, str):
-            dtype = 'STRING'
-        elif np.issubdtype(dtype, bool):
-            dtype = 'BOOLEAN'
-        else:
-            raise KeyError('Attribute: {}, {} is not supported.'.format(self.name, dtype))
-        return dtype
-
-    def from_list(self, data):
-        pass
 

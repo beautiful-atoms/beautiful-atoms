@@ -408,7 +408,7 @@ class SheetSetting(Setting):
 
     def __init__(self, label, batoms=None,
                  ) -> None:
-        Setting.__init__(self, label)
+        Setting.__init__(self, label, coll_name=label)
         self.label = label
         self.name = 'bsheet'
         self.batoms = batoms
