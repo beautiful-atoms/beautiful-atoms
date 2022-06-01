@@ -306,6 +306,28 @@ def test_export_mesh_obj():
                      with_search_bond=True,
                      with_bond=True)
 
+###############################
+# Patch from TT for Atoms.array
+###############################
+def test_batoms_array():
+    import numpy as np
+    from batoms import Batoms
+    from batoms.bio.bio import read
+    import ase.io
+    atoms_ase = ase.io.read("../tests/datas/ch4_int_flag.extxyz")
+    # ASE treats additional I-field as np.int32, 
+    # but on most recent platforms default int is np.int64
+    # this may cause error in loading Batoms
+    assert atoms_ase.arrays["some_int_flag"].dtype in (np.int32, np.int64)
+    assert atoms_ase.arrays["positions"].dtype == np.float64
+    # Without patch following will throw error
+    atoms_bl = read("../tests/datas/ch4_int_flag.extxyz")
+    # Change the array to float32 should also work
+    atoms_ase2 = atoms_ase.copy()
+    arr = atoms_ase.get_array("some_int_flag")
+    atoms_ase2.set_array("some_int_flag", arr.astype("float32"))
+    atoms_bl2 = Batoms("ch4", from_ase=atoms_ase2)
+
 
 
 if __name__ == "__main__":
@@ -318,6 +340,7 @@ if __name__ == "__main__":
     test_batoms_wrap()
     test_batoms_supercell()
     test_batoms_occupy()
+    test_batoms_array()
     test_batoms_copy()
     test_replace()
     test_batoms_add()
