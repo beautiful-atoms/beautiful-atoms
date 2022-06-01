@@ -8,17 +8,13 @@ import bpy
 from time import time
 import numpy as np
 from batoms.base.object import ObjectGN
+from batoms.attribute import Attribute
 from batoms.cavity.cavitysetting import CavitySettings
 from scipy import spatial
 from batoms.utils.butils import object_mode, get_nodes_by_name
 from batoms.utils import string2Number
 
-default_attributes = [
-    ['species_index', 'INT'],
-    ['species', 'STRING'],
-    ['show', 'BOOLEAN'],
-    ['scale', 'FLOAT'],
-]
+
 
 default_GroupInput = [
     ['species_index', 'NodeSocketInt'],
@@ -29,7 +25,7 @@ default_GroupInput = [
 default_cavity_datas = {
     'species_index': np.ones(0, dtype=int),
     'centers': np.zeros((1, 0, 3)),
-    'show': np.zeros(0, dtype=int),
+    'show': np.zeros(1, dtype=int),
     'scale': np.ones(0, dtype=float),
 }
 
@@ -300,18 +296,19 @@ class Cavity(ObjectGN):
             centers = cavity_datas['centers'][0]
         else:
             raise Exception('Shape of centers is wrong!')
+        #
         attributes.update({
-            'species_index': cavity_datas['species_index'],
-            'show': cavity_datas['show'],
-            'scale': cavity_datas['scale'],
-            })
+            'species_index': Attribute("species_index", "INT", 
+                array=cavity_datas['species_index']),
+            'show': Attribute("show", "BOOLEAN", 
+                array=cavity_datas['show']),
+            'scale': Attribute("scale", "FLOAT", 
+                array=cavity_datas['scale']),
+        })
         name = self.obj_name
         self.delete_obj(name)
         mesh = bpy.data.meshes.new(name)
         # Add attributes
-        for attribute in default_attributes:
-            mesh.attributes.new(
-                name=attribute[0], type=attribute[1], domain='POINT')
         obj = bpy.data.objects.new(name, mesh)
         obj.data.from_pydata(centers, [], [])
         obj.batoms.type = 'CAVITY'
@@ -427,9 +424,14 @@ class Cavity(ObjectGN):
         elif dnvert < 0:
             self.delete_vertices_bmesh(-dnvert)
         self.set_frames(arrays)
-        self.set_attributes({'species_index': arrays['species_index']})
-        self.set_attributes({'scale': arrays['scale']})
-        self.set_attributes({'show': arrays['show']})
+        attributes = {
+            'species_index': Attribute("species_index", "INT", 
+                array=arrays['species_index']),
+            'show': Attribute("show", "BOOLEAN", 
+                array=arrays['show']),
+            'scale': Attribute("scale", "FLOAT", 
+                array=arrays['scale']),
+        }
         self.update_mesh()
         self.update_geometry_node_instancer()
 

@@ -1,7 +1,7 @@
 import numpy as np
 import math
 from time import time
-
+from batoms.attribute import Attribute
 
 def read_from_others(from_ase=None, from_pymatgen=None,
                      from_pybel=None):
@@ -26,23 +26,26 @@ def read_from_ase(atoms):
         frames = [atoms]
     nframe = len(frames)
     natom = len(atoms)
-    if 'species' not in atoms.arrays:
-        atoms.new_array('species', np.array(
-            atoms.get_chemical_symbols(), dtype='U20'))
-    if 'scale' not in atoms.arrays:
-        atoms.new_array('scale', np.ones(len(atoms)))
     arrays = atoms.arrays
-    species = arrays.pop('species')
+    if 'species' not in arrays:
+        species = np.array(atoms.get_chemical_symbols(), dtype='U20')
+    else:
+        species = arrays['species']
     info = atoms.info
     # read frames
     if nframe > 1:
         positions = np.zeros((nframe, natom, 3))
         for i in range(0, nframe):
             positions[i, :, :] = frames[i].positions
-        arrays.pop('positions')
     else:
-        positions = arrays.pop('positions')
-    return species, positions, arrays, atoms.cell, \
+        positions = arrays['positions']
+    # attributes
+    attributes = {}
+    for key, array in arrays.items():
+        if key in ["positions", "species"]:
+            continue
+        attributes[key] = Attribute(key, array=array)
+    return species, positions, attributes, atoms.cell, \
         npbool2bool(atoms.pbc), info
 
 

@@ -2,6 +2,7 @@ import bpy
 import numpy as np
 from batoms.utils.butils import (object_mode, set_look_at, get_nodes_by_name,
                                  update_object, object_mode)
+from batoms.attribute import Attribute
 # from time import time
 
 default_object_attributes = [
@@ -425,35 +426,27 @@ class ObjectGN(BaseObject):
         """
         # tstart = time()
         me = self.obj.data
-        for key, data in attributes.items():
+        for key, att_data in attributes.items():
             # print(key)
+            # print(att_data.array)
             att = me.attributes.get(key)
             if att is None:
-                dtype = type(attributes[key][0])
-                if np.issubdtype(dtype, int):
-                    dtype = 'INT'
-                elif np.issubdtype(dtype, float):
-                    dtype = 'FLOAT'
-                elif np.issubdtype(dtype, str):
-                    dtype = 'STRING'
-                else:
-                    # raise KeyError('%s is not supported.' % dtype)
-                    print('Attribute: {}, {} is not supported.'.format(key, dtype))
-                    continue
-                att = me.attributes.new(name=key, type=dtype, domain='POINT')
+                att = me.attributes.new(name=key, type=att_data.dtype,
+                        domain=att_data.domain)
             if att.data_type == 'STRING':
                 nvert = len(me.vertices)
                 for i in range(nvert):
-                    att.data[i].value = data[i]
+                    att.data[i].value = att_data.array[i]
             else:
-                att.data.foreach_set("value", data)
+                att.data.foreach_set("value", att_data.array)
         me.update()
         # print('set_attributes: %s'%(time() - tstart))
 
     def set_attribute_with_indices(self, name, indices, data):
         data0 = self.attributes[name]
         data0[indices] = data
-        self.set_attributes({name: data0})
+        attributes = {name: Attribute(name, array=data0)}
+        self.set_attributes(attributes)
 
     def get_attribute_with_indices(self, name, indices):
         return self.attributes[name][indices]

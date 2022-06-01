@@ -6,20 +6,12 @@ This module defines the polyhedras object in the Batoms package.
 
 import bpy
 from time import time
+from batoms.attribute import Attribute
 from batoms.utils.butils import object_mode, compareNodeType, get_nodes_by_name
 from batoms.utils import string2Number
 import numpy as np
 from batoms.base.object import ObjectGN
 from batoms.polyhedra.polyhedrasetting import PolyhedraSettings
-
-default_attributes = [
-    ['atoms_index1', 'INT', 'POINT'],
-    ['atoms_index2', 'INT', 'POINT'],
-    ['species_index', 'INT', 'POINT'],
-    ['face_species_index', 'INT', 'FACE'],
-    ['show', 'BOOLEAN', 'POINT'],
-    ['style', 'INT', 'POINT'],
-]
 
 default_GroupInput = [
     ['atoms_index1', 'NodeSocketInt', 'POINT'],
@@ -40,7 +32,7 @@ default_polyhedra_datas = {
     'edges': [],
     'faces': [],
     'widths': np.ones(0, dtype=float),
-    'show': np.zeros(0, dtype=int),
+    'shows': np.zeros(0, dtype=int),
 }
 
 
@@ -118,16 +110,19 @@ class Polyhedras(ObjectGN):
             offsets = datas['offsets'][0]
         else:
             raise Exception('Shape of vertices is wrong!')
-        nbond = len(datas['vertices'])
-        show = np.ones(nbond, dtype=int)
         attributes.update({
-            'atoms_index1': datas['atoms_index1'],
-            'atoms_index2': datas['atoms_index2'],
-            'species_index': datas['species_index'],
-            'face_species_index': datas['face_species_index'],
-            'show': show,
+            'atoms_index1': Attribute('atoms_index1', 'INT',
+                        array=datas['atoms_index1']),
+            'atoms_index1': Attribute('atoms_index1', 'INT',
+                        array=datas['atoms_index1']),
+            'species_index': Attribute('species_index', 'INT',
+                        array=datas['atoms_index1']),
+            'face_species_index': Attribute('face_species_index', "INT", 
+                    domain="FACE", array=datas['face_species_index']),
+            'show': Attribute('show', "BOOLEAN",
+                array=datas['shows']),
             # 'model_style': datas['model_styles'],
-        })
+            })
         name = self.obj_name
         self.delete_obj(name)
         mesh = bpy.data.meshes.new(name)
@@ -135,9 +130,6 @@ class Polyhedras(ObjectGN):
             vertices, datas['edges'], datas['faces'])
         mesh.update()
         obj = bpy.data.objects.new(name, mesh)
-        for attribute in default_attributes:
-            mesh.attributes.new(
-                name=attribute[0], type=attribute[1], domain=attribute[2])
         self.setting.coll.objects.link(obj)
         obj.batoms.type = 'POLYHEDRA'
         obj.batoms.label = self.label
@@ -431,11 +423,19 @@ class Polyhedras(ObjectGN):
         if len(arrays['vertices']) == len(attributes['show']):
             self.positions = arrays['vertices']
             self.offsets = arrays['offsets']
-            self.set_attributes({'atoms_index1': arrays['atoms_index1']})
-            self.set_attributes({'atoms_index2': arrays['atoms_index2']})
-            self.set_attributes({'species_index': arrays['species_index']})
-            self.set_attributes(
-                {'face_species_index': arrays['face_species_index']})
+            attributes.update({
+            'atoms_index1': Attribute('atoms_index1', 'INT',
+                        array=arrays['atoms_index1']),
+            'atoms_index1': Attribute('atoms_index1', 'INT',
+                        array=arrays['atoms_index1']),
+            'species_index': Attribute('species_index', 'INT',
+                        array=arrays['atoms_index1']),
+            'face_species_index': Attribute('face_species_index', "INT", 
+                    domain="FACE", array=arrays['face_species_index']),
+            'show': Attribute('show', "BOOLEAN",
+                array=arrays['shows']),
+            })
+            self.set_attributes(attributes)
             self.update_geometry_node_material()
         else:
             # add or remove vertices, rebuild the object
@@ -605,6 +605,7 @@ class Polyhedras(ObjectGN):
             datas = default_polyhedra_datas
         else:
             nf = len(faces)
+            shows = np.ones(n, dtype=int)
             datas = {
                 'atoms_index1': atoms_index1[0:n],
                 'atoms_index2': atoms_index2[0:n],
@@ -615,6 +616,7 @@ class Polyhedras(ObjectGN):
                 'widths': widths[0:n],
                 'edges': edges,
                 'faces': faces,
+                'shows': shows,
                 'model_styles': model_styles,
             }
         # print('datas: ', datas)

@@ -26,7 +26,7 @@ def test_cavity():
     tio2.cavity.draw()
     if use_cycles:
         set_cycles_res(tio2)
-    tio2.get_image([0, 1, 0], output="mof-5.png", **extras)
+    tio2.get_image([0, 1, 0], output="cavity-tio2.png", **extras)
 
 
 def test_cavity_zsm():
@@ -40,7 +40,7 @@ def test_cavity_zsm():
     mof.cavity.draw()
     if use_cycles:
         set_cycles_res(mof)
-    mof.get_image([0, 1, 0], output="mof-5.png", **extras)
+    mof.get_image([0, 1, 0], output="cavity-zsm.png", **extras)
 
 def test_cavity_mof():
     from batoms.bio.bio import read
@@ -53,5 +53,5 @@ def test_cavity_mof():
     mof.cavity.draw()
     if use_cycles:
         set_cycles_res(mof)
-    mof.get_image([0, 1, 0], output="mof-5.png", **extras)
+    mof.get_image([0, 1, 0], output="tio2-mof.png", **extras)
 

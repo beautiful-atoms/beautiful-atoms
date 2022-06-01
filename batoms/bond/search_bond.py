@@ -2,18 +2,10 @@ import bpy
 import numpy as np
 from time import time
 from batoms.base.object import ObjectGN
+from batoms.attribute import Attribute
 from batoms.utils.butils import object_mode, compareNodeType
 from batoms.utils import number2String, string2Number
 
-
-default_attributes = [
-    ['atoms_index', 'INT'],
-    ['species_index', 'INT'],
-    ['show', 'BOOLEAN'],
-    ['select', 'INT'],
-    ['model_style', 'INT'],
-    ['scale', 'FLOAT'],
-]
 
 default_GroupInput = [
     ['atoms_index', 'NodeSocketInt'],
@@ -83,12 +75,18 @@ class SearchBond(ObjectGN):
             raise Exception('Shape of positions is wrong!')
         #
         attributes.update({
-            'atoms_index': datas['atoms_index'],
-            'species_index': datas['species_index'],
-            'show': datas['shows'],
-            'model_style': datas['model_styles'],
-            'select': datas['selects'],
-            'scale': datas['scales'],
+            'atoms_index': Attribute("atoms_index", "INT", 
+                array=datas['atoms_index']),
+            'species_index': Attribute("species_index", "INT", 
+                array=datas['species_index']),
+            'show': Attribute("show", "BOOLEAN", 
+                array=datas['shows']),
+            'model_style': Attribute("model_style", "INT", 
+                array=datas['model_styles']),
+            'select': Attribute("select", "INT", 
+                array=datas['selects']),
+            'scale': Attribute("scale", "FLOAT", 
+                array=datas['scales']),
         })
         name = '%s_search_bond' % self.label
         self.delete_obj(name)
@@ -96,9 +94,6 @@ class SearchBond(ObjectGN):
         mesh.from_pydata(positions, [], [])
         mesh.update()
         obj = bpy.data.objects.new(name, mesh)
-        for attribute in default_attributes:
-            mesh.attributes.new(
-                name=attribute[0], type=attribute[1], domain='POINT')
         self.batoms.coll.objects.link(obj)
         obj.parent = self.batoms.obj
         #
@@ -293,12 +288,17 @@ class SearchBond(ObjectGN):
         self.set_frames(arrays)
         self.update_mesh()
         species_index = [string2Number(sp) for sp in arrays['species']]
-        self.set_attributes({
-                            'atoms_index': arrays["atoms_index"],
-                            'species_index': species_index,
-                            'scale': arrays['scales'],
-                            'show': arrays['shows'],
-                            })
+        attributes = {
+            'atoms_index': Attribute("atoms_index'", "INT", 
+                array=arrays["atoms_index"]),
+            'species_index': Attribute("species_index'", "INT", 
+                array=species_index),
+            'scale': Attribute("scale'", "INT", 
+                array=arrays['scales']),
+            'show': Attribute("show'", "BOOLEAN", 
+                array=arrays['shows']),
+            }
+        self.set_attributes(attributes)
         species = np.unique(arrays['species'])
         for sp in species:
             self.add_geometry_node(sp)
