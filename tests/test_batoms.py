@@ -246,8 +246,12 @@ def test_set_arrays_precision():
     # Change the array to float32 should also work
     atoms_ase2 = atoms_ase.copy()
     arr = atoms_ase.get_array("some_int_flag")
-    atoms_ase2.set_array("some_int_flag", arr.astype("float32"))
+    atoms_ase2.arrays["some_int_flag"] = np.array([1.0, 2.0, 2.0, 2.0, 2.0], dtype="float32")
+    assert atoms_ase2.get_array("some_int_flag").dtype == np.float32
     atoms_bl2 = Batoms("ch4", from_ase=atoms_ase2)
+    # get_attribute will return np.int64 and np.float64 explicitly
+    assert atoms_bl.attributes["some_int_flag"].dtype == np.int64
+    assert atoms_bl2.attributes["some_int_flag"].dtype == np.float64
 
 
 def test_repeat():
