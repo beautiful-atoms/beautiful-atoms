@@ -27,6 +27,7 @@ default_attributes = [
     ['model_style', 'INT'],
 ]
 
+
 default_GroupInput = [
     ['select', 'NodeSocketInt'],
     ['species_index', 'NodeSocketInt'],
@@ -187,6 +188,7 @@ class Batoms(BaseCollection, ObjectGN):
         self._lattice_plane = None
         self._crystal_shape = None
         self._ms = None
+        self._magres = None
         self._cavity = None
         show_index()
         self.hideOneLevel()
@@ -1501,6 +1503,20 @@ class Batoms(BaseCollection, ObjectGN):
     @ms.setter
     def ms(self, ms):
         self._ms = ms
+    
+    @property
+    def magres(self):
+        """magres object."""
+        from batoms.magres import Magres
+        if self._magres is not None:
+            return self._magres
+        magres = Magres(self.label, batoms=self)
+        self.magres = magres
+        return magres
+
+    @magres.setter
+    def magres(self, magres):
+        self._magres = magres
 
     @property
     def cavity(self):
