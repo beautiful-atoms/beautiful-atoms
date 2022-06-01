@@ -420,11 +420,13 @@ class ObjectGN(BaseObject):
             att = me.attributes.get(key)
             if att is None:
                 dtype = type(attributes[key][0])
-                if np.issubdtype(dtype, int):
+                # Update the subdtype check according to 
+                # https://github.com/numpy/numpy/blob/db481babcfa7ebc70833e77985858e9295a3135b/numpy/core/numerictypes.py#L357
+                if np.issubdtype(dtype, np.integer):
                     dtype = 'INT'
-                elif np.issubdtype(dtype, float):
+                elif np.issubdtype(dtype, np.floating):
                     dtype = 'FLOAT'
-                elif np.issubdtype(dtype, str):
+                elif np.issubdtype(dtype, np.str_):
                     dtype = 'STRING'
                 else:
                     raise KeyError('%s is not supported.' % dtype)
