@@ -27,7 +27,7 @@ class IsosurfaceSettings(Setting):
             isosurfacesetting (_type_, optional):
                 _description_. Defaults to None.
         """
-        Setting.__init__(self, label, coll_name='%s_isosurface' % label)
+        Setting.__init__(self, label, coll_name='%s' % label)
         self.label = label
         self.batoms = batoms
         self.parent = parent

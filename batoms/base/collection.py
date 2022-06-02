@@ -187,7 +187,7 @@ class Setting():
             obj = bpy.data.objects.get(self.obj_name)
             collection = getattr(obj.batoms, self.name)
         else:
-            raise KeyError("The collection property {}not exist!".format(self.name))
+            raise KeyError("The collection property {} not exist!".format(self.name))
         return collection
 
     @property

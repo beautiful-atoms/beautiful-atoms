@@ -100,7 +100,7 @@ class Bonds(BaseCollection, ObjectGN):
             self.update_geometry_nodes()
         else:
             self.setting = BondSettings(self.label, batoms=batoms, bonds=self)
-            self._attributes = Attributes(label=self.label, parent=self, obj_name=self.label)
+            self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
         self._search_bond = None
 
     def build_object(self, bond_datas, attributes={}):
