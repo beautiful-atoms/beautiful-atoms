@@ -5,8 +5,8 @@
 # TODO: add feature: cavity
 """
 import bpy
-from batoms.attribute import Attribute
 from batoms.bspecies import Bspecies
+from batoms.attribute import Attributes
 from batoms.cell import Bcell
 from batoms.bselect import Selects
 from batoms.base.collection import BaseCollection
@@ -17,6 +17,16 @@ from batoms.utils.butils import object_mode, show_index, \
 from batoms.utils import string2Number, read_from_others
 import numpy as np
 from time import time
+
+
+default_attributes = [
+    {"name": 'select', "type": 'INT', "dimension": 0},
+    {"name": 'species_index', "type": 'INT', "dimension": 0},
+    {"name": 'species', "type": 'STRING', "dimension": 0},
+    {"name": 'show', "type": 'BOOLEAN', "dimension": 0},
+    {"name": 'scale', "type": 'FLOAT', "dimension": 0},
+    {"name": 'model_style', "type": 'INT', "dimension": 0},
+]
 
 
 default_GroupInput = [
@@ -145,23 +155,17 @@ class Batoms(BaseCollection, ObjectGN):
                 scale = np.ones(natom)*scale
             show = np.ones(natom, dtype=int)
             species_index = [string2Number(sp) for sp in species]
-            attributes0 = {
-                'species': Attribute("species", dtype="STRING",
-                            array=species),
-                'species_index': Attribute("species_index", dtype="INT",
-                            array=species_index),
-                'scale': Attribute("scale", dtype="FLOAT",
-                            array=scale),
-                'show': Attribute("show", dtype="BOOLEAN",
-                            array=show),
-                'model_style': Attribute("model_style", dtype="INT",
-                            array=np.zeros(natom, dtype=int)),
-                'select': Attribute("select", dtype="INT",
-                            array=np.zeros(natom, dtype=int)),
-                }
+            arrays = {
+                      'species': species,
+                      'species_index': species_index,
+                      'scale': scale,
+                      'show': show,
+                      'model_style': np.zeros(natom, dtype=int),
+                      'select': np.zeros(natom, dtype=int),
+                      }
             if attributes is not None:
-                attributes0.update(attributes)
-            self.build_object(label, positions, attributes0, location)
+                arrays.update(attributes)
+            self.build_object(label, positions, arrays, location)
             self.selects = Selects(label, self)
             if species_props is None:
                 species_props = species
@@ -216,30 +220,32 @@ class Batoms(BaseCollection, ObjectGN):
         # hideOneLevel()
         pass
 
-    def build_object(self, label, positions, attributes, location=[0, 0, 0]):
+    def build_object(self, label, positions, arrays, location=[0, 0, 0]):
         """Build the main Batoms object
 
         Args:
             label (str):
                 Name of the object
-            attributes (array):
-                attributes of properties for each atoms
+            arrays (array):
+                arrays of properties for each atoms
             location (list, optional):
                 Location of the object. Defaults to [0, 0, 0].
         """
-        from batoms.attribute import Attributes
         self.delete_obj(label)
         mesh = bpy.data.meshes.new(label)
-        # Add attributes
         obj = bpy.data.objects.new(label, mesh)
         obj.data.from_pydata(positions, [], [])
         obj.location = location
         obj.batoms.type = 'BATOMS'
         obj.batoms.label = label
         self.coll.objects.link(obj)
+        #
+        self._attributes = Attributes(label=label, parent=self, obj_name=label)
+        # Add attributes
+        self._attributes.add(default_attributes)
         # add cell object as its child
         self.cell.obj.parent = self.obj
-        self.set_attributes(attributes)
+        self.set_attributes(arrays)
         self.build_geometry_node()
 
     def build_geometry_node(self):
@@ -422,6 +428,7 @@ class Batoms(BaseCollection, ObjectGN):
         self.obj_name = label
         self._cell = Bcell(label=label, batoms = self)
         self._species = Bspecies(label, label, {}, self)
+        self._attributes = Attributes(label=label, parent=self, obj_name=label)
         self.selects = Selects(label, self)
 
     @property
@@ -477,21 +484,12 @@ class Batoms(BaseCollection, ObjectGN):
         elif dnvert < 0:
             self.delete_vertices_bmesh(-dnvert)
         self.set_frames(arrays)
-        attributes = {
-                'species': Attribute("species", dtype="STRING",
-                            array=arrays['species']),
-                'species_index': Attribute("species_index", dtype="INT",
-                            array=arrays['species_index']),
-                'scale': Attribute("scale", dtype="FLOAT",
-                            array=arrays['scale']),
-                'show': Attribute("show", dtype="BOOLEAN",
-                            array=arrays['show']),
-                'model_style': Attribute("model_style", dtype="INT",
-                            array=arrays['model_style']),
-                'select': Attribute("select", dtype="INT",
-                            array=arrays['select']),
-                }
-        self.set_attributes(attributes)
+        self.set_attributes({'species_index': arrays['species_index']})
+        self.set_attributes({'species': arrays['species']})
+        self.set_attributes({'scale': arrays['scale']})
+        self.set_attributes({'show': arrays['show']})
+        self.set_attributes({'model_style': arrays['model_style']})
+        self.set_attributes({'select': arrays['select']})
         self.update_mesh()
 
     @property
@@ -532,7 +530,7 @@ class Batoms(BaseCollection, ObjectGN):
             for key, value in scale.items():
                 scale0[np.where(species == key)] = value
             scale = scale0
-        self.set_attributes({'scale': Attribute("scale", "FLOAT", array=scale)})
+        self.set_attributes({'scale': scale})
 
     @property
     def species(self):
@@ -572,9 +570,9 @@ class Batoms(BaseCollection, ObjectGN):
         return self.attributes['model_style']
 
     def set_model_style(self, model_style):
-        attribute = {'model_style': Attribute("model_style", "INT", array=np.ones(
-            len(self), dtype=int)*int(model_style))}
-        self.set_attributes(attribute)
+        model_style = {'model_style': np.ones(
+            len(self), dtype=int)*int(model_style)}
+        self.set_attributes(model_style)
         self.draw()
         if self._boundary is not None:
             self.boundary.update()
@@ -1079,10 +1077,8 @@ class Batoms(BaseCollection, ObjectGN):
         #
         species_index[indices] = string2Number(species[0])
         species_array[indices] = species[0]
-        self.set_attributes({'species_index': Attribute("species_index", "INT",
-                        array=species_index)})
-        self.set_attributes({'species': Attribute("species", "STRING",
-                        array=species_array)})
+        self.set_attributes({'species_index': species_index})
+        self.set_attributes({'species': species_array})
         bpy.context.view_layer.objects.active = self.obj
         # print(mode)
         bpy.ops.object.mode_set(mode=mode)
@@ -1263,7 +1259,7 @@ class Batoms(BaseCollection, ObjectGN):
         #
         if isinstance(show, (int, float)):
             show = np.ones(len(self))*show
-        self.set_attributes({'show': Attribute("show", "BOOLEAN", array=show)})
+        self.set_attributes({'show': show})
 
     @property
     def wrap(self):

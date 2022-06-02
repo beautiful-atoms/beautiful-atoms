@@ -184,7 +184,7 @@ class Setting():
             coll = bpy.data.collections.get(self.coll_name)
             collection = getattr(coll.batoms, self.name)
         elif self.obj_name:
-            obj = bpy.data.collections.get(self.obj_name)
+            obj = bpy.data.objects.get(self.obj_name)
             collection = getattr(obj.batoms, self.name)
         else:
             raise KeyError("The collection property {}not exist!".format(self.name))

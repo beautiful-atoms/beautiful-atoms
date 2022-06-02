@@ -7,7 +7,7 @@ This module defines the Bonds object in the Batoms package.
 import bpy
 import bmesh
 from time import time
-from batoms.attribute import Attribute
+from batoms.attribute import Attributes
 from batoms.utils.butils import object_mode, compareNodeType, get_nodes_by_name
 from batoms.utils import string2Number, number2String
 import numpy as np
@@ -17,7 +17,20 @@ from batoms.bond.bondsetting import BondSettings
 from batoms.bond.search_bond import SearchBond, default_search_bond_datas
 # from pprint import pprint
 
-
+default_attributes = [
+    {"name": 'atoms_index1', "type": 'INT', "dimension": 0},
+    {"name": 'atoms_index2', "type": 'INT', "dimension": 0},
+    {"name": 'atoms_index3', "type": 'INT', "dimension": 0},
+    {"name": 'atoms_index4', "type": 'INT', "dimension": 0},
+    {"name": 'species_index1', "type": 'INT', "dimension": 0},
+    {"name": 'species_index2', "type": 'INT', "dimension": 0},
+    {"name": 'order', "type": 'INT', "dimension": 0},
+    {"name": 'style', "type": 'INT', "dimension": 0},
+    {"name": 'show', "type": 'BOOLEAN', "dimension": 0},
+    {"name": 'model_style', "type": 'INT', "dimension": 0},
+    {"name": 'polyhedra', "type": 'BOOLEAN', "dimension": 0},
+    {"name": 'second_bond', "type": 'INT', "dimension": 0},
+]
 
 default_GroupInput = [
     ['atoms_index1', 'NodeSocketInt'],
@@ -87,6 +100,7 @@ class Bonds(BaseCollection, ObjectGN):
             self.update_geometry_nodes()
         else:
             self.setting = BondSettings(self.label, batoms=batoms, bonds=self)
+            self._attributes = Attributes(label=self.label, parent=self, obj_name=self.label)
         self._search_bond = None
 
     def build_object(self, bond_datas, attributes={}):
@@ -121,32 +135,18 @@ class Bonds(BaseCollection, ObjectGN):
         offsets2 = bond_datas['offsets2']
         offsets3 = bond_datas['offsets3']
         offsets4 = bond_datas['offsets4']
-        nbond = len(centers)
         attributes.update({
-            'atoms_index1': Attribute('atoms_index1', 'INT',
-                        array=bond_datas['atoms_index1']),
-            'atoms_index2': Attribute('atoms_index2', "INT",
-                array=bond_datas['atoms_index2']),
-            'atoms_index3': Attribute('atoms_index3', "INT",
-                array=bond_datas['atoms_index3']),
-            'atoms_index4': Attribute('atoms_index4', "INT",
-                array=bond_datas['atoms_index4']),
-            'species_index1': Attribute('species_index1', "INT",
-                array=bond_datas['species_index1']),
-            'species_index2': Attribute('species_index2', "INT",
-                array=bond_datas['species_index2']),
-            'show': Attribute('show', "BOOLEAN",
-                array=bond_datas['show']),
-            'model_style': Attribute('model_style', "INT",
-                array=bond_datas['model_style']),
-            'style': Attribute('style', "INT",
-                array=bond_datas['style']),
-            'order': Attribute('order', "INT",
-                array=bond_datas['order']),
-            'second_bond': Attribute('second_bond', "INT",
-                array=bond_datas['second_bond']),
-            'polyhedra': Attribute('polyhedra', "BOOLEAN",
-                array=bond_datas['polyhedra']),
+            'atoms_index1': bond_datas['atoms_index1'],
+            'atoms_index2': bond_datas['atoms_index2'],
+            'atoms_index3': bond_datas['atoms_index3'],
+            'atoms_index4': bond_datas['atoms_index4'],
+            'species_index1': bond_datas['species_index1'],
+            'species_index2': bond_datas['species_index2'],
+            'show': bond_datas['show'],
+            'model_style': bond_datas['model_style'],
+            'style': bond_datas['style'],
+            'order': bond_datas['order'],
+            'second_bond': bond_datas['second_bond'],
         })
         name = self.obj_name
         self.delete_obj(name)
@@ -154,6 +154,9 @@ class Bonds(BaseCollection, ObjectGN):
         mesh.from_pydata(centers, [], [])
         mesh.update()
         obj = bpy.data.objects.new(name, mesh)
+        self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
+        # Add attributes
+        self._attributes.add(default_attributes)
         self.coll.objects.link(obj)
         obj.parent = self.batoms.obj
         obj.batoms.type = 'BOND'
@@ -731,33 +734,8 @@ class Bonds(BaseCollection, ObjectGN):
         self.set_frames(arrays)
         self.offsets = [arrays.pop('offsets1'), arrays.pop('offsets2'),
                         arrays.pop('offsets3'), arrays.pop('offsets4')]
-        attributes.update({
-            'atoms_index1': Attribute('atoms_index1', 'INT',
-                        array=arrays['atoms_index1']),
-            'atoms_index2': Attribute('atoms_index2', "INT",
-                array=arrays['atoms_index2']),
-            'atoms_index3': Attribute('atoms_index3', "INT",
-                array=arrays['atoms_index3']),
-            'atoms_index4': Attribute('atoms_index4', "INT",
-                array=arrays['atoms_index4']),
-            'species_index1': Attribute('species_index1', "INT",
-                array=arrays['species_index1']),
-            'species_index2': Attribute('species_index2', "INT",
-                array=arrays['species_index2']),
-            'show': Attribute('show', "BOOLEAN",
-                array=arrays['show']),
-            'model_style': Attribute('model_style', "INT",
-                array=arrays['model_style']),
-            'style': Attribute('style', "INT",
-                array=arrays['style']),
-            'order': Attribute('order', "INT",
-                array=arrays['order']),
-            'second_bond': Attribute('second_bond', "INT",
-                array=arrays['second_bond']),
-            'polyhedra': Attribute('polyhedra', "BOOLEAN",
-                array=arrays['polyhedra']),
-        })
-        self.set_attributes(attributes)
+        arrays.pop("centers")
+        self.set_attributes(arrays)
         self.update_geometry_node_species()
         self.update_geometry_node_instancer()
         self.update_geometry_nodes()

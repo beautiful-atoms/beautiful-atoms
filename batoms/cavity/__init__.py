@@ -7,14 +7,19 @@ This module defines the Cavity object in the Batoms package.
 import bpy
 from time import time
 import numpy as np
+from batoms.attribute import Attributes
 from batoms.base.object import ObjectGN
-from batoms.attribute import Attribute
 from batoms.cavity.cavitysetting import CavitySettings
 from scipy import spatial
 from batoms.utils.butils import object_mode, get_nodes_by_name
 from batoms.utils import string2Number
 
-
+default_attributes = [
+    {"name": 'species_index', "type": 'INT', "dimension": 0},
+    {"name": 'species', "type": 'STRING', "dimension": 0},
+    {"name": 'show', "type": 'BOOLEAN', "dimension": 0},
+    {"name": 'scale', "type": 'FLOAT', "dimension": 0},
+]
 
 default_GroupInput = [
     ['species_index', 'NodeSocketInt'],
@@ -25,7 +30,7 @@ default_GroupInput = [
 default_cavity_datas = {
     'species_index': np.ones(0, dtype=int),
     'centers': np.zeros((1, 0, 3)),
-    'show': np.zeros(1, dtype=int),
+    'show': np.zeros(0, dtype=int),
     'scale': np.ones(0, dtype=float),
 }
 
@@ -61,6 +66,7 @@ class Cavity(ObjectGN):
         else:
             self.setting = CavitySettings(
                 self.label, batoms=batoms, parent=self)
+            self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
 
     def build_materials(self, name, color, node_inputs=None,
                         material_style='default'):
@@ -296,24 +302,22 @@ class Cavity(ObjectGN):
             centers = cavity_datas['centers'][0]
         else:
             raise Exception('Shape of centers is wrong!')
-        #
         attributes.update({
-            'species_index': Attribute("species_index", "INT", 
-                array=cavity_datas['species_index']),
-            'show': Attribute("show", "BOOLEAN", 
-                array=cavity_datas['show']),
-            'scale': Attribute("scale", "FLOAT", 
-                array=cavity_datas['scale']),
-        })
+            'species_index': cavity_datas['species_index'],
+            'show': cavity_datas['show'],
+            'scale': cavity_datas['scale'],
+            })
         name = self.obj_name
         self.delete_obj(name)
         mesh = bpy.data.meshes.new(name)
-        # Add attributes
         obj = bpy.data.objects.new(name, mesh)
         obj.data.from_pydata(centers, [], [])
         obj.batoms.type = 'CAVITY'
         obj.batoms.label = self.batoms.label
         self.batoms.coll.objects.link(obj)
+        self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
+        # Add attributes
+        self._attributes.add(default_attributes)
         # add cell object as its child
         obj.parent = self.batoms.obj
         self.set_attributes(attributes)
@@ -424,14 +428,9 @@ class Cavity(ObjectGN):
         elif dnvert < 0:
             self.delete_vertices_bmesh(-dnvert)
         self.set_frames(arrays)
-        attributes = {
-            'species_index': Attribute("species_index", "INT", 
-                array=arrays['species_index']),
-            'show': Attribute("show", "BOOLEAN", 
-                array=arrays['show']),
-            'scale': Attribute("scale", "FLOAT", 
-                array=arrays['scale']),
-        }
+        self.set_attributes({'species_index': arrays['species_index']})
+        self.set_attributes({'scale': arrays['scale']})
+        self.set_attributes({'show': arrays['show']})
         self.update_mesh()
         self.update_geometry_node_instancer()
 

@@ -1,5 +1,4 @@
 from batoms.base.collection import Setting
-from batoms.attribute import Attribute
 import numpy as np
 from batoms.utils import string2Number
 # from time import time
@@ -53,9 +52,8 @@ class Select():
     def set_model_style(self, model_style):
         model_style0 = self.batoms.attributes['model_style']
         model_style0[self.indices] = model_style
-        attributes = {'model_style': Attribute("model_style", "INT",
-                array=model_style0)}
-        self.batoms.set_attributes(attributes)
+        model_style = {'model_style': model_style0}
+        self.batoms.set_attributes(model_style)
         self.batoms.draw()
 
     @property
@@ -87,9 +85,7 @@ class Select():
     def set_show(self, show):
         show0 = self.batoms.show
         show0[self.indices] = show
-        attributes = {'show': Attribute("show", "INT",
-                array=show0)}
-        self.batoms.set_attributes(attributes)
+        self.batoms.set_attributes({'show': show0})
 
     @property
     def mask(self):
@@ -129,9 +125,8 @@ class Select():
         select = self.batoms.attributes['select']
         select[self.indices] = string2Number('all')
         select[indices] = string2Number(self.name)
-        attributes = {'select': Attribute("select", "INT",
-                array=select)}
-        self.batoms.set_attributes(attributes)
+        select = {'select': select}
+        self.batoms.set_attributes(select)
 
     @property
     def scale(self):
@@ -156,9 +151,7 @@ class Select():
             for key, value in scale.items():
                 scale0[np.where((species == key) & self.mask)] = value
             scale = scale0
-        attributes = {'scale': Attribute("scale", "INT",
-                array=scale0)}
-        self.batoms.set_attributes(attributes)
+        self.batoms.set_attributes({'scale': scale0})
 
     @property
     def color(self):

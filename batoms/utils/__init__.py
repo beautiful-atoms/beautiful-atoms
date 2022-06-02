@@ -1,7 +1,6 @@
 import numpy as np
 import math
 from time import time
-from batoms.attribute import Attribute
 
 def read_from_others(from_ase=None, from_pymatgen=None,
                      from_pybel=None):
@@ -44,7 +43,7 @@ def read_from_ase(atoms):
     for key, array in arrays.items():
         if key in ["positions", "species"]:
             continue
-        attributes[key] = Attribute(key, array=array)
+        attributes[key] = array=array
     return species, positions, attributes, atoms.cell, \
         npbool2bool(atoms.pbc), info
 
@@ -454,6 +453,42 @@ def calc_euler_angle(x, z, seq='xyz'):
     print('calc_euler_angle: {0:10.2f} s'.format(time() - tstart))
     return eulers
 
+def type_blender_to_py(dtype):
+    """Change Blender data type to python data type
+
+    Args:
+        type (_type_): _description_
+    """
+    type_dict = {
+        "INT":"int",
+        "FLOAT":"float",
+        "STRING":"str",
+        "BOOLEAN":"bool",
+    }
+    return type_dict[dtype]
+    
+def type_py_to_blender(dtype):
+    """change python data type to Blender data type
+
+    Args:
+        dtype (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    if np.issubdtype(dtype, np.integer):
+        dtype = 'INT'
+    elif np.issubdtype(dtype, np.floating):
+        dtype = 'FLOAT'
+    elif np.issubdtype(dtype, np.str_):
+        dtype = 'STRING'
+    elif np.issubdtype(dtype, np.bool_):
+        dtype = 'BOOLEAN'
+    else:
+        # raise KeyError('%s is not supported.' % dtype)
+        # print('Attribute: {}, {} is not supported.'.format(dtype))
+        return False
+    return dtype
 
 if __name__ == '__main__':
     # V = heron4(6, 7, 8, 9, 10, 11)

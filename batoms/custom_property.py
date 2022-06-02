@@ -118,29 +118,47 @@ class Battribute(Base):
                ('EDGE', "EDGE", ""),
                ("FACE", "FACE", ""),
                ),
-        default='FLOAT')
+        default='POINT')
     dimension: IntProperty(name="index", default=1)
-    shape: IntVectorProperty(name="shape", soft_min=0, size=32)
+    shape_: IntVectorProperty(name="shape_", soft_min=0, size=32)
+
+    @property
+    def natt(self) -> int:
+        import numpy as np
+        return np.product(self.shape)
+    
+    @property
+    def shape(self) -> int:
+        import numpy as np
+        return self.shape_[:self.dimension]
+
+    @shape.setter
+    def shape(self, data):
+        tmp = list(self.shape_)
+        tmp[0:self.dimension] = list(data)
+        self.shape_ = tmp
 
     def as_dict(self) -> dict:
         setdict = {
             'flag': self.flag,
             'label': self.label,
             'name': self.name,
-            'color': self.color[:],
-            'probe': self.probe,
-            'resolution': self.resolution,
-            'select': self.select,
+            'type': self.type,
+            'domain': self.domain,
+            'dimension': self.dimension,
+            'shape': self.shape,
         }
         return setdict
 
     def __repr__(self) -> str:
-        s = '-'*60 + '\n'
-        s = 'Name   select     probe   resolution    color  \n'
-        s += '{:6s}  {:6s}  {:1.3f}  {:1.3f}  [{:1.2f}  {:1.2f}  {:1.2f}   {:1.2f}] \n'.format(
-            self.name, self.select, self.probe, self.resolution, self.color[0], self.color[1], self.color[2], self.color[3])
-        s += '-'*60 + '\n'
-        return s
+        s = "-"*60 + "\n"
+        s = "{:20s}{:10s}{:10s}{:10s}   {:20s}\n".format("Name", "Type", "Domain", "Dimension", "Shape")
+        s += "{:20s}{:10s}{:10s}{:10d}  [".format(
+            self.name, self.type, self.domain, self.dimension)
+        for i in range(self.dimension):
+            s += "  {}  ".format(self.shape[i])
+        s += "] \n"
+        s += "-"*60 + "\n"
         
 class Bsite(bpy.types.PropertyGroup):
     """
@@ -899,6 +917,7 @@ classes = [
     Belement,
     Bspecies,
     Batom,
+    Battribute,
     Bcell,
     Bbond,
     Bpolyhedra,

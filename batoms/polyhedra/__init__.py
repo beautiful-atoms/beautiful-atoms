@@ -6,12 +6,22 @@ This module defines the polyhedras object in the Batoms package.
 
 import bpy
 from time import time
-from batoms.attribute import Attribute
+from batoms.attribute import Attributes
 from batoms.utils.butils import object_mode, compareNodeType, get_nodes_by_name
 from batoms.utils import string2Number
 import numpy as np
 from batoms.base.object import ObjectGN
 from batoms.polyhedra.polyhedrasetting import PolyhedraSettings
+
+default_attributes = [
+    {"name":'atoms_index1', "type": 'INT', "dimension": 0},
+    {"name":'atoms_index2', "type": 'INT', "dimension": 0},
+    {"name":'species_index', "type": 'INT', "dimension": 0},
+    {"name":'face_species_index', "type": 'INT', "dimension": 0, "domain": 'FACE'},
+    {"name":'show', "type": 'BOOLEAN', "dimension": 0},
+    {"name":'style', "type": 'INT', "dimension": 0},
+]
+
 
 default_GroupInput = [
     ['atoms_index1', 'NodeSocketInt', 'POINT'],
@@ -89,6 +99,9 @@ class Polyhedras(ObjectGN):
         flag = self.load()
         if not flag and polyhedra_datas is not None:
             self.build_object(polyhedra_datas)
+        else:
+            self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
+
 
     def build_object(self, datas, attributes={}):
         object_mode()
@@ -110,19 +123,15 @@ class Polyhedras(ObjectGN):
             offsets = datas['offsets'][0]
         else:
             raise Exception('Shape of vertices is wrong!')
+        
         attributes.update({
-            'atoms_index1': Attribute('atoms_index1', 'INT',
-                        array=datas['atoms_index1']),
-            'atoms_index1': Attribute('atoms_index1', 'INT',
-                        array=datas['atoms_index1']),
-            'species_index': Attribute('species_index', 'INT',
-                        array=datas['atoms_index1']),
-            'face_species_index': Attribute('face_species_index', "INT", 
-                    domain="FACE", array=datas['face_species_index']),
-            'show': Attribute('show', "BOOLEAN",
-                array=datas['shows']),
+            'atoms_index1': datas['atoms_index1'],
+            'atoms_index2': datas['atoms_index2'],
+            'species_index': datas['species_index'],
+            'face_species_index': datas['face_species_index'],
+            'show': datas['shows'],
             # 'model_style': datas['model_styles'],
-            })
+        })
         name = self.obj_name
         self.delete_obj(name)
         mesh = bpy.data.meshes.new(name)
@@ -130,6 +139,9 @@ class Polyhedras(ObjectGN):
             vertices, datas['edges'], datas['faces'])
         mesh.update()
         obj = bpy.data.objects.new(name, mesh)
+        self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
+        # Add attributes
+        self._attributes.add(default_attributes)
         self.setting.coll.objects.link(obj)
         obj.batoms.type = 'POLYHEDRA'
         obj.batoms.label = self.label
@@ -423,19 +435,11 @@ class Polyhedras(ObjectGN):
         if len(arrays['vertices']) == len(attributes['show']):
             self.positions = arrays['vertices']
             self.offsets = arrays['offsets']
-            attributes.update({
-            'atoms_index1': Attribute('atoms_index1', 'INT',
-                        array=arrays['atoms_index1']),
-            'atoms_index1': Attribute('atoms_index1', 'INT',
-                        array=arrays['atoms_index1']),
-            'species_index': Attribute('species_index', 'INT',
-                        array=arrays['atoms_index1']),
-            'face_species_index': Attribute('face_species_index', "INT", 
-                    domain="FACE", array=arrays['face_species_index']),
-            'show': Attribute('show', "BOOLEAN",
-                array=arrays['shows']),
-            })
-            self.set_attributes(attributes)
+            self.set_attributes({'atoms_index1': arrays['atoms_index1']})
+            self.set_attributes({'atoms_index2': arrays['atoms_index2']})
+            self.set_attributes({'species_index': arrays['species_index']})
+            self.set_attributes(
+                {'face_species_index': arrays['face_species_index']})
             self.update_geometry_node_material()
         else:
             # add or remove vertices, rebuild the object

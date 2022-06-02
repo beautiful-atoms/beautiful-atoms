@@ -1,9 +1,8 @@
 import bpy
 import numpy as np
-from batoms.utils.butils import (object_mode, set_look_at, get_nodes_by_name,
-                                 update_object, object_mode)
-from batoms.attribute import Attribute
-# from time import time
+from batoms.utils.butils import (get_nodes_by_name, object_mode, set_look_at,
+                                 update_object)
+from time import time
 
 default_object_attributes = [
 ]
@@ -385,33 +384,84 @@ class ObjectGN(BaseObject):
         """
         using foreach_get and foreach_set to improve performance.
         """
-        # attributes
-        me = self.obj.data
-        nvert = len(me.vertices)
-        npoly = len(me.polygons)
+        
         attributes = {}
-        for key in me.attributes.keys():
-            att = me.attributes.get(key)
-            dtype = att.data_type
-            domain = att.domain
-            n = nvert if domain == 'POINT' else npoly
-            if dtype == 'STRING':
-                attributes[key] = np.zeros(n, dtype='U20')
-                for i in range(n):
-                    attributes[key][i] = att.data[i].value
-            elif dtype == 'INT':
-                attributes[key] = np.zeros(n, dtype=int)
-                att.data.foreach_get("value", attributes[key])
-            elif dtype == 'FLOAT':
-                attributes[key] = np.zeros(n, dtype=float)
-                att.data.foreach_get("value", attributes[key])
-            elif dtype == 'BOOLEAN':
-                attributes[key] = np.zeros(n, dtype=bool)
-                att.data.foreach_get("value", attributes[key])
-            else:
-                raise KeyError('%s is not support.' % dtype)
-            attributes[key] = np.array(attributes[key])
+        for att in self._attributes:
+            attributes[att.name] = self.get_attribute(att.name)
         return attributes
+    
+    def get_attribute(self, key):
+        """Get an attribute by key
+
+        Args:
+            key (string): name of the attribute
+
+        Raises:
+            KeyError: _description_
+
+        Returns:
+            _type_: _description_
+        """
+        from batoms.utils import type_blender_to_py
+        # get the mesh
+        att = self._attributes[key]
+        if att.dimension == 0:
+            attribute = self.get_mesh_attribute(att.name)
+        else:
+            n = att.natt
+            natom = len(self)
+            # init a large array has the size of natom*np.product(shape)
+            attribute = np.zeros(n*natom, dtype=type_blender_to_py(att.type))
+            for i in range(n):
+                name = "{}{}".format(att.name, i)
+                attribute[i*natom:(i+1)*natom] = self.get_mesh_attribute(name)
+            # reshape to (natom, shape)
+            attribute = attribute.reshape((natom, ) + att.shape)
+        return attribute
+
+    
+    def get_mesh_attribute(self, key):
+        """_summary_
+
+        Args:
+            key (_type_): _description_
+
+        Raises:
+            KeyError: _description_
+
+        Returns:
+            array: _description_
+        """
+        # get the mesh
+        me = self.obj.data
+        att = me.attributes.get(key)
+        if att is None:
+            print(key)
+        dtype = att.data_type
+        domain = att.domain
+        if domain == 'POINT':
+            n = len(me.vertices)
+        elif domain == 'EDGE':
+            n = len(me.edges)
+        else:
+            n = len(me.polygons)
+        if dtype == 'STRING':
+            attribute = np.zeros(n, dtype='U20')
+            for i in range(n):
+                attribute[i] = att.data[i].value
+        elif dtype == 'INT':
+            attribute = np.zeros(n, dtype=int)
+            att.data.foreach_get("value", attribute)
+        elif dtype == 'FLOAT':
+            attribute = np.zeros(n, dtype=float)
+            att.data.foreach_get("value", attribute)
+        elif dtype == 'BOOLEAN':
+            attribute = np.zeros(n, dtype=bool)
+            att.data.foreach_get("value", attribute)
+        else:
+            raise KeyError('%s is not support.' % dtype)
+        attribute = np.array(attribute)
+        return attribute
 
     def set_attributes(self, attributes):
         """Set attributes
@@ -421,32 +471,58 @@ class ObjectGN(BaseObject):
         
         class bpy.types.Attribute
 
+        Two cases:
+        1) for single value data (dimension=0), treat it as normal
+        2) for array data (dimension > 0), scatter the data.
+
         Args:
             attributes (dict): attributes bound to every atoms
         """
-        # tstart = time()
+        tstart = time()
         me = self.obj.data
-        for key, att_data in attributes.items():
+        # print(attributes)
+        for key, array in attributes.items():
             # print(key)
-            # print(att_data.array)
-            att = me.attributes.get(key)
-            if att is None:
-                att = me.attributes.new(name=key, type=att_data.dtype,
-                        domain=att_data.domain)
-            if att.data_type == 'STRING':
-                nvert = len(me.vertices)
-                for i in range(nvert):
-                    att.data[i].value = att_data.array[i]
+            # if key in self._attributes
+            if not self._attributes.find(key):
+                # try to create a new attribute
+                flag = self._attributes.from_array(key, array)
+                # if failed, do not add this attribute
+                if not flag:
+                    continue
+            shape = self._attributes[key].shape
+            dimension = self._attributes[key].dimension
+            # single value data
+            if dimension == 0:
+                att = me.attributes.get(key)
+                if att.data_type == 'STRING':
+                    nvert = len(me.vertices)
+                    for i in range(nvert):
+                        att.data[i].value = array[i]
+                else:
+                    att.data.foreach_set("value", array)
+            # array data
             else:
-                att.data.foreach_set("value", att_data.array)
+                # M is the number of sub-array
+                M = np.product(shape[:dimension])
+                natom = len(self)
+                array = array.reshape(-1, 1)
+                for i in range(i):
+                    att = me.attributes.get("{}{}".format(key, i))
+                    if att.data_type == 'STRING':
+                        nvert = len(me.vertices)
+                        for j in range(nvert):
+                            att.data[j].value = array[j]
+                    else:
+                        for j in range(M):
+                            att.data.foreach_set("value", array[i*natom:(i+1)*natom])
         me.update()
-        # print('set_attributes: %s'%(time() - tstart))
+        print('set_attributes {}: {}'.format(key, time() - tstart))
 
     def set_attribute_with_indices(self, name, indices, data):
         data0 = self.attributes[name]
         data0[indices] = data
-        attributes = {name: Attribute(name, array=data0)}
-        self.set_attributes(attributes)
+        self.set_attributes({name: data0})
 
     def get_attribute_with_indices(self, name, indices):
         return self.attributes[name][indices]
