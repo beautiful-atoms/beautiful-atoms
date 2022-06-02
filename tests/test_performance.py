@@ -1,12 +1,12 @@
 import pytest
 from ase.build import bulk
-
+import bpy
 
 def test_position():
-
     from batoms import Batoms
     from time import time
 
+    bpy.ops.batoms.delete()
     tstart = time()
     au = bulk("Au", cubic=True)
     au = Batoms(label="au", from_ase=au, segments=[6, 6])
