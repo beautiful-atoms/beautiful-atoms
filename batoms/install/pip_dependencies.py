@@ -42,8 +42,9 @@ def install_module(package, modname):
         cmd = [sys.executable, "-m", "pip",
                 "install", "--upgrade", package]
         subprocess.call(cmd)
-    else:
         print("package {0} installed.".format(package))
+    # else:
+        # print("package {0} installed.".format(package))
     return has_module(modname)
 
 def install():

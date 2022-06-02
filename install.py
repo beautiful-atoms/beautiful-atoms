@@ -113,6 +113,20 @@ except ImportError:
     print('batoms cleanly uninstalled.')
 """
 
+BLENDERPY_SETTING_PREFERENCES = f"""
+print('start setting preferences')
+import bpy
+bpy.ops.batoms.use_batoms_preference()
+print('Successfully setting and preference.')
+"""
+
+BLENDERPY_SETTING_STARTUP = f"""
+print('start setting startup')
+import bpy
+bpy.ops.batoms.use_batoms_startup()
+print('Successfully setting preference.')
+"""
+
 # The directory to move factory python from conda
 
 repo_name = os.environ.get("GITHUB_REPO", DEFAULT_REPO_NAME)
@@ -767,6 +781,12 @@ def install(parameters):
     print(f"Plugin copied to {plugin_path_target.as_posix()}.")
     _blender_enable_plugin(blender_bin)
     _blender_test_plugin(parameters)
+    #
+    if parameters["use_startup"]: 
+        _blender_set_startup(blender_bin)
+    if parameters["use_preferences"]: 
+        _blender_set_preferences(blender_bin)
+
     print(
         (
             "Beautiful-atoms and its dependencies have been successfully installed in your Blender distribution.\n"
@@ -890,6 +910,15 @@ def check_python_conflict():
     else:
         return
 
+def _blender_set_startup(blender_bin):
+    """Use set default startup of batoms"""
+    _run_blender_multiline_expr(blender_bin, BLENDERPY_SETTING_STARTUP)
+    return
+
+def _blender_set_preferences(blender_bin):
+    """Use set default preferences of batoms"""
+    _run_blender_multiline_expr(blender_bin, BLENDERPY_SETTING_PREFERENCES)
+    return
 
 def main():
     import argparse
@@ -921,6 +950,12 @@ def main():
     parser.add_argument(
         "--uninstall", action="store_true", help="Uninstall plugin in blender_root"
     )
+    parser.add_argument(
+        "--use-startup", action="store_true", default=False,
+                        help="Use the default startup.")
+    parser.add_argument(
+        "--use-preferences", action="store_true", default=False,
+                        help="Use the default preferences.")
     parser.add_argument(
         "-n",
         "--conda-env-name",
@@ -977,6 +1012,8 @@ def main():
         custom_conda_env=args.conda_env_name,
         dependency_only=args.dependency_only,
         generate_env_file=args.generate_env_file,
+        use_startup=args.use_startup,
+        use_preferences=args.use_preferences,
     )
 
     # Uninstallation does not need information about current environment
@@ -1030,7 +1067,7 @@ def main():
     #     test_plugin(true_blender_bin)
 
     install(parameters)
-
+    
 
 if __name__ == "__main__":
     main()
