@@ -36,7 +36,7 @@ class Attributes(Setting):
             datas = [datas]
         for data in datas:
             # print(data)
-            print("Add new attribute: {}".format(data))
+            # print("Add new attribute: {}".format(data))
             self[data["name"]] = data
             att = self[data["name"]]
             mesh = self.parent.obj.data

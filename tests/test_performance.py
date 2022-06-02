@@ -29,6 +29,39 @@ def test_position():
     print("Set positions time: {:1.2f}".format(t))
 
 
+def test_scatter_and_gather_attribute():
+    from ase.build import bulk
+    import numpy as np
+    from batoms import Batoms
+    from time import time
+    au = bulk('Au')
+    au *= [10, 10, 10]
+    au *= [10, 10, 10]
+    # single value
+    d0 = np.zeros((len(au)))
+    d2 = np.zeros((len(au), 2))
+    d22 = np.zeros((len(au), 2, 2))
+    au.set_array("d0d", d0)
+    au.set_array("d1d", d2)
+    au.set_array("d2d", d22)
+    au = Batoms('au', from_ase = au)
+    tstart = time()
+    au.get_attribute('d0d')
+    t = time() - tstart
+    print("Gatther data for data (1,): {:1.2f}".format(t))
+    assert t < 1
+    tstart = time()
+    au.get_attribute('d1d')
+    t = time() - tstart
+    print("Gatther data for data (2,): {:1.2f}".format(t))
+    assert t < 2
+    tstart = time()
+    au.get_attribute('d2d')
+    t = time() - tstart
+    print("Gatther data for data (2, 2): {:1.2f}".format(t))
+    assert t < 4
+    
+
 if __name__ == "__main__":
     test_position()
     print("\n Performance: All pass! \n")

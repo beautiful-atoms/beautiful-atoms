@@ -507,7 +507,7 @@ class ObjectGN(BaseObject):
                 M = np.product(shape[:dimension])
                 natom = len(self)
                 array = array.reshape(-1, 1)
-                for i in range(i):
+                for i in range(M):
                     att = me.attributes.get("{}{}".format(key, i))
                     if att.data_type == 'STRING':
                         nvert = len(me.vertices)
@@ -516,8 +516,8 @@ class ObjectGN(BaseObject):
                     else:
                         for j in range(M):
                             att.data.foreach_set("value", array[i*natom:(i+1)*natom])
+            print('set_attributes {}: {}'.format(key, time() - tstart))
         me.update()
-        print('set_attributes {}: {}'.format(key, time() - tstart))
 
     def set_attribute_with_indices(self, name, indices, data):
         data0 = self.attributes[name]
