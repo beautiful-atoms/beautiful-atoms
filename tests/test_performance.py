@@ -34,6 +34,7 @@ def test_scatter_and_gather_attribute():
     import numpy as np
     from batoms import Batoms
     from time import time
+    bpy.ops.batoms.delete()
     au = bulk('Au')
     au *= [10, 10, 10]
     au *= [10, 10, 10]

@@ -227,11 +227,25 @@ def test_set_arrays():
     del h2o[[2]]
     assert len(h2o.arrays["positions"]) == 2
 
-def test_read_tensor_attribute():
+def test_array_attribute():
+    from ase.build import bulk
+    import numpy as np
     from batoms import Batoms
-    from ase.io import read
-    atoms = read('../tests/datas/ethanol.magres')
-    ethanol = Batoms("ethanol", from_ase=atoms)
+    from time import time
+    bpy.ops.batoms.delete()
+    au = bulk('Au')
+    # single value
+    d0 = np.zeros((len(au)))
+    d2 = np.zeros((len(au), 2))
+    d22 = np.zeros((len(au), 2, 2))
+    au.set_array("d0d", d0)
+    au.set_array("d1d", d2)
+    au.set_array("d2d", d22)
+    au = Batoms('au', from_ase = au)
+    au.get_attribute('d0d')
+    au.get_attribute('d1d')
+    au.get_attribute('d2d')
+
 
 ###############################
 # Patch from TT for Atoms.array
