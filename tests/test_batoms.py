@@ -208,7 +208,6 @@ def test_from_batoms():
 
 def test_set_arrays():
     """Set arrays and attributes"""
-    from batoms.attribute import Attribute
     bpy.ops.batoms.delete()
     h2o = Batoms(
         "h2o",
@@ -218,7 +217,7 @@ def test_set_arrays():
     h2o.show = [1, 0, 1]
     assert not h2o[1].show
     h2o.scale = [1, 1, 1]
-    h2o.set_attributes({"scale": Attribute("scale", array=np.array([0.3, 0.3, 0.3]))})
+    h2o.set_attributes({"scale": np.array([0.3, 0.3, 0.3])})
     # positions
     positions = h2o.positions
     assert len(positions) == 3
@@ -227,6 +226,12 @@ def test_set_arrays():
     #
     del h2o[[2]]
     assert len(h2o.arrays["positions"]) == 2
+
+def test_read_tensor_attribute():
+    from batoms import Batoms
+    from ase.io import read
+    atoms = read('../tests/datas/ethanol.magres')
+    ethanol = Batoms("ethanol", from_ase=atoms)
 
 ###############################
 # Patch from TT for Atoms.array

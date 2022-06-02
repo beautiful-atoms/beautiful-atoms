@@ -99,4 +99,3 @@ class Attributes(Setting):
             s += "] \n"
         s += "-"*60 + "\n"
         return s
-    
