@@ -364,7 +364,13 @@ class ObjectGN(BaseObject):
         self.set_arrays(arrays)
 
     def get_arrays(self):
-        """
+        """Get the arrays of the Batoms object.
+
+        arrays is the combination of attributes and the  positions
+
+
+        Returns:
+            dict: _description_
         """
         object_mode()
         arrays = self.attributes
@@ -381,17 +387,22 @@ class ObjectGN(BaseObject):
         self.set_attributes(attributes)
 
     def get_attributes(self):
+        """Get all attributes of the Batoms object.
+
+
+        Returns:
+            dict: attributes dict
         """
-        using foreach_get and foreach_set to improve performance.
-        """
-        
         attributes = {}
         for att in self._attributes:
             attributes[att.name] = self.get_attribute(att.name)
         return attributes
     
     def get_attribute(self, key):
-        """Get an attribute by key
+        """Get an attribute of Batoms object by name
+        If the attribute is single value, just use the attribute of mesh.
+        If the attribute is an array, we should gather several attributes 
+        from the mesh.
 
         Args:
             key (string): name of the attribute
@@ -421,10 +432,10 @@ class ObjectGN(BaseObject):
 
     
     def get_mesh_attribute(self, key):
-        """_summary_
+        """Get the attribute of mesh by name
 
         Args:
-            key (_type_): _description_
+            key (string): name of the attribute
 
         Raises:
             KeyError: _description_
@@ -436,7 +447,7 @@ class ObjectGN(BaseObject):
         me = self.obj.data
         att = me.attributes.get(key)
         if att is None:
-            print(key)
+            raise KeyError('{} is not exist.'.format(key))
         dtype = att.data_type
         domain = att.domain
         if domain == 'POINT':
@@ -459,7 +470,7 @@ class ObjectGN(BaseObject):
             attribute = np.zeros(n, dtype=bool)
             att.data.foreach_get("value", attribute)
         else:
-            raise KeyError('%s is not support.' % dtype)
+            raise KeyError('Attribute type: %s is not support.' % dtype)
         attribute = np.array(attribute)
         return attribute
 
@@ -506,7 +517,7 @@ class ObjectGN(BaseObject):
             # array data
             else:
                 # M is the number of sub-array
-                M = np.product(shape[:dimension])
+                M = att_coll.natt
                 natom = len(self)
                 array = array.reshape(-1, 1)
                 for i in range(M):
