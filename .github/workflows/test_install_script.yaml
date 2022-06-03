@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        blender_ver: ["3.0.1", "3.1.0"]
+        blender_ver: ["3.0.1", "3.1.2"]
     steps:
       - uses: actions/checkout@v2
       - uses: conda-incubator/setup-miniconda@v2
@@ -60,7 +60,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        blender_ver: ["3.0.1", "3.1.0"]
+        blender_ver: ["3.0.1", "3.1.2"]
     steps:
       - uses: actions/checkout@v2
       - uses: conda-incubator/setup-miniconda@v2
@@ -106,7 +106,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        blender_ver: ["3.0.1", "3.1.0"]
+        blender_ver: ["3.0.1", "3.1.2"]
     steps:
       - uses: actions/checkout@v2
       - uses: conda-incubator/setup-miniconda@v2
@@ -149,4 +149,43 @@ jobs:
       - name: Run installation script with startup and preferences
         run: |
           python install.py --use-pip $env:BLENDER_ROOT --use-startup --use-preferences
+  
+  install-windows-wsl:
+    defaults:
+      run:
+        shell: pwsh
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        blender_ver: ["3.1.2"]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: conda-incubator/setup-miniconda@v2
+      - name: Download portable blender
+        shell: bash -l {0}
+        run: |
+          echo Currently install in $(pwd)
+          VER=${{ matrix.blender_ver }}
+          MAJ_VER=${VER%.*}
+          echo $VER $MAJ_VER
+          URL="${BLENDER_DOWN_URL}/Blender${MAJ_VER}/blender-${VER}-windows-x64.zip"
+          curl -O ${URL} && unzip blender-*-windows-x64.zip -d ../
+          ls ../blender-${VER}-windows-x64/${MAJ_VER}
+          echo "BLENDER_ROOT=../blender-${VER}-windows-x64/${MAJ_VER}" >> $GITHUB_ENV
+      - uses: Vampire/setup-wsl@v1
+        name: setup wsl on windows host
+      - name: Run installation script
+        shell: wsl-bash {0}
+        run: |
+          pwd
+          which python
+          echo "Use blender root" ${BLENDER_ROOT}
+          conda info
+          conda list
+          python install.py --use-pip ${BLENDER_ROOT}
+      - name: Run uninstallation script
+        shell: wsl-bash {0}
+        run: |
+          python install.py --uninstall --use-pip ${BLENDER_ROOT}
+      
       
