@@ -46,7 +46,7 @@ class Attributes(Setting):
             else:
                 M = np.product(data["shape"][0:data["dimension"]])
                 for i in range(M):
-                    name = "{}{}".format(data["name"], i)
+                    name = "{}@{}".format(data["name"], i)
                     mesh.attributes.new(name=name,
                                 type=att.type, domain=att.domain)
     
