@@ -37,19 +37,55 @@ class Attributes(Setting):
         for data in datas:
             # print(data)
             # print("Add new attribute: {}".format(data))
+            # add attribute into _attributes collection
             self[data["name"]] = data
+
+            # create attribute in mesh
             att = self[data["name"]]
             mesh = self.parent.obj.data
+            # is single value, no delimiter needed
             if data['dimension'] == 0:
                 mesh.attributes.new(name=data["name"],
                         type=att.type, domain=att.domain)
             else:
+                # is array, scatter to new attribute,
+                # with name = "{}{}{}".format(name, delimiter, index)
+                # default delimiter = "@". Compare new name with other attribute's name
+                # add "@" recursively if needed.
                 M = np.product(data["shape"][0:data["dimension"]])
+                name_list = list(self.data.keys())
+                delimiter = self.find_delimiter(name_list, data["name"], M, att.delimiter)
+                # update delimiter
+                att.delimiter = delimiter
                 for i in range(M):
-                    name = "{}@{}".format(data["name"], i)
+                    name = "{}{}{}".format(att.name, att.delimiter, i)
                     mesh.attributes.new(name=name,
                                 type=att.type, domain=att.domain)
     
+    def find_delimiter(self, name_list, name, M, delimiter):
+        """find delimiter recursively
+
+        Args:
+            name_list (list):
+                list of the name of attributes already in the collection
+            name (string): the name used for scatter
+            M (int): number of new attribute
+            delimiter (string): default @
+
+        Returns:
+            string: "@"*n (n>=1)
+        """
+        # print("find delimiter: ", name, name_list)
+        for i in range(M):
+            new_name = "{}{}{}".format(name, delimiter, i)
+            if new_name in name_list:
+                delimiter += "@"
+                delimiter = self.find_delimiter(name_list, name, M, delimiter)
+                return delimiter
+                # print("new delimiter: ", delimiter)
+        return delimiter
+
+
     def from_array(self, name, data):
         """_summary_
 

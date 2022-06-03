@@ -121,11 +121,17 @@ class Battribute(Base):
         default='POINT')
     dimension: IntProperty(name="index", default=1)
     shape_: IntVectorProperty(name="shape_", soft_min=0, size=32)
+    delimiter: StringProperty(name="delimiter", default='@')
 
     @property
     def natt(self) -> int:
         import numpy as np
         return np.product(self.shape)
+    
+    @property
+    def sub_name(self) -> int:
+        sub_name = ["{}{}".format(self.name, i) for i in range(self.natt)]
+        return sub_name
     
     @property
     def shape(self) -> int:

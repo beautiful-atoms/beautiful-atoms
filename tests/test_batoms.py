@@ -235,16 +235,13 @@ def test_array_attribute():
     bpy.ops.batoms.delete()
     au = bulk('Au')
     # single value
-    d0 = np.zeros((len(au)))
-    d2 = np.zeros((len(au), 2))
-    d22 = np.zeros((len(au), 2, 2))
-    au.set_array("d0d", d0)
-    au.set_array("d1d", d2)
-    au.set_array("d2d", d22)
+    vel = np.zeros((len(au), 3))
+    tensor = np.zeros((len(au), 3, 3))
+    au.set_array("vel", vel)
+    au.set_array("tensor", tensor)
     au = Batoms('au', from_ase = au)
-    au.get_attribute('d0d')
-    au.get_attribute('d1d')
-    au.get_attribute('d2d')
+    au.get_attribute('vel')
+    au.get_attribute('tensor')
 
 def test_att_conflict_case1():
     # Case 1: name ending in 0 
@@ -255,19 +252,20 @@ def test_att_conflict_case1():
     bpy.ops.batoms.delete()
     au_ase = bulk('Au') * [2, 2, 2]
     d_arr1 = np.ones((len(au_ase)))
+    d_arr2 = np.ones((len(au_ase)))*2
     # delibrately increate additional dimension
-    d_arr2 = np.ones((len(au_ase), 1)) * 2
+    d_arr3 = np.ones((len(au_ase), 2, 2)) * 3
     # Name confusion
     # array with name "d0" and shape (len(atoms), ) --> attribute name "d0"
-    au_ase.set_array("d0", d_arr1)
+    au_ase.set_array("d@0", d_arr1)
+    au_ase.set_array("d@@2", d_arr2)
     # array with name "d" and shape (len(atoms), 1) --> attribute name also "d0"
     # after that should get d0.001 as attribute name
-    au_ase.set_array("d", d_arr2)
+    au_ase.set_array("d", d_arr3)
     au_bl = Batoms('au', from_ase = au_ase)
-    print(au_bl.get_attribute("d0"))
-    print(au_bl.get_attribute("d"))
-    assert np.isclose(au_bl.get_attribute('d0'), d_arr1).all()
-    assert np.isclose(au_bl.get_attribute('d'), d_arr2).all()
+    assert np.isclose(au_bl.get_attribute('d@0'), d_arr1).all()
+    assert np.isclose(au_bl.get_attribute('d@@2'), d_arr2).all()
+    assert np.isclose(au_bl.get_attribute('d'), d_arr3).all()
 
 def test_att_conflict_case2():
     # Case 2: huge matrix

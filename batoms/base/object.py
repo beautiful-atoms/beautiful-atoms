@@ -413,7 +413,7 @@ class ObjectGN(BaseObject):
             # init a large array has the size of natom*np.product(shape)
             attribute = np.zeros(n*natom, dtype=type_blender_to_py(att.type))
             for i in range(n):
-                name = "{}@{}".format(att.name, i)
+                name = "{}{}{}".format(att.name, att.delimiter, i)
                 attribute[i*natom:(i+1)*natom] = self.get_mesh_attribute(name)
             # reshape to (natom, shape)
             attribute = attribute.reshape((natom, ) + att.shape)
@@ -490,8 +490,10 @@ class ObjectGN(BaseObject):
                 # if failed, do not add this attribute
                 if not flag:
                     continue
-            shape = self._attributes[key].shape
-            dimension = self._attributes[key].dimension
+            att_coll = self._attributes[key]
+            shape = att_coll.shape
+            dimension = att_coll.dimension
+            delimiter = att_coll.delimiter
             # single value data
             if dimension == 0:
                 att = me.attributes.get(key)
@@ -508,7 +510,7 @@ class ObjectGN(BaseObject):
                 natom = len(self)
                 array = array.reshape(-1, 1)
                 for i in range(M):
-                    att = me.attributes.get("{}@{}".format(key, i))
+                    att = me.attributes.get("{}{}{}".format(key, delimiter, i))
                     if att.data_type == 'STRING':
                         nvert = len(me.vertices)
                         for j in range(nvert):
