@@ -476,6 +476,8 @@ def type_py_to_blender(dtype):
     Returns:
         _type_: _description_
     """
+    # Update the subdtype check according to 
+        # https://github.com/numpy/numpy/blob/db481babcfa7ebc70833e77985858e9295a3135b/numpy/core/numerictypes.py#L357
     if np.issubdtype(dtype, np.integer):
         dtype = 'INT'
     elif np.issubdtype(dtype, np.floating):

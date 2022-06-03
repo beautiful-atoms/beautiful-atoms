@@ -65,8 +65,6 @@ class Attributes(Setting):
         array = np.asarray(data)
         type_py = type(array.flat[0])
         # print(name, dtype)
-        # Update the subdtype check according to 
-        # https://github.com/numpy/numpy/blob/db481babcfa7ebc70833e77985858e9295a3135b/numpy/core/numerictypes.py#L357
         dtype_bl = type_py_to_blender(type_py)
         if dtype_bl is False:
             print('Attribute: {}, {} is not supported.'.format(name, type_py))
