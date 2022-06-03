@@ -211,8 +211,21 @@ def _get_blender_bin(os_name, blender_bundle_root):
         raise NotImplementedError(f"Blender not supported for system {os_name}")
 
     if not blender_bin.exists():
+        help_url = "https://beautiful-atoms.readthedocs.io/en/latest/getting_started/installing/index.html"
+        if (os_name == "linux") and (
+            "Program Files" in blender_bundle_root.absolute().as_posix()
+        ):
+            extra_msg = f"""
+            It seems you are running the installation script in WSL but points to Blender
+            installed on Windows host. Please rerun the script directly on Windows host, 
+            see instructions at {help_url}
+            """
+        else:
+            extra_msg = f"""
+            Please refer to instructions at {help_url}
+            """
         raise FileNotFoundError(
-            f"Cannot find blender binary at {blender_bin.as_posix()}"
+            f"Cannot find blender binary at {blender_bin.as_posix()}!\n{extra_msg}"
         )
     return blender_bin
 
@@ -428,9 +441,9 @@ def _symlink_dir(src, dst):
         # TODO: do something here
         raise
 
+
 def _replace_conda_env(python_version=None, numpy_version=None):
-    """Replace the env.yml with actual python and numpy versions
-    """
+    """Replace the env.yml with actual python and numpy versions"""
     blender_py_ver = (
         python_version if python_version is not None else DEFAULT_BLENDER_PY_VER
     )
@@ -441,6 +454,7 @@ def _replace_conda_env(python_version=None, numpy_version=None):
         blender_py_ver=blender_py_ver, blender_numpy_ver=blender_numpy_ver
     )
     return env_file_content
+
 
 def _conda_update(
     conda_env_file, conda_vars, env_name=None, python_version=None, numpy_version=None
@@ -470,7 +484,7 @@ def _conda_update(
 
     # Install from the env.yaml
     print("Updating conda environment")
-    
+
     # NamedTemporaryFile can only work on Windows if delete=False
     # see https://stackoverflow.com/questions/55081022/python-tempfile-with-a-context-manager-on-windows-10-leads-to-permissionerror
     tmp_del = False if _get_os_name() in ["windows"] else True
@@ -782,9 +796,9 @@ def install(parameters):
     _blender_enable_plugin(blender_bin)
     _blender_test_plugin(parameters)
     #
-    if parameters["use_startup"]: 
+    if parameters["use_startup"]:
         _blender_set_startup(blender_bin)
-    if parameters["use_preferences"]: 
+    if parameters["use_preferences"]:
         _blender_set_preferences(blender_bin)
 
     print(
@@ -910,15 +924,18 @@ def check_python_conflict():
     else:
         return
 
+
 def _blender_set_startup(blender_bin):
     """Use set default startup of batoms"""
     _run_blender_multiline_expr(blender_bin, BLENDERPY_SETTING_STARTUP)
     return
 
+
 def _blender_set_preferences(blender_bin):
     """Use set default preferences of batoms"""
     _run_blender_multiline_expr(blender_bin, BLENDERPY_SETTING_PREFERENCES)
     return
+
 
 def main():
     import argparse
@@ -951,11 +968,17 @@ def main():
         "--uninstall", action="store_true", help="Uninstall plugin in blender_root"
     )
     parser.add_argument(
-        "--use-startup", action="store_true", default=False,
-                        help="Use the default startup.")
+        "--use-startup",
+        action="store_true",
+        default=False,
+        help="Use the default startup.",
+    )
     parser.add_argument(
-        "--use-preferences", action="store_true", default=False,
-                        help="Use the default preferences.")
+        "--use-preferences",
+        action="store_true",
+        default=False,
+        help="Use the default preferences.",
+    )
     parser.add_argument(
         "-n",
         "--conda-env-name",
@@ -981,7 +1004,7 @@ def main():
         const="env.yml",
         help=(
             "Only print the dependency as a env.yml to local dir without any installation."
-        )
+        ),
     )
     args = parser.parse_args()
     print(args)
@@ -1067,7 +1090,7 @@ def main():
     #     test_plugin(true_blender_bin)
 
     install(parameters)
-    
+
 
 if __name__ == "__main__":
     main()
