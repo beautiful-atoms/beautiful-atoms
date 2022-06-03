@@ -178,11 +178,12 @@ jobs:
         shell: wsl-bash {0}
         run: |
           pwd
-          which python
-          echo "Use blender root" ${BLENDER_ROOT}
-          conda info
-          conda list
-          python install.py --use-pip ${BLENDER_ROOT}
+          env
+          # which python
+          # echo "Use blender root" ${BLENDER_ROOT}
+          # conda info
+          # conda list
+          # python install.py --use-pip ${BLENDER_ROOT}
       - name: Run uninstallation script
         shell: wsl-bash {0}
         run: |
