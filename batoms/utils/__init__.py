@@ -2,7 +2,6 @@ import numpy as np
 import math
 from time import time
 
-
 def read_from_others(from_ase=None, from_pymatgen=None,
                      from_pybel=None):
     if from_ase is not None:
@@ -26,23 +25,26 @@ def read_from_ase(atoms):
         frames = [atoms]
     nframe = len(frames)
     natom = len(atoms)
-    if 'species' not in atoms.arrays:
-        atoms.new_array('species', np.array(
-            atoms.get_chemical_symbols(), dtype='U20'))
-    if 'scale' not in atoms.arrays:
-        atoms.new_array('scale', np.ones(len(atoms)))
     arrays = atoms.arrays
-    species = arrays.pop('species')
+    if 'species' not in arrays:
+        species = np.array(atoms.get_chemical_symbols(), dtype='U20')
+    else:
+        species = arrays['species']
     info = atoms.info
     # read frames
     if nframe > 1:
         positions = np.zeros((nframe, natom, 3))
         for i in range(0, nframe):
             positions[i, :, :] = frames[i].positions
-        arrays.pop('positions')
     else:
-        positions = arrays.pop('positions')
-    return species, positions, arrays, atoms.cell, \
+        positions = arrays['positions']
+    # attributes
+    attributes = {}
+    for key, array in arrays.items():
+        if key in ["positions", "species"]:
+            continue
+        attributes[key] = array=array
+    return species, positions, attributes, atoms.cell, \
         npbool2bool(atoms.pbc), info
 
 
@@ -451,6 +453,44 @@ def calc_euler_angle(x, z, seq='xyz'):
     print('calc_euler_angle: {0:10.2f} s'.format(time() - tstart))
     return eulers
 
+def type_blender_to_py(dtype):
+    """Change Blender data type to python data type
+
+    Args:
+        type (_type_): _description_
+    """
+    type_dict = {
+        "INT":"int",
+        "FLOAT":"float",
+        "STRING":"str",
+        "BOOLEAN":"bool",
+    }
+    return type_dict[dtype]
+    
+def type_py_to_blender(dtype):
+    """change python data type to Blender data type
+
+    Args:
+        dtype (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    # Update the subdtype check according to 
+        # https://github.com/numpy/numpy/blob/db481babcfa7ebc70833e77985858e9295a3135b/numpy/core/numerictypes.py#L357
+    if np.issubdtype(dtype, np.integer):
+        dtype = 'INT'
+    elif np.issubdtype(dtype, np.floating):
+        dtype = 'FLOAT'
+    elif np.issubdtype(dtype, np.str_):
+        dtype = 'STRING'
+    elif np.issubdtype(dtype, np.bool_):
+        dtype = 'BOOLEAN'
+    else:
+        # raise KeyError('%s is not supported.' % dtype)
+        # print('Attribute: {}, {} is not supported.'.format(dtype))
+        return False
+    return dtype
 
 if __name__ == '__main__':
     # V = heron4(6, 7, 8, 9, 10, 11)

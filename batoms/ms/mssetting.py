@@ -26,7 +26,7 @@ class MSsetting(Setting):
         probe: float
             probe radius, in [0,inf], default is 1.4
         """
-        Setting.__init__(self, label)
+        Setting.__init__(self, label, coll_name=label)
         self.label = label
         self.name = 'bms'
         self.probe = probe

@@ -92,6 +92,81 @@ class Batom(bpy.types.PropertyGroup):
         default='0')
 
 
+class Battribute(Base):
+    """
+    """
+    flag: BoolProperty(name="flag", default=False)
+    name: StringProperty(name="name")
+    label: StringProperty(name="label", default='batoms')
+    type: EnumProperty(
+        name="type",
+        description="data type",
+        items=(('FLOAT', "FLOAT", "Floating-point value"),
+               ('INT', "INT", "32-bit integer"),
+               ("FLOAT_VECTOR", "FLOAT_VECTOR", "Vector – 3D vector with floating-point values."),
+               ("FLOAT_COLOR", "FLOAT_COLOR", "Color – RGBA color with floating-point values."),
+               ("BYTE_COLOR", "BYTE_COLOR", "Byte Color – RGBA color with 8-bit values."),
+               ("STRING", "STRING", "String – Text string."),
+               ("BOOLEAN", "BOOLEAN", "Boolean – True or false."),
+               ("FLOAT2", "FLOAT2", "2D Vector – 2D vector with floating-point values."),
+               ),
+        default='FLOAT')
+    domain: EnumProperty(
+        name="domain",
+        description="Domain",
+        items=(('POINT', "POINT", ""),
+               ('EDGE', "EDGE", ""),
+               ("FACE", "FACE", ""),
+               ),
+        default='POINT')
+    dimension: IntProperty(name="index", default=1)
+    shape_: IntVectorProperty(name="shape_", soft_min=0, size=32)
+    delimiter: StringProperty(name="delimiter", default='@')
+
+    @property
+    def natt(self) -> int:
+        import numpy as np
+        return np.product(self.shape)
+    
+    @property
+    def sub_name(self) -> int:
+        sub_name = ["{}{}".format(self.name, i) for i in range(self.natt)]
+        return sub_name
+    
+    @property
+    def shape(self) -> int:
+        import numpy as np
+        return self.shape_[:self.dimension]
+
+    @shape.setter
+    def shape(self, data):
+        tmp = list(self.shape_)
+        tmp[0:self.dimension] = list(data)
+        self.shape_ = tmp
+
+    def as_dict(self) -> dict:
+        setdict = {
+            'flag': self.flag,
+            'label': self.label,
+            'name': self.name,
+            'type': self.type,
+            'domain': self.domain,
+            'dimension': self.dimension,
+            'shape': self.shape,
+        }
+        return setdict
+
+    def __repr__(self) -> str:
+        s = "-"*60 + "\n"
+        s = "{:20s}{:10s}{:10s}{:10s}{:10s}   {:20s}\n".format("Name", "Type", "Domain", "delimiter", "Dimension", "Shape")
+        s += "{:20s}{:10s}{:10s}{:10s}{:10d}  [".format(
+            self.name, self.type, self.domain, self.delimiter, self.dimension)
+        for i in range(self.dimension):
+            s += "  {}  ".format(self.shape[i])
+        s += "] \n"
+        s += "-"*80 + "\n"
+        return s
+        
 class Bsite(bpy.types.PropertyGroup):
     """
     """
@@ -839,6 +914,8 @@ class BatomsObject(bpy.types.PropertyGroup):
                            type=Blight)
     camera: PointerProperty(name='Bcamera',
                             type=Bcamera)
+    battribute: CollectionProperty(name='Battribute',
+                                 type=Battribute)
 
 
 
@@ -847,6 +924,7 @@ classes = [
     Belement,
     Bspecies,
     Batom,
+    Battribute,
     Bcell,
     Bbond,
     Bpolyhedra,

@@ -1,18 +1,19 @@
 import bpy
 import numpy as np
 from time import time
+from batoms.attribute import Attributes
 from batoms.base.object import ObjectGN
 from batoms.utils.butils import object_mode, compareNodeType
 from batoms.utils import number2String, string2Number
 
 
 default_attributes = [
-    ['atoms_index', 'INT'],
-    ['species_index', 'INT'],
-    ['show', 'BOOLEAN'],
-    ['select', 'INT'],
-    ['model_style', 'INT'],
-    ['scale', 'FLOAT'],
+    {"name": 'atoms_index', "type": 'INT', "dimension": 0},
+    {"name": 'species_index', "type": 'INT', "dimension": 0},
+    {"name": 'show', "type": 'BOOLEAN', "dimension": 0},
+    {"name": 'select', "type": 'INT', "dimension": 0},
+    {"name": 'model_style', "type": 'INT', "dimension": 0},
+    {"name": 'scale', "type": 'FLOAT', "dimension": 0},
 ]
 
 default_GroupInput = [
@@ -61,6 +62,7 @@ class SearchBond(ObjectGN):
             self.build_object(search_bond_datas)
         else:
             self.load(label)
+            self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
 
     def build_object(self, datas, attributes={}):
         """
@@ -96,9 +98,9 @@ class SearchBond(ObjectGN):
         mesh.from_pydata(positions, [], [])
         mesh.update()
         obj = bpy.data.objects.new(name, mesh)
-        for attribute in default_attributes:
-            mesh.attributes.new(
-                name=attribute[0], type=attribute[1], domain='POINT')
+        self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
+        # Add attributes
+        self._attributes.add(default_attributes)
         self.batoms.coll.objects.link(obj)
         obj.parent = self.batoms.obj
         #

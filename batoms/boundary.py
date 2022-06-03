@@ -8,19 +8,19 @@ from time import time
 import bpy
 import numpy as np
 from ase.geometry import complete_cell
-
+from batoms.attribute import Attributes
 from batoms.base.object import ObjectGN
 from batoms.utils import number2String, string2Number
 from batoms.utils.butils import compareNodeType, object_mode
 
 default_attributes = [
-    ['atoms_index', 'INT'],
-    ['species_index', 'INT'],
-    ['show', 'BOOLEAN'],
-    ['select', 'INT'],
-    ['model_style', 'INT'],
-    ['scale', 'FLOAT'],
-    ['radius_style', 'INT'],
+    {"name": 'atoms_index', "type": 'INT', "dimension": 0},
+    {"name": 'species_index', "type": 'INT', "dimension": 0},
+    {"name": 'show', "type": 'BOOLEAN', "dimension": 0},
+    {"name": 'select', "type": 'INT', "dimension": 0},
+    {"name": 'model_style', "type": 'INT', "dimension": 0},
+    {"name": 'scale', "type": 'FLOAT', "dimension": 0},
+    {"name": 'radius_style', "type": 'INT', "dimension": 0},
 ]
 
 default_GroupInput = [
@@ -141,6 +141,8 @@ class Boundary(ObjectGN):
             self.build_object(boundary_datas)  # , location=location)
         else:
             self.load(label)
+            self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
+
         self.boundary = boundary
 
     def build_object(self, datas, location=[0, 0, 0], attributes={}):
@@ -177,9 +179,9 @@ class Boundary(ObjectGN):
         mesh.from_pydata(positions, [], [])
         mesh.update()
         obj = bpy.data.objects.new(name, mesh)
-        for attribute in default_attributes:
-            mesh.attributes.new(
-                name=attribute[0], type=attribute[1], domain='POINT')
+        self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
+        # Add attributes
+        self._attributes.add(default_attributes)
         self.batoms.coll.objects.link(obj)
         obj.location = location
         obj.parent = self.batoms.obj

@@ -143,7 +143,7 @@ class Magres(BaseObject):
             return
         # select atoms
         positions = self.batoms.positions[indices]
-        tensors = self.tensors[indices]
+        tensors = self.batoms.get_attribute('ms')[indices]
         ellipsoids = self.build_ellipsoids(positions, tensors, scale)
         ms_name = '%s_%s_ms' % (self.label, magres.name)
         self.delete_obj(ms_name)

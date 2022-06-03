@@ -227,6 +227,70 @@ def test_set_arrays():
     del h2o[[2]]
     assert len(h2o.arrays["positions"]) == 2
 
+def test_array_attribute():
+    from ase.build import bulk
+    import numpy as np
+    from batoms import Batoms
+    from time import time
+    bpy.ops.batoms.delete()
+    au = bulk('Au')
+    # single value
+    vel = np.zeros((len(au), 3))
+    tensor = np.zeros((len(au), 3, 3))
+    au.set_array("vel", vel)
+    au.set_array("tensor", tensor)
+    au = Batoms('au', from_ase = au)
+    au.get_attribute('vel')
+    au.get_attribute('tensor')
+
+def test_att_conflict_case1():
+    # Case 1: name ending in 0 
+    from ase.build import bulk
+    import numpy as np
+    from batoms import Batoms
+    from time import time
+    bpy.ops.batoms.delete()
+    au_ase = bulk('Au') * [2, 2, 2]
+    d_arr1 = np.ones((len(au_ase)))
+    d_arr2 = np.ones((len(au_ase)))*2
+    # delibrately increate additional dimension
+    d_arr3 = np.ones((len(au_ase), 2, 2)) * 3
+    # Name confusion
+    # array with name "d@0" and shape (len(atoms), ) --> attribute name "d@0"
+    au_ase.set_array("d@0", d_arr1)
+    au_ase.set_array("d@@2", d_arr2)
+    # array with name "d" and shape (len(atoms), 2, 2)
+    # after that should get d@@@{i} as attribute name
+    au_ase.set_array("d", d_arr3)
+    au_bl = Batoms('au', from_ase = au_ase)
+    assert np.isclose(au_bl.get_attribute('d@0'), d_arr1).all()
+    assert np.isclose(au_bl.get_attribute('d@@2'), d_arr2).all()
+    assert np.isclose(au_bl.get_attribute('d'), d_arr3).all()
+
+def test_att_conflict_case2():
+    # Case 2: huge matrix
+    from ase.build import bulk
+    import numpy as np
+    from batoms import Batoms
+    from time import time
+    bpy.ops.batoms.delete()
+    au_ase = bulk('Au') * [2, 2, 1]
+    d_arr1 = np.ones((len(au_ase), 1))
+    # delibrately increate additional dimension
+    d_arr2 = np.ones((len(au_ase), 15)) * 2
+    # Name confusion
+    # array with name "d1" and shape (len(atoms), 1) --> attribute name "d10"
+    au_ase.set_array("d1", d_arr1)
+    # array with name "d" and shape (len(atoms), 15) --> attribute name also "d10"
+    # after that should get d@10 as attribute name
+    au_ase.set_array("d", d_arr2)
+    au_bl = Batoms('au', from_ase = au_ase)
+    assert np.isclose(au_bl.get_attribute('d1'), d_arr1).all()
+    assert np.isclose(au_bl.get_attribute('d'), d_arr2).all()
+
+
+
+
 ###############################
 # Patch from TT for Atoms.array
 ###############################
@@ -351,6 +415,8 @@ if __name__ == "__main__":
     test_batoms_add()
     test_from_batoms()
     test_set_arrays()
+    test_att_conflict_case1()
+    test_att_conflict_case2()
     test_set_arrays_precision()
     test_repeat()
     test_get_geometry()

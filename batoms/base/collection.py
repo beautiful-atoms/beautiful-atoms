@@ -107,23 +107,33 @@ class Setting():
     """
     Setting object
 
-    The Setting object store the other information for batoms.
+    The Setting object store the additional information for batoms.
+    The inforation is a colleciton of data. For example, species, bond pairs.
+    In Batoms, collection properties are added to a bpy.type.collection 
+    or a bpy.type.object.
 
+    Setting has "add", "remove", "find" and "extend" operators.
+
+    
     Parameters:
 
     label: str
         The label define the batoms object that a Setting belong to.
+        
     """
 
-    def __init__(self, label, coll_name=None) -> None:
+    def __init__(self, label, coll_name=None, obj_name=None) -> None:
         self.label = label
         self.name = 'base'
-        if coll_name is None:
-            self.coll_name = self.label
-        else:
-            self.coll_name = coll_name
+        self.coll_name = coll_name
+        self.obj_name = obj_name
 
     def get_data(self):
+        """Return a dict of all data in the collection.
+
+        Returns:
+            dict: dict of properties.
+        """
         data = {}
         for b in self.collection:
             data[b.name] = b
@@ -131,6 +141,11 @@ class Setting():
 
     @property
     def coll(self):
+        """collection
+
+        Returns:
+            bpy.type.collection: collection which setting atached to.
+        """
         return self.get_coll()
 
     def get_coll(self):
@@ -141,12 +156,38 @@ class Setting():
         return coll
 
     @property
+    def obj(self):
+        """object
+
+        Returns:
+            bpy.type.object: object which setting atached to.
+        """
+        return self.get_obj()
+
+    def get_obj(self):
+        obj = bpy.data.objects.get(self.obj_name)
+        if obj is None:
+            raise KeyError('%s object is not exist.' % self.obj_name)
+        return obj
+
+    @property
     def collection(self):
+        """Collection properties
+
+        Returns:
+            bpy.props.CollectionProperty: colleciton of the properties
+        """
         return self.get_collection()
 
     def get_collection(self):
-        coll = bpy.data.collections.get(self.label)
-        collection = getattr(coll.batoms, self.name)
+        if self.coll_name:
+            coll = bpy.data.collections.get(self.coll_name)
+            collection = getattr(coll.batoms, self.name)
+        elif self.obj_name:
+            obj = bpy.data.objects.get(self.obj_name)
+            collection = getattr(obj.batoms, self.name)
+        else:
+            raise KeyError("The collection property {} not exist!".format(self.name))
         return collection
 
     @property

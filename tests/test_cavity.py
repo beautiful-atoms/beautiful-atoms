@@ -55,3 +55,7 @@ def test_cavity_mof():
         set_cycles_res(mof)
     mof.get_image([0, 1, 0], output="mof-5.png", **extras)
 
+if __name__ == "__main__":
+    test_cavity()
+    test_cavity_zsm()
+    test_cavity_mof

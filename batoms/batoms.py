@@ -6,6 +6,7 @@
 """
 import bpy
 from batoms.bspecies import Bspecies
+from batoms.attribute import Attributes
 from batoms.cell import Bcell
 from batoms.bselect import Selects
 from batoms.base.collection import BaseCollection
@@ -19,12 +20,12 @@ from time import time
 
 
 default_attributes = [
-    ['select', 'INT'],
-    ['species_index', 'INT'],
-    ['species', 'STRING'],
-    ['show', 'BOOLEAN'],
-    ['scale', 'FLOAT'],
-    ['model_style', 'INT'],
+    {"name": 'select', "type": 'INT', "dimension": 0},
+    {"name": 'species_index', "type": 'INT', "dimension": 0},
+    {"name": 'species', "type": 'STRING', "dimension": 0},
+    {"name": 'show', "type": 'BOOLEAN', "dimension": 0},
+    {"name": 'scale', "type": 'FLOAT', "dimension": 0},
+    {"name": 'model_style', "type": 'INT', "dimension": 0},
 ]
 
 
@@ -154,7 +155,7 @@ class Batoms(BaseCollection, ObjectGN):
                 scale = np.ones(natom)*scale
             show = np.ones(natom, dtype=int)
             species_index = [string2Number(sp) for sp in species]
-            arrays = {'positions': positions,
+            arrays = {
                       'species': species,
                       'species_index': species_index,
                       'scale': scale,
@@ -164,7 +165,7 @@ class Batoms(BaseCollection, ObjectGN):
                       }
             if attributes is not None:
                 arrays.update(attributes)
-            self.build_object(label, arrays, location)
+            self.build_object(label, positions, arrays, location)
             self.selects = Selects(label, self)
             if species_props is None:
                 species_props = species
@@ -219,7 +220,7 @@ class Batoms(BaseCollection, ObjectGN):
         # hideOneLevel()
         pass
 
-    def build_object(self, label, arrays, location=[0, 0, 0]):
+    def build_object(self, label, positions, arrays, location=[0, 0, 0]):
         """Build the main Batoms object
 
         Args:
@@ -232,17 +233,16 @@ class Batoms(BaseCollection, ObjectGN):
         """
         self.delete_obj(label)
         mesh = bpy.data.meshes.new(label)
-        positions = arrays.pop('positions')
-        # Add attributes
-        for attribute in default_attributes:
-            mesh.attributes.new(
-                name=attribute[0], type=attribute[1], domain='POINT')
         obj = bpy.data.objects.new(label, mesh)
         obj.data.from_pydata(positions, [], [])
         obj.location = location
         obj.batoms.type = 'BATOMS'
         obj.batoms.label = label
         self.coll.objects.link(obj)
+        #
+        self._attributes = Attributes(label=label, parent=self, obj_name=label)
+        # Add attributes
+        self._attributes.add(default_attributes)
         # add cell object as its child
         self.cell.obj.parent = self.obj
         self.set_attributes(arrays)
@@ -428,6 +428,7 @@ class Batoms(BaseCollection, ObjectGN):
         self.obj_name = label
         self._cell = Bcell(label=label, batoms = self)
         self._species = Bspecies(label, label, {}, self)
+        self._attributes = Attributes(label=label, parent=self, obj_name=label)
         self.selects = Selects(label, self)
 
     @property

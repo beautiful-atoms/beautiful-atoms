@@ -26,7 +26,7 @@ class CavitySettings(Setting):
             cavitysetting (_type_, optional):
                 _description_. Defaults to None.
         """
-        Setting.__init__(self, label, coll_name='%s_cavity' % label)
+        Setting.__init__(self, label, coll_name=label)
         self.label = label
         self.batoms = batoms
         self.parent = parent

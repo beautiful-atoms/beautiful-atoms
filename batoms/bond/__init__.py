@@ -7,6 +7,7 @@ This module defines the Bonds object in the Batoms package.
 import bpy
 import bmesh
 from time import time
+from batoms.attribute import Attributes
 from batoms.utils.butils import object_mode, compareNodeType, get_nodes_by_name
 from batoms.utils import string2Number, number2String
 import numpy as np
@@ -17,18 +18,18 @@ from batoms.bond.search_bond import SearchBond, default_search_bond_datas
 # from pprint import pprint
 
 default_attributes = [
-    ['atoms_index1', 'INT'],
-    ['atoms_index2', 'INT'],
-    ['atoms_index3', 'INT'],
-    ['atoms_index4', 'INT'],
-    ['species_index1', 'INT'],
-    ['species_index2', 'INT'],
-    ['order', 'INT'],
-    ['style', 'INT'],
-    ['show', 'BOOLEAN'],
-    ['model_style', 'INT'],
-    ['polyhedra', 'BOOLEAN'],
-    ['second_bond', 'INT'],
+    {"name": 'atoms_index1', "type": 'INT', "dimension": 0},
+    {"name": 'atoms_index2', "type": 'INT', "dimension": 0},
+    {"name": 'atoms_index3', "type": 'INT', "dimension": 0},
+    {"name": 'atoms_index4', "type": 'INT', "dimension": 0},
+    {"name": 'species_index1', "type": 'INT', "dimension": 0},
+    {"name": 'species_index2', "type": 'INT', "dimension": 0},
+    {"name": 'order', "type": 'INT', "dimension": 0},
+    {"name": 'style', "type": 'INT', "dimension": 0},
+    {"name": 'show', "type": 'BOOLEAN', "dimension": 0},
+    {"name": 'model_style', "type": 'INT', "dimension": 0},
+    {"name": 'polyhedra', "type": 'BOOLEAN', "dimension": 0},
+    {"name": 'second_bond', "type": 'INT', "dimension": 0},
 ]
 
 default_GroupInput = [
@@ -99,6 +100,7 @@ class Bonds(BaseCollection, ObjectGN):
             self.update_geometry_nodes()
         else:
             self.setting = BondSettings(self.label, batoms=batoms, bonds=self)
+            self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
         self._search_bond = None
 
     def build_object(self, bond_datas, attributes={}):
@@ -133,8 +135,6 @@ class Bonds(BaseCollection, ObjectGN):
         offsets2 = bond_datas['offsets2']
         offsets3 = bond_datas['offsets3']
         offsets4 = bond_datas['offsets4']
-        nbond = len(centers)
-        show = np.ones(nbond, dtype=int)
         attributes.update({
             'atoms_index1': bond_datas['atoms_index1'],
             'atoms_index2': bond_datas['atoms_index2'],
@@ -142,7 +142,7 @@ class Bonds(BaseCollection, ObjectGN):
             'atoms_index4': bond_datas['atoms_index4'],
             'species_index1': bond_datas['species_index1'],
             'species_index2': bond_datas['species_index2'],
-            'show': show,
+            'show': bond_datas['show'],
             'model_style': bond_datas['model_style'],
             'style': bond_datas['style'],
             'order': bond_datas['order'],
@@ -154,9 +154,9 @@ class Bonds(BaseCollection, ObjectGN):
         mesh.from_pydata(centers, [], [])
         mesh.update()
         obj = bpy.data.objects.new(name, mesh)
-        for attribute in default_attributes:
-            mesh.attributes.new(
-                name=attribute[0], type=attribute[1], domain='POINT')
+        self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
+        # Add attributes
+        self._attributes.add(default_attributes)
         self.coll.objects.link(obj)
         obj.parent = self.batoms.obj
         obj.batoms.type = 'BOND'
