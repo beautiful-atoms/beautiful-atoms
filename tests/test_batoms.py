@@ -264,8 +264,10 @@ def test_att_conflict_case1():
     # after that should get d0.001 as attribute name
     au_ase.set_array("d", d_arr2)
     au_bl = Batoms('au', from_ase = au_ase)
-    assert np.isclose(au_bl.get_attribute('d'), d_arr1).all()
-    assert np.isclose(au_bl.get_attribute('d0'), d_arr2).all()
+    print(au_bl.get_attribute("d0"))
+    print(au_bl.get_attribute("d"))
+    assert np.isclose(au_bl.get_attribute('d0'), d_arr1).all()
+    assert np.isclose(au_bl.get_attribute('d'), d_arr2).all()
 
 def test_att_conflict_case2():
     # Case 2: huge matrix
