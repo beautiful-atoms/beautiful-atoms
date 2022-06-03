@@ -158,13 +158,14 @@ class Battribute(Base):
 
     def __repr__(self) -> str:
         s = "-"*60 + "\n"
-        s = "{:20s}{:10s}{:10s}{:10s}   {:20s}\n".format("Name", "Type", "Domain", "Dimension", "Shape")
-        s += "{:20s}{:10s}{:10s}{:10d}  [".format(
-            self.name, self.type, self.domain, self.dimension)
+        s = "{:20s}{:10s}{:10s}{:10s}{:10s}   {:20s}\n".format("Name", "Type", "Domain", "delimiter", "Dimension", "Shape")
+        s += "{:20s}{:10s}{:10s}{:10s}{:10d}  [".format(
+            self.name, self.type, self.domain, self.delimiter, self.dimension)
         for i in range(self.dimension):
             s += "  {}  ".format(self.shape[i])
         s += "] \n"
-        s += "-"*60 + "\n"
+        s += "-"*80 + "\n"
+        return s
         
 class Bsite(bpy.types.PropertyGroup):
     """
