@@ -14,7 +14,7 @@ batoms_dir = os.path.dirname(Path(__file__).parent)
 
 # logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
-root_logger = logging.getLogger()
+root_logger = logging.getLogger("batoms")
 
 def set_logger(version):
     # formatter = ('%(levelname)-8s '
