@@ -3,6 +3,24 @@ import bpy
 from mathutils import Vector, Matrix
 import numpy as np
 
+def get_selected_vertices_bmesh(obj):
+    """_summary_
+
+    Args:
+        obj (bpy.type.object): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    import bmesh
+    if obj.batoms.type == 'BATOMS' and obj.mode == 'EDIT':
+        data = obj.data
+        bm = bmesh.from_edit_mesh(data)
+        v = [s.index for s in bm.select_history if isinstance(
+            s, bmesh.types.BMVert)]
+        return v
+    else:
+        return []
 
 def get_all_consoles():
     """Get all consoles

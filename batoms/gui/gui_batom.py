@@ -6,7 +6,8 @@ from bpy.props import (FloatProperty,
                        BoolProperty,
                        EnumProperty,
                        )
-
+from batoms.gui.gui_batoms import get_active_batoms
+from batoms.utils.butils import get_selected_vertices_bmesh
 
 class Batom_PT_prepare(Panel):
     bl_label = "Batom"
@@ -24,12 +25,21 @@ class Batom_PT_prepare(Panel):
         layout.prop(btpanel, "bond")
 
 
-class BatomProperties(bpy.types.PropertyGroup):
 
-    def Callback_modify_scale(self, context):
-        btpanel = bpy.context.scene.btpanel
-        scale = btpanel.scale
-        bpy.ops.batoms.batom_modify(key='scale', scale=scale)
+def get_scale(self):
+    batoms = get_active_batoms()
+    if batoms is not None:
+        v = get_selected_vertices_bmesh(batoms.obj)
+        if len(v) > 0:
+            return batoms.scale[v[0]]
+    else:
+        return 0
+
+def set_scale(self, value):
+    self["scale"] = value
+    bpy.ops.batoms.batom_modify(key='scale', scale=value)
+
+class BatomProperties(bpy.types.PropertyGroup):
 
     def Callback_modify_size(self, context):
         btpanel = bpy.context.scene.btpanel
@@ -49,7 +59,9 @@ class BatomProperties(bpy.types.PropertyGroup):
     scale: FloatProperty(
         name="scale", default=0.6,
         min=0, soft_max=2,
-        description="scale", update=Callback_modify_scale)
+        description="scale",
+        get=get_scale,
+        set=set_scale)
 
     size: FloatProperty(
         name="size", default=1.5,

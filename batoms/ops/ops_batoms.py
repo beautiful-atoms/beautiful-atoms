@@ -10,7 +10,7 @@ from bpy.props import (
 )
 from batoms import Batoms
 from batoms.ops.base import OperatorBatoms, OperatorBatomsEdit
-
+from batoms.utils.butils import get_selected_vertices_bmesh
 
 class BatomsReplace(OperatorBatomsEdit):
     bl_idname = "batoms.replace"
@@ -23,10 +23,7 @@ class BatomsReplace(OperatorBatomsEdit):
 
     def execute(self, context):
         obj = context.object
-        data = obj.data
-        bm = bmesh.from_edit_mesh(data)
-        v = [s.index for s in bm.select_history if isinstance(
-            s, bmesh.types.BMVert)]
+        v = get_selected_vertices_bmesh(obj)
         batoms = Batoms(label=obj.batoms.label)
         batoms.replace(v, self.species)
         bpy.ops.object.mode_set(mode='EDIT')
@@ -62,10 +59,7 @@ class BatomModify(OperatorBatomsEdit):
 
     def execute(self, context):
         obj = context.object
-        data = obj.data
-        bm = bmesh.from_edit_mesh(data)
-        v = [s.index for s in bm.select_history if isinstance(
-            s, bmesh.types.BMVert)]
+        v = get_selected_vertices_bmesh(obj)
         batoms = Batoms(label=obj.batoms.label)
         for i in v:
             setattr(batoms[i], self.key, getattr(self, self.key))
