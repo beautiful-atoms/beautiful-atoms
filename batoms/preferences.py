@@ -98,7 +98,7 @@ class BatomsAddonPreferences(AddonPreferences):
         items = self.bl_rna.properties["logging_level"].enum_items
         # self.get: returns the value of the custom property assigned to
         # key or default when not found 
-        return items[self.get("logging_level")].value
+        return items[self.get("logging_level", 2)].value
 
     def set_logging_level(self, value):
         items = self.bl_rna.properties["logging_level"].enum_items
