@@ -13,6 +13,17 @@ def create_molecule():
     from ase.build import molecule
     batoms = Batoms(from_ase=molecule("CO"))
     bpy.ops.batoms.delete()
+    return
+
+def read_log_lines(logger):
+    """Ugly patch for reading the logger contents,
+     since pytest caplog not working properly in blender (yet)
+    """
+    fh = logger.handlers[0]
+    filename = fh.baseFilename
+    with open(filename, "r") as fd:
+        lines = fd.readlines()
+    return lines
 
 
 def test_logging_level():
@@ -32,13 +43,25 @@ def test_logging_level():
     # bpy.context.preferences.addons[package].preferences.logging_level = "WARNING"
     # assert(logger.level == 30)
 
-def test_logging_level_emit(caplog):
+def test_logging_level_emit():
     """Test if setting logging level hierachically works
+    Set the logging level to INFO, adding Batoms shows the timing info
+    Set the level to WARNING and higher, timing info is supressed
     """
-    # caplog.set_level(logging.DEBUG)
-    create_molecule()
     root_logger = logging.getLogger("batoms")
-    # root_logger.
+    # INFO level reveals the timing info
+    preferences.logging_level = "INFO"
+    create_molecule()
+    lines1 = read_log_lines(root_logger)
+    assert any(["set_attributes" in line for line in lines1])
+    # WARNING level suppresses timing info
+    preferences.logging_level = "WARNING"
+    create_molecule()
+    lines2 = read_log_lines(root_logger)[len(lines1):]
+    assert all(["set_attributes" not in line for line in lines2])
+    
+
+
 
     
     
@@ -46,4 +69,5 @@ def test_logging_level_emit(caplog):
 
 if __name__ == "__main__":
     test_logging_level()
+    test_logging_level_emit()
     print("\n Batoms: All pass! \n")
