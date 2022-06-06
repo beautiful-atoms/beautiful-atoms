@@ -20,6 +20,8 @@ from bpy.props import (StringProperty,
                        BoolProperty,
                        FloatVectorProperty,
                        )
+import logging
+logger = logging.getLogger('batoms')
 
 
 def translate(selected_batoms, displacement):

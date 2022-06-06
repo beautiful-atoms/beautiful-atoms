@@ -2,6 +2,8 @@ from batoms.ribbon.profile import ellipse, rectangle
 from batoms.base.collection import Setting
 from time import time
 import numpy as np
+import logging
+logger = logging.getLogger('batoms')
 
 
 class Protein():
@@ -173,7 +175,7 @@ class Protein():
         # HETATM
         indices = np.where(arrays['types'] == 'HETATM')[0]
         self.batoms.selects.add('heta', indices)
-        print('update ribbon: %s' % (time() - tstart))
+        logger.debug('update ribbon: %s' % (time() - tstart))
 
 
 class Chain():

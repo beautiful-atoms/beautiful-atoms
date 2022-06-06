@@ -13,6 +13,8 @@ from batoms.cavity.cavitysetting import CavitySettings
 from scipy import spatial
 from batoms.utils.butils import object_mode, get_nodes_by_name
 from batoms.utils import string2Number
+import logging
+logger = logging.getLogger('batoms')
 
 default_attributes = [
     {"name": 'species_index', "type": 'INT', "dimension": 0},

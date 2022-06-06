@@ -18,6 +18,8 @@ from batoms.utils import string2Number, read_from_others
 import numpy as np
 from time import time
 
+import logging
+logger = logging.getLogger('batoms')
 
 default_attributes = [
     {"name": 'select', "type": 'INT', "dimension": 0},

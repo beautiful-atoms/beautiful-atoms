@@ -1,6 +1,8 @@
 import urllib.request
 from batoms import Batoms
 from batoms.pdbparser import read_pdb
+import logging
+logger = logging.getLogger('batoms')
 
 
 def rscb_import(name):

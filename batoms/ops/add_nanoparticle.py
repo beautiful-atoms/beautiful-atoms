@@ -61,6 +61,7 @@ class BuildDecahedron(Operator):
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Add nanoparticle {}".format(self.label))
         return {'FINISHED'}
 
 
@@ -100,6 +101,7 @@ class BuildIcosahedron(Operator):
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Add nanoparticle {}".format(self.label))
         return {'FINISHED'}
 
 
@@ -150,4 +152,5 @@ class BuildOctahedron(Operator):
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Add nanoparticle {}".format(self.label))
         return {'FINISHED'}

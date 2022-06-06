@@ -1,6 +1,9 @@
 import numpy as np
 import math
 from time import time
+import logging
+logger = logging.getLogger('batoms')
+
 
 def read_from_others(from_ase=None, from_pymatgen=None,
                      from_pybel=None):
@@ -450,7 +453,7 @@ def calc_euler_angle(x, z, seq='xyz'):
         mat = np.linalg.inv(mat)
         r = R.from_matrix(mat)
         eulers = r.as_euler(seq=seq)  # , degrees = True)
-    print('calc_euler_angle: {0:10.2f} s'.format(time() - tstart))
+    logger.debug('calc_euler_angle: {0:10.2f} s'.format(time() - tstart))
     return eulers
 
 def type_blender_to_py(dtype):

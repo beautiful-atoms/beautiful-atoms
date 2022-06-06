@@ -9,6 +9,8 @@ from time import time
 import numpy as np
 from batoms.base.object import BaseObject
 from batoms.isosurface.isosurfacesetting import IsosurfaceSettings
+import logging
+logger = logging.getLogger('batoms')
 
 
 class Isosurface(BaseObject):

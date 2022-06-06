@@ -5,6 +5,8 @@ update batoms
 import bpy
 import subprocess
 import os
+import logging
+logger = logging.getLogger('batoms')
 
 account_name = "superstar54"
 repo_name = "beautiful-atoms"
@@ -21,9 +23,9 @@ def subprocess_run(cmds):
         if p.returncode == 0:
             return True
         else:
-            print(stdout, stderr)
+            logger.critical(stdout, stderr)
     except (OSError, Exception) as exception:
-        print(exception)
+        logger.critical(exception)
         return False
     return False
 
@@ -54,15 +56,15 @@ def gitclone(workdir=".", version="main", url=repo_git):
     flag = subprocess_run(commands)
     flag = True
     if flag:
-        print(f"Cloned repo into directory {clone_into}")
+        logger.info(f"Cloned repo into directory {clone_into}")
     else:
-        print("Faild to clone")
+        logger.warning("Faild to clone")
     #
     src = os.path.join(clone_into, "batoms")
     if os.path.exists(batoms_dir) and os.path.isdir(batoms_dir):
-        print("Remove old Batoms folder {}".format(batoms_dir))
+        logger.info("Remove old Batoms folder {}".format(batoms_dir))
         shutil.rmtree(batoms_dir)
-    print("Move {} to {}".format(src, batoms_dir))
+    logger.info("Move {} to {}".format(src, batoms_dir))
     shutil.move(src, batoms_dir)
 
 class BatomsUpdateButton(bpy.types.Operator):
@@ -74,7 +76,7 @@ class BatomsUpdateButton(bpy.types.Operator):
     def execute(self, context):
         if not has_git():
             self.report({"ERROR"}, "Please install Git first.")
-            print("Please install Git first.")
+            logger.warning("Please install Git first.")
             return {"CANCELLED"}
         gitclone()
         self.report({"INFO"}, "Update to the latest version successfully!")

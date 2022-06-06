@@ -12,6 +12,8 @@ from batoms.attribute import Attributes
 from batoms.base.object import ObjectGN
 from batoms.utils import number2String, string2Number
 from batoms.utils.butils import compareNodeType, object_mode
+import logging
+logger = logging.getLogger('batoms')
 
 default_attributes = [
     {"name": 'atoms_index', "type": 'INT', "dimension": 0},
@@ -370,7 +372,7 @@ class Boundary(ObjectGN):
         #
         self.set_arrays(boundary_datas)
         self.batoms.draw()
-        print('draw bond: {0:10.2f} s'.format(time() - tstart))
+        logger.debug('update boundary: {0:10.2f} s'.format(time() - tstart))
 
     @property
     def obj(self):

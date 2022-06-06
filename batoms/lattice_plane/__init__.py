@@ -11,6 +11,8 @@ import numpy as np
 from batoms.base.object import BaseObject
 from batoms.lattice_plane.lattice_plane_setting import LatticePlaneSettings
 from batoms.draw import draw_cylinder, draw_surface_from_vertices
+import logging
+logger = logging.getLogger('batoms')
 
 
 class LatticePlane(BaseObject):
@@ -119,7 +121,7 @@ class LatticePlane(BaseObject):
         from scipy import ndimage
         from ase.cell import Cell
         from batoms.utils.butils import object_mode
-        import matplotlib
+        import matplotlib.cm
         cell = Cell(bcell.array)
         plane = bpy.data.objects.get(name)
         object_mode()
@@ -139,7 +141,7 @@ class LatticePlane(BaseObject):
                 if length > maxlength:
                     maxlength = length
             cuts = maxlength/np.min(density)
-            print('cuts: ', cuts)
+            # print('cuts: ', cuts)
         # make mesh by subdivided
         bmesh.ops.subdivide_edges(bm,
                                   edges=bm.edges,
@@ -339,7 +341,7 @@ def save_image(data, filename, interpolation='bicubic'):
     import numpy as np
     data = data.T
     size = np.shape(data)
-    print('size: ', size)
+    # print('size: ', size)
     fig = plt.figure(figsize=(size[1]/size[0]*10, 10))
     ax = plt.Axes(fig, [0., 0., 1., 1.])
     ax.set_axis_off()

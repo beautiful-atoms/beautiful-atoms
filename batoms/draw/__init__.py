@@ -2,6 +2,8 @@ import bpy
 from batoms.material import create_material
 import numpy as np
 from time import time
+import logging
+logger = logging.getLogger('batoms')
 # ========================================================
 
 
@@ -114,7 +116,7 @@ def draw_text(coll_text=None, atoms=None, type=None):
             ob.data.body = "%s" % atoms[i].symbol
         ob.location = location
         coll_text.objects.link(ob)
-    print('text: {0:10.2f} s'.format(time() - tstart))
+    logger.debug('text: {0:10.2f} s'.format(time() - tstart))
 
 
 def draw_2d_slicing(name,
@@ -211,7 +213,7 @@ def cylinder2(vertices=16, depth=1.0):
         v0 = me.edges[i].vertices[0]
         v1 = me.edges[i].vertices[1]
         center = (vertices[v0] + vertices[v1])/2
-        print(i, v0, v1, center)
+        # print(i, v0, v1, center)
         if np.isclose(center[2], 0):
             selects[i] = True
 

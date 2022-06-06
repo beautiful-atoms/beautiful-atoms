@@ -10,6 +10,9 @@ from time import time
 import numpy as np
 from batoms.base.object import BaseObject
 from batoms.magres.magressetting import MagresSetting
+import logging
+logger = logging.getLogger('batoms')
+
 
 class Magres(BaseObject):
     def __init__(self,
@@ -136,7 +139,7 @@ class Magres(BaseObject):
         """
         """
         scale = magres.scale
-        print('Scale: {:1.3}'.format(scale))
+        # print('Scale: {:1.3}'.format(scale))
         tstart = time()
         indices = self.batoms.selects[magres.select].indices
         if len(indices) == 0:
@@ -160,7 +163,7 @@ class Magres(BaseObject):
         obj.parent = self.batoms.obj
         obj.batoms.type = 'MS'
         obj.batoms.label = self.batoms.label
-        print('Draw MS: %s' % (time() - tstart))
+        logger.debug('Draw MS: %s' % (time() - tstart))
 
     def draw_CS(self, magres, parallel=1):
         """

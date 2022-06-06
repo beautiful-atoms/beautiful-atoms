@@ -7,6 +7,8 @@ from mathutils import Vector
 import numpy as np
 from batoms.base.collection import BaseCollection
 from batoms.base.object import BaseObject
+import logging
+logger = logging.getLogger('batoms')
 
 
 class Light(BaseObject):

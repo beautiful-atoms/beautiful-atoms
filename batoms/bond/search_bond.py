@@ -5,7 +5,8 @@ from batoms.attribute import Attributes
 from batoms.base.object import ObjectGN
 from batoms.utils.butils import object_mode, compareNodeType
 from batoms.utils import number2String, string2Number
-
+import logging
+logger = logging.getLogger('batoms')
 
 default_attributes = [
     {"name": 'atoms_index', "type": 'INT', "dimension": 0},

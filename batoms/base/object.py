@@ -3,6 +3,10 @@ import numpy as np
 from batoms.utils.butils import (get_nodes_by_name, object_mode, set_look_at,
                                  update_object)
 from time import time
+import logging
+
+logger = logging.getLogger('batoms')
+
 
 default_object_attributes = [
 ]
@@ -529,7 +533,7 @@ class ObjectGN(BaseObject):
                     else:
                         for j in range(M):
                             att.data.foreach_set("value", array[i*natom:(i+1)*natom])
-            print('set_attributes {}: {}'.format(key, time() - tstart))
+            logger.info('{}: {}'.format(key, time() - tstart))
         me.update()
 
     def set_attribute_with_indices(self, name, indices, data):

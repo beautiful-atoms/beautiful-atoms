@@ -8,7 +8,8 @@ import numpy as np
 from batoms.base.object import BaseObject
 from batoms.crystal_shape.crystal_shape_setting import CrystalShapeSettings
 from batoms.draw import draw_cylinder, draw_surface_from_vertices
-
+import logging
+logger = logging.getLogger('batoms')
 
 class CrystalShape(BaseObject):
     def __init__(self,
@@ -175,7 +176,7 @@ def save_image(data, filename, interpolation='bicubic'):
     import numpy as np
     data = data.T
     size = np.shape(data)
-    print('size: ', size)
+    logger.debug('size: {}'.format(size))
     fig = plt.figure(figsize=(size[1]/size[0]*10, 10))
     ax = plt.Axes(fig, [0., 0., 1., 1.])
     ax.set_axis_off()

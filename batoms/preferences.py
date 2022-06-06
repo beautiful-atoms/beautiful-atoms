@@ -11,9 +11,24 @@ from bpy.types import AddonPreferences
 from bpy.props import (
     BoolProperty,
     StringProperty,
+    EnumProperty,
 )
 from batoms.install.pip_dependencies import has_module
 from batoms.install import update
+import logging
+
+logger = logging.getLogger('batoms')
+
+
+# Enum property.
+# Note: the getter/setter callback must use integer identifiers!
+logging_level_items = [
+    ("DEBUG", "DEBUG", "", 0),
+    ("INFO", "INFO", "", 1),
+    ("WARNING", "WARNING", "", 2),
+    ("ERROR", "ERROR", "", 3),
+    ("CRITICAL", "CRITICAL", "", 4),
+]
 
 dependencies = {"ase": "ase",
                 "scikit-image": "skimage",
@@ -70,8 +85,25 @@ class BatomsDefaultStartup(bpy.types.Operator):
         # bpy.ops.preferences.addon_show(module="batoms")
         return {'FINISHED'}
 
+
+
 class BatomsAddonPreferences(AddonPreferences):
     bl_idname = __package__
+
+    def get_logging_level(self):
+        items = self.bl_rna.properties["logging_level"].enum_items
+        # self.get: returns the value of the custom property assigned to
+        # key or default when not found 
+        return items[self.get("logging_level")].value
+
+    def set_logging_level(self, value):
+        items = self.bl_rna.properties["logging_level"].enum_items
+        item = items[value]
+        level = item.identifier
+        # we need to update both the preference and the logger
+        self["logging_level"] = level
+        logger.setLevel(level)
+        logger.info("Set logging level to: {}".format(level))
 
     def batoms_setting_path_update(self, context):
         import os
@@ -82,7 +114,7 @@ class BatomsAddonPreferences(AddonPreferences):
         if os.name == 'nt':  # Windows
             cmds = ["setx", "BATOMS_SETTING_PATH {}".format(
                 self.batoms_setting_path)]
-        print(update.run(cmds))
+        logger.debug(update.subprocess_run(cmds))
 
     ase: BoolProperty(
         name="ASE installed",
@@ -117,6 +149,14 @@ class BatomsAddonPreferences(AddonPreferences):
     batoms_setting_path: StringProperty(name="Custom Setting Path", description="Custom Setting Path",
                                             default="", subtype="FILE_PATH", update=batoms_setting_path_update)
 
+    logging_level: EnumProperty(
+        name="Logging Level",
+        items=logging_level_items,
+        get=get_logging_level,
+        set=set_logging_level,
+        default=2,
+        )
+    
 
     def draw(self, context):
         layout = self.layout
@@ -153,6 +193,7 @@ class BatomsAddonPreferences(AddonPreferences):
         layout.separator()
         box = layout.box().column()
         box.label(text="Custom Settings")
+        box.prop(self, "logging_level")
         box.prop(self, "batoms_setting_path")
 
 classes = [BatomsDefaultPreference,

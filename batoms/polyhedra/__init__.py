@@ -12,6 +12,9 @@ from batoms.utils import string2Number
 import numpy as np
 from batoms.base.object import ObjectGN
 from batoms.polyhedra.polyhedrasetting import PolyhedraSettings
+import logging
+logger = logging.getLogger('batoms')
+
 
 default_attributes = [
     {"name":'atoms_index1', "type": 'INT', "dimension": 0},
@@ -161,7 +164,7 @@ class Polyhedras(ObjectGN):
         self.set_frames(self._frames, only_basis=True)
         self.assign_materials()
         obj.parent = self.batoms.obj
-        print('polyhedras: build_object: {0:10.2f} s'.format(time() - tstart))
+        logger.debug('polyhedras: build_object: {0:10.2f} s'.format(time() - tstart))
 
     def assign_materials(self):
         # sort element by occu
@@ -258,7 +261,7 @@ class Polyhedras(ObjectGN):
         # find kinds by the names of species
         for sp in self.setting:
             self.add_geometry_node(sp.as_dict())
-        print('Build geometry nodes for polyhedras: %s' % (time() - tstart))
+        logger.debug('Build geometry nodes for polyhedras: %s' % (time() - tstart))
 
     def add_geometry_node(self, sp):
         from batoms.utils.butils import get_nodes_by_name
@@ -353,7 +356,7 @@ class Polyhedras(ObjectGN):
         polyhedra_datas = {}
         tstart = time()
         for f in range(nframe):
-            print('update polyhedra: ', f)
+            logger.debug('update polyhedra: ', f)
             positions = frames[f, show, :]
             bondlists = self.bondlists
             if len(bondlists) == 0:
@@ -374,7 +377,7 @@ class Polyhedras(ObjectGN):
         # bpy.data.collections['Collection'].objects.unlink(bb.obj)
         # bb.set_frames()
         # bpy.context.scene.frame_set(self.batoms.nframe)
-        print('draw polyhedra: {0:10.2f} s'.format(time() - tstart))
+        logger.debug('draw polyhedra: {0:10.2f} s'.format(time() - tstart))
 
     def update_geometry_node_material(self):
         """
@@ -394,7 +397,7 @@ class Polyhedras(ObjectGN):
                                                     self.label, sp["species"]),
                                                 'GeometryNodeSetMaterialIndex')
             setMaterialIndex.inputs[2].default_value = i
-        print('update bond instancer: %s'%(time() - tstart))
+        logger.debug('update bond instancer: %s'%(time() - tstart))
 
     @property
     def obj_o(self):
@@ -624,5 +627,5 @@ class Polyhedras(ObjectGN):
                 'model_styles': model_styles,
             }
         # print('datas: ', datas)
-        print('calc_polyhedra_data: {0:10.2f} s'.format(time() - tstart))
+        logger.debug('calc_polyhedra_data: {0:10.2f} s'.format(time() - tstart))
         return datas
