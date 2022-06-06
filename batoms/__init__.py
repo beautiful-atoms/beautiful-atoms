@@ -33,7 +33,8 @@ from . import (
     modal,
 )
 
-logger.set_logger()
+logger.set_logger(bl_info["version"])
+
 
 
 

@@ -6,10 +6,15 @@ import sys
 from tempfile import gettempdir
 from pathlib import Path
 import logging
+import os
+
+batoms_dir = os.path.dirname(Path(__file__).parent)
+
+
 
 logger = logging.getLogger('batoms')
 
-def set_logger():
+def set_logger(version):
     formatter = ('%(levelname)-8s '
                                 '[%(funcName)-20s]: %(message)s')
     logging.basicConfig(stream=sys.stdout,
@@ -22,6 +27,11 @@ def set_logger():
     file_handler = logging.FileHandler(filepath, mode="w")
     file_handler.setFormatter(logging.Formatter(formatter))
     logger.addHandler(file_handler)
+    logger.info("Blender version: {} ".format(bpy.app.version_string))
+    logger.info("Python version: {} ".format(sys.version))
+    logger.info("Beautiful Atoms version: {} ".format(version))
+    logger.info("Beautiful Atoms directory: {} ".format(batoms_dir))
+    
 
 def update_logging_level():
     prefs = bpy.context.preferences.addons['batoms'].preferences

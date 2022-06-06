@@ -63,6 +63,8 @@ class BatomsDefaultPreference(bpy.types.Operator):
         bpy.context.preferences.themes[0].view_3d.space.gradients.high_gradient = (0.9, 0.9, 0.9)
         bpy.context.preferences.themes[0].view_3d.space.gradients.gradient = (0.5, 0.5, 0.5)
         bpy.ops.wm.save_userpref()
+        # logger
+        bpy.context.preferences.addons['batoms'].preferences.logging_level = "WARNING"
         self.report({"INFO"}, "Set default preferences successfully!")
         return {'FINISHED'}
 
