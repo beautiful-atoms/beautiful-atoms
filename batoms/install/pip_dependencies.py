@@ -5,7 +5,8 @@ from bpy.types import Operator
 from bpy.props import (StringProperty,
                        )
 import logging
-logger = logging.getLogger('batoms')
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 dependencies = {"ase": "ase",
                 "scikit-image": "skimage",

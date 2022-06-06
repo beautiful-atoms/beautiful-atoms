@@ -2,7 +2,8 @@ import numpy as np
 import math
 from time import time
 import logging
-logger = logging.getLogger('batoms')
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 
 def read_from_others(from_ase=None, from_pymatgen=None,

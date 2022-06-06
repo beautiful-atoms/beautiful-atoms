@@ -4,7 +4,8 @@ import numpy as np
 from time import time
 from ase.geometry import wrap_positions
 import logging
-logger = logging.getLogger('batoms')
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 def RemovePbc(species0, positions0, cell, pbc, cutoffs):
     """

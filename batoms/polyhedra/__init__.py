@@ -13,7 +13,8 @@ import numpy as np
 from batoms.base.object import ObjectGN
 from batoms.polyhedra.polyhedrasetting import PolyhedraSettings
 import logging
-logger = logging.getLogger('batoms')
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 
 default_attributes = [

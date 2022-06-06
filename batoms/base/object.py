@@ -5,7 +5,8 @@ from batoms.utils.butils import (get_nodes_by_name, object_mode, set_look_at,
 from time import time
 import logging
 
-logger = logging.getLogger('batoms')
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 
 default_object_attributes = [

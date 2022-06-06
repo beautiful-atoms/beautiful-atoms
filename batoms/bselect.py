@@ -3,7 +3,8 @@ import numpy as np
 from batoms.utils import string2Number
 # from time import time
 import logging
-logger = logging.getLogger('batoms')
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 class Select():
     def __init__(self, label, name='all',

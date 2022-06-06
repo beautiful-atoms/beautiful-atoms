@@ -12,7 +12,8 @@ from batoms.base.object import BaseObject
 from batoms.lattice_plane.lattice_plane_setting import LatticePlaneSettings
 from batoms.draw import draw_cylinder, draw_surface_from_vertices
 import logging
-logger = logging.getLogger('batoms')
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 
 class LatticePlane(BaseObject):

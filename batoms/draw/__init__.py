@@ -3,7 +3,8 @@ from batoms.material import create_material
 import numpy as np
 from time import time
 import logging
-logger = logging.getLogger('batoms')
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 # ========================================================
 
 

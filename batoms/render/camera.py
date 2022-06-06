@@ -6,7 +6,8 @@ import bpy
 from mathutils import Vector
 from batoms.base.object import BaseObject
 import logging
-logger = logging.getLogger('batoms')
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 
 def set_lock_camera_to_view(switch):

@@ -12,30 +12,34 @@ batoms_dir = os.path.dirname(Path(__file__).parent)
 
 
 
-logger = logging.getLogger('batoms')
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
+root_logger = logging.getLogger("batoms")
 
 def set_logger(version):
-    formatter = ('%(levelname)-8s '
-                                '[%(funcName)-20s]: %(message)s')
+    # formatter = ('%(levelname)-8s '
+    #                             '[%(funcName)-20s]: %(message)s')
+    formatter = ('%(levelname)s '
+                    '[%(name)s %(funcName)s]: %(message)s')
     logging.basicConfig(stream=sys.stdout,
                         format=formatter,
                         level=logging.INFO
                         )
     # add logger file
     filepath = Path(gettempdir()) / ("beautiful_atoms.log")
-    logger.info("Log file: " + str(filepath))
+    root_logger.info("Log file: " + str(filepath))
     file_handler = logging.FileHandler(filepath, mode="w")
     file_handler.setFormatter(logging.Formatter(formatter))
-    logger.addHandler(file_handler)
-    logger.info("Blender version: {} ".format(bpy.app.version_string))
-    logger.info("Python version: {} ".format(sys.version))
-    logger.info("Beautiful Atoms version: {} ".format(version))
-    logger.info("Beautiful Atoms directory: {} ".format(batoms_dir))
+    root_logger.addHandler(file_handler)
+    root_logger.info("Blender version: {} ".format(bpy.app.version_string))
+    root_logger.info("Python version: {} ".format(sys.version))
+    root_logger.info("Beautiful Atoms version: {} ".format(version))
+    root_logger.info("Beautiful Atoms directory: {} ".format(batoms_dir))
     
 
 def update_logging_level():
     prefs = bpy.context.preferences.addons['batoms'].preferences
-    logger.setLevel(prefs.logging_level)
+    root_logger.setLevel(prefs.logging_level)
 
 
 def print_time(key, value):

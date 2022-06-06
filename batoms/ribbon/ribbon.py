@@ -16,7 +16,8 @@ from time import time
 import numpy as np
 from batoms.ribbon.protein import Protein
 import logging
-logger = logging.getLogger('batoms')
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 
 def draw_curve_from_vertices_bezier(name, data,

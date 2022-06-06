@@ -6,7 +6,8 @@ from . import (
             force_field,
             )
 import logging
-logger = logging.getLogger('batoms')
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 
 

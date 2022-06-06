@@ -11,7 +11,8 @@ import numpy as np
 from batoms.base.object import BaseObject
 from batoms.ms.mssetting import MSsetting
 import logging
-logger = logging.getLogger('batoms')
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 
 class MS(BaseObject):

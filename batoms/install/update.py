@@ -6,7 +6,8 @@ import bpy
 import subprocess
 import os
 import logging
-logger = logging.getLogger('batoms')
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 account_name = "superstar54"
 repo_name = "beautiful-atoms"

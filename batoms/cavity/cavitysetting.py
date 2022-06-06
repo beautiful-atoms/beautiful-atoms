@@ -4,7 +4,8 @@ import bpy
 import numpy as np
 from batoms.base.collection import Setting
 import logging
-logger = logging.getLogger('batoms')
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 class CavitySettings(Setting):
     def __init__(self, label, batoms=None, parent=None,

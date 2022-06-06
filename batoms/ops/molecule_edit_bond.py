@@ -9,7 +9,8 @@ from batoms import Batoms
 from ase.data import covalent_radii, chemical_symbols
 import numpy as np
 import logging
-logger = logging.getLogger('batoms')
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 
 def edit_bond(batoms, indices, order):

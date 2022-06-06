@@ -9,7 +9,8 @@ from batoms.base.object import BaseObject
 from batoms.crystal_shape.crystal_shape_setting import CrystalShapeSettings
 from batoms.draw import draw_cylinder, draw_surface_from_vertices
 import logging
-logger = logging.getLogger('batoms')
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 class CrystalShape(BaseObject):
     def __init__(self,

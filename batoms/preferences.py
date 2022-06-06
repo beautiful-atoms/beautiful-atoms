@@ -15,9 +15,11 @@ from bpy.props import (
 )
 from batoms.install.pip_dependencies import has_module
 from batoms.install import update
+from batoms.logger import update_logging_level
 import logging
 
-logger = logging.getLogger('batoms')
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 
 # Enum property.
@@ -104,7 +106,10 @@ class BatomsAddonPreferences(AddonPreferences):
         level = item.identifier
         # we need to update both the preference and the logger
         self["logging_level"] = level
-        logger.setLevel(level)
+        # Set the logging level for all child loggers of "batoms"
+        update_logging_level()
+        # Note the following logging info might not emit 
+        # if global level is higher than INFO
         logger.info("Set logging level to: {}".format(level))
 
     def batoms_setting_path_update(self, context):

@@ -12,7 +12,8 @@ from ase.data import covalent_radii, chemical_symbols
 from ase.geometry import get_distances
 import numpy as np
 import logging
-logger = logging.getLogger('batoms')
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 
 molecules = {

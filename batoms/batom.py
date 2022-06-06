@@ -2,7 +2,8 @@ import bpy
 from batoms.base.object import childObjectGN
 import numpy as np
 import logging
-logger = logging.getLogger('batoms')
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 
 class Batom(childObjectGN):

@@ -19,7 +19,8 @@ import numpy as np
 from time import time
 
 import logging
-logger = logging.getLogger('batoms')
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 default_attributes = [
     {"name": 'select', "type": 'INT', "dimension": 0},

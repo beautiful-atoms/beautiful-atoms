@@ -17,7 +17,8 @@ from batoms.bond.bondsetting import BondSettings
 from batoms.bond.search_bond import SearchBond, default_search_bond_datas
 # from pprint import pprint
 import logging
-logger = logging.getLogger('batoms')
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 default_attributes = [
     {"name": 'atoms_index1', "type": 'INT', "dimension": 0},
