@@ -4,6 +4,10 @@ import numpy as np
 from batoms.base.collection import BaseCollection
 from batoms.render.light import Lights
 from batoms.render.camera import Camera
+import logging
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
+
 
 subcollections = ['light']
 

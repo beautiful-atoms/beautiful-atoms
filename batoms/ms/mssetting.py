@@ -8,6 +8,9 @@ import bpy
 import numpy as np
 from time import time
 from batoms.base.collection import Setting
+import logging
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 
 

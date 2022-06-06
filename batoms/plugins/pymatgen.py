@@ -7,6 +7,9 @@ Nomad
 """
 
 from batoms import Batoms
+import logging
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 
 def pymatgen_search(key, id):

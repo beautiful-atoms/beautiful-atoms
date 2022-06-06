@@ -2,7 +2,9 @@ import bpy
 import numpy as np
 from batoms.utils import number2String
 from batoms.base.object import childObjectGN
-
+import logging
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 class Bond(childObjectGN):
     """Batom Class

@@ -4,6 +4,9 @@ import importlib
 from bpy.types import Operator
 from bpy.props import (StringProperty,
                        )
+import logging
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 dependencies = {"ase": "ase",
                 "scikit-image": "skimage",
@@ -29,7 +32,7 @@ def install_pip():
     cmd = [sys.executable, "-m", "pip", "install", "--upgrade", "pip"]
     subprocess.call(cmd)
     if not has_pip():
-        print("pip cannot be installed, please install pip manually.")
+        logger.warning("pip cannot be installed, please install pip manually.")
 
 def install_wheel():
     cmd = [sys.executable, "-m", "pip", "install", "wheel"]
@@ -42,7 +45,7 @@ def install_module(package, modname):
         cmd = [sys.executable, "-m", "pip",
                 "install", "--upgrade", package]
         subprocess.call(cmd)
-        print("package {0} installed.".format(package))
+        logger.info("package {0} installed.".format(package))
     # else:
         # print("package {0} installed.".format(package))
     return has_module(modname)

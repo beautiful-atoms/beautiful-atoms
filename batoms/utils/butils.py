@@ -2,6 +2,9 @@ from shutil import ExecError
 import bpy
 from mathutils import Vector, Matrix
 import numpy as np
+import logging
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 
 def get_all_consoles():
@@ -31,7 +34,7 @@ def eidt_mode():
     try:
         bpy.ops.object.mode_set(mode='EDIT')
     except ExecError:
-        print('Can not change to EDIT mode')
+        logger.critical('Can not change to EDIT mode')
 
 
 def read_batoms_list():
@@ -78,7 +81,7 @@ def get_selected_vertices():
         if obj.batoms.type != 'OTHER':
             objs.append(obj)
     if len(objs) == 0:
-        print('Warning: No atoms is selected, please switch to Edit mode.')
+        logger.warning('Warning: No atoms is selected, please switch to Edit mode.')
         return selected_vertices
     dict_mode = {}
     for obj in objs:

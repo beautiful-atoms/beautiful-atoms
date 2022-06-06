@@ -15,6 +15,9 @@ import bpy
 from time import time
 import numpy as np
 from batoms.ribbon.protein import Protein
+import logging
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 
 def draw_curve_from_vertices_bezier(name, data,
@@ -205,7 +208,7 @@ class Ribbon():
                                             sheet.as_dict(),
                                             self.coll,
                                             shade_smooth=False)
-        print('draw sheet: %s' % (time() - tstart))
+        logger.debug('draw sheet: %s' % (time() - tstart))
         self.batoms.selects['all'].show = False
 
     def draw_helix(self):
@@ -215,7 +218,7 @@ class Ribbon():
                                             helix.as_dict(),
                                             self.coll,
                                             shade_smooth=True)
-        print('draw helix: %s' % (time() - tstart))
+        logger.debug('draw helix: %s' % (time() - tstart))
         self.batoms.selects['all'].show = False
 
     def draw_turn(self):
@@ -234,7 +237,7 @@ class Ribbon():
                                           turn.as_dict(),
                                           self.coll,
                                           bevel_control=bevel_control)
-        print('draw turn: %s' % (time() - tstart))
+        logger.debug('draw turn: %s' % (time() - tstart))
         self.batoms.selects['all'].show = False
 
     def draw(self):
@@ -242,4 +245,4 @@ class Ribbon():
         self.draw_sheet()
         self.draw_helix()
         self.draw_turn()
-        print('draw ribbon: %s' % (time() - tstart))
+        logger.debug('draw ribbon: %s' % (time() - tstart))

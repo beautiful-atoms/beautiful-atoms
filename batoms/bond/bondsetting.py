@@ -6,7 +6,9 @@ from time import time
 from batoms.utils import string2Number
 from batoms.base.collection import Setting, tuple2string
 # from pprint import pprint
-
+import logging
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 class BondSetting():
 

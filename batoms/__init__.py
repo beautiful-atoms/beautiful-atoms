@@ -12,6 +12,7 @@ rendering atomic structures using blender.""",
     "tracker_url": "https://github.com/superstar54/beautiful-atoms/issues/new/choose",
 }
 
+import bpy
 # install pip dependencies
 from .install import pip_dependencies
 pip_dependencies.install()
@@ -19,7 +20,10 @@ pip_dependencies.install()
 from batoms.batoms import Batoms
 
 
+
+
 from . import (
+    logger,
     preferences,
     custom_property,
     pip_dependencies,
@@ -29,12 +33,16 @@ from . import (
     modal,
 )
 
+logger.set_logger(bl_info["version"])
+
+
 
 
 def register():
     # dependencies
     pip_dependencies.register_class()
     preferences.register_class()
+    logger.update_logging_level()
     # class
     custom_property.register_class()
     # class

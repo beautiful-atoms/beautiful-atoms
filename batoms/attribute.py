@@ -5,6 +5,10 @@ import bpy
 import numpy as np
 from time import time
 from batoms.base.collection import Setting
+import logging
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
+
 
 
 class Attributes(Setting):
@@ -103,7 +107,7 @@ class Attributes(Setting):
         # print(name, dtype)
         dtype_bl = type_py_to_blender(type_py)
         if dtype_bl is False:
-            print('Attribute: {}, {} is not supported.'.format(name, type_py))
+            logger.critical('Attribute: {}, {} is not supported.'.format(name, type_py))
             return False
         shape = array[0].shape
         dimension = len(shape)

@@ -33,6 +33,7 @@ class deleteBatoms(Operator):
             for label in batoms_list:
                 coll = bpy.data.collections.get(label)
                 remove_collection(label, keep_batom=False)
+                self.report({"INFO"}, "Delete {}".format(label))
         return {'FINISHED'}
 
 
@@ -60,6 +61,7 @@ class AddMolecule(Operator):
         batoms.model_style = 1
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Add molecule {}".format(self.label))
         return {'FINISHED'}
 
 
@@ -124,6 +126,7 @@ class AddBulk(Operator):
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Add bulk {}".format(self.label))
         return {'FINISHED'}
 
 
@@ -150,6 +153,7 @@ class AddAtoms(Operator):
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Add atoms {}".format(self.label))
         return {'FINISHED'}
 
 
@@ -179,4 +183,5 @@ class AddSmiles(Operator):
         batoms.model_style = 1
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Add smiles {}".format(self.label))
         return {'FINISHED'}
