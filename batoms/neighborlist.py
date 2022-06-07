@@ -3,7 +3,9 @@
 import numpy as np
 from time import time
 from ase.geometry import wrap_positions
-
+import logging
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 def RemovePbc(species0, positions0, cell, pbc, cutoffs):
     """
@@ -191,7 +193,7 @@ def primitive_neighbor_kdtree(array1, array2,
                 if m == 0:
                     continue
                 bonddatas[pair][indices_i[k]] = indices_j[indices_max[k]]
-    print('Build bondlist: {:1.2f}'.format(time() - tstart))
+    logger.debug('Build bondlist: {:1.2f}'.format(time() - tstart))
     # print(bonddatas)
     return bonddatas
 

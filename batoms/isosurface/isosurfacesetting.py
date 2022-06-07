@@ -4,6 +4,9 @@ import bpy
 import numpy as np
 from batoms.base.collection import Setting
 from time import time
+import logging
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 
 class IsosurfaceSettings(Setting):

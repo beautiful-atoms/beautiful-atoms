@@ -10,6 +10,9 @@ from time import time
 import numpy as np
 from batoms.base.object import BaseObject
 from batoms.ms.mssetting import MSsetting
+import logging
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 
 class MS(BaseObject):
@@ -128,7 +131,7 @@ class MS(BaseObject):
                       'color': color,
                       'battr_inputs': {'isosurface': {}}
                       }
-        print('Marching_cube: %s' % (time() - tstart))
+        logger.debug('Marching_cube: %s' % (time() - tstart))
         return isosurface
 
     def draw_SAS(self, ms, parallel=1):
@@ -140,7 +143,7 @@ class MS(BaseObject):
         from batoms.draw import draw_surface_from_vertices
         resolution = ms.resolution
         probe = ms.probe
-        print('Resolution: {:1.3f}, Probe: {:1.3}'.format(
+        logger.debug('Resolution: {:1.3f}, Probe: {:1.3}'.format(
             resolution, probe))
         tstart = time()
         indices = self.batoms.selects[ms.select].indices
@@ -150,7 +153,7 @@ class MS(BaseObject):
         positions = self.batoms.positions[indices]
         self.get_box(positions, padding=max(radii) + resolution)
         self.build_grid(resolution=resolution)
-        print('Grid Points: %s %s %s' % self.shape)
+        logger.debug('Grid Points: %s %s %s' % self.shape)
         indices_sas, volume_sas = \
             self.calc_power_distance(self.meshgrids,
                                      positions,
@@ -162,7 +165,7 @@ class MS(BaseObject):
             origin=self.box_origin)
         isosurface['color'] = ms.color
         isosurface['material_style'] = ms.material_style
-        print('Vertices: %s' % len(isosurface['vertices']))
+        logger.debug('Vertices: %s' % len(isosurface['vertices']))
         sas_name = '%s_%s_sas' % (self.label, ms.name)
         self.delete_obj(sas_name)
         coll = self.batoms.coll.children['%s_surface' %
@@ -178,7 +181,7 @@ class MS(BaseObject):
         obj.parent = self.batoms.obj
         obj.batoms.type = 'MS'
         obj.batoms.label = self.batoms.label
-        print('Draw SAS: %s' % (time() - tstart))
+        logger.debug('Draw SAS: %s' % (time() - tstart))
 
     def draw_SES(self, ms, parallel=1):
         """
@@ -191,7 +194,7 @@ class MS(BaseObject):
         from batoms.draw import draw_surface_from_vertices
         resolution = ms.resolution
         probe = ms.probe
-        print('Resolution: {:1.3f}, Probe: {:1.3}'.format(
+        logger.debug('Resolution: {:1.3f}, Probe: {:1.3}'.format(
             resolution, probe))
         tstart = time()
         indices = self.batoms.selects[ms.select].indices
@@ -203,7 +206,7 @@ class MS(BaseObject):
         self.get_box(positions, padding=max(radii) + resolution + probe)
         self.build_grid(resolution=resolution)
         # draw_vertices('meshgrid', self.meshgrids)
-        print('Grid Points: %s %s %s' % self.shape)
+        logger.debug('Grid Points: %s %s %s' % self.shape)
         # build SAS
         indices_sas, volume_sas = \
             self.calc_power_distance(self.meshgrids,
@@ -243,7 +246,7 @@ class MS(BaseObject):
             volume, 5, self.get_space(resolution), origin=self.box_origin)
         isosurface['color'] = ms.color
         isosurface['material_style'] = ms.material_style
-        print('Vertices: %s' % len(isosurface['vertices']))
+        logger.debug('Vertices: %s' % len(isosurface['vertices']))
         ses_name = '%s_%s_ses' % (self.label, ms.name)
         self.delete_obj(ses_name)
         coll = self.batoms.coll.children['%s_surface' %
@@ -259,7 +262,7 @@ class MS(BaseObject):
         obj.parent = self.batoms.obj
         obj.batoms.type = 'MS'
         obj.batoms.label = self.batoms.label
-        print('Time SES: %s' % (time() - tstart))
+        logger.debug('Time SES: %s' % (time() - tstart))
         self.get_sesa(ms.name)
 
     def get_sasa(self, name):
@@ -312,7 +315,7 @@ class MS(BaseObject):
         me = self.sas_objs.evaluated_get(depsgraph).to_mesh()
         nvert = len(me.vertices)
         npoly = len(me.polygons)
-        print('vertices: %s, polygons: %s.' % (nvert, npoly))
+        logger.debug('vertices: %s, polygons: %s.' % (nvert, npoly))
         # print('SAS to mesh evaluated: %s' % (time() - tstart))
         return me
 
@@ -335,7 +338,7 @@ class MS(BaseObject):
             volume = get_volume(me)
             print('{:4d}  {:11.3f}  {:11.3f}'.format(i, area, volume))
             areas_list.append(area)
-        print('Time for SAS area: %s' % (time() - tstart))
+        logger.debug('Time for SAS area: %s' % (time() - tstart))
         return areas_list, pareas_list
 
     def get_psasa_mb(self, frame_indices=[]):
@@ -399,13 +402,13 @@ class MS(BaseObject):
         # ----------------------------------------------------
         tstart = time()
         tree = spatial.KDTree(points)
-        print('KDTree point: %s' % (time() - tstart))
+        logger.debug('KDTree point: %s' % (time() - tstart))
         tstart = time()
         indices = tree.query_ball_point(positions, radii)
-        print('KDTree query: %s' % (time() - tstart))
+        logger.debug('KDTree query: %s' % (time() - tstart))
         tstart = time()
         indices = np.unique(np.concatenate(indices).astype(int))
-        print('array indices: %s' % (time() - tstart))
+        logger.debug('array indices: %s' % (time() - tstart))
         return indices
 
     def calc_power_distance(self, points, positions, radii,
@@ -427,10 +430,10 @@ class MS(BaseObject):
         positions = np.append(positions, radii, axis=1)
         tstart = time()
         tree = spatial.KDTree(positions)
-        print('KDTree positions: %s' % (time() - tstart))
+        logger.debug('KDTree positions: %s' % (time() - tstart))
         tstart = time()
         distance, indices = tree.query(points, k=k, workers=parallel)
-        print('KDTree query: %s' % (time() - tstart))
+        logger.debug('KDTree query: %s' % (time() - tstart))
         return indices, distance
 
     def to_mesh_object(self):
@@ -476,7 +479,7 @@ class MS(BaseObject):
                              threshold=threshold,
                              stiffness=stiffness)
         obj = self.to_mesh_object()
-        print('sas_mesh: %s' % (time() - tstart0))
+        logger.debug('sas_mesh: %s' % (time() - tstart0))
         obj.name = name
         eps = resolution/2
         # -------------------------------------
@@ -515,7 +518,7 @@ class MS(BaseObject):
                     positions, indices, mask1, mask2, mask3)
         self.SES_vertices_smooth(
             mask, resolution=resolution, subdivide=subdivide, smooth=smooth)
-        print('Time: %s' % (time() - tstart0))
+        logger.debug('Time: %s' % (time() - tstart0))
         if area:
             self.get_sesa()
         return obj
@@ -529,7 +532,7 @@ class MS(BaseObject):
         """
         from batoms.utils import check_origin_3, check_origin_2
         from batoms.draw import draw_vertices
-        print('eps: ', eps)
+        logger.debug('eps: ', eps)
         n = len(vertices)
         indices, distance = self.calc_power_distance(
             vertices, positions, radii, k=3)
@@ -578,7 +581,7 @@ class MS(BaseObject):
         draw_vertices('origin2', origins_probe2)
         # ---------------------------
         mask1 = np.where(delta0 > eps, True, False)
-        print('indices: 1, 2, 3 ', len(indices), np.count_nonzero(mask1),
+        logger.debug('indices: 1, 2, 3 ', len(indices), np.count_nonzero(mask1),
               np.count_nonzero(mask2), np.count_nonzero(mask3))
         # ----------------
         self.origins_probe2 = origins_probe2
@@ -675,7 +678,7 @@ class MS(BaseObject):
         if repeat > 0:
             bpy.ops.mesh.vertices_smooth(factor=0.5, repeat=repeat)
         bpy.ops.object.mode_set(mode='OBJECT')
-        print('smooth_vertices: %s' % (time() - tstart))
+        logger.debug('smooth_vertices: %s' % (time() - tstart))
 
     def SES_refine_position(self, positions, indices, indices1,
                             indices2, indices3):
@@ -718,7 +721,7 @@ class MS(BaseObject):
         vertices = vertices.reshape(-1, 1)
         me.vertices.foreach_set('co', vertices)
         me.update()
-        print('refine vertices: %s' % (time() - tstart))
+        logger.debug('refine vertices: %s' % (time() - tstart))
 
     def get_sesa_mb(self):
         """
@@ -761,7 +764,7 @@ class MS(BaseObject):
         #
         origini = positions
         spheres += origini[:, None]
-        print('build_spheres: {0:10.2f} s'.format(time() - tstart))
+        logger.debug('build_spheres: {0:10.2f} s'.format(time() - tstart))
         #
         spheres = spheres.reshape(-1, 3)
         indices, distances = self.calc_power_distance(
@@ -775,13 +778,13 @@ class MS(BaseObject):
         # tri = spatial.Delaunay(spheres)
         # faces = tri.simplices
         tree = spatial.KDTree(spheres)
-        print('KDTree positions: %s'%(time() - tstart))
+        logger.debug('KDTree positions: %s'%(time() - tstart))
         distance, indices = tree.query(spheres, k = 3)
         indices0 = np.arange(len(spheres))
         indices0 = indices0.reshape(-1, 1)
         faces = np.concatenate((indices0, indices[:, 1:]), axis = 1)
         faces = faces.tolist()
-        print('build_faces: %s'%(time() - tstart1))
+        logger.debug('build_faces: %s'%(time() - tstart1))
         '''
         #
         SAS_Shrake_Rupley = {'vertices': spheres.reshape(-1, 3),
@@ -792,8 +795,8 @@ class MS(BaseObject):
                              'color': default_colors[0],
                              'battr_inputs': {},
                              }
-        print('vertices: ', len(SAS_Shrake_Rupley['vertices']))
-        print('build_SAS: %s' % (time() - tstart))
+        logger.debug('vertices: ', len(SAS_Shrake_Rupley['vertices']))
+        logger.debug('build_SAS: %s' % (time() - tstart))
         self.SAS_Shrake_Rupley = SAS_Shrake_Rupley
         bpy.data.objects.remove(source, do_unlink=True)
         # return 0

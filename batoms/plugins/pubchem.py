@@ -1,6 +1,9 @@
 """
 """
 from batoms import Batoms
+import logging
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 
 def pubchem_search(cid):

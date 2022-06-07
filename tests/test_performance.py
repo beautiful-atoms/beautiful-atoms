@@ -36,7 +36,7 @@ def test_scatter_and_gather_attribute():
     from time import time
     bpy.ops.batoms.delete()
     au = bulk('Au')
-    au *= [10, 10, 10]
+    au *= [5, 5, 5]
     au *= [10, 10, 10]
     # single value
     d0 = np.zeros((len(au)))

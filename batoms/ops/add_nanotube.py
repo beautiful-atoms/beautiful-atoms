@@ -71,4 +71,5 @@ class BuildNanotube(Operator):
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Add nanotube {}".format(self.label))
         return {'FINISHED'}

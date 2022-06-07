@@ -29,6 +29,8 @@ class BondPairAdd(OperatorBatoms):
         pair = (self.species1, self.species2)
         batoms.bonds.setting.add(pair)
         context.view_layer.objects.active = obj
+        self.report({"INFO"}, "Add bond pair {} {}".format(
+            self.species1, self.species2))
         return {'FINISHED'}
 
 

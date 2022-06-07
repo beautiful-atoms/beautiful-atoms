@@ -16,6 +16,9 @@ from batoms.base.collection import BaseCollection
 from batoms.bond.bondsetting import BondSettings
 from batoms.bond.search_bond import SearchBond, default_search_bond_datas
 # from pprint import pprint
+import logging
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 default_attributes = [
     {"name": 'atoms_index1', "type": 'INT', "dimension": 0},
@@ -180,7 +183,7 @@ class Bonds(BaseCollection, ObjectGN):
         self.build_geometry_node()
         self.set_frames(self._frames, only_basis=False)
         #
-        print('bonds: build_object: {0:10.2f} s'.format(time() - tstart))
+        logger.debug('bonds: build_object: {0:10.2f} s'.format(time() - tstart))
 
     def build_geometry_node(self):
         """
@@ -401,7 +404,7 @@ class Bonds(BaseCollection, ObjectGN):
             CompareStyle.inputs[1].default_value = style
             gn.node_group.links.new(
                 GroupInput.outputs[8], CompareStyle.inputs[0])
-        print('Build geometry nodes for bonds: %s' % (time() - tstart))
+        logger.debug('Build geometry nodes for bonds: %s' % (time() - tstart))
         #
 
     def update_geometry_nodes(self):
@@ -427,7 +430,7 @@ class Bonds(BaseCollection, ObjectGN):
             sp = self.setting['%s-%s' % (sp1, sp2)]
             self.add_geometry_node(sp.as_dict(), order, style)
 
-        print('Update geometry nodes for bonds: %s' % (time() - tstart))
+        logger.debug('Update geometry nodes for bonds: %s' % (time() - tstart))
 
     def add_geometry_node(self, sp, order=None, style=None):
         """
@@ -568,7 +571,7 @@ class Bonds(BaseCollection, ObjectGN):
                 GroupInput.outputs[5], CompareSpecies[0].inputs[0])
             gn.node_group.links.new(
                 GroupInput.outputs[6], CompareSpecies[1].inputs[0])
-        print('UPdate geometry nodes species for bonds: %s'%(time() - tstart))
+        logger.debug('UPdate geometry nodes species for bonds: %s'%(time() - tstart))
 
     def update_geometry_node_instancer(self):
         """
@@ -615,7 +618,7 @@ class Bonds(BaseCollection, ObjectGN):
                                                 'GeometryNodeObjectInfo')
             ObjectInstancer.inputs['Object'].default_value = \
                 self.setting.instancers[sp["name"]][order_style]
-        print('update bond instancer: %s' % (time() - tstart))
+        logger.debug('update bond instancer: %s' % (time() - tstart))
 
     def update(self, bondlists = None, orders = None):
         """
@@ -671,7 +674,7 @@ class Bonds(BaseCollection, ObjectGN):
         if len(bond_datas) == 0:
             return
         self.set_arrays(bond_datas)
-        print('draw bond: {0:10.2f} s'.format(time() - tstart))
+        logger.debug('draw bond: {0:10.2f} s'.format(time() - tstart))
 
     @property
     def obj(self):
@@ -1412,7 +1415,7 @@ class Bonds(BaseCollection, ObjectGN):
             'polyhedra': polyhedras,
         }
         # print('datas: ', datas)
-        print('calc_bond_data: {0:10.2f} s'.format(time() - tstart))
+        logger.debug('calc_bond_data: {0:10.2f} s'.format(time() - tstart))
         return datas
 
     def secondBond(self, b, speciesarray, second_bond,

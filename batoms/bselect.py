@@ -2,7 +2,9 @@ from batoms.base.collection import Setting
 import numpy as np
 from batoms.utils import string2Number
 # from time import time
-
+import logging
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 class Select():
     def __init__(self, label, name='all',
@@ -321,21 +323,21 @@ metals
     if isinstance(expre, str):
         if 'chain' in expre:
             chainid = expre.split()[1]
-            print('chain %s' % chainid)
+            logger.debug('chain %s' % chainid)
             indices = np.where(batoms.attributes['chainids'] == chainid)[0]
         if 'sheet' in expre:
             sheet = expre.split()[1]
-            print('sheet %s' % sheet)
+            logger.debug('sheet %s' % sheet)
             indices = batoms.ribbon.protein.sheets[sheet].indices
         if 'helix' in expre:
             helix = expre.split()[1]
-            print('helix %s' % helix)
+            logger.debug('helix %s' % helix)
             indices = batoms.ribbon.protein.helixs[helix].indices
         if 'hetatm' in expre:
-            print('hetatm')
+            logger.debug('hetatm')
             indices = np.where(batoms.attributes['types'] == 'HETATM')[0]
         if 'species' in expre:
             species = expre.split()[1]
-            print('species %s' % species)
+            logger.debug('species %s' % species)
             indices = np.where(batoms.attributes['species'] == species)[0]
     return indices

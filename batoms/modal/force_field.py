@@ -28,6 +28,9 @@ try:
 except:
     from ase.calculators.emt import EMT
 from ase.constraints import FixAtoms
+import logging
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 
 def translate(selected_vertices, displacement,

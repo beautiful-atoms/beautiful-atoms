@@ -8,6 +8,9 @@ import bmesh
 from batoms import Batoms
 from ase.data import covalent_radii, chemical_symbols
 import numpy as np
+import logging
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
 
 
 def edit_bond(batoms, indices, order):
@@ -16,7 +19,7 @@ def edit_bond(batoms, indices, order):
     Args:
         order (int): The target order
     """
-    print('edit bond')
+    logger.debug('edit bond')
     positions = batoms.positions
     species = batoms.arrays['species']
     bondlists = batoms.bonds.bondlists
@@ -87,7 +90,7 @@ class MolecueEditBond(Operator):
     def execute(self, context):
         obj = context.object
         if not obj.batoms.bbond.flag:
-            print('Please select a Batom.')
+            logger.critical('Please select a Batom.')
             return {'FINISHED'}
         data = obj.data
         if data.total_vert_sel > 0:

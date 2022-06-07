@@ -11,6 +11,10 @@ from ase.build import rotate
 from ase.data import covalent_radii, chemical_symbols
 from ase.geometry import get_distances
 import numpy as np
+import logging
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
+
 
 molecules = {
     'C': Atoms(symbols=['C', 'H', 'H', 'H', 'H'],
@@ -47,7 +51,7 @@ def edit_atom(batoms, indices, element):
     Args:
         element (str): The target element
     """
-    print('replace atoms')
+    logger.debug('replace atoms')
     positions = batoms.positions
     species = batoms.arrays['species']
     bondlists = batoms.bonds.bondlists

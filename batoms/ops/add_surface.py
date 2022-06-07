@@ -68,6 +68,7 @@ class BuildSurfaceFCC100(Operator):
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Add surface {}".format(self.label))
         return {'FINISHED'}
 
 
@@ -120,6 +121,7 @@ class BuildSurfaceFCC110(Operator):
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Add surface {}".format(self.label))
         return {'FINISHED'}
 
 
@@ -172,6 +174,7 @@ class BuildSurfaceFCC111(Operator):
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Add surface {}".format(self.label))
         return {'FINISHED'}
 
 
@@ -219,6 +222,7 @@ class BuildSurfaceFCC211(Operator):
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Add surface {}".format(self.label))
         return {'FINISHED'}
 
 
@@ -273,6 +277,7 @@ class BuildSurfaceFCC111Root(Operator):
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Add surface {}".format(self.label))
         return {'FINISHED'}
 
 
@@ -325,6 +330,7 @@ class BuildSurfaceBCC100(Operator):
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Add surface {}".format(self.label))
         return {'FINISHED'}
 
 
@@ -377,6 +383,7 @@ class BuildSurfaceBCC110(Operator):
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Add surface {}".format(self.label))
         return {'FINISHED'}
 
 
@@ -429,6 +436,7 @@ class BuildSurfaceBCC111(Operator):
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Add surface {}".format(self.label))
         return {'FINISHED'}
 
 
@@ -483,6 +491,7 @@ class BuildSurfaceBCC111Root(Operator):
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Add surface {}".format(self.label))
         return {'FINISHED'}
 
 
@@ -542,6 +551,7 @@ class BuildSurfaceHCP0001(Operator):
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Add surface {}".format(self.label))
         return {'FINISHED'}
 
 
@@ -601,6 +611,7 @@ class BuildSurfaceHCP10m10(Operator):
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Add surface {}".format(self.label))
         return {'FINISHED'}
 
 
@@ -655,6 +666,7 @@ class BuildSurfaceHCP0001Root(Operator):
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Add surface {}".format(self.label))
         return {'FINISHED'}
 
 
@@ -707,6 +719,7 @@ class BuildSurfaceDiamond100(Operator):
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Add surface {}".format(self.label))
         return {'FINISHED'}
 
 
@@ -759,4 +772,5 @@ class BuildSurfaceDiamond111(Operator):
         batoms = Batoms(label=self.label, from_ase=atoms)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Add surface {}".format(self.label))
         return {'FINISHED'}
