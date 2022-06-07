@@ -9,7 +9,7 @@ def test_batoms():
     bpy.ops.batoms.molecule_add()
     ch4 = Batoms('CH4')
     ch4.obj.select_set(True)
-    bpy.context.scene.bapanel.model_style = {"1", "1", "1"}
+    # bpy.context.scene.bapanel.model_style = {"1", "1", "1"}
     assert ch4.model_style[0] == 1
 
 

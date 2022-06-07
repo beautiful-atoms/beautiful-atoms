@@ -789,6 +789,8 @@ class BatomsCollection(bpy.types.PropertyGroup):
                ('3', "polyhedra", "polyhedra")),
         default='0')
 
+    scale: FloatProperty(name="scale", default=1)
+    show: BoolProperty(name="show", default=True)
     show_unit_cell: BoolProperty(name="show_unit_cell", default=True)
     show_axes: BoolProperty(name="show_axes", default=True)
     show_label: StringProperty(name="show_label", default="Index")

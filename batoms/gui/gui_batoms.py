@@ -57,7 +57,7 @@ class Batoms_PT_prepare(Panel):
 def get_model_style(self):
     batoms = get_active_batoms()
     if batoms is not None:
-        return int(batoms.model_style[0])
+        return int(batoms.coll.batoms.model_style)
     else:
         return 0
 
@@ -131,9 +131,9 @@ def set_show_label(self, value):
 def get_show(self):
     batoms = get_active_batoms()
     if batoms is not None:
-        return batoms.show[0]
+        return batoms.coll.batoms.show
     else:
-        return 0
+        return False
 
 def set_show(self, value):
     self["show"] = value
@@ -153,7 +153,7 @@ def set_wrap(self, value):
 def get_scale(self):
     batoms = get_active_batoms()
     if batoms is not None:
-        return batoms.scale[0]
+        return batoms.coll.batoms.scale
     else:
         return 0
 
@@ -236,7 +236,9 @@ class BatomsProperties(bpy.types.PropertyGroup):
 def get_active_batoms():
     context = bpy.context
     if context.object and context.object.batoms.type != 'OTHER':
+        mode = context.object.mode
         batoms = Batoms(label=context.object.batoms.label)
+        bpy.ops.object.mode_set(mode=mode)
         return batoms
     return None
 
