@@ -1,6 +1,7 @@
 name: Build beautiful_atoms main image
 
 env:
+  user_name: alchem0x2a
   image_name: beautiful_atoms
   TEST_TAG: beautiful_atoms:tests
   REGISTRY: ghcr.io
@@ -76,7 +77,7 @@ jobs:
           build-args: BLENDER_VER=${{ matrix.blender-version }}
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ github.repository }}:blender${{ matrix.blender-version }}
-            ${{ env.REGISTRY }}/${{ github.repository }}:latest
+            ${{ env.REGISTRY }}/${{ env.user_name }}/${{ env.image_name }}:blender${{ matrix.blender-version }}
+            ${{ env.REGISTRY }}/${{ env.user_name }}/${{ env.image_name }}:latest
           # cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:buildcache
           # cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:buildcache,mode=max
