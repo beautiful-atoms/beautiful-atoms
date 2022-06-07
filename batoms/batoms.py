@@ -1261,7 +1261,7 @@ class Batoms(BaseCollection, ObjectGN):
                 obj.hide_set(not show)
         #
         if isinstance(show, (bool, int)):
-            show = np.ones(len(self))*bool(show)
+            show = np.ones(len(self), dtype=bool)*show
         self.set_attributes({'show': show})
         self.coll.batoms.show = show[0]
 
