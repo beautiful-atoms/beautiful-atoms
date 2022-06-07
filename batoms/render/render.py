@@ -148,7 +148,7 @@ class Render(BaseCollection):
     @viewport.setter
     def viewport(self, viewport):
         if viewport is not None:
-            viewport = viewport/np.linalg.norm(viewport)
+            # viewport = viewport/np.linalg.norm(viewport)
             self.coll.batoms.brender.viewport = viewport
             self.update_camera()
             self.update_light()
