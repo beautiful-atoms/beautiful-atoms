@@ -55,9 +55,9 @@ class Batoms_PT_prepare(Panel):
 
 
 def get_model_style(self):
-    batoms = get_active_batoms()
+    batoms = get_active_collection()
     if batoms is not None:
-        return int(batoms.coll.batoms.model_style)
+        return int(batoms.model_style)
     else:
         return 0
 
@@ -71,7 +71,7 @@ def set_model_style(self, value):
 
 
 def get_radius_style(self):
-    batoms = get_active_batoms()
+    batoms = get_active_collection()
     if batoms is not None:
         return int(batoms.radius_style)
     else:
@@ -87,7 +87,7 @@ def set_radius_style(self, value):
 
 
 def get_color_style(self):
-    batoms = get_active_batoms()
+    batoms = get_active_collection()
     if batoms is not None:
         return int(batoms.color_style)
     else:
@@ -103,7 +103,7 @@ def set_color_style(self, value):
 
 
 def get_polyhedra_style(self):
-    batoms = get_active_batoms()
+    batoms = get_active_collection()
     if batoms is not None:
         return int(batoms.polyhedra_style)
     else:
@@ -118,7 +118,7 @@ def set_polyhedra_style(self, value):
     set_batoms_attr('polyhedra_style', value)
 
 def get_show_label(self):
-    batoms = get_active_batoms()
+    batoms = get_active_collection()
     if batoms is not None:
         return batoms.show_label
     else:
@@ -129,9 +129,9 @@ def set_show_label(self, value):
     set_batoms_attr('show_label', value)
 
 def get_show(self):
-    batoms = get_active_batoms()
+    batoms = get_active_collection()
     if batoms is not None:
-        return batoms.coll.batoms.show
+        return batoms.show
     else:
         return False
 
@@ -140,7 +140,7 @@ def set_show(self, value):
     set_batoms_attr('show', value)
 
 def get_wrap(self):
-    batoms = get_active_batoms()
+    batoms = get_active_collection()
     if batoms is not None:
         return batoms.wrap[0]
     else:
@@ -151,9 +151,9 @@ def set_wrap(self, value):
     set_batoms_attr('wrap', value)
 
 def get_scale(self):
-    batoms = get_active_batoms()
+    batoms = get_active_collection()
     if batoms is not None:
-        return batoms.coll.batoms.scale
+        return batoms.scale
     else:
         return 0
 
@@ -232,6 +232,22 @@ class BatomsProperties(bpy.types.PropertyGroup):
         get=get_scale,
         set=set_scale,)
 
+
+def get_active_collection():
+    """Get the collection of the active Batoms
+
+    When get the attribute of Batoms object, 
+    if the attribute if saved in the Batoms.coll.batoms,
+    we only need to read data form the colleciton, 
+    it is faster than get data from the Batoms itself.
+
+    Returns:
+        bpy.type.collection: _description_
+    """
+    context = bpy.context
+    if context.object and context.object.batoms.type != 'OTHER':
+        return bpy.data.collections[context.object.batoms.label].batoms
+    return None
 
 def get_active_batoms():
     context = bpy.context
