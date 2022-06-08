@@ -74,4 +74,4 @@ jobs:
           tags: |
             docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
             ghcr.io/${{ env.user_name }}/${{ env.IMAGE_NAME }}:latest
-          if: matrix.os == env.LATEST_VERSION
+          if: ${{ matrix.blender-version == env.LATEST_VERSION }}
