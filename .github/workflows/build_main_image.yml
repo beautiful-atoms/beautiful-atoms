@@ -57,6 +57,12 @@ jobs:
           build-args: BLENDER_VER=${{ matrix.blender-version }}
           load: true
           tags: ${{ env.TEST_TAG }}
+      - name: Set lower case repository name
+        # Hit at https://github.community/t/github-actions-repository-name-must-be-lowercase/184924
+        run: |
+          echo "REPO_OWNER_LC=${OWNER,,}" >> ${GITHUB_ENV}
+        env:
+          OWNER: '${{ github.repository_owner }}'
       - name: Push image to Dockerhub & GHCR
         uses: docker/build-push-action@v2
         with:
@@ -66,13 +72,12 @@ jobs:
           push: true
           tags: |
             docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
-            # ghcr.io/${{ env.user_name }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
-            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
+            ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
       - name: Tag latest image 
         uses: akhilerm/tag-push-action@v2.0.0
         with:
           src: docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
           dst: |
             docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
-            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+            ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:latest
         if: ${{ matrix.blender-version == env.LATEST_VERSION }}
