@@ -4,7 +4,7 @@ env:
   DOCKERHUB_USERNAME: luciusm
   IMAGE_NAME: beautiful_atoms
   TEST_TAG: beautiful_atoms:tests
-  LATEST_VERSION: '3.1'
+  LATEST_VERSION: "3.1"
 
 on:
   push:
@@ -19,7 +19,7 @@ jobs:
     strategy:
       matrix:
         # Manually change these to match the blender image versions
-        blender-version: ['3.0', '3.1']
+        blender-version: ["3.0", "3.1"]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -57,7 +57,7 @@ jobs:
         run: |
           echo "REPO_OWNER_LC=${OWNER,,}" >> ${GITHUB_ENV}
         env:
-          OWNER: '${{ github.repository_owner }}'
+          OWNER: "${{ github.repository_owner }}"
       - name: Push image to Dockerhub & GHCR
         uses: docker/build-push-action@v2
         with:
@@ -67,9 +67,9 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
-          cache-from: type=registry,ref=ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:buildcache
-          cache-to: type=registry,ref=ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:buildcache
-      - name: Tag latest image 
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Tag latest image
         uses: akhilerm/tag-push-action@v2.0.0
         with:
           src: docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
@@ -86,7 +86,7 @@ jobs:
       #     tags: |
       #       docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
       #       ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
-      # - name: Tag latest image 
+      # - name: Tag latest image
       #   uses: akhilerm/tag-push-action@v2.0.0
       #   with:
       #     src: docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}

@@ -4,8 +4,7 @@ env:
   DOCKERHUB_USERNAME: luciusm
   IMAGE_NAME: blender_env
   TEST_TAG: blender_env:tests
-  LATEST_VERSION: '3.1'
-  
+  LATEST_VERSION: "3.1"
 
 on:
   push:
@@ -13,8 +12,8 @@ on:
       - main
       - workflow
     paths:
-      - 'Dockerfiles/Dockerfile.base**'
-      - '.github/workflows/build_blender_env_image.yml'
+      - "Dockerfiles/Dockerfile.base**"
+      - ".github/workflows/build_blender_env_image.yml"
   workflow_dispatch:
 
 jobs:
@@ -23,7 +22,7 @@ jobs:
     strategy:
       matrix:
         # Manually change these to match the blender image versions
-        blender-version: ['3.0', '3.1']
+        blender-version: ["3.0", "3.1"]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -48,7 +47,7 @@ jobs:
         run: |
           echo "REPO_OWNER_LC=${OWNER,,}" >> ${GITHUB_ENV}
         env:
-          OWNER: '${{ github.repository_owner }}'
+          OWNER: "${{ github.repository_owner }}"
       - name: Build and push to GHCR
         uses: docker/build-push-action@v2
         with:
@@ -58,11 +57,8 @@ jobs:
           build-args: BLENDER_VERSION=${{ matrix.blender-version }}
           tags: |
             ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
-          cache-from: type=registry,ref=ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:buildcache
-          cache-to: type=registry,ref=ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:buildcache
-          # cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:buildcache,mode=max
-#           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:${{ matrix.blender-version }}
-#           cache-to: type=inline
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
       - name: Tag latest image GHCR
         uses: akhilerm/tag-push-action@v2.0.0
         with:
@@ -80,4 +76,3 @@ jobs:
         with:
           src: ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
           dst: docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
-      
