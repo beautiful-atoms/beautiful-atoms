@@ -63,6 +63,12 @@ jobs:
           # cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:buildcache,mode=max
 #           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:${{ matrix.blender-version }}
 #           cache-to: type=inline
+      - name: Tag latest image GHCR
+        uses: akhilerm/tag-push-action@v2.0.0
+        with:
+          src: ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
+          dst: ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:latest
+        if: ${{ matrix.blender-version == env.LATEST_VERSION }}
       # Keep the dockerhub images just for backward compatibility check
       - name: Login to DockerHub
         uses: docker/login-action@v1
@@ -74,3 +80,4 @@ jobs:
         with:
           src: ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
           dst: docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
+      
