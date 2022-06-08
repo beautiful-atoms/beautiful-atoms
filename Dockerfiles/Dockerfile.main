@@ -3,7 +3,7 @@
 # docker build . --build-arg BLENDER_VER=3.0  \
 #                -f Dockerfiles/Dockerfile.main -t <image_name>:blender3.0
 ARG BLENDER_VER
-ARG BASE_IMAGE_NAME="ghcr.io/beautiful-atoms/beautiful-atoms"
+ARG BASE_IMAGE_NAME="ghcr.io/beautiful-atoms/blender-env"
 FROM ${BASE_IMAGE_NAME}:${BLENDER_VER}
 
 LABEL Author="T.Tian <alchem0x2a@gmail.com>,X.Wang <xingwang1991@gmail.com>"
