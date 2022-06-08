@@ -54,6 +54,7 @@ def test_render():
     bpy.context.scene.repanel.viewport_y = 2
     assert ch4.render.viewport[1] == 2
     # camera
+    ch4.render.camera.type = "ORTHO"
     assert bpy.context.scene.repanel.camera_type == "ORTHO"
     # Some GUI tests can only be tested manually by opening Blender
     # bpy.context.scene.repanel.camera_type = "PERSP"
