@@ -2,8 +2,8 @@ name: Build blend_env image
 
 env:
   DOCKERHUB_USERNAME: luciusm
-  IMAGE_NAME: blender_env
-  TEST_TAG: blender_env:tests
+  IMAGE_NAME: blender-env
+  TEST_TAG: blender-env:tests
   LATEST_VERSION: "3.1"
 
 on:
@@ -43,11 +43,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Set lower case repository name
-        # Hit at https://github.community/t/github-actions-repository-name-must-be-lowercase/184924
+        # Hit from https://github.community/t/github-actions-repository-name-must-be-lowercase/184924
         run: |
           echo "REPO_OWNER_LC=${OWNER,,}" >> ${GITHUB_ENV}
         env:
           OWNER: "${{ github.repository_owner }}"
+      - name: Name conversion between ghcr & dockerhub. Replace - with _
+        run: |
+          echo "DOCKERHUB_IMAGE_NAME=${IMG/-/_}" >> ${GITHUB_ENV}
+        env:
+          IMG: "${{ env.IMAGE_NAME }}"
       - name: Build and push to GHCR
         uses: docker/build-push-action@v2
         with:
@@ -65,7 +70,7 @@ jobs:
           src: ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
           dst: ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:latest
         if: ${{ matrix.blender-version == env.LATEST_VERSION }}
-      # Keep the dockerhub images just for backward compatibility check
+      # Keep the dockerhub images just for backward compatibility check. Ok to fail
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
@@ -75,4 +80,4 @@ jobs:
         uses: akhilerm/tag-push-action@v2.0.0
         with:
           src: ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
-          dst: docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
+          dst: docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.DOCKERHUB_IMAGE_NAME }}:blender${{ matrix.blender-version }}

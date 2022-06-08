@@ -2,8 +2,8 @@ name: Build beautiful_atoms main image
 
 env:
   DOCKERHUB_USERNAME: luciusm
-  IMAGE_NAME: beautiful_atoms
-  TEST_TAG: beautiful_atoms:tests
+  IMAGE_NAME: beautiful-atoms
+  TEST_TAG: beautiful-atoms:tests
   LATEST_VERSION: "3.1"
 
 on:
@@ -39,25 +39,17 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      # - name: Login to Docker Hub
-      #   uses: docker/login-action@v1
-      #   with:
-      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
-      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
-      # - name: Build local copy
-      #   uses: docker/build-push-action@v2
-      #   with:
-      #     context: ./
-      #     file: ./Dockerfiles/Dockerfile.main
-      #     build-args: BLENDER_VER=${{ matrix.blender-version }}
-      #     load: true
-      #     tags: ${{ env.TEST_TAG }}
       - name: Set lower case repository name
-        # Hit at https://github.community/t/github-actions-repository-name-must-be-lowercase/184924
+        # Hint from https://github.community/t/github-actions-repository-name-must-be-lowercase/184924
         run: |
           echo "REPO_OWNER_LC=${OWNER,,}" >> ${GITHUB_ENV}
         env:
           OWNER: "${{ github.repository_owner }}"
+      - name: Name conversion between ghcr & dockerhub. Replace - with _
+        run: |
+          echo "DOCKERHUB_IMAGE_NAME=${IMG/-/_}" >> ${GITHUB_ENV}
+        env:
+          IMG: "${{ env.IMAGE_NAME }}"
       - name: Push image to Dockerhub & GHCR
         uses: docker/build-push-action@v2
         with:
@@ -72,25 +64,22 @@ jobs:
       - name: Tag latest image
         uses: akhilerm/tag-push-action@v2.0.0
         with:
-          src: docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
-          dst: |
-            ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:latest
+          src: ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
+          dst: ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:latest
         if: ${{ matrix.blender-version == env.LATEST_VERSION }}
-      # - name: Push image to Dockerhub & GHCR
-      #   uses: docker/build-push-action@v2
-      #   with:
-      #     context: ./
-      #     file: ./Dockerfiles/Dockerfile.main
-      #     build-args: BLENDER_VER=${{ matrix.blender-version }}
-      #     push: true
-      #     tags: |
-      #       docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
-      #       ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
-      # - name: Tag latest image
-      #   uses: akhilerm/tag-push-action@v2.0.0
-      #   with:
-      #     src: docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
-      #     dst: |
-      #       docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
-      #       ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:latest
-      #   if: ${{ matrix.blender-version == env.LATEST_VERSION }}
+      # Tagging from ghcr --> dockerhub is optional and ok to fail
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Copy images between GHCR and Dockerhub
+        uses: akhilerm/tag-push-action@v2.0.0
+        with:
+          src: ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
+          dst: docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.DOCKERHUB_IMAGE_NAME }}:blender${{ matrix.blender-version }}
+      - name: Tag latest image dockerhub
+        uses: akhilerm/tag-push-action@v2.0.0
+        with:
+          src: docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.DOCKERHUB_IMAGE_NAME }}:blender${{ matrix.blender-version }}
+          dst: docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.DOCKERHUB_IMAGE_NAME }}:blender${{ matrix.blender-version }}

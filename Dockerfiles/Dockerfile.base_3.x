@@ -1,10 +1,17 @@
 # Base image for the blender environment. Used for CD/CI test and debug
 # Dockerfile adapted from https://github.com/nytimes/rd-blender-docker
 # To build the Docker image, create the build from root directory:
-# docker build --build-arg BLENDER_VERSION=3.0 . -f Dockerfiles/Dockerfile.base_3.0 -t luciusm/blender_env:3.0
+# docker build --build-arg BLENDER_VERSION=3.0 . -f Dockerfiles/Dockerfile.base_3.0 -t <image_name>:blender3.0
 
 ARG BLENDER_VERSION=3.1
 FROM nytimes/blender:${BLENDER_VERSION}-gpu-ubuntu18.04
+
+LABEL Author="T.Tian <alchem0x2a@gmail.com>,X.Wang <xingwang1991@gmail.com>"
+LABEL Title="Blender base environment for testing beautiful-atoms"
+LABEL RepoUrl="https://github.com/beautiful-atoms/beautiful-atoms"
+LABEL ImageUrl="https://github.com/beautiful-atoms/beautiful-atoms/pkgs/container/beautiful-env"
+
+
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
 
