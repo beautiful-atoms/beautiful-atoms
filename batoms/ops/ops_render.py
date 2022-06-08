@@ -14,7 +14,7 @@ from batoms.ops.base import OperatorBatoms, OperatorBatomsEdit
 
 class RenderAdd(OperatorBatoms):
     bl_idname = "batoms.render_add"
-    bl_label = "Init Render"
+    bl_label = "Attach Render"
     bl_description = "Add a render to a Batoms object."
 
     viewport: FloatVectorProperty(

@@ -1266,6 +1266,9 @@ class Batoms(BaseCollection, ObjectGN):
         if isinstance(show, (bool, int)):
             show = np.ones(len(self), dtype=bool)*show
         self.set_attributes({'show': show})
+        #TODO: /home/xing/apps/beautiful-atoms/batoms/batoms.py:1269: 
+        # DeprecationWarning: In future, it will be an error for 'np.bool_'
+        #  scalars to be interpreted as an index
         self.coll.batoms.show = show[0]
 
     @property
@@ -1796,7 +1799,7 @@ class Batoms(BaseCollection, ObjectGN):
         arrays = self.arrays
         positions = arrays["positions"]
         self.draw_text.remove_handle()
-        if label is None:
+        if label is None or label=="":
             return
         if label.lower() == "index":
             n = len(positions)

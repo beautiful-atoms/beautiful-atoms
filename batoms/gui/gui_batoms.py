@@ -38,8 +38,7 @@ class Batoms_PT_prepare(Panel):
         layout.label(text="Model style")
         col = layout.column()
         col.prop(bapanel, "model_style", expand=True)
-        layout.label(text="Add label")
-        layout.prop(bapanel, "show_label", expand=True)
+        # layout.label(text="Add label")
         layout.label(text="Radius style")
         layout.prop(bapanel, "radius_style", expand=True)
         layout.label(text="Color style")
@@ -49,6 +48,7 @@ class Batoms_PT_prepare(Panel):
 
         layout.prop(bapanel, "show", expand=True)
         layout.prop(bapanel, "wrap", expand=True)
+        layout.prop(bapanel, "show_label", expand=True, text="label")
         layout.prop(bapanel, "scale")
 
         layout.operator("batoms.replace")
@@ -172,11 +172,11 @@ class BatomsProperties(bpy.types.PropertyGroup):
     )
 
     show_label: StringProperty(
-        name="show_label",
+        name="label",
         description="Show label: None, Index, Species or Charge and so on",
         get=get_show_label,
         set=set_show_label,
-        default="None",
+        default="",
     )
 
     radius_style: EnumProperty(

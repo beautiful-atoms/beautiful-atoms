@@ -795,7 +795,7 @@ class BatomsCollection(bpy.types.PropertyGroup):
     show: BoolProperty(name="show", default=True)
     show_unit_cell: BoolProperty(name="show_unit_cell", default=True)
     show_axes: BoolProperty(name="show_axes", default=True)
-    show_label: StringProperty(name="show_label", default="Index")
+    show_label: StringProperty(name="show_label", default="")
 
     show_search: BoolProperty(name="show_search", default=False)
     show_hydrogen_bond: BoolProperty(name="show_hydrogen_bond", default=False)

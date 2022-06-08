@@ -24,16 +24,18 @@ class Render_PT_prepare(Panel):
         layout = self.layout
         # row = col.row(align=True)
         layout.operator("batoms.render_add")
-        layout.label(text="Camera")
+        layout.label(text="Viewport")
         row = layout.row()
         row.prop(repanel, "viewport_x")
         row.prop(repanel, "viewport_y")
         row.prop(repanel, "viewport_z")
-        col = layout.column()
-        col.label(text="Type")
-        col.prop(repanel, "camera_type", expand=True)
+        layout.separator()
+        # col = layout.column()
+        layout.label(text="Camera")
+        layout.label(text="Type")
+        layout.prop(repanel, "camera_type", expand=True)
         if repanel.camera_type == 'ORTHO':
-            layout.prop(repanel, "scale")
+            layout.prop(repanel, "ortho_scale")
         else:
             layout.prop(repanel, "camera_lens")
             layout.prop(repanel, "distance")
@@ -100,16 +102,16 @@ def set_lens(self, value):
     self["lens"] = value
     set_camera_attr('lens', value)
 
-def get_scale(self):
+def get_ortho_scale(self):
     camera = get_default_camera()
     if camera is not None:
         return camera.data.ortho_scale
     else:
         return 10
 
-def set_scale(self, value):
-    self["scale"] = value
-    set_camera_attr('scale', value)
+def set_ortho_scale(self, value):
+    self["ortho_scale"] = value
+    set_camera_attr('ortho_scale', value)
 
 def get_distance(self):
     render = get_active_render_collection()
@@ -196,12 +198,12 @@ class RenderProperties(bpy.types.PropertyGroup):
         # soft_min = 100, soft_max = 2000,
         # description="Miller resolution for the render", update=Callback_modify_resolution)
     
-    scale: FloatProperty(
-        name="scale", default=10,
+    ortho_scale: FloatProperty(
+        name="ortho_scale", default=10,
         soft_min = 1, soft_max = 100,
-        description="scale",
-        get=get_scale,
-        set=set_scale)
+        description="ortho_scale",
+        get=get_ortho_scale,
+        set=set_ortho_scale)
 
     light_direction_x: FloatProperty(
         name="light_direction_x",default=0,
@@ -285,7 +287,7 @@ def set_camera_attr(key, value):
     from batoms.batoms import Batoms
     if bpy.context.object and bpy.context.object.batoms.type != 'OTHER':
         batoms = Batoms(label=bpy.context.object.batoms.label)
-        if key == 'scale':
+        if key == 'ortho_scale':
             batoms.render.camera.set_ortho_scale(value)
         elif key in ['lens']:
             setattr(batoms.render.camera, key, value)
