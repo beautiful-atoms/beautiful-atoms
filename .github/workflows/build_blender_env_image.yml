@@ -43,11 +43,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      # - name: Login to DockerHub
-      #   uses: docker/login-action@v1
-      #   with:
-      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
-      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Set lower case repository name
         # Hit at https://github.community/t/github-actions-repository-name-must-be-lowercase/184924
         run: |
@@ -63,8 +58,19 @@ jobs:
           build-args: BLENDER_VERSION=${{ matrix.blender-version }}
           tags: |
             ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
-          # tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:${{ matrix.blender-version }}
-          # cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:buildcache
+          cache-from: type=registry,ref=ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:buildcache
           # cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:buildcache,mode=max
 #           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:${{ matrix.blender-version }}
 #           cache-to: type=inline
+      # Keep the dockerhub images just for backward compatibility check
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Copy images between GHCR and Dockerhub
+        uses: akhilerm/tag-push-action@v2.0.0
+        with:
+          src: ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
+          dst: docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}

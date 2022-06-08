@@ -67,6 +67,8 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
+          cache-from: type=registry,ref=ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:buildcache
       - name: Tag latest image 
         uses: akhilerm/tag-push-action@v2.0.0
         with:
