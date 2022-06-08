@@ -218,6 +218,9 @@ def test_set_arrays():
     assert not h2o[1].show
     h2o.scale = [1, 1, 1]
     h2o.set_attributes({"scale": np.array([0.3, 0.3, 0.3])})
+    # attributes
+    h2o.show = 1
+    h2o.show = True
     # positions
     positions = h2o.positions
     assert len(positions) == 3

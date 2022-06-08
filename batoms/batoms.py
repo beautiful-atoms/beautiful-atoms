@@ -534,6 +534,8 @@ class Batoms(BaseCollection, ObjectGN):
                 scale0[np.where(species == key)] = value
             scale = scale0
         self.set_attributes({'scale': scale})
+        self.coll.batoms.scale = scale[0]
+
 
     @property
     def species(self):
@@ -573,6 +575,7 @@ class Batoms(BaseCollection, ObjectGN):
         return self.attributes['model_style']
 
     def set_model_style(self, model_style):
+        self.coll.batoms.model_style = str(model_style)
         model_style = {'model_style': np.ones(
             len(self), dtype=int)*int(model_style)}
         self.set_attributes(model_style)
@@ -1260,9 +1263,13 @@ class Batoms(BaseCollection, ObjectGN):
                 obj.hide_render = not show
                 obj.hide_set(not show)
         #
-        if isinstance(show, (int, float)):
-            show = np.ones(len(self))*show
+        if isinstance(show, (bool, int)):
+            show = np.ones(len(self), dtype=bool)*show
         self.set_attributes({'show': show})
+        #TODO: /home/xing/apps/beautiful-atoms/batoms/batoms.py:1269: 
+        # DeprecationWarning: In future, it will be an error for 'np.bool_'
+        #  scalars to be interpreted as an index
+        self.coll.batoms.show = show[0]
 
     @property
     def wrap(self):
@@ -1792,7 +1799,7 @@ class Batoms(BaseCollection, ObjectGN):
         arrays = self.arrays
         positions = arrays["positions"]
         self.draw_text.remove_handle()
-        if label is None:
+        if label is None or label=="":
             return
         if label.lower() == "index":
             n = len(positions)

@@ -10,7 +10,6 @@ from bpy.props import (StringProperty,
                        PointerProperty,
                        CollectionProperty,
                        )
-from bpy.types import Collection, Object
 
 class Base(bpy.types.PropertyGroup):
 
@@ -442,6 +441,8 @@ class Blight(bpy.types.PropertyGroup):
     flag: BoolProperty(name="flag", default=False)
     label: StringProperty(name="label", default='X')
     name: StringProperty(name="name", default='X')
+    type: StringProperty(name="type", default='SUN')
+    strength: FloatProperty(name="strength", soft_min=0.01, soft_max=1, default=0.01)
     lock_to_camera: BoolProperty(name="lock_to_camera", default=False)
     direction: FloatVectorProperty(name="direction", default=[0, 0, 1], size=3)
     look_at: FloatVectorProperty(name="look_at", default=[0, 0, 0], size=3)
@@ -453,6 +454,7 @@ class Bcamera(bpy.types.PropertyGroup):
     flag: BoolProperty(name="flag", default=False)
     label: StringProperty(name="label", default='X')
     name: StringProperty(name="name", default='X')
+    type: StringProperty(name="type", default='ORTHO')
     direction: FloatVectorProperty(name="direction", default=[0, 0, 1], size=3)
     look_at: FloatVectorProperty(name="look_at", default=[0, 0, 0], size=3)
 
@@ -789,9 +791,11 @@ class BatomsCollection(bpy.types.PropertyGroup):
                ('3', "polyhedra", "polyhedra")),
         default='0')
 
+    scale: FloatProperty(name="scale", default=1)
+    show: BoolProperty(name="show", default=True)
     show_unit_cell: BoolProperty(name="show_unit_cell", default=True)
     show_axes: BoolProperty(name="show_axes", default=True)
-    show_label: StringProperty(name="show_label", default="Index")
+    show_label: StringProperty(name="show_label", default="")
 
     show_search: BoolProperty(name="show_search", default=False)
     show_hydrogen_bond: BoolProperty(name="show_hydrogen_bond", default=False)
@@ -947,6 +951,7 @@ classes = [
 
 
 
+from bpy.types import Collection, Object, Camera, Light
 
 def register_class():
     from bpy.utils import register_class

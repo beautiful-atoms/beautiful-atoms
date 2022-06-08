@@ -69,9 +69,9 @@ class Render(BaseCollection):
         if coll and coll.batoms.brender.flag:
             self.lights = Lights(label)
             self.camera = Camera(label)
-            coll.batoms.brender.viewport = viewport
-            coll.batoms.brender.animation = animation
-            coll.batoms.brender.run_render = run_render
+            # coll.batoms.brender.viewport = viewport
+            # coll.batoms.brender.animation = animation
+            # coll.batoms.brender.run_render = run_render
         else:
             self.set_collection(viewport, animation=animation,
                                 run_render=run_render)
@@ -152,7 +152,7 @@ class Render(BaseCollection):
     @viewport.setter
     def viewport(self, viewport):
         if viewport is not None:
-            viewport = viewport/np.linalg.norm(viewport)
+            # viewport = viewport/np.linalg.norm(viewport)
             self.coll.batoms.brender.viewport = viewport
             self.update_camera()
             self.update_light()

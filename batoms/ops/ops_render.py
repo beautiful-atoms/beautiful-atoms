@@ -14,7 +14,7 @@ from batoms.ops.base import OperatorBatoms, OperatorBatomsEdit
 
 class RenderAdd(OperatorBatoms):
     bl_idname = "batoms.render_add"
-    bl_label = "Add Render"
+    bl_label = "Attach Render"
     bl_description = "Add a render to a Batoms object."
 
     viewport: FloatVectorProperty(
@@ -35,4 +35,5 @@ class RenderAdd(OperatorBatoms):
                         )
         batoms.render = render
         batoms.render.init()
+        bpy.context.space_data.region_3d.view_perspective = 'CAMERA'
         return {'FINISHED'}

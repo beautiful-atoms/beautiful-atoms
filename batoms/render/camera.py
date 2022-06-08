@@ -92,6 +92,7 @@ class Camera(BaseObject):
         else:
             camera_data = bpy.data.cameras.new(self.obj_name)
         camera = bpy.data.objects.get(self.obj_name)
+        # create camera if not exist
         if not camera:
             # bpy.data.objects.remove(obj, do_unlink=True)
             camera = bpy.data.objects.new(self.obj_name, camera_data)
