@@ -4,7 +4,7 @@ env:
   DOCKERHUB_USERNAME: luciusm
   IMAGE_NAME: blender_env
   TEST_TAG: blender_env:tests
-  LATEST_VERSION: "3.1"
+  LATEST_VERSION: '3.1'
   
 
 on:
@@ -13,8 +13,8 @@ on:
       - main
       - workflow
     paths:
-      - "Dockerfiles/Dockerfile.base_*"
-      - ".github/workflows/build_blend_env_image.yml"
+      - 'Dockerfiles/Dockerfile.base**'
+      - '.github/workflows/build_blender_env_image.yml'
   workflow_dispatch:
 
 jobs:
@@ -23,7 +23,7 @@ jobs:
     strategy:
       matrix:
         # Manually change these to match the blender image versions
-        blender-version: ["3.0", "3.1"]
+        blender-version: ['3.0', '3.1']
     steps:
       - name: Checkout
         uses: actions/checkout@v2

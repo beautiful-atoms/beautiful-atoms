@@ -28,10 +28,10 @@ RUN wget --quiet https://repo.continuum.io/miniconda/Miniconda3-py39_${MINICONDA
     conda config --system --prepend channels conda-forge && \
     conda config --system --set show_channel_urls true && \
     conda install --quiet --yes \
-                  -c conda-forge \
-                  conda=${CONDA_VERSION} \
-		  python=$PYTHON_VERSION \
-		  pip &&\
+    -c conda-forge \
+    conda=${CONDA_VERSION} \
+    python=$PYTHON_VERSION \
+    pip &&\
     conda update --all --quiet --yes &&\
     conda clean --all -f -y
 
@@ -41,11 +41,11 @@ RUN . ${CONDA_DIR}/bin/activate &&\
     yes | python install.py --generate-env-file ./env.yml ${BLENDER_PATH} &&\
     rm -rf ${BLENDER_PATH}/python &&\
     ln -s ${CONDA_DIR} ${BLENDER_PATH}/python
-    
+
 
 RUN conda env update -n base --file ./env.yml &&\
     conda clean --all -f -y &&\
-     rm -rf /tmp/*
+    rm -rf /tmp/*
 
 
 # Set the working directory

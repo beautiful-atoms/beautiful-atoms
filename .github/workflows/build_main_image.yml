@@ -4,7 +4,7 @@ env:
   DOCKERHUB_USERNAME: luciusm
   IMAGE_NAME: beautiful_atoms
   TEST_TAG: beautiful_atoms:tests
-  LATEST_VERSION: "3.1"
+  LATEST_VERSION: '3.1'
 
 on:
   push:
@@ -19,7 +19,7 @@ jobs:
     strategy:
       matrix:
         # Manually change these to match the blender image versions
-        blender-version: ["3.0", "3.1"]
+        blender-version: ['3.0', '3.1']
     steps:
       - name: Checkout
         uses: actions/checkout@v2
