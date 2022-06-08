@@ -247,6 +247,7 @@ class RenderProperties(bpy.types.PropertyGroup):
 
 
 def modify_render_attr(context, key, value):
+    
     from batoms.batoms import Batoms
     if context.object and context.object.batoms.type != 'OTHER':
         batoms = Batoms(label=context.object.batoms.label)
@@ -257,6 +258,14 @@ def modify_render_attr(context, key, value):
 
 
 def set_light_attr(key, value):
+    """Set light attribute
+
+    We need to use Render.
+
+    Args:
+        key (_type_): _description_
+        value (_type_): _description_
+    """
     from batoms.batoms import Batoms
     if bpy.context.object and bpy.context.object.batoms.type != 'OTHER':
         batoms = Batoms(label=bpy.context.object.batoms.label)
@@ -265,6 +274,14 @@ def set_light_attr(key, value):
         bpy.context.space_data.region_3d.view_perspective = 'CAMERA'
 
 def set_camera_attr(key, value):
+    """Set Camera attribute
+
+    we need to use Batoms
+
+    Args:
+        key (_type_): _description_
+        value (_type_): _description_
+    """
     from batoms.batoms import Batoms
     if bpy.context.object and bpy.context.object.batoms.type != 'OTHER':
         batoms = Batoms(label=bpy.context.object.batoms.label)
