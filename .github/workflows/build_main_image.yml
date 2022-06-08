@@ -1,7 +1,6 @@
 name: Build beautiful_atoms main image
 
 env:
-  # user_name: alchem0x2a
   DOCKERHUB_USERNAME: luciusm
   IMAGE_NAME: beautiful_atoms
   TEST_TAG: beautiful_atoms:tests
@@ -11,12 +10,6 @@ on:
   push:
     branches:
       - main
-      - develop
-      - workflow
-  pull_request:
-    branches:
-      - main
-      - develop
       - workflow
   workflow_dispatch:
 
