@@ -12,10 +12,12 @@ on:
     branches:
       - main
       - develop
+      - workflow
   pull_request:
     branches:
       - main
       - develop
+      - workflow
   workflow_dispatch:
 
 jobs:
@@ -49,14 +51,14 @@ jobs:
       #   with:
       #     username: ${{ secrets.DOCKERHUB_USERNAME }}
       #     password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build local copy
-        uses: docker/build-push-action@v2
-        with:
-          context: ./
-          file: ./Dockerfiles/Dockerfile.main
-          build-args: BLENDER_VER=${{ matrix.blender-version }}
-          load: true
-          tags: ${{ env.TEST_TAG }}
+      # - name: Build local copy
+      #   uses: docker/build-push-action@v2
+      #   with:
+      #     context: ./
+      #     file: ./Dockerfiles/Dockerfile.main
+      #     build-args: BLENDER_VER=${{ matrix.blender-version }}
+      #     load: true
+      #     tags: ${{ env.TEST_TAG }}
       - name: Set lower case repository name
         # Hit at https://github.community/t/github-actions-repository-name-must-be-lowercase/184924
         run: |
