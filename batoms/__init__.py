@@ -9,7 +9,7 @@ rendering atomic structures using blender.""",
     "warning": "",
     "category": "Import-Export",
     "doc_url": "https://beautiful-atoms.readthedocs.io/en/latest/",
-    "tracker_url": "https://github.com/superstar54/beautiful-atoms/issues/new/choose",
+    "tracker_url": "https://github.com/beautiful-atoms/beautiful-atoms/issues/new/choose",
 }
 
 import bpy

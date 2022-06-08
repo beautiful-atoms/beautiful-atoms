@@ -5,7 +5,7 @@ Installation can be as easy as following steps
 ```
 conda create -n batoms git curl python
 conda activate batoms
-curl -O https://raw.githubusercontent.com/superstar54/beautiful-atoms/main/install.py
+curl -O https://raw.githubusercontent.com/beautiful-atoms/beautiful-atoms/main/install.py
 python install.py
 ```
 
@@ -34,7 +34,7 @@ from distutils.version import LooseVersion
 # numpy.__version__ --> numpy
 
 
-DEFAULT_GITHUB_ACCOUNT = "superstar54"
+DEFAULT_GITHUB_ACCOUNT = "beautiful-atoms"
 DEFAULT_REPO_NAME = "beautiful-atoms"
 DEFAULT_PLUGIN_NAME = "batoms"
 DEFAULT_PLUGIN_PATH = f"scripts/addons_contrib/{DEFAULT_PLUGIN_NAME}"

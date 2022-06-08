@@ -40,7 +40,7 @@ dependencies = {"ase": "ase",
                 }
 
 
-DEFAULT_GITHUB_ACCOUNT = "superstar54"
+DEFAULT_GITHUB_ACCOUNT = "beautiful-atoms"
 DEFAULT_REPO_NAME = "beautiful-atoms"
 DEFAULT_PLUGIN_NAME = "batoms"
 

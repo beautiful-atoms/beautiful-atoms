@@ -9,7 +9,7 @@ import logging
 # logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 
-account_name = "superstar54"
+account_name = "beautiful-atoms"
 repo_name = "beautiful-atoms"
 DEFAULT_PLUGIN_NAME = "batoms"
 
