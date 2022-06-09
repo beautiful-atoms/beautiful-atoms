@@ -22,10 +22,6 @@ class Cell_PT_prepare(Panel):
         layout = self.layout
         cell = context.scene.batoms.cell
 
-        # op = layout.operator("batoms.apply_cell")
-        # op.a = [cell.cell_a0, cell.cell_a1, cell.cell_a2]
-        # op.b = [cell.cell_b0, cell.cell_b1, cell.cell_b2]
-        # op.c = [cell.cell_c0, cell.cell_c1, cell.cell_c2]
         box = layout.box()
         row = box.row(align = True)
         row.prop(cell, "cell_a0")

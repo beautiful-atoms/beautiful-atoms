@@ -67,8 +67,8 @@ def test_render():
     ch4.render.lights["Default"].direction = [1, 0, 0]
     assert np.isclose(bpy.context.scene.batoms.render.light_direction_x, 1)
     ch4.render.lights["Default"].energy = 20
-    assert np.isclose(bpy.context.scene.batoms.render.light_energy, 20)
-    # bpy.context.scene.batoms.render.light_energy = 5
+    assert np.isclose(bpy.context.scene.batoms.render.energy, 20)
+    # bpy.context.scene.batoms.render.energy = 5
     # assert np.isclose(ch4.render.lights["Default"].energy, 5)
 
 

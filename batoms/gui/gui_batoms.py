@@ -16,7 +16,8 @@ model_style_items = [("Space-filling", "Space-filling", "", 0),
                      ("Ball-and-stick", "Ball-and-Stick", "", 1),
                      ("Polyhedral", "Polyhedral", "", 2),
                      ("Stick", "Stick", "", 3),
-                    ]
+                     ]
+
 
 class Batoms_PT_prepare(Panel):
     bl_label = "Batoms"
@@ -57,20 +58,69 @@ class Batoms_PT_prepare(Panel):
         layout.operator("batoms.replace")
 
 
+def get_active_collection():
+    """Get the collection of the active Batoms
+
+    When get the attribute of Batoms object, 
+    if the attribute if saved in the Batoms.coll.batoms,
+    we only need to read data form the colleciton, 
+    it is faster than get data from the Batoms itself.
+
+    Returns:
+        bpy.type.collection: _description_
+    """
+    context = bpy.context
+    if context.object and context.object.batoms.type != 'OTHER':
+        return bpy.data.collections[context.object.batoms.label].batoms
+    return None
+
+
+# ---------------------------------------------------
+def get_active_batoms():
+    context = bpy.context
+    if context.object and context.object.batoms.type != 'OTHER':
+        mode = context.object.mode
+        batoms = Batoms(label=context.object.batoms.label)
+        bpy.ops.object.mode_set(mode=mode)
+        return batoms
+    return None
+
+
+def set_batoms_attr(key, value):
+    """
+    """
+    batoms = get_active_batoms()
+    if batoms is not None:
+        setattr(batoms, key, value)
+        bpy.context.view_layer.objects.active = batoms.obj
+
+
+def modify_batoms_attr(context, key, value):
+    """
+    """
+    if context.object and context.object.batoms.type != 'OTHER':
+        batoms = Batoms(label=context.object.batoms.label)
+        setattr(batoms, key, value)
+        # batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
+
+
 def get_enum_attr(name):
     """Helper function to easily get enum property.
 
     Args:
         name (str): name of the attribute
     """
+
     def getter(self):
         batoms = get_active_collection()
         if batoms is not None:
             return int(getattr(batoms, name))
         else:
             return 0
-        
+
     return getter
+
 
 def set_enum_attr(name):
     """Helper function to easily set enum property.
@@ -78,24 +128,26 @@ def set_enum_attr(name):
     Args:
         name (str): name of the attribute
     """
+
     def setter(self, value):
         items = self.bl_rna.properties[name].enum_items
         item = items[value]
         identifier = item.identifier
         self[name] = identifier
         set_batoms_attr(name, value)
-    
+
     return setter
 
 
-def get_attr(name):
+def get_attr(name, func):
     """Helper function to easily get property.
 
     Args:
         name (str): name of the attribute
     """
+
     def getter(self):
-        batoms = get_active_collection()
+        batoms = func()
         if batoms is not None:
             return getattr(batoms, name)
         else:
@@ -103,16 +155,18 @@ def get_attr(name):
             return prop.default
     return getter
 
-def set_attr(name):
+
+def set_attr(name, func):
     """Helper function to easily set property.
 
     Args:
         name (str): name of the attribute
     """
+
     def setter(self, value):
         self[name] = value
-        set_batoms_attr(name, value)
-    
+        func(name, value)
+
     return setter
 
 
@@ -137,8 +191,8 @@ class BatomsProperties(bpy.types.PropertyGroup):
     show_label: StringProperty(
         name="label",
         description="Show label: None, Index, Species or Charge and so on",
-        get=get_attr("show_label"),
-        set=set_attr("show_label"),
+        get=get_attr("show_label", get_active_collection),
+        set=set_attr("show_label", set_batoms_attr),
         default="",
     )
 
@@ -179,64 +233,21 @@ class BatomsProperties(bpy.types.PropertyGroup):
     show: BoolProperty(name="show",
                        default=False,
                        description="show all object for view and rendering",
-                       get=get_attr("show"),
-                       set=set_attr("show"))
+                       get=get_attr("show", get_active_collection),
+                       set=set_attr("show", set_batoms_attr)
+                       )
 
     wrap: BoolProperty(name="wrap",
                        default=False,
                        description="wrap all atoms into cell",
                        get=get_wrap,
-                       set=set_attr("wrap"),)
+                       set=set_attr("wrap", set_batoms_attr)
+                       )
 
     scale: FloatProperty(
         name="scale", default=1.0,
         min=0.0, soft_max=2.0,
         description="scale",
-        get=get_attr("scale"),
-        set=set_attr("scale"),)
-
-
-def get_active_collection():
-    """Get the collection of the active Batoms
-
-    When get the attribute of Batoms object, 
-    if the attribute if saved in the Batoms.coll.batoms,
-    we only need to read data form the colleciton, 
-    it is faster than get data from the Batoms itself.
-
-    Returns:
-        bpy.type.collection: _description_
-    """
-    context = bpy.context
-    if context.object and context.object.batoms.type != 'OTHER':
-        return bpy.data.collections[context.object.batoms.label].batoms
-    return None
-
-def get_active_batoms():
-    context = bpy.context
-    if context.object and context.object.batoms.type != 'OTHER':
-        mode = context.object.mode
-        batoms = Batoms(label=context.object.batoms.label)
-        bpy.ops.object.mode_set(mode=mode)
-        return batoms
-    return None
-
-
-
-def set_batoms_attr(key, value):
-    """
-    """
-    batoms = get_active_batoms()
-    if batoms is not None:
-        setattr(batoms, key, value)
-        bpy.context.view_layer.objects.active = batoms.obj
-
-
-def modify_batoms_attr(context, key, value):
-    """
-    """
-    if context.object and context.object.batoms.type != 'OTHER':
-        batoms = Batoms(label=context.object.batoms.label)
-        setattr(batoms, key, value)
-        # batoms.obj.select_set(True)
-        bpy.context.view_layer.objects.active = batoms.obj
+        get=get_attr("scale", get_active_collection),
+        set=set_attr("scale", set_batoms_attr)
+    )
