@@ -19,34 +19,34 @@ class Render_PT_prepare(Panel):
 
     def draw(self, context):
         layout = self.layout
-        repanel = context.scene.repanel
+        render = context.scene.batoms.render
 
         layout = self.layout
         # row = col.row(align=True)
         layout.operator("batoms.render_add")
         layout.label(text="Viewport")
         row = layout.row()
-        row.prop(repanel, "viewport_x")
-        row.prop(repanel, "viewport_y")
-        row.prop(repanel, "viewport_z")
+        row.prop(render, "viewport_x")
+        row.prop(render, "viewport_y")
+        row.prop(render, "viewport_z")
         layout.separator()
         # col = layout.column()
         layout.label(text="Camera")
         layout.label(text="Type")
-        layout.prop(repanel, "camera_type", expand=True)
-        if repanel.camera_type == 'ORTHO':
-            layout.prop(repanel, "ortho_scale")
+        layout.prop(render, "camera_type", expand=True)
+        if render.camera_type == 'ORTHO':
+            layout.prop(render, "ortho_scale")
         else:
-            layout.prop(repanel, "camera_lens")
-            layout.prop(repanel, "distance")
-        # layout.prop(repanel, "resolution")
+            layout.prop(render, "camera_lens")
+            layout.prop(render, "distance")
+        # layout.prop(render, "resolution")
         layout.separator()
         layout.label(text="Light")
         row = layout.row()
-        row.prop(repanel, "light_direction_x")
-        row.prop(repanel, "light_direction_y")
-        row.prop(repanel, "light_direction_z")
-        layout.prop(repanel, "light_energy")
+        row.prop(render, "light_direction_x")
+        row.prop(render, "light_direction_y")
+        row.prop(render, "light_direction_z")
+        layout.prop(render, "light_energy")
 
 def get_viewport(i):
     """Helper function to easily get cell-property."""

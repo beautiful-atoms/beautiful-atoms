@@ -33,23 +33,23 @@ class Batoms_PT_prepare(Panel):
         layout.operator("batoms.import")
         layout.operator("batoms.export")
 
-        bapanel = context.scene.bapanel
+        batoms = context.scene.batoms.batoms
 
         layout.label(text="Model style")
         col = layout.column()
-        col.prop(bapanel, "model_style", expand=True)
+        col.prop(batoms, "model_style", expand=True)
         # layout.label(text="Add label")
         layout.label(text="Radius style")
-        layout.prop(bapanel, "radius_style", expand=True)
+        layout.prop(batoms, "radius_style", expand=True)
         layout.label(text="Color style")
-        layout.prop(bapanel, "color_style", expand=True)
+        layout.prop(batoms, "color_style", expand=True)
         layout.label(text="Polyhedra style")
-        layout.prop(bapanel, "polyhedra_style", expand=True)
+        layout.prop(batoms, "polyhedra_style", expand=True)
 
-        layout.prop(bapanel, "show", expand=True)
-        layout.prop(bapanel, "wrap", expand=True)
-        layout.prop(bapanel, "show_label", expand=True, text="label")
-        layout.prop(bapanel, "scale")
+        layout.prop(batoms, "show", expand=True)
+        layout.prop(batoms, "wrap", expand=True)
+        layout.prop(batoms, "show_label", expand=True, text="label")
+        layout.prop(batoms, "scale")
 
         layout.operator("batoms.replace")
 

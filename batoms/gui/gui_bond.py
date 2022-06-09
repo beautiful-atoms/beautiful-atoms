@@ -18,37 +18,37 @@ class Bond_PT_prepare(Panel):
 
     def draw(self, context):
         layout = self.layout
-        bbpanel = context.scene.bbpanel
+        bond = context.scene.batoms.bond
 
         layout.operator("bond.bond_order_auto_set", icon='MODIFIER_ON', text="Auto Set Bond Order")
         layout.separator()
         layout.label(text="Bond style")
         col = layout.column()
-        col.prop(bbpanel, "bond_style", expand=True)
-        layout.prop(bbpanel, "bondwidth")
-        layout.prop(bbpanel, "order")
-        layout.prop(bbpanel, "show")
+        col.prop(bond, "bond_style", expand=True)
+        layout.prop(bond, "bondwidth")
+        layout.prop(bond, "order")
+        layout.prop(bond, "show")
 
 
 class BondProperties(bpy.types.PropertyGroup):
     def Callback_bond_style(self, context):
-        bbpanel = bpy.context.scene.bbpanel
-        bond_style = list(bbpanel.bond_style)[0]
+        bond = bpy.context.scene.batoms.bond
+        bond_style = list(bond.bond_style)[0]
         bpy.ops.bond.bond_modify(key='style', style=bond_style)
 
     def Callback_modify_bondwidth(self, context):
-        bbpanel = bpy.context.scene.bbpanel
-        bondwidth = bbpanel.bondwidth
+        bond = bpy.context.scene.batoms.bond
+        bondwidth = bond.bondwidth
         bpy.ops.bond.bond_modify(key='width', bondwidth=bondwidth)
 
     def Callback_modify_show(self, context):
-        bbpanel = bpy.context.scene.bbpanel
-        show = bbpanel.show
+        bond = bpy.context.scene.batoms.bond
+        show = bond.show
         bpy.ops.bond.bond_modify(key='show', show=show)
 
     def Callback_modify_order(self, context):
-        bbpanel = bpy.context.scene.bbpanel
-        order = bbpanel.order
+        bond = bpy.context.scene.batoms.bond
+        order = bond.order
         bpy.ops.bond.bond_modify(key='order', order=order)
 
     bond_style: EnumProperty(
