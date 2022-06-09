@@ -1,9 +1,15 @@
 # Build docker image containing blender environment + batoms
 # Please build from the root path, e.g.:
 # docker build . --build-arg BLENDER_VER=3.0  \
-#                -f Dockerfiles/Dockerfile.main -t luciusm/beautiful_atoms:blender3.0
+#                -f Dockerfiles/Dockerfile.main -t <image_name>:blender3.0
 ARG BLENDER_VER
-FROM luciusm/blender_env:${BLENDER_VER}
+ARG BASE_IMAGE_NAME="ghcr.io/beautiful-atoms/blender-env"
+FROM ${BASE_IMAGE_NAME}:blender${BLENDER_VER}
+
+LABEL Author="T.Tian <alchem0x2a@gmail.com>,X.Wang <xingwang1991@gmail.com>"
+LABEL Title="Conainer image for beautiful-atoms usage and developent"
+LABEL RepoUrl="https://github.com/beautiful-atoms/beautiful-atoms"
+LABEL ImageUrl="https://github.com/beautiful-atoms/beautiful-atoms/pkgs/container/beautiful-atoms"
 
 USER root
 
@@ -12,15 +18,15 @@ COPY batoms ${BLENDER_PATH}/scripts/addons_contrib/batoms
 
 # Enable batoms addon and do a simple import test
 RUN blender -b \
-            --python-exit-code 1 \
-            --python-expr  \
-            "import bpy; import addon_utils; addon_utils.enable('batoms', default_set=True); bpy.ops.wm.save_userpref(); print('success')" &&\
-    blender -b \
-            --python-exit-code 1 \
-            --python-expr  \
-            "from batoms import Batoms; b = Batoms('O', ['O'], [[0, 0, 0]]); print('success')"
+        --python-exit-code 1 \
+        --python-expr  \
+        "import bpy; import addon_utils; addon_utils.enable('batoms', default_set=True); bpy.ops.wm.save_userpref(); print('success')" &&\
+        blender -b \
+        --python-exit-code 1 \
+        --python-expr  \
+        "from batoms import Batoms; b = Batoms('O', ['O'], [[0, 0, 0]]); print('success')"
 
- 
+
 RUN chmod 744 -R ${BLENDER_PATH}/scripts/addons_contrib/batoms
 
 USER ${B_UID}

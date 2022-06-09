@@ -1,18 +1,17 @@
 name: Build beautiful_atoms main image
 
 env:
-  image_name: beautiful_atoms
-  TEST_TAG: beautiful_atoms:tests
+  DOCKERHUB_USERNAME: luciusm
+  BASE_IMAGE_NAME: blender-env
+  IMAGE_NAME: beautiful-atoms
+  TEST_TAG: beautiful-atoms:tests
+  LATEST_VERSION: "3.1"
 
 on:
   push:
     branches:
       - main
-      - develop
-  pull_request:
-    branches:
-      - main
-      - develop
+      - workflow
   workflow_dispatch:
 
 jobs:
@@ -35,38 +34,55 @@ jobs:
         uses: docker/setup-buildx-action@v1
         with:
           endpoint: builders
-      - name: Login to DockerHub
+      - name: Login to Github Container Repo
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set lower case repository name
+        # Hint from https://github.community/t/github-actions-repository-name-must-be-lowercase/184924
+        run: |
+          echo "REPO_OWNER_LC=${OWNER,,}" >> ${GITHUB_ENV}
+        env:
+          OWNER: "${{ github.repository_owner }}"
+      - name: Name conversion between ghcr & dockerhub. Replace - with _
+        run: |
+          echo "DOCKERHUB_IMAGE_NAME=${IMG/-/_}" >> ${GITHUB_ENV}
+        env:
+          IMG: "${{ env.IMAGE_NAME }}"
+      - name: Push image to Dockerhub & GHCR
+        uses: docker/build-push-action@v3
+        with:
+          context: ./
+          file: ./Dockerfiles/Dockerfile.main
+          build-args: |
+            BLENDER_VER=${{ matrix.blender-version }}
+            BASE_IMAGE_NAME=ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.BASE_IMAGE_NAME }}
+          push: true
+          tags: |
+            ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Tag latest image
+        uses: akhilerm/tag-push-action@v2.0.0
+        with:
+          src: ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
+          dst: ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:latest
+        if: ${{ matrix.blender-version == env.LATEST_VERSION }}
+      # Tagging from ghcr --> dockerhub is optional and ok to fail
+      - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build local copy
-        uses: docker/build-push-action@v2
+      - name: Copy images between GHCR and Dockerhub
+        uses: akhilerm/tag-push-action@v2.0.0
         with:
-          context: ./
-          file: ./Dockerfiles/Dockerfile.main
-          build-args: BLENDER_VER=${{ matrix.blender-version }}
-          load: true
-          # push: true
-          # tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:blender${{ matrix.blender-version }}
-          tags: ${{ env.TEST_TAG }}
-          # cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:buildcache
-          # cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:buildcache,mode=max
-      #           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:${{ matrix.blender-version }}
-      #           cache-to: type=inline
-      - name: Test local image
-        run: |
-          docker run --rm -v $(pwd)/tests:/workdir -e CI=1 ${{ env.TEST_TAG }} bash test_ci.sh
-
-      - name: Push image
-        uses: docker/build-push-action@v2
+          src: ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
+          dst: docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.DOCKERHUB_IMAGE_NAME }}:blender${{ matrix.blender-version }}
+      - name: Tag latest image dockerhub
+        uses: akhilerm/tag-push-action@v2.0.0
         with:
-          context: ./
-          file: ./Dockerfiles/Dockerfile.main
-          build-args: BLENDER_VER=${{ matrix.blender-version }}
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:blender${{ matrix.blender-version }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:latest
-          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:buildcache,mode=max
+          src: docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.DOCKERHUB_IMAGE_NAME }}:blender${{ matrix.blender-version }}
+          dst: docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.DOCKERHUB_IMAGE_NAME }}:blender${{ matrix.blender-version }}
