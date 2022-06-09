@@ -5,6 +5,7 @@ import pytest
 
 def test_batoms():
     """Batoms panel"""
+    from batoms.batoms import Batoms
     bpy.ops.batoms.delete()
     bpy.ops.batoms.molecule_add()
     ch4 = Batoms('CH4')
@@ -28,6 +29,7 @@ def test_batoms():
 
 def test_cell():
     """Cell panel"""
+    from batoms.batoms import Batoms
     bpy.ops.batoms.delete()
     bpy.ops.batoms.molecule_add()
     ch4 = Batoms('CH4')
@@ -40,6 +42,7 @@ def test_cell():
 
 def test_render():
     """Render panel"""
+    from batoms.batoms import Batoms
     bpy.ops.batoms.delete()
     bpy.ops.batoms.molecule_add()
     ch4 = Batoms('CH4')
@@ -71,9 +74,40 @@ def test_render():
     # bpy.context.scene.batoms.render.energy = 5
     # assert np.isclose(ch4.render.lights["Default"].energy, 5)
 
+def test_batom():
+    """Batom panel"""
+    from batoms.batoms import Batoms
+    bpy.ops.batoms.delete()
+    bpy.ops.batoms.molecule_add()
+    ch4 = Batoms('CH4')
+    ch4.obj.select_set(True)
+    # scale
+    assert np.isclose(bpy.context.scene.batoms.batom.scale, ch4[0].scale)
+    bpy.context.scene.batoms.batom.scale = 1
+    assert np.isclose(ch4[0].scale, bpy.context.scene.batoms.batom.scale)
+
+def test_bond():
+    """Bond panel"""
+    from batoms.batoms import Batoms
+    import numpy as np
+    bpy.ops.batoms.delete()
+    bpy.ops.batoms.molecule_add()
+    ch4 = Batoms('CH4')
+    ch4.bonds.obj.data.vertices.foreach_set('select', [1, 0, 0, 0, 0])
+    ch4.bonds[0].order = 2
+    # order
+    ch4.obj.select_set(False)
+    bpy.context.view_layer.objects.active = ch4.bonds.obj
+    assert np.isclose(bpy.context.scene.batoms.bond.order, ch4.bonds[0].order)
+    ch4.bonds.obj.data.vertices.foreach_set('select', [1, 0, 0, 0])
+    bpy.context.scene.batoms.bond.order = 1
+    assert np.isclose(ch4.bonds[0].order, bpy.context.scene.batoms.bond.order)
+
 
 if __name__ == "__main__":
     test_batoms()
     test_cell()
     test_render()
+    test_batom()
+    test_bond()
     print("\n GUI: All pass! \n")

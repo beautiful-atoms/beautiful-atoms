@@ -105,7 +105,7 @@ def modify_batoms_attr(context, key, value):
         bpy.context.view_layer.objects.active = batoms.obj
 
 
-def get_enum_attr(name):
+def get_enum_attr(name, func):
     """Helper function to easily get enum property.
 
     Args:
@@ -113,7 +113,7 @@ def get_enum_attr(name):
     """
 
     def getter(self):
-        batoms = get_active_collection()
+        batoms = func()
         if batoms is not None:
             return int(getattr(batoms, name))
         else:
@@ -183,7 +183,7 @@ class BatomsProperties(bpy.types.PropertyGroup):
         name="model_style",
         description="Structural models",
         items=model_style_items,
-        get=get_enum_attr("model_style"),
+        get=get_enum_attr("model_style", get_active_collection),
         set=set_enum_attr("model_style"),
         default=0,
     )
@@ -202,7 +202,7 @@ class BatomsProperties(bpy.types.PropertyGroup):
         items=(("Covalent", "covalent", "", 0),
                ("VDW", "van der Waals", "", 1),
                ("Ionic", "ionic", "", 2)),
-        get=get_enum_attr("radius_style"),
+        get=get_enum_attr("radius_style", get_active_collection),
         set=set_enum_attr("radius_style"),
         default=0,
     )
@@ -213,7 +213,7 @@ class BatomsProperties(bpy.types.PropertyGroup):
         items=(("JMOL", "JMOL", "", 0),
                ("VESTA", "VESTA", "", 1),
                ("CPK", "CPK", "", 2)),
-        get=get_enum_attr("color_style"),
+        get=get_enum_attr("color_style", get_active_collection),
         set=set_enum_attr("color_style"),
         default=0,
     )
@@ -225,7 +225,7 @@ class BatomsProperties(bpy.types.PropertyGroup):
                ("1", "atoms, polyhedra", "", 1),
                ("2", "central atoms, polyhedra", "", 2),
                ("3", "polyhedra", "", 3)),
-        get=get_enum_attr("polyhedra_style"),
+        get=get_enum_attr("polyhedra_style", get_active_collection),
         set=set_enum_attr("polyhedra_style"),
         default=0,
     )

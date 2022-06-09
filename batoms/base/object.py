@@ -749,11 +749,14 @@ class childObjectGN():
 
     """
 
-    def __init__(self, label, index, parent=None):
+    def __init__(self, label, index, obj_name=None, parent=None):
         self.label = label
         self.index = index
         self.parent = parent
-        self.obj_name = label
+        if obj_name is None:
+            self.obj_name = label
+        else:
+            self.obj_name = obj_name
 
     @property
     def obj(self):
@@ -830,12 +833,7 @@ class childObjectGN():
             layer = bm.verts.layers.float.get("scale")
             scale = bm.verts[self.index][layer]
         else:
-            bm = bmesh.new()
-            bm.from_mesh(self.obj.data)
-            bm.verts.ensure_lookup_table()
-            layer = bm.verts.layers.float.get("scale")
-            scale = bm.verts[self.index][layer]
-            bm.free()
+            scale = self.attributes['scale'].data[self.index].value
         return scale
 
     @scale.setter
@@ -847,17 +845,18 @@ class childObjectGN():
             bm.verts[self.index][layer] = scale
             bmesh.update_edit_mesh(self.obj.data)
         else:
-            bm = bmesh.new()
-            bm.from_mesh(self.obj.data)
-            bm.verts.ensure_lookup_table()
-            layer = bm.verts.layers.float.get("scale")
-            bm.verts[self.index][layer] = scale
-            bm.to_mesh(self.obj.data)
-            # self.obj.data.update()
-            bm.free()
+            self.attributes['scale'].data[self.index].value = scale
 
     @property
     def show(self):
+        """_summary_
+
+        Unfortunately, bmesh layers does not support bool, only int/float/string.
+
+        Returns:
+            _type_: _description_
+        """
+        
         return self.attributes['show'].data[self.index].value
 
     @show.setter

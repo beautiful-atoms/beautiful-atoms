@@ -1,4 +1,5 @@
 import bpy
+import bmesh
 import numpy as np
 from batoms.utils import number2String
 from batoms.base.object import childObjectGN
@@ -11,7 +12,9 @@ class Bond(childObjectGN):
     """
 
     def __init__(self, label, index=0, bonds=None) -> None:
-        childObjectGN.__init__(self, label, index, parent=bonds)
+        childObjectGN.__init__(self, label, index,
+                    obj_name="{}_bond".format(label),
+                    parent=bonds)
 
     def __repr__(self):
         bpy.context.view_layer.objects.active = self.parent.obj
@@ -47,11 +50,24 @@ class Bond(childObjectGN):
 
     @property
     def order(self):
-        return self.attributes['order'].data[self.index].value
-
+        if self.obj.mode == 'EDIT':
+            bm =bmesh.from_edit_mesh(self.obj.data)
+            bm.verts.ensure_lookup_table()
+            layer = bm.verts.layers.int.get("order")
+            order = bm.verts[self.index][layer]
+        else:
+            order = self.attributes['order'].data[self.index].value
+        return order
     @order.setter
     def order(self, order):
-        self.attributes['order'].data[self.index].value = order
+        if self.obj.mode == 'EDIT':
+            bm =bmesh.from_edit_mesh(self.obj.data)
+            bm.verts.ensure_lookup_table()
+            layer = bm.verts.layers.int.get("order")
+            bm.verts[self.index][layer] = order
+            bmesh.update_edit_mesh(self.obj.data)
+        else:
+            self.attributes['order'].data[self.index].value = int(order)
         # find plane for high order
         a3, a4 = self.secondBond()
         self.attributes['atoms_index3'].data[self.index].value = a3
@@ -64,11 +80,25 @@ class Bond(childObjectGN):
 
     @property
     def style(self):
-        return self.attributes['style'].data[self.index].value
+        if self.obj.mode == 'EDIT':
+            bm =bmesh.from_edit_mesh(self.obj.data)
+            bm.verts.ensure_lookup_table()
+            layer = bm.verts.layers.int.get("style")
+            style = bm.verts[self.index][layer]
+        else:
+            style = self.attributes['style'].data[self.index].value
+        return style
 
     @style.setter
     def style(self, style):
-        self.attributes['style'].data[self.index].value = int(style)
+        if self.obj.mode == 'EDIT':
+            bm =bmesh.from_edit_mesh(self.obj.data)
+            bm.verts.ensure_lookup_table()
+            layer = bm.verts.layers.int.get("style")
+            bm.verts[self.index][layer] = style
+            bmesh.update_edit_mesh(self.obj.data)
+        else:
+            self.attributes['style'].data[self.index].value = int(style)
         # if stule not exist, add one
         sp = self.species
         sp['style'] = style
