@@ -12,6 +12,9 @@ on:
       - develop
   workflow_dispatch:
 
+env:
+  TEST_IMAGE_NAME: ghcr.io/beautiful-atoms/beautiful-atoms
+
 jobs:
   basic:
     defaults:
@@ -24,7 +27,7 @@ jobs:
         blender-version: ["3.0", "3.1"]
     container:
       # Consider change to matrix versions
-      image: luciusm/blender_env:${{ matrix.blender-version }}
+      image: ${{ env.TEST_IMAGE_NAME }}:${{ matrix.blender-version }}
       # Will need pytest installation
       options: --user root
 
