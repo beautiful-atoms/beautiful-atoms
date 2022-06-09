@@ -70,6 +70,6 @@ RUN useradd -m -s /bin/bash -N -u $B_UID $B_USER && \
     chown -R ${B_UID}:${B_GID} /workdir
 
 
-USER ${B_UID}
+USER ${B_USER}
 SHELL ["/bin/bash", "-c"]
 WORKDIR /workdir

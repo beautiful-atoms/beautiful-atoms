@@ -27,6 +27,8 @@ RUN blender -b \
         "from batoms import Batoms; b = Batoms('O', ['O'], [[0, 0, 0]]); print('success')"
 
 
-RUN chmod 744 -R ${BLENDER_PATH}/scripts/addons_contrib/batoms
 
-USER ${B_UID}
+RUN chown ${B_USER} -R ${BLENDER_PATH}/scripts/addons_contrib/batoms &&\
+        chmod 755 -R ${BLENDER_PATH}/scripts/addons_contrib/batoms
+
+USER ${B_USER}
