@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
 
 env:
-  TEST_IMAGE_NAME: ghcr.io/beautiful-atoms/beautiful-atoms
+  TEST_IMAGE_NAME: ghcr.io/beautiful-atoms/beautiful-env
 
 jobs:
   basic:
@@ -26,8 +26,8 @@ jobs:
         # Manually change these to match the blender image versions
         blender-version: ["3.0", "3.1"]
     container:
-      # Consider change to matrix versions
-      image: ${{ env.TEST_IMAGE_NAME }}:${{ matrix.blender-version }}
+      # env is not 
+      image: ghcr.io/beautiful-atoms/blender-env:blender${{ matrix.blender-version }}
       # Will need pytest installation
       options: --user root
 
