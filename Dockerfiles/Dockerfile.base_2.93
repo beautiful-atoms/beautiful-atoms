@@ -2,6 +2,9 @@
 # Dockerfile adapted from https://github.com/nytimes/rd-blender-docker
 # To build the Docker image, create the build from root directory:
 # docker build . -f Dockerfiles/Dockerfile.base_2.93 -t luciusm/blender_env:2.93
+################################################################################
+# This is a deprecated Docker file
+################################################################################
 
 FROM nytimes/blender:2.93-gpu-ubuntu18.04
 

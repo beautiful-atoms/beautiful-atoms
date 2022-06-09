@@ -1,13 +1,19 @@
 name: Build blend_env image
 
 env:
-  image_name: blender_env
+  DOCKERHUB_USERNAME: luciusm
+  IMAGE_NAME: blender-env
+  TEST_TAG: blender-env:tests
+  LATEST_VERSION: "3.1"
 
 on:
   push:
+    branches:
+      - main
+      - workflow
     paths:
-      - "Dockerfiles/Dockerfile.base_*"
-      - ".github/workflows/build_blend_env_image.yml"
+      - "Dockerfiles/Dockerfile.base**"
+      - ".github/workflows/build_blender_env_image.yml"
   workflow_dispatch:
 
 jobs:
@@ -30,20 +36,48 @@ jobs:
         uses: docker/setup-buildx-action@v1
         with:
           endpoint: builders
-      - name: Login to DockerHub
+      - name: Login to Github Container Repo
         uses: docker/login-action@v1
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build and push
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set lower case repository name
+        # Hit from https://github.community/t/github-actions-repository-name-must-be-lowercase/184924
+        run: |
+          echo "REPO_OWNER_LC=${OWNER,,}" >> ${GITHUB_ENV}
+        env:
+          OWNER: "${{ github.repository_owner }}"
+      - name: Name conversion between ghcr & dockerhub. Replace - with _
+        run: |
+          echo "DOCKERHUB_IMAGE_NAME=${IMG/-/_}" >> ${GITHUB_ENV}
+        env:
+          IMG: "${{ env.IMAGE_NAME }}"
+      - name: Build and push to GHCR
         uses: docker/build-push-action@v2
         with:
           context: ./
           file: ./Dockerfiles/Dockerfile.base_3.x
           push: true
           build-args: BLENDER_VERSION=${{ matrix.blender-version }}
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:${{ matrix.blender-version }}
-          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:buildcache,mode=max
-#           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.image_name }}:${{ matrix.blender-version }}
-#           cache-to: type=inline
+          tags: |
+            ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Tag latest image GHCR
+        uses: akhilerm/tag-push-action@v2.0.0
+        with:
+          src: ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
+          dst: ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:latest
+        if: ${{ matrix.blender-version == env.LATEST_VERSION }}
+      # Keep the dockerhub images just for backward compatibility check. Ok to fail
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Copy images between GHCR and Dockerhub
+        uses: akhilerm/tag-push-action@v2.0.0
+        with:
+          src: ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
+          dst: docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.DOCKERHUB_IMAGE_NAME }}:blender${{ matrix.blender-version }}
