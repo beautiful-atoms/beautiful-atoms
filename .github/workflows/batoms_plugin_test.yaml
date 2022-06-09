@@ -5,12 +5,15 @@ on:
   push:
     branches: 
       - main
-      - develop
+      - workflow
   pull_request:
     branches: 
       - main
-      - develop
+      - workflow
   workflow_dispatch:
+
+env:
+  TEST_IMAGE_NAME: ghcr.io/beautiful-atoms/blender-env
 
 jobs:
   basic:
@@ -23,8 +26,8 @@ jobs:
         # Manually change these to match the blender image versions
         blender-version: ["3.0", "3.1"]
     container:
-      # Consider change to matrix versions
-      image: luciusm/blender_env:${{ matrix.blender-version }}
+      # env is not 
+      image: ghcr.io/beautiful-atoms/blender-env:blender${{ matrix.blender-version }}
       # Will need pytest installation
       options: --user root
 
