@@ -11,7 +11,10 @@ LABEL Title="Conainer image for beautiful-atoms usage and developent"
 LABEL RepoUrl="https://github.com/beautiful-atoms/beautiful-atoms"
 LABEL ImageUrl="https://github.com/beautiful-atoms/beautiful-atoms/pkgs/container/beautiful-atoms"
 
+ENV B_USER blender
+
 USER root
+
 
 # Copy batoms to the addons_contrib directory
 COPY batoms ${BLENDER_PATH}/scripts/addons_contrib/batoms
