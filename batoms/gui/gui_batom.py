@@ -7,7 +7,8 @@ from bpy.props import (FloatProperty,
                        EnumProperty,
                        )
 from batoms.gui.gui_batoms import get_active_batoms
-from batoms.utils.butils import get_selected_vertices_bmesh
+from batoms.utils.butils import get_selected_vertices
+from batoms.batom import Batom
 
 class Batom_PT_prepare(Panel):
     bl_label = "Batom"
@@ -17,9 +18,14 @@ class Batom_PT_prepare(Panel):
     bl_category = "Species"
     bl_idname = "BATOMS_PT_Batom"
 
-    # @classmethod    
+
+    # @classmethod
     # def poll(cls, context):
-        # return (context.object.mode == "EDIT")
+    #     obj = context.object
+    #     if obj:
+    #         return obj.batoms.type == 'BATOMS' and obj.mode == 'EDIT'
+    #     else:
+    #         return False
 
     def draw(self, context):
         layout = self.layout
@@ -29,21 +35,39 @@ class Batom_PT_prepare(Panel):
         layout.prop(batom, "bond")
 
 
+# ---------------------------------------------------
+def get_active_batom():
+    context = bpy.context
+    if context.object and context.object.batoms.type != 'OTHER':
+        v = get_selected_vertices(context.object)
+        if len(v) > 0:
+            batom = Batom(label=context.object.batoms.label, index=v[0])
+            return batom
+        else:
+            return None
+    return None
+
+def set_batom_attr(key, value):
+    """
+    """
+    batom = get_active_batom()
+    if batom is not None:
+        setattr(batom, key, value)
+        # bpy.context.view_layer.objects.active = batom.obj
 
 def get_scale(self):
-    batoms = get_active_batoms()
-    if batoms is not None:
-        v = get_selected_vertices_bmesh(batoms.obj)
-        if len(v) > 0:
-            return batoms.scale[v[0]]
-        else:
-            return 0
+    batom = get_active_batom()
+    if batom is not None:
+        return batom.scale
     else:
         return 0
 
 def set_scale(self, value):
     self["scale"] = value
-    bpy.ops.batoms.batom_modify(key='scale', scale=value)
+    set_batom_attr("scale", value)
+    
+
+
 
 class BatomProperties(bpy.types.PropertyGroup):
 
@@ -53,12 +77,12 @@ class BatomProperties(bpy.types.PropertyGroup):
         bpy.ops.batoms.batom_modify(key='size', size=size)
 
     def Callback_modify_bond(self, context):
-        batom = bpy.context.scene.batom
+        batom = bpy.context.scene.batoms.batom
         bond = batom.bond
         bpy.ops.batoms.batom_modify(key='bond', bond=bond)
 
     def Callback_modify_show(self, context):
-        batom = bpy.context.scene.batom
+        batom = bpy.context.scene.batoms.batom
         show = batom.show
         bpy.ops.batoms.batom_modify(key='show', show=show)
 
