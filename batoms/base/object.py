@@ -853,11 +853,18 @@ class childObjectGN():
 
         Unfortunately, bmesh layers does not support bool, only int/float/string.
 
-        Returns:
+        Returns:    
             _type_: _description_
         """
-        
-        return self.attributes['show'].data[self.index].value
+        if self.obj.mode == 'EDIT':
+            bpy.context.view_layer.objects.active = self.obj
+            bpy.ops.object.mode_set(mode="OBJECT")
+            show = self.attributes['show'].data[self.index].value
+            bpy.ops.object.mode_set(mode="EDIT")
+            #
+        else:
+            show = self.attributes['show'].data[self.index].value
+        return show
 
     @show.setter
     def show(self, show):
