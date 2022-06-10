@@ -11,7 +11,7 @@ blender -b -P test_light.py
 blender -b -P test_ms.py
 blender -b -P test_performance.py
 blender -b -P test_plane.py
-blender -b -P test_plugins.py
+blender -b -P test_database.py
 blender -b -P test_polyhedrasetting.py
 blender -b -P test_real.py
 blender -b -P test_render.py

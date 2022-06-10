@@ -4,7 +4,7 @@ from bpy.types import (Panel,
                        )
 from bpy.props import (StringProperty,
                        )
-from batoms.plugins.rscb import rscb_import
+from batoms.database.rscb import rscb_import
 
 
 class RSCB_PT_prepare(Panel):
