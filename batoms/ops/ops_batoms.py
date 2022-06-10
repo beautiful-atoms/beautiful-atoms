@@ -7,7 +7,8 @@ from bpy.props import (
     FloatVectorProperty,
     FloatProperty,
     IntProperty,
-    IntVectorProperty
+    IntVectorProperty,
+    EnumProperty,
 )
 from batoms import Batoms
 from batoms.ops.base import OperatorBatoms, OperatorBatomsEdit
@@ -306,3 +307,76 @@ class deleteSelectedBatoms(OperatorBatoms):
             remove_collection(label, keep_batom=False)
             self.report({"INFO"}, "Delete {}".format(label))
         return {'FINISHED'}
+
+class ApplyModelStyle(OperatorBatoms):
+    bl_idname = "batoms.apply_model_style"
+    bl_label = "Apply Model Style"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = ("Apply new model_style parameters")
+
+    model_style: EnumProperty(
+        name="model_style",
+        description="Structural models",
+        items=[('0', "Space-filling", "Use ball and stick"),
+               ('1', "Ball-and-stick", "Use ball"),
+               ('2', "Polyhedral", "Use polyhedral"),
+               ('3', "Stick", "Use stick")
+            ],
+        default='0',
+    )
+
+    def execute(self, context):
+        batoms = Batoms(label=context.object.batoms.label)
+        batoms.model_style = int(self.model_style)
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
+        return {'FINISHED'}
+    
+class ApplyRadiusStyle(OperatorBatoms):
+    bl_idname = "batoms.apply_radius_style"
+    bl_label = "Apply Radius Style"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = ("Apply new.radius_style parameters")
+
+    radius_style: EnumProperty(
+        name="radius_style",
+        description="Structural models",
+        items=[('0', "Covalent", "Covalent"),
+               ('1', "VDW", "van der Waals"),
+               ('2', "Ionic", "Ionic")
+            ],
+        default='0',
+    )
+
+    def execute(self, context):
+        batoms = Batoms(label=context.object.batoms.label)
+        batoms.radius_style = int(self.radius_style)
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
+        return {'FINISHED'}
+
+
+class ApplyColorStyle(OperatorBatoms):
+    bl_idname = "batoms.apply_color_style"
+    bl_label = "Apply Color Style"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = ("Apply new color_style parameters")
+
+    color_style: EnumProperty(
+        name="color_style",
+        description="Structural models",
+        items=[('0', "JMOL", "JMOL"),
+               ('1', "VESTA", "VESTA"),
+               ('2', "CPK", "CPK")
+            ],
+        default='0',
+    )
+
+    def execute(self, context):
+        batoms = Batoms(label=context.object.batoms.label)
+        batoms.color_style = int(self.color_style)
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
+        return {'FINISHED'}
+
+
