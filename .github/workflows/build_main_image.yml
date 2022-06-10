@@ -85,4 +85,5 @@ jobs:
         uses: akhilerm/tag-push-action@v2.0.0
         with:
           src: docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.DOCKERHUB_IMAGE_NAME }}:blender${{ matrix.blender-version }}
-          dst: docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.DOCKERHUB_IMAGE_NAME }}:blender${{ matrix.blender-version }}
+          dst: docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.DOCKERHUB_IMAGE_NAME }}:latest
+        if: ${{ matrix.blender-version == env.LATEST_VERSION }}
