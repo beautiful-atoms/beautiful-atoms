@@ -56,9 +56,9 @@ RUN conda env update -n base --file ./env.yml &&\
 
 
 # Set the working directory
-ARG B_USER="blender"
-ARG B_UID="1000"
-ARG B_GID="100"
+ENV B_USER="blender"
+ENV B_UID="1000"
+ENV B_GID="100"
 ENV HOME=/home/${B_USER}
 
 
@@ -70,6 +70,6 @@ RUN useradd -m -s /bin/bash -N -u $B_UID $B_USER && \
     chown -R ${B_UID}:${B_GID} /workdir
 
 
-USER ${B_UID}
+USER ${B_USER}
 SHELL ["/bin/bash", "-c"]
 WORKDIR /workdir
