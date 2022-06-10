@@ -82,6 +82,11 @@ class BatomsDefaultStartup(bpy.types.Operator):
         addon_dir = pathlib.Path(__file__).parent.resolve()
         blend_dir = os.path.join(addon_dir, "data/startup.blend")
         bpy.ops.wm.open_mainfile(filepath=blend_dir, load_ui=True, use_scripts=True) 
+        ###################################################
+        # Add additional settings to the startup file here
+        ###################################################
+        bpy.context.scene.unit_settings.system = "NONE"
+        ###################################################
         bpy.ops.wm.save_homefile()
         self.report({"INFO"}, "Load default startup successfully!")
         # todo open preference again.
