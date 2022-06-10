@@ -10,6 +10,9 @@ class Batom(childObjectGN):
     def __init__(self, label, index=0, batoms=None) -> None:
         """Batom class
 
+        Access properties of one atoms by reading attribute 
+        from obj directly. This will be faster than Batoms[index]
+
         Args:
             label (str):
                 Name of the Batoms object
@@ -21,11 +24,11 @@ class Batom(childObjectGN):
         childObjectGN.__init__(self, label, index, parent=batoms)
 
     def __repr__(self):
-        bpy.context.view_layer.objects.active = self.parent.obj
-        mode = self.parent.obj.mode
+        bpy.context.view_layer.objects.active = self.obj
+        mode = self.obj.mode
         bpy.ops.object.mode_set(mode='OBJECT')
         s = "Batom(species = '%s', " % self.species
-        s += "elements = %s, " % str(self.elements)
+        # s += "elements = %s, " % str(self.elements)
         s += "positions = %s)" % np.round(self.position, 2)
         bpy.ops.object.mode_set(mode=mode)
         return s

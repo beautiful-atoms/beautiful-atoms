@@ -15,10 +15,10 @@ class Pubchem_PT_prepare(Panel):
 
     def draw(self, context):
         layout = self.layout
-        pubcpanel = context.scene.pubcpanel
+        pubchem = context.scene.batoms.pubchem
 
         layout.label(text="Search structure")
-        layout.prop(pubcpanel, "cid")
+        layout.prop(pubchem, "cid")
         layout.operator("batoms.pubchem_search")
 
 
@@ -35,6 +35,6 @@ class Search(Operator):
     bl_description = ("Search structure by id")
 
     def execute(self, context):
-        pubcpanel = context.scene.pubcpanel
-        batoms = pubchem_search(pubcpanel.cid)
+        pubchem = context.scene.batoms.pubchem
+        batoms = pubchem_search(pubchem.cid)
         return {'FINISHED'}

@@ -17,10 +17,10 @@ class RSCB_PT_prepare(Panel):
 
     def draw(self, context):
         layout = self.layout
-        pubcpanel = context.scene.pubcpanel
+        rscb = context.scene.batoms.rscb
 
         layout.label(text="Import PDB")
-        layout.prop(pubcpanel, "name")
+        layout.prop(rscb, "name")
         layout.operator("batoms.rscb_import")
 
 
@@ -37,7 +37,7 @@ class RSCB_Import(Operator):
     bl_description = ("Import pdb by name")
 
     def execute(self, context):
-        pubcpanel = context.scene.pubcpanel
-        batoms = rscb_import(pubcpanel.name)
+        rscb = context.scene.batoms.rscb
+        batoms = rscb_import(rscb.name)
         batoms.ribbon.draw()
         return {'FINISHED'}

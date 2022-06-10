@@ -17,11 +17,11 @@ class Pymatgen_PT_prepare(Panel):
 
     def draw(self, context):
         layout = self.layout
-        pmgpanel = context.scene.pmgpanel
+        pymatgen = context.scene.batoms.pymatgen
 
         layout.label(text="Search structure")
-        layout.prop(pmgpanel, "key")
-        layout.prop(pmgpanel, "id")
+        layout.prop(pymatgen, "key")
+        layout.prop(pymatgen, "id")
         layout.operator("batoms.pymatgen_search")
 
 
@@ -41,6 +41,6 @@ class Search(Operator):
     bl_description = ("Search structure by id")
 
     def execute(self, context):
-        pmgpanel = context.scene.pmgpanel
-        batoms = pymatgen_search(pmgpanel.key, pmgpanel.id)
+        pymatgen = context.scene.batoms.pymatgen
+        batoms = pymatgen_search(pymatgen.key, pymatgen.id)
         return {'FINISHED'}

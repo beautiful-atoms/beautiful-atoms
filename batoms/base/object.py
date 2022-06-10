@@ -3,6 +3,7 @@ import numpy as np
 from batoms.utils.butils import (get_nodes_by_name, object_mode, set_look_at,
                                  update_object)
 from time import time
+import bmesh
 import logging
 
 # logger = logging.getLogger('batoms')
@@ -748,18 +749,45 @@ class childObjectGN():
 
     """
 
-    def __init__(self, label, index, parent=None):
+    def __init__(self, label, index, obj_name=None, parent=None):
         self.label = label
         self.index = index
         self.parent = parent
+        if obj_name is None:
+            self.obj_name = label
+        else:
+            self.obj_name = obj_name
+
+    @property
+    def obj(self):
+        return self.get_obj()
+
+    def get_obj(self):
+        obj = bpy.data.objects.get(self.obj_name)
+        if obj is None:
+            raise KeyError('%s object is not exist.' % self.obj_name)
+        return obj
 
     @property
     def vertice(self):
-        return self.parent.obj.data.shape_keys.key_blocks[0].data[self.index]
+        return self.obj.data.shape_keys.key_blocks[0].data[self.index]
+
+    @property
+    def bm(self):
+        if self.obj.mode == 'EDIT':
+            bm =bmesh.from_edit_mesh(self.obj.data)
+        else:
+            bm = bmesh.new()
+            bm.from_mesh(self.obj.data)
+        return bm
+
+    @property
+    def bm_vert(self):
+        return self.bm.verts[self.index]
 
     @property
     def attributes(self):
-        return self.parent.obj.data.attributes
+        return self.obj.data.attributes
 
     @property
     def local_position(self):
@@ -779,7 +807,7 @@ class childObjectGN():
         """
         from batoms.utils import local2global
         position = local2global(np.array([self.local_position]),
-                                np.array(self.parent.obj.matrix_world))
+                                np.array(self.obj.matrix_world))
         return position[0]
 
     def set_position(self, position):
@@ -790,26 +818,55 @@ class childObjectGN():
         from batoms.utils import local2global
         position = np.array([position])
         position = local2global(position,
-                                np.array(self.parent.obj.matrix_world),
+                                np.array(self.obj.matrix_world),
                                 reversed=True)
         # rashpe to (natoms*3, 1) and use forseach_set
         self.vertice.co = position[0]
-        self.parent.obj.data.update()
-        update_object(self.parent.obj)
+        self.obj.data.update()
+        update_object(self.obj)
 
     @property
     def scale(self):
-        return self.attributes['scale'].data[self.index].value
+        if self.obj.mode == 'EDIT':
+            bm =bmesh.from_edit_mesh(self.obj.data)
+            bm.verts.ensure_lookup_table()
+            layer = bm.verts.layers.float.get("scale")
+            scale = bm.verts[self.index][layer]
+        else:
+            scale = self.attributes['scale'].data[self.index].value
+        return scale
 
     @scale.setter
     def scale(self, scale):
-        self.attributes['scale'].data[self.index].value = scale
+        if self.obj.mode == 'EDIT':
+            bm =bmesh.from_edit_mesh(self.obj.data)
+            bm.verts.ensure_lookup_table()
+            layer = bm.verts.layers.float.get("scale")
+            bm.verts[self.index][layer] = scale
+            bmesh.update_edit_mesh(self.obj.data)
+        else:
+            self.attributes['scale'].data[self.index].value = scale
 
     @property
     def show(self):
-        return self.attributes['show'].data[self.index].value
+        """_summary_
+
+        Unfortunately, bmesh layers does not support bool, only int/float/string.
+
+        Returns:    
+            _type_: _description_
+        """
+        if self.obj.mode == 'EDIT':
+            bpy.context.view_layer.objects.active = self.obj
+            bpy.ops.object.mode_set(mode="OBJECT")
+            show = self.attributes['show'].data[self.index].value
+            bpy.ops.object.mode_set(mode="EDIT")
+            #
+        else:
+            show = self.attributes['show'].data[self.index].value
+        return show
 
     @show.setter
     def show(self, show):
         self.attributes['show'].data[self.index].value = show
-        update_object(self.parent.obj)
+        update_object(self.obj)

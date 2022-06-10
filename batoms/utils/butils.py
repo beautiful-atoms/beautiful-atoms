@@ -9,6 +9,9 @@ logger = logging.getLogger(__name__)
 def get_selected_vertices_bmesh(obj):
     """_summary_
 
+    Warnning: bmesh.select_history does not support
+     box/lasso/circle/other selected vertices.
+
     Args:
         obj (bpy.type.object): _description_
 
@@ -85,8 +88,25 @@ def get_selected_objects(attr):
             objs.append(obj.name)
     return objs
 
+def get_selected_vertices(obj):
+    """
+    """
+    import numpy as np
+    selected_vertices = []
+    # if obj.mode != "EDIT":
+        # logger.warning('Warning: Please switch to Edit mode.')
+        # return selected_vertices
+    mode = obj.mode
+    bpy.ops.object.mode_set(mode='OBJECT')
+    count = len(obj.data.vertices)
+    sel = np.zeros(count, dtype=np.bool)
+    obj.data.vertices.foreach_get('select', sel)
+    selected_vertices = np.where(sel)[0]
+    # back to whatever mode we were in
+    bpy.ops.object.mode_set(mode=mode)
+    return selected_vertices.tolist()
 
-def get_selected_vertices():
+def get_selected_vertices_all():
     """
     change to 'Object' mode
     in order
