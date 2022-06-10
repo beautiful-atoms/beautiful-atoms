@@ -242,6 +242,9 @@ class Batoms(BaseCollection, ObjectGN):
         obj.batoms.type = 'BATOMS'
         obj.batoms.label = label
         self.coll.objects.link(obj)
+        # add shape_keys
+        if self.obj.data.shape_keys is None:
+            self.obj.shape_key_add(name=self.label)
         #
         self._attributes = Attributes(label=label, parent=self, obj_name=label)
         # Add attributes

@@ -1,5 +1,6 @@
 import bpy
 import bmesh
+from bpy.types import Operator
 from bpy.props import (
     StringProperty,
     BoolProperty,
@@ -239,4 +240,69 @@ class AddRootSurface(OperatorBatoms):
         batoms.translate([2, 2, 2])
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        return {'FINISHED'}
+
+
+class BatomsJoin(OperatorBatoms):
+    bl_idname = "batoms.join"
+    bl_label = "Join batoms"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = ("Join batoms")
+
+    label: StringProperty(
+        name="Label", default='',
+        description="Label")
+
+    def execute(self, context):
+        from batoms.utils.butils import get_selected_batoms
+        batoms_list = get_selected_batoms()
+        if len(batoms_list) < 2:
+            self.report({"WARNING"}, "Please select at least two Batoms objects.")
+            return {'FINISHED'}
+        if self.label == '':
+            self.label = batoms_list[0]
+        if self.label not in batoms_list:
+            self.report({"INFO"}, "Create a new Batoms object: {}.".format(self.label))
+        batoms = Batoms(label=self.label)
+        for label in batoms_list:
+            if self.label == label: continue
+            batoms += Batoms(label=label)
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
+        return {'FINISHED'}
+
+class deleteBatoms(Operator):
+    bl_idname = "batoms.delete"
+    bl_label = "Delete batoms"
+    bl_description = ("Delete batoms")
+
+    label: StringProperty(
+        name="Label", default='',
+        description="Label")
+
+    def execute(self, context):
+        from batoms.utils.butils import remove_collection, read_batoms_list
+        if self.label != '':
+            coll = bpy.data.collections.get(self.label)
+            remove_collection(self.label, keep_batom=False)
+        else:
+            batoms_list = read_batoms_list()
+            for label in batoms_list:
+                coll = bpy.data.collections.get(label)
+                remove_collection(label, keep_batom=False)
+                self.report({"INFO"}, "Delete {}".format(label))
+        return {'FINISHED'}
+
+class deleteSelectedBatoms(OperatorBatoms):
+    bl_idname = "batoms.delete_selected"
+    bl_label = "Delete selected batoms"
+    bl_description = ("Delete selected batoms")
+
+    def execute(self, context):
+        from batoms.utils.butils import get_selected_batoms, remove_collection
+        batoms_list = get_selected_batoms()
+        for label in batoms_list:
+            coll = bpy.data.collections.get(label)
+            remove_collection(label, keep_batom=False)
+            self.report({"INFO"}, "Delete {}".format(label))
         return {'FINISHED'}

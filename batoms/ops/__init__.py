@@ -20,7 +20,6 @@ from . import (
     )
 
 classes = [
-    add_object.deleteBatoms,
     add_object.AddMolecule,
     add_object.AddBulk,
     add_object.AddAtoms,
@@ -53,6 +52,9 @@ classes = [
     ops_batoms.ApplyBoundary,
     ops_batoms.AddSurface,
     ops_batoms.AddRootSurface,
+    ops_batoms.BatomsJoin,
+    ops_batoms.deleteBatoms,
+    ops_batoms.deleteSelectedBatoms,
     ops_io.IMPORT_OT_batoms,
     ops_io.EXPORT_OT_batoms,
     ops_species.SpeciesAdd,
