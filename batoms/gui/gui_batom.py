@@ -23,7 +23,7 @@ class Batom_PT_prepare(Panel):
     # def poll(cls, context):
     #     obj = context.object
     #     if obj:
-    #         return obj.batoms.type == 'BATOMS' and obj.mode == 'EDIT'
+    #         return obj.batoms.type == 'BATOMS' and obj.mode != 'EDIT'
     #     else:
     #         return False
 

@@ -20,6 +20,14 @@ class Bond_PT_prepare(Panel):
     bl_category = "Bond"
     bl_idname = "BATOMS_PT_Bond"
 
+    # @classmethod
+    # def poll(cls, context):
+    #     obj = context.object
+    #     if obj:
+    #         return obj.batoms.type == 'BOND' and obj.mode != 'EDIT'
+    #     else:
+    #         return False
+    
     def draw(self, context):
         layout = self.layout
         bond = context.scene.batoms.bond
@@ -36,7 +44,7 @@ class Bond_PT_prepare(Panel):
 # ---------------------------------------------------
 def get_active_bond():
     context = bpy.context
-    if context.object and context.object.batoms.type != 'OTHER':
+    if context.object and context.object.batoms.type == 'BOND':
         v = get_selected_vertices(context.object)
         if len(v) > 0:
             bond = Bond(label=context.object.batoms.label, index=v[0])
@@ -54,7 +62,7 @@ def set_bond_attr_by_batoms(key):
             batoms = Batoms(label=bond.label)
             setattr(batoms.bonds[bond.index], key, value)
             # bpy.ops.object.mode_set(mode="EDIT")
-            # bpy.context.view_layer.objects.active = batom.obj
+            bpy.context.view_layer.objects.active = batoms.bonds.obj
     
     return setter
 
@@ -65,9 +73,12 @@ def get_bond_attr(key):
         bond = get_active_bond()
         if bond is not None:
             batoms = Batoms(label=bond.label)
-            return getattr(batoms.bonds[bond.index], key)
+            # bpy.context.view_layer.objects.active = batoms.bonds.obj
+            value = getattr(batoms.bonds[bond.index], key)
             # bpy.ops.object.mode_set(mode="EDIT")
-            # bpy.context.view_layer.objects.active = batom.obj
+            return value
+        else:
+            return self.bl_rna.properties[key].default
     
     return getter
 
@@ -102,6 +113,6 @@ class BondProperties(bpy.types.PropertyGroup):
                        set=set_bond_attr_by_batoms("order"),
                        )
     show: BoolProperty(name="show", default=False,
-                        get=get_attr("show", get_active_bond),
-                        set=set_bond_attr_by_batoms("show"),    
-                        )
+                       get=get_attr("show", get_active_bond),
+                       set=set_bond_attr_by_batoms("show"),    
+                       )

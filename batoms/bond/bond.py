@@ -3,6 +3,7 @@ import bmesh
 import numpy as np
 from batoms.utils import number2String
 from batoms.base.object import childObjectGN
+import time
 import logging
 # logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
@@ -51,6 +52,11 @@ class Bond(childObjectGN):
     @property
     def order(self):
         if self.obj.mode == 'EDIT':
+            # bpy.context.view_layer.objects.active = self.obj
+            # bpy.ops.object.mode_set(mode="OBJECT")
+            # order = self.attributes['order'].data[self.index].value
+            # bpy.ops.object.mode_set(mode="EDIT")
+            #
             bm =bmesh.from_edit_mesh(self.obj.data)
             bm.verts.ensure_lookup_table()
             layer = bm.verts.layers.int.get("order")
@@ -58,6 +64,7 @@ class Bond(childObjectGN):
         else:
             order = self.attributes['order'].data[self.index].value
         return order
+
     @order.setter
     def order(self, order):
         if self.obj.mode == 'EDIT':
@@ -81,10 +88,20 @@ class Bond(childObjectGN):
     @property
     def style(self):
         if self.obj.mode == 'EDIT':
+            # tstart = time.time()
+            # bpy.context.view_layer.objects.active = self.obj
+            # bpy.ops.object.mode_set(mode="OBJECT")
+            # style = self.attributes['style'].data[self.index].value
+            # bpy.ops.object.mode_set(mode="EDIT")
+            # t1 = time.time() - tstart
+            #
+            # tstart = time.time()
             bm =bmesh.from_edit_mesh(self.obj.data)
             bm.verts.ensure_lookup_table()
             layer = bm.verts.layers.int.get("style")
             style = bm.verts[self.index][layer]
+            # t2 = time.time() - tstart
+            # print("mode: {}, bmesh: {}".format(t1, t2))
         else:
             style = self.attributes['style'].data[self.index].value
         return style
