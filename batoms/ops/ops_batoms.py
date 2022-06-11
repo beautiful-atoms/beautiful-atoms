@@ -272,6 +272,19 @@ class BatomsJoin(OperatorBatoms):
         bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
+class BatomsSeparate(OperatorBatoms):
+    bl_idname = "batoms.separate"
+    bl_label = "Separate batoms"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = ("Separate batoms based on selects")
+
+    def execute(self, context):
+        batoms = Batoms(label=context.object.batoms.label)
+        batoms.separate()
+        # batoms.obj.select_set(True)
+        self.report({"INFO"}, "Separate the Batoms object: {}.".format(self.label))
+        return {'FINISHED'}
+
 class deleteBatoms(Operator):
     bl_idname = "batoms.delete"
     bl_label = "Delete batoms"
