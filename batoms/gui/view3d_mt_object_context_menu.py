@@ -64,7 +64,7 @@ class VIEW3D_MT_object_context_batoms_color_style(Menu):
         op1.color_style = '1'
         op2 = layout.operator("batoms.apply_color_style", text="CPK")
         op2.color_style = '2'
-
+    
 class VIEW3D_MT_object_context_batoms(Menu):
     bl_idname = "VIEW3D_MT_object_context_batoms"
     bl_label = "Batoms"
@@ -81,6 +81,7 @@ class VIEW3D_MT_object_context_batoms(Menu):
         layout.menu("VIEW3D_MT_object_context_batoms_radius_style",
                     text="Radius Style", icon='LAYER_ACTIVE')
         layout.operator("batoms.join", text="Join", icon='LAYER_ACTIVE')
+        layout.operator("batoms.separate", text="Separate", icon='LAYER_ACTIVE')
         layout.operator("batoms.delete_selected", text="Delete",
                         icon='FORCE_LENNARDJONES')
 
