@@ -2,6 +2,38 @@ import bpy
 from batoms import Batoms
 import pytest
 
+def test_batoms_join_seperate():
+    """
+    """
+    from batoms import Batoms
+    bpy.ops.batoms.delete()
+    bpy.ops.batoms.molecule_add(label="nh3", formula="NH3")
+    bpy.ops.batoms.molecule_add(label="h2o", formula="H2O")
+    nh3 = Batoms('nh3')
+    nh3.obj.select_set(True)
+    h2o = Batoms('h2o')
+    h2o.obj.select_set(True)
+    # join
+    bpy.ops.batoms.join(label = 'nh3')
+    assert len(nh3) == 7
+    # separate
+    nh3.separate()
+    assert len(nh3) == 4
+    assert len(h2o) == 3
+    # join with another name
+    nh3.obj.select_set(True)
+    h2o.obj.select_set(True)
+    bpy.ops.batoms.join(label = 'a')
+    a = Batoms('a')
+    assert len(a) == 7
+    # separate
+    a.separate()
+    assert len(nh3) == 4
+    assert len(h2o) == 3
+
+
+
+
 
 def test_ase_molecule():
     """Create a molecule use GUI ASE"""

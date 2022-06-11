@@ -56,6 +56,7 @@ classes = [
     ops_batoms.AddSurface,
     ops_batoms.AddRootSurface,
     ops_batoms.BatomsJoin,
+    ops_batoms.BatomsSeparate,
     ops_batoms.deleteBatoms,
     ops_batoms.deleteSelectedBatoms,
     ops_io.IMPORT_OT_batoms,
