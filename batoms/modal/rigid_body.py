@@ -98,7 +98,7 @@ class Rigid_Body_Operator(bpy.types.Operator):
                 return {'RUNNING_MODAL'}
             delta = mouse_position - self.mouse_position
             displacement = mouse2positions(
-                delta, self.viewports_3D.spaces.active.region_3d.    view_matrix)
+                delta, self.viewports_3D.spaces.active.region_3d.view_matrix)
             translate(self.selected_batoms[0], displacement)
             self.previous = 'MOUSEMOVE'
             return {'RUNNING_MODAL'}

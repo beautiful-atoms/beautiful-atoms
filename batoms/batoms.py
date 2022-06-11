@@ -242,6 +242,9 @@ class Batoms(BaseCollection, ObjectGN):
         obj.batoms.type = 'BATOMS'
         obj.batoms.label = label
         self.coll.objects.link(obj)
+        # add shape_keys
+        if self.obj.data.shape_keys is None:
+            self.obj.shape_key_add(name="Basis_{}".format(self.label))
         #
         self._attributes = Attributes(label=label, parent=self, obj_name=label)
         # Add attributes
@@ -1027,6 +1030,45 @@ class Batoms(BaseCollection, ObjectGN):
         """
         self += other
         return self
+    
+    def separate(self):
+        """
+        Separate batoms object based on selects.
+
+        >>> slab = au111 + co
+        >>> slab.separate()
+        >>> au111=Batoms('au111')
+        >>> co=Batoms('co')
+        """
+        # could also use self.add_arrays(other.positions)
+        object_mode()
+        arrays = self.arrays
+        selects = self.selects.selects
+        self_indices = []
+        for name, sel in selects.items():
+            if name == "all": continue
+            if name == self.label:
+                self_indices = sel.indices
+                continue
+            indices = sel.indices
+            sel = self.__class__(name, species = arrays['species'][indices],
+                                positions = arrays['positions'][indices])
+            new_arrays = {}
+            for key, array in arrays.items():
+                if key in ["positions", "species"]: continue
+                new_arrays[key] = array[indices]
+            sel.set_attributes(new_arrays)
+        if len(self_indices) == 0:
+            # remove old
+            bpy.ops.batoms.delete(label=self.label)
+            bpy.context.view_layer.objects.active = sel.obj
+        else:
+            remove_indices = list(set(range(len(self))) - set(self_indices))
+            del self[remove_indices]
+            bpy.context.view_layer.objects.active = self.obj
+
+
+        
 
     def __iter__(self):
         batom = self.obj

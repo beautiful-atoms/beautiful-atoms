@@ -14,29 +14,6 @@ from ase import Atoms
 from batoms import Batoms
 
 
-class deleteBatoms(Operator):
-    bl_idname = "batoms.delete"
-    bl_label = "Delete batoms"
-    bl_description = ("Delete batoms")
-
-    label: StringProperty(
-        name="Label", default='',
-        description="Label")
-
-    def execute(self, context):
-        from batoms.utils.butils import remove_collection, read_batoms_list
-        if self.label != '':
-            coll = bpy.data.collections.get(self.label)
-            remove_collection(self.label, keep_batom=False)
-        else:
-            batoms_list = read_batoms_list()
-            for label in batoms_list:
-                coll = bpy.data.collections.get(label)
-                remove_collection(label, keep_batom=False)
-                self.report({"INFO"}, "Delete {}".format(label))
-        return {'FINISHED'}
-
-
 class AddMolecule(Operator):
     bl_idname = "batoms.molecule_add"
     bl_label = "Add molecule"
