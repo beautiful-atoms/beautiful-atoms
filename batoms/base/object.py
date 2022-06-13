@@ -273,9 +273,9 @@ class ObjectGN(BaseObject):
         """
         Geometry node for everything!
         """
+        from batoms.utils.butils import build_modifier
         name = 'GeometryNodes_%s' % self.obj_name
-        modifier = self.obj.modifiers.new(name=name, type='NODES')
-        modifier.node_group.name = name
+        modifier = build_modifier(self.obj, name)
 
     def vectorDotMatrix(self, gn, vectorNode, matrix, name):
         """

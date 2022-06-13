@@ -257,9 +257,9 @@ class Batoms(BaseCollection, ObjectGN):
     def build_geometry_node(self):
         """Geometry node for instancing sphere on vertices!
         """
+        from batoms.utils.butils import build_modifier
         name = 'GeometryNodes_%s' % self.label
-        modifier = self.obj.modifiers.new(name=name, type='NODES')
-        modifier.node_group.name = name
+        modifier = build_modifier(self.obj, name)
         inputs = modifier.node_group.inputs
         GroupInput = modifier.node_group.nodes[0]
         GroupOutput = modifier.node_group.nodes[1]

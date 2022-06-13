@@ -305,7 +305,7 @@ class BondSettings(Setting):
         nv = len(obj.data.vertices)
         for i in range(nv):
             obj.data.vertices[i].co[0] -= 2*(order - 1)*radius
-        bpy.ops.object.modifier_apply(modifier='Array')
+        # bpy.ops.object.modifier_apply(modifier='Array')
         #
         if style == 2:
             mod = obj.modifiers.new('arrayStyle', 'ARRAY')
@@ -314,7 +314,7 @@ class BondSettings(Setting):
             nv = len(obj.data.vertices)
             for i in range(nv):
                 obj.data.vertices[i].co[2] -= (10 - 1)*depth
-        bpy.ops.object.modifier_apply(modifier='Array')
+        # bpy.ops.object.modifier_apply(modifier='Array')
         obj.name = name
         obj.data.name = name
         return obj

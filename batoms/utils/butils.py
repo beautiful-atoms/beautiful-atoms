@@ -363,7 +363,17 @@ def hideOneLevel():
         bpy.ops.outliner.show_one_level(c, open=False)
         ol.tag_redraw()
 
-
+def build_modifier(obj, name):
+    from bl_operators.geometry_nodes import geometry_node_group_empty_new
+    modifier = obj.modifiers.new(name=name, type='NODES')
+    if bpy.app.version_string >= '3.2.0':
+        # bpy.context.view_layer.objects.active = obj
+        # bpy.context.object.modifiers.active = modifier
+        # bpy.ops.node.new_geometry_node_group_assign()
+        group = geometry_node_group_empty_new()
+        modifier.node_group = group
+    modifier.node_group.name = name
+    return modifier
 # ========================================================
 if bpy.app.version_string >= '3.1.0':
     compareNodeType = 'FunctionNodeCompare'
