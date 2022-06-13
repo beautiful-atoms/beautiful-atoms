@@ -1,16 +1,18 @@
 import bpy
 import bmesh
+from bpy.types import Operator
 from bpy.props import (
     StringProperty,
     BoolProperty,
     FloatVectorProperty,
     FloatProperty,
     IntProperty,
-    IntVectorProperty
+    IntVectorProperty,
+    EnumProperty,
 )
 from batoms import Batoms
 from batoms.ops.base import OperatorBatoms, OperatorBatomsEdit
-from batoms.utils.butils import get_selected_vertices_bmesh
+from batoms.utils.butils import get_selected_vertices
 
 class BatomsReplace(OperatorBatomsEdit):
     bl_idname = "batoms.replace"
@@ -23,7 +25,7 @@ class BatomsReplace(OperatorBatomsEdit):
 
     def execute(self, context):
         obj = context.object
-        v = get_selected_vertices_bmesh(obj)
+        v = get_selected_vertices(obj)
         batoms = Batoms(label=obj.batoms.label)
         batoms.replace(v, self.species)
         bpy.ops.object.mode_set(mode='EDIT')
@@ -37,7 +39,7 @@ class BatomModify(OperatorBatomsEdit):
     bl_description = ("Modify batom")
 
     key: StringProperty(
-        name="key", default='style',
+        name="key", default='scale',
         description="Replaced by this species")
 
     scale: FloatProperty(name="scale", default=0.6,
@@ -59,7 +61,7 @@ class BatomModify(OperatorBatomsEdit):
 
     def execute(self, context):
         obj = context.object
-        v = get_selected_vertices_bmesh(obj)
+        v = get_selected_vertices(obj)
         batoms = Batoms(label=obj.batoms.label)
         for i in v:
             setattr(batoms[i], self.key, getattr(self, self.key))
@@ -240,3 +242,154 @@ class AddRootSurface(OperatorBatoms):
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
+
+
+class BatomsJoin(OperatorBatoms):
+    bl_idname = "batoms.join"
+    bl_label = "Join batoms"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = ("Join batoms")
+
+    label: StringProperty(
+        name="Label", default='',
+        description="Label")
+
+    def execute(self, context):
+        from batoms.utils.butils import get_selected_batoms
+        batoms_list = get_selected_batoms()
+        if len(batoms_list) < 2:
+            self.report({"WARNING"}, "Please select at least two Batoms objects.")
+            return {'FINISHED'}
+        if self.label == '':
+            self.label = batoms_list[0]
+        if self.label not in batoms_list:
+            self.report({"INFO"}, "Create a new Batoms object: {}.".format(self.label))
+        batoms = Batoms(label=self.label)
+        for label in batoms_list:
+            if self.label == label: continue
+            batoms += Batoms(label=label)
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
+        return {'FINISHED'}
+
+class BatomsSeparate(OperatorBatoms):
+    bl_idname = "batoms.separate"
+    bl_label = "Separate batoms"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = ("Separate batoms based on selects")
+
+    def execute(self, context):
+        batoms = Batoms(label=context.object.batoms.label)
+        batoms.separate()
+        # batoms.obj.select_set(True)
+        self.report({"INFO"}, "Separate the Batoms object: {}.".format(self.label))
+        return {'FINISHED'}
+
+class deleteBatoms(Operator):
+    bl_idname = "batoms.delete"
+    bl_label = "Delete batoms"
+    bl_description = ("Delete batoms")
+
+    label: StringProperty(
+        name="Label", default='',
+        description="Label")
+
+    def execute(self, context):
+        from batoms.utils.butils import remove_collection, read_batoms_list
+        if self.label != '':
+            coll = bpy.data.collections.get(self.label)
+            remove_collection(self.label, keep_batom=False)
+        else:
+            batoms_list = read_batoms_list()
+            for label in batoms_list:
+                coll = bpy.data.collections.get(label)
+                remove_collection(label, keep_batom=False)
+                self.report({"INFO"}, "Delete {}".format(label))
+        return {'FINISHED'}
+
+class deleteSelectedBatoms(OperatorBatoms):
+    bl_idname = "batoms.delete_selected"
+    bl_label = "Delete selected batoms"
+    bl_description = ("Delete selected batoms")
+
+    def execute(self, context):
+        from batoms.utils.butils import get_selected_batoms, remove_collection
+        batoms_list = get_selected_batoms()
+        for label in batoms_list:
+            coll = bpy.data.collections.get(label)
+            remove_collection(label, keep_batom=False)
+            self.report({"INFO"}, "Delete {}".format(label))
+        return {'FINISHED'}
+
+class ApplyModelStyle(OperatorBatoms):
+    bl_idname = "batoms.apply_model_style"
+    bl_label = "Apply Model Style"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = ("Apply new model_style parameters")
+
+    model_style: EnumProperty(
+        name="model_style",
+        description="Structural models",
+        items=[('0', "Space-filling", "Use ball and stick"),
+               ('1', "Ball-and-stick", "Use ball"),
+               ('2', "Polyhedral", "Use polyhedral"),
+               ('3', "Stick", "Use stick")
+            ],
+        default='0',
+    )
+
+    def execute(self, context):
+        batoms = Batoms(label=context.object.batoms.label)
+        batoms.model_style = int(self.model_style)
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
+        return {'FINISHED'}
+    
+class ApplyRadiusStyle(OperatorBatoms):
+    bl_idname = "batoms.apply_radius_style"
+    bl_label = "Apply Radius Style"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = ("Apply new.radius_style parameters")
+
+    radius_style: EnumProperty(
+        name="radius_style",
+        description="Structural models",
+        items=[('0', "Covalent", "Covalent"),
+               ('1', "VDW", "van der Waals"),
+               ('2', "Ionic", "Ionic")
+            ],
+        default='0',
+    )
+
+    def execute(self, context):
+        batoms = Batoms(label=context.object.batoms.label)
+        batoms.radius_style = int(self.radius_style)
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
+        return {'FINISHED'}
+
+
+class ApplyColorStyle(OperatorBatoms):
+    bl_idname = "batoms.apply_color_style"
+    bl_label = "Apply Color Style"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = ("Apply new color_style parameters")
+
+    color_style: EnumProperty(
+        name="color_style",
+        description="Structural models",
+        items=[('0', "JMOL", "JMOL"),
+               ('1', "VESTA", "VESTA"),
+               ('2', "CPK", "CPK")
+            ],
+        default='0',
+    )
+
+    def execute(self, context):
+        batoms = Batoms(label=context.object.batoms.label)
+        batoms.color_style = int(self.color_style)
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
+        return {'FINISHED'}
+
+

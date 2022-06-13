@@ -3,6 +3,77 @@ from batoms import Batoms
 import pytest
 
 
+def test_batoms_delete():
+    """
+    """
+    from batoms import Batoms
+    bpy.ops.batoms.delete()
+    # delete all
+    bpy.ops.batoms.molecule_add(label="nh3", formula="NH3")
+    bpy.ops.batoms.molecule_add(label="h2o", formula="H2O")
+    bpy.ops.batoms.delete()
+    assert 'nh3' not in bpy.data.collections
+    assert 'h2o' not in bpy.data.collections
+    # delete by label
+    bpy.ops.batoms.molecule_add(label="nh3", formula="NH3")
+    bpy.ops.batoms.molecule_add(label="h2o", formula="H2O")
+    bpy.ops.batoms.delete(label="h2o")
+    assert 'h2o' not in bpy.data.collections
+    # delete by selection
+    bpy.ops.batoms.molecule_add(label="nh3", formula="NH3")
+    bpy.ops.batoms.molecule_add(label="h2o", formula="H2O")
+    nh3 = Batoms('nh3')
+    h2o = Batoms('h2o')
+    nh3.obj.select_set(False)
+    h2o.obj.select_set(True)
+    bpy.ops.batoms.delete_selected()
+    assert 'h2o' not in bpy.data.collections
+
+def test_batoms_apply_model_style():
+    from batoms import Batoms
+    bpy.ops.batoms.delete()
+    bpy.ops.batoms.molecule_add(label="nh3", formula="NH3")
+    nh3 = Batoms('nh3')
+    assert nh3.model_style[0] == 1
+    # model_style
+    bpy.ops.batoms.apply_model_style(model_style='0')
+    assert nh3.model_style[0] == 0
+    # radius_style
+    bpy.ops.batoms.apply_radius_style(radius_style='1')
+    assert nh3.radius_style == '1'
+    # color_style
+    bpy.ops.batoms.apply_color_style(color_style='2')
+    assert nh3.color_style == '2'
+
+def test_batoms_join_seperate():
+    """
+    """
+    from batoms import Batoms
+    bpy.ops.batoms.delete()
+    bpy.ops.batoms.molecule_add(label="nh3", formula="NH3")
+    bpy.ops.batoms.molecule_add(label="h2o", formula="H2O")
+    nh3 = Batoms('nh3')
+    nh3.obj.select_set(True)
+    h2o = Batoms('h2o')
+    h2o.obj.select_set(True)
+    # join
+    bpy.ops.batoms.join(label = 'nh3')
+    assert len(nh3) == 7
+    # separate
+    nh3.separate()
+    assert len(nh3) == 4
+    assert len(h2o) == 3
+    # join with another name
+    nh3.obj.select_set(True)
+    h2o.obj.select_set(True)
+    bpy.ops.batoms.join(label = 'a')
+    a = Batoms('a')
+    assert len(a) == 7
+    # separate
+    a.separate()
+    assert len(nh3) == 4
+    assert len(h2o) == 3
+
 def test_ase_molecule():
     """Create a molecule use GUI ASE"""
     bpy.ops.batoms.delete()

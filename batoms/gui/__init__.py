@@ -22,7 +22,23 @@ from . import (
     ui_list_ms,
     ui_list_magres,
     view3d_mt_batoms_add,
+    view3d_mt_object_context_menu,
 )
+
+class BatomsCollection(bpy.types.PropertyGroup):
+    """
+    Collection properties of all panel properties.
+    """
+    batoms: PointerProperty(type=gui_batoms.BatomsProperties)
+    batom: PointerProperty(type=gui_batom.BatomProperties)
+    cell: PointerProperty(type=gui_cell.CellProperties)
+    bond: PointerProperty(type=gui_bond.BondProperties)
+    plane: PointerProperty(type=gui_plane.PlaneProperties)
+    render: PointerProperty(type=gui_render.RenderProperties)
+    pymatgen: PointerProperty(type=gui_pymatgen.PymatgenProperties)
+    pubchem: PointerProperty(type=gui_pubchem.PubchemProperties)
+    rscb: PointerProperty(type=gui_rscb.RSCBProperties)
+
 
 classes = [
     gui_batoms.Batoms_PT_prepare,
@@ -51,6 +67,10 @@ classes = [
     view3d_mt_batoms_add.VIEW3D_MT_surface_add,
     view3d_mt_batoms_add.VIEW3D_MT_nanotube_add,
     view3d_mt_batoms_add.VIEW3D_MT_nanoparticle_add,
+    view3d_mt_object_context_menu.VIEW3D_MT_object_context_batoms_model_style,
+    view3d_mt_object_context_menu.VIEW3D_MT_object_context_batoms_radius_style,
+    view3d_mt_object_context_menu.VIEW3D_MT_object_context_batoms_color_style,
+    view3d_mt_object_context_menu.VIEW3D_MT_object_context_batoms,
     ui_list_species.BATOMS_MT_species_context_menu,
     ui_list_species.BATOMS_UL_species,
     ui_list_species.BATOMS_PT_species,
@@ -78,22 +98,17 @@ classes = [
     ui_list_magres.BATOMS_MT_magres_context_menu,
     ui_list_magres.BATOMS_UL_magres,
     ui_list_magres.BATOMS_PT_magres,
+    BatomsCollection,
 ]
+
+
 
 def register_class():
     from bpy.utils import register_class
     for cls in classes:
         register_class(cls)
     scene = bpy.types.Scene
-    scene.bapanel = PointerProperty(type=gui_batoms.BatomsProperties)
-    scene.btpanel = PointerProperty(type=gui_batom.BatomProperties)
-    scene.clpanel = PointerProperty(type=gui_cell.CellProperties)
-    scene.bbpanel = PointerProperty(type=gui_bond.BondProperties)
-    scene.plpanel = PointerProperty(type=gui_plane.PlaneProperties)
-    scene.repanel = PointerProperty(type=gui_render.RenderProperties)
-    scene.pmgpanel = PointerProperty(type=gui_pymatgen.PymatgenProperties)
-    scene.pubcpanel = PointerProperty(type=gui_pubchem.PubchemProperties)
-    
+    scene.batoms = PointerProperty(type=BatomsCollection)
 
 
 def unregister_class():
@@ -101,20 +116,16 @@ def unregister_class():
     for cls in reversed(classes):
         unregister_class(cls)
     scene = bpy.types.Scene
-    del scene.bapanel
-    del scene.btpanel
-    del scene.clpanel
-    del scene.bbpanel
-    del scene.plpanel
-    del scene.repanel
-    del scene.pmgpanel
-    del scene.pubcpanel
+    del scene.batoms
+
 
 def register_menu():
     bpy.types.VIEW3D_MT_add.prepend(view3d_mt_batoms_add.menu_func)
+    bpy.types.VIEW3D_MT_object_context_menu.prepend(view3d_mt_object_context_menu.menu_func)
 
 def unregister_menu():
     bpy.types.VIEW3D_MT_add.remove(view3d_mt_batoms_add.menu_func)
+    bpy.types.VIEW3D_MT_object_context_menu.remove(view3d_mt_object_context_menu.menu_func)
     
 
 

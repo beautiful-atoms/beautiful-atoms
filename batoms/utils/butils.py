@@ -9,6 +9,9 @@ logger = logging.getLogger(__name__)
 def get_selected_vertices_bmesh(obj):
     """_summary_
 
+    Warnning: bmesh.select_history does not support
+     box/lasso/circle/other selected vertices.
+
     Args:
         obj (bpy.type.object): _description_
 
@@ -85,8 +88,25 @@ def get_selected_objects(attr):
             objs.append(obj.name)
     return objs
 
+def get_selected_vertices(obj):
+    """
+    """
+    import numpy as np
+    selected_vertices = []
+    # if obj.mode != "EDIT":
+        # logger.warning('Warning: Please switch to Edit mode.')
+        # return selected_vertices
+    mode = obj.mode
+    bpy.ops.object.mode_set(mode='OBJECT')
+    count = len(obj.data.vertices)
+    sel = np.zeros(count, dtype=np.bool)
+    obj.data.vertices.foreach_get('select', sel)
+    selected_vertices = np.where(sel)[0]
+    # back to whatever mode we were in
+    bpy.ops.object.mode_set(mode=mode)
+    return selected_vertices.tolist()
 
-def get_selected_vertices():
+def get_selected_vertices_all():
     """
     change to 'Object' mode
     in order
@@ -343,7 +363,17 @@ def hideOneLevel():
         bpy.ops.outliner.show_one_level(c, open=False)
         ol.tag_redraw()
 
-
+def build_modifier(obj, name):
+    from bl_operators.geometry_nodes import geometry_node_group_empty_new
+    modifier = obj.modifiers.new(name=name, type='NODES')
+    if bpy.app.version_string >= '3.2.0':
+        # bpy.context.view_layer.objects.active = obj
+        # bpy.context.object.modifiers.active = modifier
+        # bpy.ops.node.new_geometry_node_group_assign()
+        group = geometry_node_group_empty_new()
+        modifier.node_group = group
+    modifier.node_group.name = name
+    return modifier
 # ========================================================
 if bpy.app.version_string >= '3.1.0':
     compareNodeType = 'FunctionNodeCompare'

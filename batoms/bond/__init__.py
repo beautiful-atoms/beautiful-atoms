@@ -189,12 +189,12 @@ class Bonds(BaseCollection, ObjectGN):
         """
         todo: add width to nodes
         """
-        from batoms.utils.butils import get_nodes_by_name
+        from batoms.utils.butils import get_nodes_by_name, compareNodeType, \
+                            build_modifier
         from batoms.utils import string2Number
         tstart = time()
         name = 'GeometryNodes_%s_bond' % self.label
-        modifier = self.obj.modifiers.new(name=name, type='NODES')
-        modifier.node_group.name = name
+        modifier = build_modifier(self.obj, name)
         # ------------------------------------------------------------------
         inputs = modifier.node_group.inputs
         GroupInput = modifier.node_group.nodes[0]

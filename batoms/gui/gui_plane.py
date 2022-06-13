@@ -20,21 +20,21 @@ class Plane_PT_prepare(Panel):
     bl_idname = "PLANE_PT_Tools"
 
     def draw(self, context):
-        plpanel = context.scene.plpanel
+        plane = context.scene.batoms.plane
         
         layout = self.layout
         row = layout.row()
-        row.prop(plpanel, "indices")
-        layout.prop(plpanel, "distance")
-        layout.prop(plpanel, "scale")
-        layout.prop(plpanel, "symmetry", expand  = True)
+        row.prop(plane, "indices")
+        layout.prop(plane, "distance")
+        layout.prop(plane, "scale")
+        layout.prop(plane, "symmetry", expand  = True)
         row = layout.row()
-        row.prop(plpanel, "crystal")
-        row.prop(plpanel, "center")
-        layout.prop(plpanel, "slicing", expand  = True)
-        layout.prop(plpanel, "boundary", expand  = True)
-        layout.prop(plpanel, "show_edge")
-        layout.prop(plpanel, "color")
+        row.prop(plane, "crystal")
+        row.prop(plane, "center")
+        layout.prop(plane, "slicing", expand  = True)
+        layout.prop(plane, "boundary", expand  = True)
+        layout.prop(plane, "show_edge")
+        layout.prop(plane, "color")
         layout.operator("batoms.add_plane")
 
 
@@ -47,45 +47,45 @@ class PlaneProperties(bpy.types.PropertyGroup):
     def selected_plane(self):
         return get_selected_objects('bplane')
     def Callback_modify_indices(self, context):
-        plpanel = bpy.context.scene.plpanel
+        plane = bpy.context.scene.batoms.plane
         modify_plane_attr(self.selected_batoms, 
-                    self.selected_plane, 'indices', plpanel.indices)
+                    self.selected_plane, 'indices', plane.indices)
     def Callback_modify_distance(self, context):
-        plpanel = bpy.context.scene.plpanel
+        plane = bpy.context.scene.batoms.plane
         modify_plane_attr(self.selected_batoms, 
-                    self.selected_plane, 'distance', plpanel.distance)
+                    self.selected_plane, 'distance', plane.distance)
     def Callback_modify_scale(self, context):
-        plpanel = bpy.context.scene.plpanel
+        plane = bpy.context.scene.batoms.plane
         modify_plane_attr(self.selected_batoms, 
-                    self.selected_plane, 'scale', plpanel.scale)
+                    self.selected_plane, 'scale', plane.scale)
     def Callback_modify_crystal(self, context):
-        plpanel = bpy.context.scene.plpanel
+        plane = bpy.context.scene.batoms.plane
         modify_plane_attr(self.selected_batoms, 
-                    self.selected_plane, 'crystal', plpanel.crystal, center = plpanel.center)
+                    self.selected_plane, 'crystal', plane.crystal, center = plane.center)
     def Callback_modify_center(self, context):
-        plpanel = bpy.context.scene.plpanel
+        plane = bpy.context.scene.batoms.plane
         modify_plane_attr(self.selected_batoms, 
-                    self.selected_plane, 'center', plpanel.center)
+                    self.selected_plane, 'center', plane.center)
     def Callback_modify_symmetry(self, context):
-        plpanel = bpy.context.scene.plpanel
+        plane = bpy.context.scene.batoms.plane
         modify_plane_attr(self.selected_batoms, 
-                    self.selected_plane, 'symmetry', plpanel.symmetry)
+                    self.selected_plane, 'symmetry', plane.symmetry)
     def Callback_modify_slicing(self, context):
-        plpanel = bpy.context.scene.plpanel
+        plane = bpy.context.scene.batoms.plane
         modify_plane_attr(self.selected_batoms, 
-                    self.selected_plane, 'slicing', plpanel.slicing)
+                    self.selected_plane, 'slicing', plane.slicing)
     def Callback_modify_boundary(self, context):
-        plpanel = bpy.context.scene.plpanel
+        plane = bpy.context.scene.batoms.plane
         modify_plane_attr(self.selected_batoms, 
-                    self.selected_plane, 'boundary', plpanel.boundary)
+                    self.selected_plane, 'boundary', plane.boundary)
     def Callback_modify_show_edge(self, context):
-        plpanel = bpy.context.scene.plpanel
-        show_edge = plpanel.show_edge
+        plane = bpy.context.scene.batoms.plane
+        show_edge = plane.show_edge
         modify_plane_attr(self.selected_batoms, 
                     self.selected_plane, 'show_edge', show_edge)
     def Callback_modify_color(self, context):
-        plpanel = bpy.context.scene.plpanel
-        color = plpanel.color
+        plane = bpy.context.scene.batoms.plane
+        color = plane.color
         modify_plane_attr(self.selected_batoms, 
                     self.selected_plane, 'color', color)
 
@@ -131,11 +131,11 @@ class PlaneProperties(bpy.types.PropertyGroup):
         update = Callback_modify_color)
     
 
-def modify_plane_attr(batoms_name_list, plpanel_name_list, key, value, center = False):
+def modify_plane_attr(batoms_name_list, plane_name_list, key, value, center = False):
     selected_plane_new = []
     for batoms_name in batoms_name_list:
         batoms = Batoms(label = batoms_name)
-        for plane_name in plpanel_name_list:
+        for plane_name in plane_name_list:
             plane = bpy.data.objects[plane_name]
             if plane.bplane.label == batoms_name:
                 batoms.planesetting[plane.bplane.indices] = {key: value}

@@ -80,10 +80,10 @@ class Bcell(ObjectGN):
     def build_geometry_node(self):
         """
         """
-        from batoms.utils.butils import get_nodes_by_name, compareNodeType
+        from batoms.utils.butils import get_nodes_by_name, compareNodeType, \
+                            build_modifier
         name = 'GeometryNodes_%s_cell' % self.label
-        modifier = self.obj.modifiers.new(name=name, type='NODES')
-        modifier.node_group.name = name
+        modifier = build_modifier(self.obj, name)
         # ------------------------------------------------------------------
         # select attributes
         gn = modifier

@@ -20,42 +20,38 @@ class Cell_PT_prepare(Panel):
 
     def draw(self, context):
         layout = self.layout
-        clpanel = context.scene.clpanel
+        cell = context.scene.batoms.cell
 
-        # op = layout.operator("batoms.apply_cell")
-        # op.a = [clpanel.cell_a0, clpanel.cell_a1, clpanel.cell_a2]
-        # op.b = [clpanel.cell_b0, clpanel.cell_b1, clpanel.cell_b2]
-        # op.c = [clpanel.cell_c0, clpanel.cell_c1, clpanel.cell_c2]
         box = layout.box()
         row = box.row(align = True)
-        row.prop(clpanel, "cell_a0")
-        row.prop(clpanel, "cell_a1")
-        row.prop(clpanel, "cell_a2")
+        row.prop(cell, "cell_a0")
+        row.prop(cell, "cell_a1")
+        row.prop(cell, "cell_a2")
         row = box.row(align = True)
-        row.prop(clpanel, "cell_b0")
-        row.prop(clpanel, "cell_b1")
-        row.prop(clpanel, "cell_b2")
+        row.prop(cell, "cell_b0")
+        row.prop(cell, "cell_b1")
+        row.prop(cell, "cell_b2")
         row = box.row(align = True)
-        row.prop(clpanel, "cell_c0")
-        row.prop(clpanel, "cell_c1")
-        row.prop(clpanel, "cell_c2")
-        layout.prop(clpanel, "pbc")
+        row.prop(cell, "cell_c0")
+        row.prop(cell, "cell_c1")
+        row.prop(cell, "cell_c2")
+        layout.prop(cell, "pbc")
 
         op = layout.operator("batoms.apply_transform")
-        op.a = clpanel.transform_a
-        op.b = clpanel.transform_b
-        op.c = clpanel.transform_c
-        layout.prop(clpanel, "transform_a")
-        layout.prop(clpanel, "transform_b")
-        layout.prop(clpanel, "transform_c")
+        op.a = cell.transform_a
+        op.b = cell.transform_b
+        op.c = cell.transform_c
+        layout.prop(cell, "transform_a")
+        layout.prop(cell, "transform_b")
+        layout.prop(cell, "transform_c")
         #
         op = layout.operator("batoms.apply_boundary")
-        op.a = clpanel.boundary_a
-        op.b = clpanel.boundary_b
-        op.c = clpanel.boundary_c
-        layout.prop(clpanel, "boundary_a")
-        layout.prop(clpanel, "boundary_b")
-        layout.prop(clpanel, "boundary_c")
+        op.a = cell.boundary_a
+        op.b = cell.boundary_b
+        op.c = cell.boundary_c
+        layout.prop(cell, "boundary_a")
+        layout.prop(cell, "boundary_b")
+        layout.prop(cell, "boundary_c")
 
 def get_cell(i1, i2):
     """Helper function to easily get cell-property."""
@@ -87,8 +83,8 @@ class CellProperties(bpy.types.PropertyGroup):
         return None
 
     def Callback_modify_pbc(self, context):
-        clpanel = bpy.context.scene.clpanel
-        pbc = clpanel.pbc
+        cell = bpy.context.scene.batoms.cell
+        pbc = cell.pbc
         modify_batoms_attr(self.selected_batoms(context), 'pbc', pbc)
 
     pbc: BoolProperty(
