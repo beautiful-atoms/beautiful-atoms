@@ -19,7 +19,13 @@ USER root
 # Copy batoms to the addons_contrib directory
 COPY batoms ${BLENDER_PATH}/scripts/addons_contrib/batoms
 
-# Enable batoms addon, use default preferences and do a simple import test
+RUN chown ${B_USER} -R ${BLENDER_PATH} &&\
+        chmod 755 -R ${BLENDER_PATH}
+
+USER ${B_USER}
+WORKDIR /workdir
+
+# Enable batoms addon and test (under the user)
 RUN blender -b \
         --python-exit-code 1 \
         --python-expr  \
@@ -32,10 +38,3 @@ RUN blender -b \
         --python-exit-code 1 \
         --python-expr  \
         "from batoms import Batoms; b = Batoms('O', ['O'], [[0, 0, 0]]); print('success')"
-
-
-
-RUN chown ${B_USER} -R ${BLENDER_PATH}/scripts/addons_contrib/batoms &&\
-        chmod 755 -R ${BLENDER_PATH}/scripts/addons_contrib/batoms
-
-USER ${B_USER}
