@@ -6,11 +6,11 @@ import requests
 from bs4 import BeautifulSoup
 from distutils.version import LooseVersion
 import re
-from subprocess import run
+from subprocess import run, PIPE
 from pathlib import Path
 
 
-DEFAULT_BLENDER_MIRROR = "https://mirrors.ocf.berkeley.edu/blender/release/"
+DEFAULT_BLENDER_MIRROR = "https://mirrors.ocf.berkeley.edu/blender/release"
 BLENDER_MIRROR_ROOT = os.environ.get("BLENDER_MIRROR_URL", DEFAULT_BLENDER_MIRROR)
 
 def get_latest_url(version="3.1", regex=r"blender-(\d+\.\d+\.\d+)-linux-x64.tar.xz"):
@@ -44,14 +44,15 @@ def get_default_bl_py_version(blender_root):
     """Get default python path
     """
     py_binary = next(Path(f"{blender_root}/python/bin/").glob("python*"))
-    proc = run([py_binary.as_posix(), "-V"], capture_output=True)
+    # Init image only has minimal python3 version, use pipe redirect
+    proc = run([py_binary.as_posix(), "-V"], stdout=PIPE)
     version = proc.stdout.decode("ascii").strip().split()[-1]
     return version
 
 def extract_python_source(blender_root, python_version):
     short_version = ".".join(python_version.split(".")[:2])
     url = f"https://www.python.org/ftp/python/{python_version}/Python-{python_version}.tgz"
-    commands = f"wget url && tar -xzf Python-*.tgz && cp -r Python-*/Include/* {blender_root}/python/include/python{short_version}/ && rm -rf Python-*"
+    commands = f"wget {url} && tar -xzf Python-*.tgz && cp -r Python-*/Include/* {blender_root}/python/include/python{short_version}/ && rm -rf Python-*"
     proc = run(commands, shell=True)
     if proc.returncode != 0:
         raise RuntimeError("Error extracting python source")
@@ -65,9 +66,11 @@ def main():
     version = arguments.version
     url, href = get_latest_url(version)
     print(url, href)
+    print(f"Extract blender bin")
     extract_blender(url, href, root="/bin")
     blender_root = f"/bin/{version}"
-    python_version = get_default_bl_py_version()
+    python_version = get_default_bl_py_version(blender_root)
+    print(f"Downloading python source of {python_version}")
     extract_python_source(blender_root, python_version)
     return
 
