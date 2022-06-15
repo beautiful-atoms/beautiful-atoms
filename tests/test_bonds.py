@@ -72,6 +72,7 @@ def test_bonds_search_bond_0():
     tio2.bonds.setting[('Ti', 'O')].search = 0
     tio2.model_style = 1
     tio2.boundary = 0.01
+    tio2.model_style = 1
     assert len(tio2.bonds) == 14
     tio2.bonds.show_search = True
     if use_cycles:
