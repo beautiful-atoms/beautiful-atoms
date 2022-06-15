@@ -13,6 +13,14 @@ def test_boundary():
     o.boundary = [1, 0, 0]
     assert len(o.boundary) == 2
 
+def test_boundary_scale():
+    bpy.ops.batoms.delete()
+    au = Batoms("au", from_ase=bulk("Au", cubic=True))
+    au.scale = 0.5
+    au.boundary = [1, 1, 1]
+    assert np.allclose(au.scale[0], 0.5)
+    # repeat
+
 def test_boundary_off_origin():
     bpy.ops.batoms.delete()
     au = Batoms("au", from_ase=bulk("Au", cubic=True))

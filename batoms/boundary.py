@@ -371,7 +371,7 @@ class Boundary(ObjectGN):
 
         #
         self.set_arrays(boundary_datas)
-        self.batoms.draw()
+        # self.batoms.draw()
         logger.debug('update boundary: {0:10.2f} s'.format(time() - tstart))
 
     @property
