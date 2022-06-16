@@ -457,24 +457,24 @@ def _replace_conda_env(python_version=None, numpy_version=None):
     return env_file_content
 
 
-def _ensure_mamba(conda_vars, env_name=None):
-    """Ensure mamba is installed.
+def _ensure_mamba(conda_vars):
+    """Ensure mamba is installed at the base conda environment
     Search sequence:
     1. mamba in $PATH
     2. mamba in given env
     if not found, install mamba in the env and return its binary path
     """
     # 1. Check mamba in current $PATH
-    mamba_bin = shutil.which("mamba")
-    if mamba_bin is not None:
-        return mamba_bin
+    # mamba_bin = shutil.which("mamba")
+    # if mamba_bin is not None:
+    #     return mamba_bin
     # 2. Check mamba in given env
-    if env_name:
-        args_env = ["-n", env_name]
-    else:
-        args_env = ["-n", "base"]
+    # if env_name:
+    #     args_env = ["-n", env_name]
+    # else:
+    #     args_env = ["-n", "base"]
     proc = _run_process(
-        [conda_vars["CONDA_EXE"], "list", "mamba"] + args_env, capture_output=True
+        [conda_vars["CONDA_EXE"], "list", "-n", "base", "mamba"], capture_output=True
     )
     output = proc.stdout.decode("utf8")
     if "mamba" not in output:
@@ -482,19 +482,18 @@ def _ensure_mamba(conda_vars, env_name=None):
             conda_vars["CONDA_EXE"],
             "install",
             "-y",
+            "-n",
+            "base",
             "-c",
             "conda-forge",
             "mamba",
-        ] + args_env
+        ]
         _run_process(commands)
     # Get the mamba binary in given env
     output = _run_process(
         [
             conda_vars["CONDA_EXE"],
-            "run",
-        ]
-        + args_env
-        + ["which", "mamba"],
+            "run", "-n", "base", "which", "mamba"],
         capture_output=True,
     ).stdout.decode("utf8")
     if "ERROR" in output:
@@ -536,7 +535,7 @@ def _conda_update(
     # Install from the env.yaml
     print("Updating conda environment")
     if backend == "mamba":
-        mamba_bin = _ensure_mamba(conda_vars, env_name=env_name)
+        mamba_bin = _ensure_mamba(conda_vars)
         # This is dangerous running outside conda env. Consider check the base first
         commands_prefix = [
             mamba_bin,
