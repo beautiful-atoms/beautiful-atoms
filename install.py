@@ -650,8 +650,8 @@ def install(parameters):
     conda_env_file = repo_path / "env.yml"
     # plugin_path_source: dir of plugin in github repo
     # plugin_path_target: dir of plugin under blender root
-    plugin_path_source = repo_path / DEFAULT_PLUGIN_NAME
-    plugin_path_target = blender_root / DEFAULT_PLUGIN_PATH
+    plugin_path_source = (repo_path / DEFAULT_PLUGIN_NAME).resolve()
+    plugin_path_target = (blender_root / DEFAULT_PLUGIN_PATH).resolve()
 
     # factory_python_source: (presumably) python shipped with blender
     # factory_python_target: dir to move factory python
@@ -669,7 +669,7 @@ def install(parameters):
     # TODO: wrap the directory handling into another function
 
     if factory_python_target.exists():
-        # Empty of symlink factory python might be mistakenly created
+        # Empty symlink factory python might be mistakenly created
         # just delete them
         exception_corrupt = False
         if _is_empty_dir(factory_python_target) or factory_python_target.is_symlink():
@@ -791,9 +791,15 @@ def install(parameters):
                 os.unlink(plugin_path_target)
             else:
                 shutil.rmtree(plugin_path_target)
+    # Choose whether to copy the plugin path or symlink it
 
-    shutil.copytree(plugin_path_source, plugin_path_target)
-    print(f"Plugin copied to {plugin_path_target.as_posix()}.")
+    if parameters["develop"]:
+        os.symlink(plugin_path_source, plugin_path_target)
+        print("Installation in development mode!")
+        print(f"Created symlink {plugin_path_source.as_posix()} --> {plugin_path_target.as_posix()}.")
+    else:
+        shutil.copytree(plugin_path_source, plugin_path_target)
+        print(f"Plugin copied to {plugin_path_target.as_posix()}.")
     _blender_enable_plugin(blender_bin)
     _blender_test_plugin(parameters)
     #
@@ -1007,6 +1013,15 @@ def main():
             "Only print the dependency as a env.yml to local dir without any installation."
         ),
     )
+    parser.add_argument(
+        "--develop",
+        action="store_true",
+        help=(
+            "Development mode. Symlink the local batoms directory to plugin folder in blender."
+            "After such installation, local change of batoms source code will have immediate effect "
+            "without running install.py again."
+        )
+    )
     args = parser.parse_args()
     print(args)
     os_name = _get_os_name()
@@ -1038,6 +1053,7 @@ def main():
         generate_env_file=args.generate_env_file,
         use_startup=args.use_startup,
         use_preferences=args.use_preferences,
+        develop=args.develop,
     )
 
     # Uninstallation does not need information about current environment
