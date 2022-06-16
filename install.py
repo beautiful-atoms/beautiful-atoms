@@ -825,11 +825,16 @@ def install(parameters):
 
         # Give a warning about conda env
         # TODO: allow direct install into another environment
+        if parameters["no_mamba"]:
+            backend = "conda"
+        else:
+            backend = "mamba"
         _conda_update(
             conda_env_file,
             conda_vars,
             python_version=factory_py_ver,
             numpy_version=factory_numpy_ver,
+            backend=backend
         )
 
     # Step 4: install plugin
