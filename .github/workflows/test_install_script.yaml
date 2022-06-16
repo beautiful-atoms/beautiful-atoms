@@ -52,6 +52,15 @@ jobs:
       - name: Run installation script with startup and preferences
         run: |
           $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT}  --use-startup --use-preferences
+          #CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOR}
+      - name: Run installation using develop mode
+        run: |
+          $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} --develop
+          readlink ${BLENDER_ROOR}/scripts/addons_contrib/batoms
+          $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
+
+
+
 
 
   install-macos:
@@ -98,6 +107,12 @@ jobs:
       - name: Run installation script with startup and preferences
         run: |
           $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} --use-startup --use-preferences
+          $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
+      - name: Run installation using develop mode
+        run: |
+          $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} --develop
+          readlink ${BLENDER_ROOR}/scripts/addons_contrib/batoms
+          $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
       
 
   install-windows:
