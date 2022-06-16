@@ -41,7 +41,7 @@ DEFAULT_PLUGIN_PATH = f"scripts/addons_contrib/{DEFAULT_PLUGIN_NAME}"
 DEFAULT_BLENDER_PY_VER = "3.10.2"
 DEFAULT_BLENDER_NUMPY_VER = "1.22.0"
 
-ALLOWED_BLENDER_VERSIONS = ["3.0", "3.1"]
+ALLOWED_BLENDER_VERSIONS = ["3.0", "3.1", "3.2", "3.3"]
 
 PY_PATH = "python"
 PY_BACKUP_PATH = "_old_python"
@@ -456,9 +456,44 @@ def _replace_conda_env(python_version=None, numpy_version=None):
     )
     return env_file_content
 
+def _ensure_mamba(conda_vars, env_name=None):
+    """Ensure mamba is installed.
+    Search sequence:
+    1. mamba in $PATH
+    2. mamba in given env
+    if not found, install mamba in the env and return its binary path
+    """
+    # 1. Check mamba in current $PATH
+    mamba_bin = shutil.which("mamba")
+    if mamba_bin is not None:
+        return mamba_bin
+    # 2. Check mamba in given env
+    if env_name:
+        args_env = ["-n", env_name]
+    else:
+        args_env = ["-n", "base"]
+    proc = _run_process([
+        conda_vars["CONDA_EXE"], "list", "mamba"
+    ] + args_env, capture_output=True)
+    output = proc.stdout.decode("utf8")
+    if "mamba" not in output:
+        commands = [
+                conda_vars["CONDA_EXE"],
+                "install",
+                "-y",
+                "-c",
+                "conda-forge",
+                "mamba"
+            ] + args_env
+        _run_process(commands)
+    # Get the mamba binary in given env
+    output = _run_process([conda_vars["CONDA_EXE"], "run", ] + args_env + ["which", "mamba"], capture_output=True).stdout.decode("utf8")
+    if "ERROR" in output:
+        raise RuntimeError(output)
+    return output.strip()
 
 def _conda_update(
-    conda_env_file, conda_vars, env_name=None, python_version=None, numpy_version=None
+    conda_env_file, conda_vars, env_name=None, python_version=None, numpy_version=None, backend="mamba",
 ):
     """Update conda environment using env file.
     If env_name is None, use default env
@@ -485,6 +520,12 @@ def _conda_update(
 
     # Install from the env.yaml
     print("Updating conda environment")
+    if backend == "mamba":
+        mamba_bin = _ensure_mamba(conda_vars, env_name=env_name)
+        # This is dangerous running outside conda env. Consider check the base first
+        commands_prefix = [mamba_bin, "env", "update", "-n", env_name,]
+    else:
+        commands_prefix = [conda_vars["CONDA_EXE"], "env", "update", "-n", env_name]
 
     # NamedTemporaryFile can only work on Windows if delete=False
     # see https://stackoverflow.com/questions/55081022/python-tempfile-with-a-context-manager-on-windows-10-leads-to-permissionerror
@@ -495,12 +536,12 @@ def _conda_update(
             env_file_content = _replace_conda_env(python_version, numpy_version)
             fd.writelines(env_file_content.lstrip())
 
-        commands = [
-            conda_vars["CONDA_EXE"],
-            "env",
-            "update",
-            "-n",
-            env_name,
+        commands = commands_prefix + [
+            # conda_vars["CONDA_EXE"],
+            # "env",
+            # "update",
+            # "-n",
+            # env_name,
             "--file",
             tmp_yml,
             # conda_env_file.as_posix(),
@@ -1022,6 +1063,13 @@ def main():
             "without running install.py again."
         )
     )
+    parser.add_argument(
+        "--no-mamba",
+        action="store_true",
+        help=(
+            "Use the default conda backend instead of mamba for version resolver"
+        )
+    )
     args = parser.parse_args()
     print(args)
     os_name = _get_os_name()
@@ -1054,6 +1102,7 @@ def main():
         use_startup=args.use_startup,
         use_preferences=args.use_preferences,
         develop=args.develop,
+        no_mamba=args.no_mamba,
     )
 
     # Uninstallation does not need information about current environment
