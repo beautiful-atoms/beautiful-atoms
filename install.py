@@ -456,6 +456,7 @@ def _replace_conda_env(python_version=None, numpy_version=None):
     )
     return env_file_content
 
+
 def _ensure_mamba(conda_vars, env_name=None):
     """Ensure mamba is installed.
     Search sequence:
@@ -472,28 +473,42 @@ def _ensure_mamba(conda_vars, env_name=None):
         args_env = ["-n", env_name]
     else:
         args_env = ["-n", "base"]
-    proc = _run_process([
-        conda_vars["CONDA_EXE"], "list", "mamba"
-    ] + args_env, capture_output=True)
+    proc = _run_process(
+        [conda_vars["CONDA_EXE"], "list", "mamba"] + args_env, capture_output=True
+    )
     output = proc.stdout.decode("utf8")
     if "mamba" not in output:
         commands = [
-                conda_vars["CONDA_EXE"],
-                "install",
-                "-y",
-                "-c",
-                "conda-forge",
-                "mamba"
-            ] + args_env
+            conda_vars["CONDA_EXE"],
+            "install",
+            "-y",
+            "-c",
+            "conda-forge",
+            "mamba",
+        ] + args_env
         _run_process(commands)
     # Get the mamba binary in given env
-    output = _run_process([conda_vars["CONDA_EXE"], "run", ] + args_env + ["which", "mamba"], capture_output=True).stdout.decode("utf8")
+    output = _run_process(
+        [
+            conda_vars["CONDA_EXE"],
+            "run",
+        ]
+        + args_env
+        + ["which", "mamba"],
+        capture_output=True,
+    ).stdout.decode("utf8")
     if "ERROR" in output:
         raise RuntimeError(output)
     return output.strip()
 
+
 def _conda_update(
-    conda_env_file, conda_vars, env_name=None, python_version=None, numpy_version=None, backend="mamba",
+    conda_env_file,
+    conda_vars,
+    env_name=None,
+    python_version=None,
+    numpy_version=None,
+    backend="mamba",
 ):
     """Update conda environment using env file.
     If env_name is None, use default env
@@ -523,7 +538,13 @@ def _conda_update(
     if backend == "mamba":
         mamba_bin = _ensure_mamba(conda_vars, env_name=env_name)
         # This is dangerous running outside conda env. Consider check the base first
-        commands_prefix = [mamba_bin, "env", "update", "-n", env_name,]
+        commands_prefix = [
+            mamba_bin,
+            "env",
+            "update",
+            "-n",
+            env_name,
+        ]
     else:
         commands_prefix = [conda_vars["CONDA_EXE"], "env", "update", "-n", env_name]
 
@@ -837,7 +858,9 @@ def install(parameters):
     if parameters["develop"]:
         os.symlink(plugin_path_source, plugin_path_target)
         print("Installation in development mode!")
-        print(f"Created symlink {plugin_path_source.as_posix()} --> {plugin_path_target.as_posix()}.")
+        print(
+            f"Created symlink {plugin_path_source.as_posix()} --> {plugin_path_target.as_posix()}."
+        )
     else:
         shutil.copytree(plugin_path_source, plugin_path_target)
         print(f"Plugin copied to {plugin_path_target.as_posix()}.")
@@ -1061,14 +1084,12 @@ def main():
             "Development mode. Symlink the local batoms directory to plugin folder in blender."
             "After such installation, local change of batoms source code will have immediate effect "
             "without running install.py again."
-        )
+        ),
     )
     parser.add_argument(
         "--no-mamba",
         action="store_true",
-        help=(
-            "Use the default conda backend instead of mamba for version resolver"
-        )
+        help=("Use the default conda backend instead of mamba for version resolver"),
     )
     args = parser.parse_args()
     print(args)
