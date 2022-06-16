@@ -56,7 +56,7 @@ jobs:
       - name: Run installation using develop mode
         run: |
           $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} --develop
-          readlink ${BLENDER_ROOR}/scripts/addons_contrib/batoms
+          readlink ${BLENDER_ROOT}/scripts/addons_contrib/batoms
           $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
 
 
@@ -111,7 +111,7 @@ jobs:
       - name: Run installation using develop mode
         run: |
           $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} --develop
-          readlink ${BLENDER_ROOR}/scripts/addons_contrib/batoms
+          readlink ${BLENDER_ROOT}/scripts/addons_contrib/batoms
           $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
       
 
