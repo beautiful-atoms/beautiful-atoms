@@ -491,9 +491,7 @@ def _ensure_mamba(conda_vars):
         _run_process(commands)
     # Get the mamba binary in given env
     output = _run_process(
-        [
-            conda_vars["CONDA_EXE"],
-            "run", "-n", "base", "which", "mamba"],
+        [conda_vars["CONDA_EXE"], "run", "-n", "base", "which", "mamba"],
         capture_output=True,
     ).stdout.decode("utf8")
     if "ERROR" in output:
