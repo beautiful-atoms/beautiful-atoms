@@ -241,7 +241,7 @@ def _get_blender_py(blender_bin):
         "import sys; print('Python binary: ', sys.executable)",
     ]
     proc = _run_process(commands, shell=False, capture_output=True)
-    output = proc.stdout.decode("ascii")
+    output = proc.stdout.decode("utf8")
     print(output)
     pat = r"Python\s+binary\:\s+(.*)$"
     py = next(re.finditer(pat, output, re.MULTILINE))[1]
@@ -270,7 +270,7 @@ def _get_factory_versions(blender_bin):
     # First get blender python version
     commands = [blender_bin, "-b", "--python-expr", BLENDER_CHK_VERSION]
     proc = _run_process(commands, shell=False, capture_output=True)
-    output = proc.stdout.decode("ascii")
+    output = proc.stdout.decode("utf8")
     pat_py_version = r"Python\s+Version\:\s+(\d+\.\d+.\d+)"
     pat_numpy_version = r"Numpy\s+Version\:\s+(\d+\.\d+.\d+)"
     py_version = next(re.finditer(pat_py_version, output))[1]
@@ -284,7 +284,7 @@ def _get_blender_version(blender_bin):
     # First get blender python version
     commands = [blender_bin, "-b"]
     proc = _run_process(commands, shell=False, capture_output=True)
-    output = proc.stdout.decode("ascii")
+    output = proc.stdout.decode("utf8")
     pat_bl_version = r"Blender\s+(\d+\.\d+\.\d+)"
     bl_version = next(re.finditer(pat_bl_version, output))[1]
     return bl_version
@@ -560,7 +560,7 @@ def _pip_install(blender_py, blender_python_root, factory_py_ver, conda_vars):
     # Step 1: check numpy installation
     commands = pip_prefix + ["show", "numpy"]
     proc = _run_process(commands, shell=False, capture_output=True)
-    if "Name: numpy" not in proc.stdout.decode("ascii"):
+    if "Name: numpy" not in proc.stdout.decode("utf8"):
         raise RuntimeError(
             "Cannot find package numpy. Your bundle python may be corrupt."
         )
@@ -585,7 +585,7 @@ def _pip_install(blender_py, blender_python_root, factory_py_ver, conda_vars):
     # check spglib installation
     commands = pip_prefix + ["show", "spglib"]
     proc = _run_process(commands, shell=False, capture_output=True)
-    if "Name: spglib" not in proc.stdout.decode("ascii"):
+    if "Name: spglib" not in proc.stdout.decode("utf8"):
         # TODO: improve error msg
         raise RuntimeError("Spglib installation failed.")
 
