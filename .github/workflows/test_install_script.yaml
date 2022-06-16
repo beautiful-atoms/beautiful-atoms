@@ -39,19 +39,17 @@ jobs:
           URL="${BLENDER_DOWN_URL}/Blender${MAJ_VER}/blender-${VER}-linux-x64.tar.xz"
           mkdir -p ../blender && curl -O ${URL} && tar -xvf blender-*-linux-x64.tar.xz -C ../blender
           echo "BLENDER_ROOT=../blender/blender-${VER}-linux-x64/${MAJ_VER}" >> $GITHUB_ENV
-      - name: Run installation script
+      - name: Run normal installation & uninstall script 
         run: |
           echo Currently install in $(pwd)
           echo Use blender root ${BLENDER_ROOT}
-          conda info
-          conda list
           $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT}
-      - name: Run uninstallation script
-        run: |
           $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
       - name: Run installation script with startup and preferences
         run: |
           $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT}  --use-startup --use-preferences
+          python -m pip install pytest==6.2.5
+          ${BLENDER_ROOT}/../blender -b -P tests/test_default_preference.py
           $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
       - name: Run installation using develop mode
         run: |
@@ -90,23 +88,21 @@ jobs:
           echo "BLENDER_ROOT=$HOME/Applications/Blender.app/Contents/Resources/${MAJ_VER}" >> $GITHUB_ENV
           chmod -R u+x $HOME/Applications/Blender.app
           # ls "$HOME/Library/Application Support/Blender/${MAJ_VER}/config/"
-      - name: Run installation script
+      - name: Run installation and uninstallation script
         run: |
           echo Currently install in $(pwd)
           echo Use blender root ${BLENDER_ROOT}
           $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT}
-      - name: Run uninstallation script
-        run: |
           $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
-      - name: Run installation script with auto path infer
+      - name: Run installation and uninstallation script with auto path infer
         run: |
           $CONDA_PYTHON_EXE install.py
-      - name: Run uninstallation script with auto path infer
-        run: |
           $CONDA_PYTHON_EXE install.py --uninstall
       - name: Run installation script with startup and preferences
         run: |
           $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} --use-startup --use-preferences
+          python -m pip install pytest==6.2.5
+          ${BLENDER_ROOT}/../../MacOS/Blender -b -P tests/test_default_preference.py
           $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
       - name: Run installation using develop mode
         run: |
