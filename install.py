@@ -41,7 +41,7 @@ DEFAULT_PLUGIN_PATH = f"scripts/addons_contrib/{DEFAULT_PLUGIN_NAME}"
 DEFAULT_BLENDER_PY_VER = "3.10.2"
 DEFAULT_BLENDER_NUMPY_VER = "1.22.0"
 
-ALLOWED_BLENDER_VERSIONS = ["3.0", "3.1"]
+ALLOWED_BLENDER_VERSIONS = ["3.0", "3.1", "3.2", "3.3"]
 
 PY_PATH = "python"
 PY_BACKUP_PATH = "_old_python"
@@ -241,7 +241,7 @@ def _get_blender_py(blender_bin):
         "import sys; print('Python binary: ', sys.executable)",
     ]
     proc = _run_process(commands, shell=False, capture_output=True)
-    output = proc.stdout.decode("ascii")
+    output = proc.stdout.decode("utf8")
     print(output)
     pat = r"Python\s+binary\:\s+(.*)$"
     py = next(re.finditer(pat, output, re.MULTILINE))[1]
@@ -270,7 +270,7 @@ def _get_factory_versions(blender_bin):
     # First get blender python version
     commands = [blender_bin, "-b", "--python-expr", BLENDER_CHK_VERSION]
     proc = _run_process(commands, shell=False, capture_output=True)
-    output = proc.stdout.decode("ascii")
+    output = proc.stdout.decode("utf8")
     pat_py_version = r"Python\s+Version\:\s+(\d+\.\d+.\d+)"
     pat_numpy_version = r"Numpy\s+Version\:\s+(\d+\.\d+.\d+)"
     py_version = next(re.finditer(pat_py_version, output))[1]
@@ -284,7 +284,7 @@ def _get_blender_version(blender_bin):
     # First get blender python version
     commands = [blender_bin, "-b"]
     proc = _run_process(commands, shell=False, capture_output=True)
-    output = proc.stdout.decode("ascii")
+    output = proc.stdout.decode("utf8")
     pat_bl_version = r"Blender\s+(\d+\.\d+\.\d+)"
     bl_version = next(re.finditer(pat_bl_version, output))[1]
     return bl_version
@@ -457,8 +457,55 @@ def _replace_conda_env(python_version=None, numpy_version=None):
     return env_file_content
 
 
+def _ensure_mamba(conda_vars):
+    """Ensure mamba is installed at the base conda environment
+    Search sequence:
+    1. mamba in $PATH
+    2. mamba in given env
+    if not found, install mamba in the env and return its binary path
+    """
+    # 1. Check mamba in current $PATH
+    # mamba_bin = shutil.which("mamba")
+    # if mamba_bin is not None:
+    #     return mamba_bin
+    # 2. Check mamba in given env
+    # if env_name:
+    #     args_env = ["-n", env_name]
+    # else:
+    #     args_env = ["-n", "base"]
+    proc = _run_process(
+        [conda_vars["CONDA_EXE"], "list", "-n", "base", "mamba"], capture_output=True
+    )
+    output = proc.stdout.decode("utf8")
+    if "mamba" not in output:
+        commands = [
+            conda_vars["CONDA_EXE"],
+            "install",
+            "-y",
+            "-n",
+            "base",
+            "-c",
+            "conda-forge",
+            "mamba",
+        ]
+        _run_process(commands)
+    # Get the mamba binary in given env
+    output = _run_process(
+        [conda_vars["CONDA_EXE"], "run", "-n", "base", "which", "mamba"],
+        capture_output=True,
+    ).stdout.decode("utf8")
+    if "ERROR" in output:
+        raise RuntimeError(output)
+    return output.strip()
+
+
 def _conda_update(
-    conda_env_file, conda_vars, env_name=None, python_version=None, numpy_version=None
+    conda_env_file,
+    conda_vars,
+    env_name=None,
+    python_version=None,
+    numpy_version=None,
+    backend="mamba",
 ):
     """Update conda environment using env file.
     If env_name is None, use default env
@@ -485,6 +532,18 @@ def _conda_update(
 
     # Install from the env.yaml
     print("Updating conda environment")
+    if backend == "mamba":
+        mamba_bin = _ensure_mamba(conda_vars)
+        # This is dangerous running outside conda env. Consider check the base first
+        commands_prefix = [
+            mamba_bin,
+            "env",
+            "update",
+            "-n",
+            env_name,
+        ]
+    else:
+        commands_prefix = [conda_vars["CONDA_EXE"], "env", "update", "-n", env_name]
 
     # NamedTemporaryFile can only work on Windows if delete=False
     # see https://stackoverflow.com/questions/55081022/python-tempfile-with-a-context-manager-on-windows-10-leads-to-permissionerror
@@ -495,12 +554,12 @@ def _conda_update(
             env_file_content = _replace_conda_env(python_version, numpy_version)
             fd.writelines(env_file_content.lstrip())
 
-        commands = [
-            conda_vars["CONDA_EXE"],
-            "env",
-            "update",
-            "-n",
-            env_name,
+        commands = commands_prefix + [
+            # conda_vars["CONDA_EXE"],
+            # "env",
+            # "update",
+            # "-n",
+            # env_name,
             "--file",
             tmp_yml,
             # conda_env_file.as_posix(),
@@ -560,7 +619,7 @@ def _pip_install(blender_py, blender_python_root, factory_py_ver, conda_vars):
     # Step 1: check numpy installation
     commands = pip_prefix + ["show", "numpy"]
     proc = _run_process(commands, shell=False, capture_output=True)
-    if "Name: numpy" not in proc.stdout.decode("ascii"):
+    if "Name: numpy" not in proc.stdout.decode("utf8"):
         raise RuntimeError(
             "Cannot find package numpy. Your bundle python may be corrupt."
         )
@@ -585,7 +644,7 @@ def _pip_install(blender_py, blender_python_root, factory_py_ver, conda_vars):
     # check spglib installation
     commands = pip_prefix + ["show", "spglib"]
     proc = _run_process(commands, shell=False, capture_output=True)
-    if "Name: spglib" not in proc.stdout.decode("ascii"):
+    if "Name: spglib" not in proc.stdout.decode("utf8"):
         # TODO: improve error msg
         raise RuntimeError("Spglib installation failed.")
 
@@ -650,8 +709,8 @@ def install(parameters):
     conda_env_file = repo_path / "env.yml"
     # plugin_path_source: dir of plugin in github repo
     # plugin_path_target: dir of plugin under blender root
-    plugin_path_source = repo_path / DEFAULT_PLUGIN_NAME
-    plugin_path_target = blender_root / DEFAULT_PLUGIN_PATH
+    plugin_path_source = (repo_path / DEFAULT_PLUGIN_NAME).resolve()
+    plugin_path_target = (blender_root / DEFAULT_PLUGIN_PATH).resolve()
 
     # factory_python_source: (presumably) python shipped with blender
     # factory_python_target: dir to move factory python
@@ -669,7 +728,7 @@ def install(parameters):
     # TODO: wrap the directory handling into another function
 
     if factory_python_target.exists():
-        # Empty of symlink factory python might be mistakenly created
+        # Empty symlink factory python might be mistakenly created
         # just delete them
         exception_corrupt = False
         if _is_empty_dir(factory_python_target) or factory_python_target.is_symlink():
@@ -766,11 +825,16 @@ def install(parameters):
 
         # Give a warning about conda env
         # TODO: allow direct install into another environment
+        if parameters["no_mamba"]:
+            backend = "conda"
+        else:
+            backend = "mamba"
         _conda_update(
             conda_env_file,
             conda_vars,
             python_version=factory_py_ver,
             numpy_version=factory_numpy_ver,
+            backend=backend
         )
 
     # Step 4: install plugin
@@ -791,9 +855,17 @@ def install(parameters):
                 os.unlink(plugin_path_target)
             else:
                 shutil.rmtree(plugin_path_target)
+    # Choose whether to copy the plugin path or symlink it
 
-    shutil.copytree(plugin_path_source, plugin_path_target)
-    print(f"Plugin copied to {plugin_path_target.as_posix()}.")
+    if parameters["develop"]:
+        os.symlink(plugin_path_source, plugin_path_target)
+        print("Installation in development mode!")
+        print(
+            f"Created symlink {plugin_path_source.as_posix()} --> {plugin_path_target.as_posix()}."
+        )
+    else:
+        shutil.copytree(plugin_path_source, plugin_path_target)
+        print(f"Plugin copied to {plugin_path_target.as_posix()}.")
     _blender_enable_plugin(blender_bin)
     _blender_test_plugin(parameters)
     #
@@ -1007,6 +1079,20 @@ def main():
             "Only print the dependency as a env.yml to local dir without any installation."
         ),
     )
+    parser.add_argument(
+        "--develop",
+        action="store_true",
+        help=(
+            "Development mode. Symlink the local batoms directory to plugin folder in blender."
+            "After such installation, local change of batoms source code will have immediate effect "
+            "without running install.py again."
+        ),
+    )
+    parser.add_argument(
+        "--no-mamba",
+        action="store_true",
+        help=("Use the default conda backend instead of mamba for version resolver"),
+    )
     args = parser.parse_args()
     print(args)
     os_name = _get_os_name()
@@ -1038,6 +1124,8 @@ def main():
         generate_env_file=args.generate_env_file,
         use_startup=args.use_startup,
         use_preferences=args.use_preferences,
+        develop=args.develop,
+        no_mamba=args.no_mamba,
     )
 
     # Uninstallation does not need information about current environment
