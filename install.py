@@ -24,6 +24,7 @@ import sys
 import tempfile
 from pathlib import Path
 from distutils.version import LooseVersion
+from threading import local
 
 # TODO: allow version control
 # TODO: windows privilege issue
@@ -387,6 +388,7 @@ def _blender_test_uninstall(parameters):
 def _gitclone(workdir=".", version="main", url=repo_git):
     """Make a git clone to the directory
     version can be a branch name or tag name
+    return the plugin source path name
     """
     workdir = Path(expanduser(expandvars(workdir)))
     clone_into = workdir / repo_name
@@ -403,6 +405,7 @@ def _gitclone(workdir=".", version="main", url=repo_git):
     ]
     _run_process(commands)
     print(f"Cloned repo into directory {clone_into.as_posix()}")
+    return clone_into
 
 def _gitcheckout(workdir=".", version="main"):
     """Check a git directory to a specific version
@@ -725,8 +728,6 @@ def install(parameters):
     factory_python_source = blender_root / PY_PATH
     factory_python_target = blender_root / PY_BACKUP_PATH
 
-    # Step 0. Checkout specific version of plugin source
-    _gitcheckout(repo_path, local_parameters["plugin_version"])
 
     # Check conda environment status
     conda_vars = _get_conda_variables()
@@ -866,7 +867,16 @@ def install(parameters):
                 os.unlink(plugin_path_target)
             else:
                 shutil.rmtree(plugin_path_target)
+    # Step 5. Checkout the plugin version
+    local_plugin_version = local_parameters["plugin_version"]
+    if local_plugin_version:
+        tempdir = tempfile.mkdtemp()
+        plugin_path_source = _gitclone(tempdir, local_plugin_version)
+        local_parameters["develop"] = False
+
+
     # Choose whether to copy the plugin path or symlink it
+
 
     if local_parameters["develop"]:
         os.symlink(plugin_path_source, plugin_path_target)
@@ -1039,8 +1049,12 @@ def main():
     parser.add_argument(
         "-t",
         "--plugin-version",
-        default="main",
-        help="Plugin version or git hash tag. Default to fetch main",
+        default=None,
+        help=(
+            "Plugin version (in the form 'vX.Y.Z') or git hash tag. " 
+            "Note this option, if not None, discards the values from "
+            "--local-repo-path and --develop.")
+        ,
     )
     parser.add_argument(
         "-p",
