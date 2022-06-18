@@ -404,6 +404,21 @@ def _gitclone(workdir=".", version="main", url=repo_git):
     _run_process(commands)
     print(f"Cloned repo into directory {clone_into.as_posix()}")
 
+def _gitcheckout(workdir=".", version="main"):
+    """Check a git directory to a specific version
+    """
+    workdir = Path(expanduser(expandvars(workdir)))
+    commands = [
+        "git",
+        "checkout",
+        f"{version}",
+    ]
+    try:
+        _run_process(commands, cwd=workdir)
+        print(f"Checkout version {version}")
+    except Exception as e:
+        raise RuntimeError(f"Failed to checkout version {version}") from e
+
 
 def _rename_dir(src, dst):
     """Rename dir from scr to dst use os.rename functionality if possible"""
@@ -465,14 +480,7 @@ def _ensure_mamba(conda_vars):
     if not found, install mamba in the env and return its binary path
     """
     # 1. Check mamba in current $PATH
-    # mamba_bin = shutil.which("mamba")
-    # if mamba_bin is not None:
-    #     return mamba_bin
     # 2. Check mamba in given env
-    # if env_name:
-    #     args_env = ["-n", env_name]
-    # else:
-    #     args_env = ["-n", "base"]
     proc = _run_process(
         [conda_vars["CONDA_EXE"], "list", "-n", "base", "mamba"], capture_output=True
     )
@@ -717,6 +725,9 @@ def install(parameters):
     factory_python_source = blender_root / PY_PATH
     factory_python_target = blender_root / PY_BACKUP_PATH
 
+    # Step 0. Checkout specific version of plugin source
+    _gitcheckout(repo_path, local_parameters["plugin_version"])
+
     # Check conda environment status
     conda_vars = _get_conda_variables()
 
@@ -788,15 +799,15 @@ def install(parameters):
 
     # If need to output the env yaml only, do it now
     # print(parameters["generate_env_file"])
-    if parameters["generate_env_file"] is not None:
-        env_file_name = Path(parameters["generate_env_file"])
+    if local_parameters["generate_env_file"] is not None:
+        env_file_name = Path(local_parameters["generate_env_file"])
         with open(env_file_name, "w") as fd:
             fd.writelines(_replace_conda_env(factory_py_ver, factory_numpy_ver))
         print(f"Conda env exported to {env_file_name.as_posix()}. Exit.")
         sys.exit(0)
 
     # Step 2. cond 1: use pip
-    if parameters["use_pip"]:
+    if local_parameters["use_pip"]:
         _pip_install(blender_py, factory_python_source, factory_py_ver, conda_vars)
 
     else:
@@ -825,7 +836,7 @@ def install(parameters):
 
         # Give a warning about conda env
         # TODO: allow direct install into another environment
-        if parameters["no_mamba"]:
+        if local_parameters["no_mamba"]:
             backend = "conda"
         else:
             backend = "mamba"
@@ -838,7 +849,7 @@ def install(parameters):
         )
 
     # Step 4: install plugin
-    if parameters["dependency_only"]:
+    if local_parameters["dependency_only"]:
         print("Install dependency only. Batoms plugin will not be copied.")
         return
 
@@ -857,7 +868,7 @@ def install(parameters):
                 shutil.rmtree(plugin_path_target)
     # Choose whether to copy the plugin path or symlink it
 
-    if parameters["develop"]:
+    if local_parameters["develop"]:
         os.symlink(plugin_path_source, plugin_path_target)
         print("Installation in development mode!")
         print(
@@ -867,11 +878,11 @@ def install(parameters):
         shutil.copytree(plugin_path_source, plugin_path_target)
         print(f"Plugin copied to {plugin_path_target.as_posix()}.")
     _blender_enable_plugin(blender_bin)
-    _blender_test_plugin(parameters)
+    _blender_test_plugin(local_parameters)
     #
-    if parameters["use_startup"]:
+    if local_parameters["use_startup"]:
         _blender_set_startup(blender_bin)
-    if parameters["use_preferences"]:
+    if local_parameters["use_preferences"]:
         _blender_set_preferences(blender_bin)
 
     print(
@@ -911,7 +922,7 @@ def uninstall(parameters):
 
     # _old_python not found, ignore
     if not factory_python_target.exists():
-        if parameters["use_pip"]:
+        if local_parameters["use_pip"]:
             blender_py = _get_blender_py(blender_bin)
             _pip_uninstall(blender_py, conda_vars)
             print(
@@ -926,7 +937,7 @@ def uninstall(parameters):
             )
         return
     else:
-        if parameters["use_pip"]:
+        if local_parameters["use_pip"]:
             raise RuntimeError(
                 "Uninstall via pip cannot be performed when bundled python moved to another location. Abort"
             )
@@ -954,7 +965,7 @@ def uninstall(parameters):
             os.symlink(origin, factory_python_source)
         else:
             shutil.move(factory_python_target, factory_python_source)
-    _blender_test_uninstall(parameters)
+    _blender_test_uninstall(local_parameters)
     print(
         (
             "Beautiful-atoms uninstallation finished.\n"
@@ -1126,6 +1137,7 @@ def main():
         use_preferences=args.use_preferences,
         develop=args.develop,
         no_mamba=args.no_mamba,
+        plugin_verson=args.plugin_version
     )
 
     # Uninstallation does not need information about current environment
