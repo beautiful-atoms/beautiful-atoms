@@ -1137,7 +1137,7 @@ def main():
         use_preferences=args.use_preferences,
         develop=args.develop,
         no_mamba=args.no_mamba,
-        plugin_verson=args.plugin_version
+        plugin_version=args.plugin_version
     )
 
     # Uninstallation does not need information about current environment
