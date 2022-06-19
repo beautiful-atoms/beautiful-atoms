@@ -56,6 +56,8 @@ jobs:
           $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} --develop
           readlink ${BLENDER_ROOT}/scripts/addons_contrib/batoms
           $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
+          echo "blender root parent"
+          ls -alh ${BLENDER_ROOT}/..
       - name: Run installation with version check and without local repo
         run: |
           cp install.py $HOME && cd $HOME
@@ -173,10 +175,17 @@ jobs:
         run: |
           python install.py --use-pip $env:BLENDER_ROOT --use-startup --use-preferences
           python install.py --use-pip --uninstall $env:BLENDER_ROOT
+      - name: ls
+        shell: bash -l {0}
+        run: |
+          echo "blender root parent"
+          ls -alh ${{ env.BLENDER_ROOT }}/..
       - name: Run installation with version
         shell: bash -l {0}
         run: |
           cp install.py ${HOME} && cd ${HOME}
+          echo "blender root parent"
+          ls -alh ${BLENDER_ROOT}/..
           python install.py --use-pip ${{ env.BLENDER_ROOT }} -t v2.1.0
           python install.py --use-pip --uninstall ${{ env.BLENDER_ROOT }}
         if: ${{ matrix.blender_ver != '3.2.0' }}
