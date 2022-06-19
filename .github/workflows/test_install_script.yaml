@@ -56,6 +56,17 @@ jobs:
           $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} --develop
           readlink ${BLENDER_ROOT}/scripts/addons_contrib/batoms
           $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
+          echo "blender root parent"
+          ls -alh ${BLENDER_ROOT}/..
+      - name: Run installation with version check and without local repo
+        run: |
+          BLENDER_ROOT=$(realpath ${BLENDER_ROOT})
+          cp install.py $HOME && cd $HOME
+          # echo "blender root parent"
+          ls -alh ${BLENDER_ROOT}/..
+          $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} -t v2.1.0
+          $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
+        if: ${{ matrix.blender_ver != '3.2.0' }}
 
 
 
@@ -109,6 +120,14 @@ jobs:
           $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} --develop
           readlink ${BLENDER_ROOT}/scripts/addons_contrib/batoms
           $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
+      - name: Run installation with version check and without local repo
+        run: |
+          # BLENDER_ROOT=$(readlink -f ${BLENDER_ROOT})
+          cp install.py $HOME
+          $CONDA_PYTHON_EXE ${HOME}/install.py ${BLENDER_ROOT} -t v2.1.0
+          $CONDA_PYTHON_EXE ${HOME}/install.py --uninstall ${BLENDER_ROOT}
+        if: ${{ matrix.blender_ver != '3.2.0' }}
+
       
 
   install-windows:
@@ -133,14 +152,12 @@ jobs:
           curl -O ${URL} && unzip blender-*-windows-x64.zip -d ../
           ls ../blender-${VER}-windows-x64/${MAJ_VER}
           echo "BLENDER_ROOT=../blender-${VER}-windows-x64/${MAJ_VER}" >> $GITHUB_ENV
-      - name: Run installation script
+      - name: Run installation / uninstall script
         run: |
           echo "Use blender root" $env:BLENDER_ROOT
           conda info
           conda list
           python install.py --use-pip $env:BLENDER_ROOT
-      - name: Run uninstallation script
-        run: |
           python install.py --uninstall --use-pip $env:BLENDER_ROOT
       - name: Copy blender to program files
         shell: bash -l {0}
@@ -150,14 +167,30 @@ jobs:
           mkdir -p "/c/Program Files/Blender Foundation/Blender ${MAJ_VER}"
           cp -r ../blender-${VER}-windows-x64/* "/c/Program Files/Blender Foundation/Blender ${MAJ_VER}/"
           ls "/c/Program Files/Blender Foundation/Blender ${MAJ_VER}/"
-      - name: Run installation script with auto path infer
+      - name: Run installation / uninstall script with auto path infer
         run: |
           conda info
           conda list
           python install.py --use-pip
-      - name: Run uninstallation script with auto path infer
-        run: |
           python install.py --uninstall --use-pip
       - name: Run installation script with startup and preferences
         run: |
           python install.py --use-pip $env:BLENDER_ROOT --use-startup --use-preferences
+          python install.py --use-pip --uninstall $env:BLENDER_ROOT
+      - name: ls
+        shell: bash -l {0}
+        run: |
+          echo "blender root parent"
+          ls -alh ${{ env.BLENDER_ROOT }}/..
+      - name: Run installation with version
+        shell: bash -l {0}
+        run: |
+          BLENDER_ROOT=$(realpath ${BLENDER_ROOT})
+          cp install.py ${HOME} && cd ${HOME}
+          echo "blender root parent"
+          ls -alh ${BLENDER_ROOT}/..
+          python install.py --use-pip ${BLENDER_ROOT} -t v2.1.0
+          python install.py --use-pip --uninstall ${BLENDER_ROOT}
+        if: ${{ matrix.blender_ver != '3.2.0' }}
+
+          
