@@ -51,6 +51,7 @@ class PolyhedraSettings(Setting):
                         node_inputs=node_inputs,
                         material_style=material_style,
                         backface_culling=False)
+        # logger.debug('build polyhedra materials: {}'.format(sp['color']))
         return mat
 
     def __setitem__(self, index, setdict):
@@ -73,22 +74,21 @@ class PolyhedraSettings(Setting):
     def set_default(self, species_props):
         """
         """
-        for sp, data in species_props.items():
+        for sp, props in species_props.items():
             if sp not in default_polyhedras:
                 continue
-            self[sp] = {
-                'flag': True,
-                'label': self.label,
-                'species': sp,
-                'color': np.append(data['color'][:3], 0.8),
-                'width': 0.005,
-            }
+            props['color'] = (props['color'][0], props['color'][1], props['color'][2], 0.8)
+            self[sp] = props
+            
 
     def add(self, polyhedras):
         if isinstance(polyhedras, str):
             polyhedras = [polyhedras]
-        species = {sp: self.batoms.species.species_props[sp] for sp in polyhedras}
-        self.set_default(species)
+        for sp in polyhedras:
+            props = self.batoms.species.species_props[sp]
+            props['color'] = (props['color'][0], props['color'][1], props['color'][2], 0.8)
+            props['species'] = sp
+            self[sp] = props
 
     def __repr__(self) -> str:
         s = "-"*60 + "\n"
