@@ -56,6 +56,11 @@ jobs:
           $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} --develop
           readlink ${BLENDER_ROOT}/scripts/addons_contrib/batoms
           $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
+      - name: Run installation with version check and without local repo
+        run: |
+          cp install.py $HOME && cd $HOME
+          $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} -t v2.1.0
+          $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
 
 
 
@@ -108,6 +113,11 @@ jobs:
         run: |
           $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} --develop
           readlink ${BLENDER_ROOT}/scripts/addons_contrib/batoms
+          $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
+      - name: Run installation with version check and without local repo
+        run: |
+          cp install.py $HOME && cd $HOME
+          $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} -t v2.1.0
           $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
       
 
