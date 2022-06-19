@@ -223,9 +223,7 @@ def _get_blender_bin(os_name, blender_bundle_root):
             see instructions at {help_url}
             """
         else:
-            extra_msg = f"""
-            Please refer to instructions at {help_url}
-            """
+            extra_msg = f"Please refer to instructions at {help_url}"
         raise FileNotFoundError(
             f"Cannot find blender binary at {blender_bin.as_posix()}!\n{extra_msg}"
         )
