@@ -615,7 +615,7 @@ def _conda_cache_move(condition, conda_vars, blender_python_root):
     """
     # Step 1: search latest spglib available for the py version
     conda_bin = conda_vars["CONDA_EXE"]
-    cprint("Conda bin at: ", conda_bin, color="HEADER")
+    cprint(f"Conda bin at: {conda_bin}", color="HEADER")
     commands = [conda_bin, "search", "-c", "conda-forge", str(condition)]
     proc = _run_process(commands, capture_output=True)
     lines = [l for l in proc.stdout.decode("utf-8").split("\n") if len(l) > 1]
@@ -1174,7 +1174,7 @@ def main():
         nargs="?",
         const="env.yml",
         help=(
-            "Only cprint the dependency as a env.yml to local dir without any installation."
+            "Only print the dependency as a env.yml to local dir without any installation."
         ),
     )
     parser.add_argument(
