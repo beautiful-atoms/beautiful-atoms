@@ -24,6 +24,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Get Tag
+        uses: olegtarasov/get-tag@v2.1
+        id: tagName
+        with:
+          tagRegex: "(v\\d+\\.\\d+\\.\\d+.*)"
+      # Add special release tag if tag exists
+      - name: Test tagger
+        run: |
+          echo ${{ steps.tagName.outputs }}
+          echo ${{ env.GIT_TAG_NAME }}
+          echo Current tag is ${{ env.GIT_TAG_NAME }}
+      - name: Pass Tagger Flag
+        run: |
+          echo "ADD_VERSION_DOCKER=${{ startsWith(env.GIT_TAG_NAME, 'v') }}" >> ${GITHUB_ENV}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: setup docker context for buildx
@@ -87,3 +101,11 @@ jobs:
           src: docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.DOCKERHUB_IMAGE_NAME }}:blender${{ matrix.blender-version }}
           dst: docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.DOCKERHUB_IMAGE_NAME }}:latest
         if: ${{ matrix.blender-version == env.LATEST_VERSION }}
+      - name: Make version-tagged images
+        uses: akhilerm/tag-push-action@v2.0.0
+        with:
+          src: ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}
+          dst: |
+            docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.DOCKERHUB_IMAGE_NAME }}:blender${{ matrix.blender-version }}-${{ env.GIT_TAG_NAME }}
+            ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.IMAGE_NAME }}:blender${{ matrix.blender-version }}-${{ env.GIT_TAG_NAME }}
+        if: ${{ env.ADD_VERSION_DOCKER }}
