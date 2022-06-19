@@ -60,7 +60,8 @@ jobs:
           ls -alh ${BLENDER_ROOT}/..
       - name: Run installation with version check and without local repo
         run: |
-          # cp install.py $HOME && cd $HOME
+          BLENDER_ROOT=$(realpath ${BLENDER_ROOT})
+          cp install.py $HOME && cd $HOME
           # echo "blender root parent"
           ls -alh ${BLENDER_ROOT}/..
           $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} -t v2.1.0
@@ -121,7 +122,8 @@ jobs:
           $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
       - name: Run installation with version check and without local repo
         run: |
-          # cp install.py $HOME && cd $HOME
+          BLENDER_ROOT=$(realpath ${BLENDER_ROOT})
+          cp install.py $HOME && cd $HOME
           $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} -t v2.1.0
           $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
         if: ${{ matrix.blender_ver != '3.2.0' }}
@@ -183,7 +185,8 @@ jobs:
       - name: Run installation with version
         shell: bash -l {0}
         run: |
-          # cp install.py ${HOME} && cd ${HOME}
+          BLENDER_ROOT=$(realpath ${BLENDER_ROOT})
+          cp install.py ${HOME} && cd ${HOME}
           echo "blender root parent"
           ls -alh ${BLENDER_ROOT}/..
           python install.py --use-pip ${{ env.BLENDER_ROOT }} -t v2.1.0
