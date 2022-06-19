@@ -870,12 +870,24 @@ def install(parameters):
                 shutil.rmtree(plugin_path_target)
     # Step 5. Checkout the plugin version
     local_plugin_version = local_parameters["plugin_version"]
+    # if the local_plugin_version is not None, download the latest to tmpdir
     if local_plugin_version:
         tempdir = tempfile.mkdtemp()
         plugin_path_source = (_gitclone(tempdir, local_plugin_version) / DEFAULT_PLUGIN_NAME).resolve()
         print(plugin_path_source)
         local_parameters["develop"] = False
-
+    # if version is None and plugin_path_source does not exist, download the latest to tmpdir
+    elif _is_empty_dir(plugin_path_source) or (not plugin_path_source.is_dir()):
+        print(
+            f"Local repo path {plugin_path_source.as_posix()} does not exist. Run git clone."
+        )
+        tempdir = tempfile.mkdtemp()
+        local_plugin_version = "main"
+        plugin_path_source = (_gitclone(tempdir, local_plugin_version) / DEFAULT_PLUGIN_NAME).resolve()
+        print(plugin_path_source)
+        local_parameters["develop"] = False
+    else:
+        pass
 
     # Choose whether to copy the plugin path or symlink it
 
@@ -1062,7 +1074,10 @@ def main():
         "-p",
         "--local-repo-path",
         default=curdir,
-        help="Path to root of the beautiful-atoms repo. Default is the same level as install.py",
+        help=("Path to root of the beautiful-atoms repo. " 
+        "Default is the same level as install.py. "
+        "If using install.py alone, download the latest version from github and install."
+        ),
     )
     parser.add_argument(
         "--uninstall", action="store_true", help="Uninstall plugin in blender_root"
