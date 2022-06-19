@@ -163,7 +163,8 @@ class Polyhedras(ObjectGN):
         self.set_attributes(attributes)
         self.build_geometry_node()
         self.set_frames(self._frames, only_basis=True)
-        self.assign_materials()
+        # self.assign_materials()
+        self.update_geometry_node_material()
         obj.parent = self.batoms.obj
         logger.debug('polyhedras: build_object: {0:10.2f} s'.format(time() - tstart))
 
@@ -397,7 +398,7 @@ class Polyhedras(ObjectGN):
                                                     self.label, sp["species"]),
                                                 'GeometryNodeSetMaterialIndex')
             setMaterialIndex.inputs[2].default_value = i
-        logger.debug('update bond instancer: %s'%(time() - tstart))
+        logger.debug('update polyhedra materials: %s'%(time() - tstart))
 
     @property
     def obj_o(self):
@@ -447,6 +448,7 @@ class Polyhedras(ObjectGN):
         else:
             # add or remove vertices, rebuild the object
             self.build_object(arrays)
+            
 
     @property
     def obj(self):

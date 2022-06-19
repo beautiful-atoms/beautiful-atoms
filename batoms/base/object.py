@@ -535,7 +535,7 @@ class ObjectGN(BaseObject):
                     else:
                         for j in range(M):
                             att.data.foreach_set("value", array[i*natom:(i+1)*natom])
-            logger.info('{}: {}'.format(key, time() - tstart))
+            logger.info('Time: {:10s} {:5.2f}'.format(key, time() - tstart))
         me.update()
 
     def set_attribute_with_indices(self, name, indices, data):
