@@ -22,7 +22,10 @@ class LatticePlaneAdd(OperatorBatoms):
         obj = context.object
         batoms = Batoms(label=context.object.batoms.label)
         batoms.lattice_plane.setting.add(self.indices)
+        batoms.coll.batoms.latticeplane_index = len(batoms.lattice_plane.setting) - 1
         context.view_layer.objects.active = obj
+        self.report({"INFO"}, "Add lattice plane ({}{}{})."
+            .format(self.indices[0], self.indices[1], self.indices[2]))
         return {'FINISHED'}
 
 
@@ -121,6 +124,7 @@ class CrystalShapeAdd(OperatorBatoms):
         obj = context.object
         batoms = Batoms(label=context.object.batoms.label)
         batoms.crystal_shape.setting.add(self.indices)
+        batoms.coll.batoms.crystalshape_index = len(batoms.crystal_shape.setting) - 1
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 

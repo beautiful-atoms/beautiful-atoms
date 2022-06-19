@@ -21,6 +21,7 @@ class CavityAdd(OperatorBatoms):
         obj = context.object
         batoms = Batoms(label=context.object.batoms.label)
         batoms.cavity.setting.add(self.name)
+        batoms.coll.batoms.cavity_index = len(batoms.cavity.setting) - 1
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 

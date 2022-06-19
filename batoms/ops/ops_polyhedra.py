@@ -15,13 +15,16 @@ class PolyhedraAdd(OperatorBatoms):
     bl_description = ("Add polyhedra to a Batoms")
 
     species: StringProperty(
-        name="species", default='C',
+        name="species", default='',
         description="species to be added")
 
     def execute(self, context):
+        if self.species == '':
+            return {'FINISHED'}
         obj = context.object
         batoms = Batoms(label=context.object.batoms.label)
         batoms.polyhedras.setting.add(self.species)
+        batoms.coll.batoms.polyhedra_index = len(batoms.polyhedras.setting) - 1
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 

@@ -16,18 +16,21 @@ class BondPairAdd(OperatorBatoms):
     bl_description = ("Add Bond Pair to a Batoms")
 
     species1: StringProperty(
-        name="species", default='C',
+        name="species", default='',
         description="Replaced by this species")
 
     species2: StringProperty(
-        name="species", default='H',
+        name="species", default='',
         description="Replaced by this species")
 
     def execute(self, context):
+        if self.species1 == '' or self.species2 == '':
+            return {'FINISHED'}
         obj = context.object
         batoms = Batoms(label=context.object.batoms.label)
         pair = (self.species1, self.species2)
         batoms.bonds.setting.add(pair)
+        batoms.coll.batoms.bond_index = len(batoms.bonds.setting) - 1
         context.view_layer.objects.active = obj
         self.report({"INFO"}, "Add bond pair {} {}".format(
             self.species1, self.species2))
