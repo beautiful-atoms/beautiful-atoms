@@ -356,7 +356,7 @@ class Polyhedras(ObjectGN):
         polyhedra_datas = {}
         tstart = time()
         for f in range(nframe):
-            logger.debug('update polyhedra: ', f)
+            logger.debug('update polyhedra: {}'.format(f))
             positions = frames[f, show, :]
             bondlists = self.bondlists
             if len(bondlists) == 0:
