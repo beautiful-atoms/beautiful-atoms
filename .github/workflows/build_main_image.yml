@@ -27,11 +27,11 @@ jobs:
       - name: Get Tag
         uses: olegtarasov/get-tag@v2.1
         id: tagName
-        with:
-          tagRegex: "(v\\d+\\.\\d+\\.\\d+.*)"
+        # with:
+          # tagRegex: "(v\\d+\\.\\d+\\.\\d+.*)"
       - name: Echo tag Name
         run: |
-          echo ${{ steps.tagName.outputs.tag }}
+          echo ${{ steps.tagName.outputs }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: setup docker context for buildx
