@@ -143,23 +143,25 @@ install_script_path = (
 
 
 def cprint(content, color=None, **kwargs):
-    """Color print wrapper
-    """
+    """Color print wrapper"""
     ansi_color = dict(
-    HEADER = '\033[95m',
-    OKBLUE = '\033[94m',
-    OKGREEN = '\033[92m',
-    WARNING = '\033[93m',
-    FAIL = '\033[91m',
-    ENDC = '\033[0m',
-    BOLD = '\033[1m',
-    UNDERLINE = '\033[4m',)
+        HEADER="\033[95m",
+        OKBLUE="\033[94m",
+        OKGREEN="\033[92m",
+        WARNING="\033[93m",
+        FAIL="\033[91m",
+        ENDC="\033[0m",
+        BOLD="\033[1m",
+        UNDERLINE="\033[4m",
+    )
     if color is None:
         output = content
     elif color in ansi_color.keys() and color != "ENDC":
         output = ansi_color[color] + content + ansi_color["ENDC"]
     else:
-        raise ValueError(f"Unknown ANSI color name. Allowed values are {list(ansi_color.keys())}")
+        raise ValueError(
+            f"Unknown ANSI color name. Allowed values are {list(ansi_color.keys())}"
+        )
     print(output, **kwargs)
     return
 
@@ -396,9 +398,9 @@ def _blender_test_plugin(parameters):
     if parameters["dependency_only"] is False:
         blender_bin = str(parameters["blender_bin"])
         _run_blender_multiline_expr(blender_bin, BLENDERPY_TEST_PLUGIN)
-        return
     else:
         cprint("Skip plugin test.", color="WARNING")
+    return
 
 
 def _blender_test_uninstall(parameters):
@@ -553,19 +555,20 @@ def _conda_update(
             (
                 "Seems you're installing into the base environment. "
                 "Installing batoms dependencies may interrupt your base environment. "
-            ),color="HEADER"
+            ),
+            color="WARNING",
         )
         choice = str(input("Continue? [y/N]") or "N").lower().startswith("y")
         if not choice:
             # TODO: update installation instruction
             cprint(
                 "Abort. Please check the installation manual about how to activate an additional conda environment.",
-                color="WARNING"
+                color="FAIL",
             )
             sys.exit(0)
 
     # Install from the env.yaml
-    cprint("Updating conda environment", color="HEADER")
+    cprint("Updating conda environment")
     if backend == "mamba":
         mamba_bin = _ensure_mamba(conda_vars)
         # This is dangerous running outside conda env. Consider check the base first
@@ -665,7 +668,7 @@ def _pip_install(blender_py, blender_python_root, factory_py_ver, conda_vars):
     except RuntimeError:
         cprint(
             "Building spglib from source failed. We'll try to install from conda-distruted lib.",
-            color="WARNING"
+            color="WARNING",
         )
         # abbrevate version, i.e. 3.10 --> py310
         abbrev_py_ver = "py" + "".join(factory_py_ver.split(".")[:2])
@@ -699,9 +702,11 @@ def _pip_install(blender_py, blender_python_root, factory_py_ver, conda_vars):
         proc = _run_process(commands)
     except RuntimeError as e:
         cprint(
-            ("Cannot install openbabel. You need to have a working compiler on windows. "
-            "The installation will continue but some functionalities in batoms may not be working."),
-            color="WARNING"
+            (
+                "Cannot install openbabel. You need to have a working compiler on windows. "
+                "The installation will continue but some functionalities in batoms may not be working."
+            ),
+            color="WARNING",
         )
 
     return
@@ -772,7 +777,7 @@ def install(parameters):
         if _is_empty_dir(factory_python_target) or factory_python_target.is_symlink():
             exception_corrupt = True
         else:
-            cprint(f"Target path {factory_python_target.as_posix()} exists.", color="HEADER")
+            cprint(f"Target path {factory_python_target.as_posix()} exists.")
             try:
                 old_py = next(factory_python_target.glob("bin/python*"))
             except StopIteration:
@@ -788,7 +793,7 @@ def install(parameters):
                             f"Found factory python at {old_py.as_posix()} "
                             "but it's not working"
                         ),
-                        color="WARNING"
+                        color="WARNING",
                     )
                     exception_corrupt = True
         # TODO: improve error msg
@@ -813,7 +818,7 @@ def install(parameters):
             shutil.move(factory_python_target, factory_python_source)
             cprint(
                 f"Renamed {factory_python_target.as_posix()} to {factory_python_source.as_posix()}",
-                color="OKGREEN"
+                color="OKGREEN",
             )
 
     # Step 1.1 check python and numpy version
@@ -832,7 +837,9 @@ def install(parameters):
         env_file_name = Path(local_parameters["generate_env_file"])
         with open(env_file_name, "w") as fd:
             fd.writelines(_replace_conda_env(factory_py_ver, factory_numpy_ver))
-        cprint(f"Conda env exported to {env_file_name.as_posix()}. Exit.", color="OKGREEN")
+        cprint(
+            f"Conda env exported to {env_file_name.as_posix()}. Exit.", color="OKGREEN"
+        )
         sys.exit(0)
 
     # Step 2. cond 1: use pip
@@ -853,7 +860,7 @@ def install(parameters):
         # os.rename(factory_python_source, factory_python_target)
         cprint(
             f"Renamed {factory_python_source.as_posix()} to {factory_python_target.as_posix()}",
-            color="OKGREEN"
+            color="OKGREEN",
         )
 
         # Step 2-1: link the conda prefix of current environment
@@ -862,7 +869,10 @@ def install(parameters):
         if factory_python_source.is_symlink():
             os.unlink(factory_python_source)
         os.symlink(conda_prefix, factory_python_source)
-        cprint(f"Created symlink {conda_prefix} --> {factory_python_source.as_posix()}", color="OKGREEN")
+        cprint(
+            f"Created symlink {conda_prefix} --> {factory_python_source.as_posix()}",
+            color="OKGREEN",
+        )
 
         # Give a warning about conda env
         # TODO: allow direct install into another environment
@@ -880,13 +890,16 @@ def install(parameters):
 
     # Step 4: install plugin
     if local_parameters["dependency_only"]:
-        cprint("Install dependency only. Batoms plugin will not be copied.", color="OKGREEN")
+        cprint(
+            "Install dependency only. Batoms plugin will not be copied.",
+            color="OKGREEN",
+        )
         return
 
     if not _is_empty_dir(plugin_path_target):
         cprint(
             f"Target plugin installtion directory {plugin_path_target.as_posix()} is not empty.",
-            color="WARNING"
+            color="WARNING",
         )
         choice = str(input("Overwrite? [y/N]") or "N").lower().startswith("y")
         if not choice:
@@ -911,7 +924,6 @@ def install(parameters):
     elif _is_empty_dir(plugin_path_source) or (not plugin_path_source.is_dir()):
         cprint(
             f"Local repo path {plugin_path_source.as_posix()} does not exist. Run git clone.",
-            color="HEADER"
         )
         tempdir = tempfile.mkdtemp()
         local_plugin_version = "main"
@@ -930,7 +942,7 @@ def install(parameters):
         cprint("Installation in development mode!", color="HEADER")
         cprint(
             f"Created symlink {plugin_path_source.as_posix()} --> {plugin_path_target.as_posix()}.",
-            color="HEADER"
+            color="HEADER",
         )
     else:
         shutil.copytree(plugin_path_source, plugin_path_target)
@@ -952,7 +964,7 @@ def install(parameters):
             "\n"
             "And use conda or pip for the installation. Happy coding!"
         ).format(env_pref=conda_vars["CONDA_PREFIX"]),
-        color="OKGREEN"
+        color="OKGREEN",
     )
     return
 
@@ -977,7 +989,7 @@ def uninstall(parameters):
     else:
         cprint(
             f"Plugin directory {plugin_path_target.as_posix()} does not exist. Ignore.",
-            color="WARNING"
+            color="WARNING",
         )
 
     # _old_python not found, ignore
@@ -987,16 +999,16 @@ def uninstall(parameters):
             _pip_uninstall(blender_py, conda_vars)
             cprint(
                 "Beautiful-atoms and its dependencies have been successfully uninstalled!",
-                color="OKGREEN"
+                color="OKGREEN",
             )
         else:
             cprint(
                 f"Backup of factory blender python path {factory_python_target.as_posix()} does not exist. Ignore.",
-                color="WARNING"
+                color="WARNING",
             )
             cprint(
                 "It seems beautiful-atoms has already been uninstalled from your Blender distribution.",
-                color="OKGREEN"
+                color="OKGREEN",
             )
         return
     else:
@@ -1009,14 +1021,16 @@ def uninstall(parameters):
                 if factory_python_source.is_symlink():
                     os.unlink(factory_python_source)
                 elif factory_python_source.is_dir():
-                    cprint(f"Current blender python path is not a symlink.", color="WARNING")
+                    cprint(
+                        f"Current blender python path is not a symlink.", color="HEADER"
+                    )
                     overwrite = (
                         str(input("Overwrite? [y/N]") or "N").lower().startswith("y")
                     )
                     if overwrite:
                         shutil.rmtree(factory_python_source)
                     else:
-                        cprint("Ignored.", color="WARNING")
+                        cprint("Ignored.", color="FAIL")
                         return
                 else:
                     pass
@@ -1038,7 +1052,7 @@ def uninstall(parameters):
             "$ conda env remove --prefix {env_pref}\n"
             "\n"
         ).format(env_pref=conda_vars["CONDA_PREFIX"]),
-        color="OKGREEN"
+        color="OKGREEN",
     )
     return
 
@@ -1061,7 +1075,7 @@ def check_python_conflict():
                 "We recommend using another python interpreter for install.py, such as: \n"
                 "$CONDA_PYTHON_EXE install.py [options]"
             ),
-            color="WARNING"
+            color="WARNING",
         )
         choice = str(input("Continue? [y/N]") or "N").lower().startswith("y")
         if not choice:
@@ -1192,7 +1206,9 @@ def main():
         true_blender_root = _get_default_locations(os_name)
     true_blender_bin = _get_blender_bin(os_name, true_blender_root)
     cprint(f"Found blender binary at {true_blender_bin.as_posix()}", color="OKGREEN")
-    cprint(f"      blender bundle root at {true_blender_root.as_posix()}", color="OKGREEN")
+    cprint(
+        f"      blender bundle root at {true_blender_root.as_posix()}", color="OKGREEN"
+    )
 
     # Parameters can be provided to install / uninstall methods at this time
     # Do not process any information regarding blender version / python version
@@ -1220,7 +1236,7 @@ def main():
                 (
                     "To uninstall batoms depedencies on windows, please add the --use-pip tag to the script."
                 ),
-            color="FAIL"
+                color="FAIL",
             )
             sys.exit(0)
         uninstall(parameters)
@@ -1230,7 +1246,7 @@ def main():
     if (not is_conda()) and (args.use_pip is False):
         cprint(
             "The installation script should be run inside a conda environment. Abort.",
-            color="FAIL"
+            color="FAIL",
         )
         sys.exit(0)
 
@@ -1242,7 +1258,7 @@ def main():
                     "Install dependencies via pip is only recommended for windows."
                     " Please remove the --use-pip flag and try again"
                 ),
-                color="FAIL"
+                color="FAIL",
             )
             sys.exit(0)
     elif os_name in ["windows"]:
@@ -1252,20 +1268,9 @@ def main():
                 "due to a bug in anaconda https://github.com/ContinuumIO/anaconda-issues/issues/11994.\n"
                 "Please add the --use-pip flag to installation script. "
             ),
-            color="FAIL"
+            color="FAIL",
         )
         sys.exit(0)
-
-    # TODO: allow change tag during installation
-    # with tempfile.TemporaryDirectory() as workdir:
-    #     if hasattr(args, "local_repo_path"):
-    #         repo_path = Path(expanduser(expandvars(args.local_repo_path)))
-    #     else:
-    #         repo_path = _gitclone(
-    #             workdir, version=args.plugin_version, url=repo_git
-    #         )
-    #     install(true_blender_root, true_blender_bin, repo_path)
-    #     test_plugin(true_blender_bin)
 
     install(parameters)
 
