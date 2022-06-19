@@ -24,6 +24,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Get Tag
+        uses: olegtarasov/get-tag@v2.1
+        id: tagName
+        with:
+          tagRegex: "(v\\d+\\.\\d+\\.\\d+.*)"
+      - name: Echo tag Name
+        run: |
+          echo ${{ steps.tagName.outputs.tag }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: setup docker context for buildx
