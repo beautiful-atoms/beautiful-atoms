@@ -31,10 +31,12 @@ jobs:
           tagRegex: "(v\\d+\\.\\d+\\.\\d+.*)"
       # Add special release tag if tag exists
       - name: Test tagger
-        run:
+        run: |
           echo ${{ steps.tagName.outputs }}
           echo ${{ env.GIT_TAG_NAME }}
           echo Current tag is ${{ env.GIT_TAG_NAME }}
+      - name: Pass Tagger Flag
+        run: |
           echo "ADD_VERSION_DOCKER=${{ startsWith(env.GIT_TAG_NAME, 'v') }}" >> ${GITHUB_ENV}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
