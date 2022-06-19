@@ -37,7 +37,7 @@ jobs:
       - name: Test tagger
         run:
           echo Current tag is ${{ env.GIT_TAG_NAME }}
-          echo Is tag ok to add to docker tag? ${{ startsWith(env.GIT_TAG_NAME, "v") }}
+          echo Is tag ok to add to docker tag? ${{ startsWith(env.GIT_TAG_NAME, 'v') }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: setup docker context for buildx
