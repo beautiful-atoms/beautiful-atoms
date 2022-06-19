@@ -579,8 +579,11 @@ class Batoms(BaseCollection, ObjectGN):
 
     def set_model_style(self, model_style):
         self.coll.batoms.model_style = str(model_style)
-        model_style = {'model_style': np.ones(
-            len(self), dtype=int)*int(model_style)}
+        model_style_array = np.ones(len(self), dtype=int)*int(model_style)
+        self.set_model_style_array(model_style_array)
+
+    def set_model_style_array(self, model_style_array):
+        model_style = {'model_style': model_style_array}
         self.set_attributes(model_style)
         self.draw()
         if self._boundary is not None:

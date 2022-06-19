@@ -20,10 +20,12 @@ class BatomsReplace(OperatorBatomsEdit):
     bl_description = "Replace selected atoms by new species"
 
     species: StringProperty(
-        name="species", default='O',
+        name="species", default='',
         description="Replaced by this species")
 
     def execute(self, context):
+        if self.species == '':
+            return {'FINISHED'}
         obj = context.object
         v = get_selected_vertices(obj)
         batoms = Batoms(label=obj.batoms.label)
@@ -343,13 +345,15 @@ class ApplyModelStyle(OperatorBatoms):
         batoms.model_style = int(self.model_style)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Model style of {} is changed to {}"
+            .format(context.object.batoms.label, self.model_style))
         return {'FINISHED'}
     
 class ApplyRadiusStyle(OperatorBatoms):
     bl_idname = "batoms.apply_radius_style"
     bl_label = "Apply Radius Style"
     bl_options = {'REGISTER', 'UNDO'}
-    bl_description = ("Apply new.radius_style parameters")
+    bl_description = ("Apply new radius_style parameters")
 
     radius_style: EnumProperty(
         name="radius_style",
@@ -366,6 +370,8 @@ class ApplyRadiusStyle(OperatorBatoms):
         batoms.radius_style = int(self.radius_style)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Radius style of {} is changed to {}"
+            .format(context.object.batoms.label, self.radius_style))
         return {'FINISHED'}
 
 
@@ -390,6 +396,54 @@ class ApplyColorStyle(OperatorBatoms):
         batoms.color_style = int(self.color_style)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Color style of {} is changed to {}"
+            .format(context.object.batoms.label, self.color_style))
         return {'FINISHED'}
 
 
+class ApplyModelStyleSelected(OperatorBatoms):
+    bl_idname = "batoms.apply_model_style_selected"
+    bl_label = "Apply Model Style Selected"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = ("Apply new model_style parameters to selected atoms")
+
+    model_style: EnumProperty(
+        name="model_style",
+        description="Structural models",
+        items=[('0', "Space-filling", "Use ball and stick"),
+               ('1', "Ball-and-stick", "Use ball"),
+               ('2', "Polyhedral", "Use polyhedral"),
+               ('3', "Stick", "Use stick")
+            ],
+        default='0',
+    )
+
+    def execute(self, context):
+        batoms = Batoms(label=context.object.batoms.label)
+        indices = get_selected_vertices(context.object)
+        model_style_array = batoms.get_attribute("model_style")
+        model_style_array[indices] = int(self.model_style)
+        batoms.set_model_style_array(model_style_array)
+        batoms.obj.select_set(True)
+        self.report({"INFO"}, "Model style of {} atoms are changed to {}".format(len(indices), self.model_style))
+        bpy.context.view_layer.objects.active = batoms.obj
+        return {'FINISHED'}
+  
+class ApplyLabel(OperatorBatoms):
+    bl_idname = "batoms.apply_label"
+    bl_label = "Apply Label"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = ("Apply new label parameters")
+
+    label: StringProperty(
+        name="label", default='',
+        description="Show label")
+
+    def execute(self, context):
+        batoms = Batoms(label=context.object.batoms.label)
+        batoms.show_label = self.label
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Show label {} for {}"
+            .format(self.label, context.object.batoms.label))
+        return {'FINISHED'}
