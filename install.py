@@ -407,9 +407,9 @@ def _gitclone(workdir=".", version="main", url=repo_git):
     print(f"Cloned repo into directory {clone_into.as_posix()}")
     return clone_into
 
+
 def _gitcheckout(workdir=".", version="main"):
-    """Check a git directory to a specific version
-    """
+    """Check a git directory to a specific version"""
     workdir = Path(expanduser(expandvars(workdir)))
     commands = [
         "git",
@@ -729,7 +729,6 @@ def install(parameters):
     factory_python_source = blender_root / PY_PATH
     factory_python_target = blender_root / PY_BACKUP_PATH
 
-
     # Check conda environment status
     conda_vars = _get_conda_variables()
 
@@ -847,7 +846,7 @@ def install(parameters):
             conda_vars,
             python_version=factory_py_ver,
             numpy_version=factory_numpy_ver,
-            backend=backend
+            backend=backend,
         )
 
     # Step 4: install plugin
@@ -873,7 +872,9 @@ def install(parameters):
     # if the local_plugin_version is not None, download the latest to tmpdir
     if local_plugin_version:
         tempdir = tempfile.mkdtemp()
-        plugin_path_source = (_gitclone(tempdir, local_plugin_version) / DEFAULT_PLUGIN_NAME).resolve()
+        plugin_path_source = (
+            _gitclone(tempdir, local_plugin_version) / DEFAULT_PLUGIN_NAME
+        ).resolve()
         print(plugin_path_source)
         local_parameters["develop"] = False
     # if version is None and plugin_path_source does not exist, download the latest to tmpdir
@@ -883,14 +884,15 @@ def install(parameters):
         )
         tempdir = tempfile.mkdtemp()
         local_plugin_version = "main"
-        plugin_path_source = (_gitclone(tempdir, local_plugin_version) / DEFAULT_PLUGIN_NAME).resolve()
+        plugin_path_source = (
+            _gitclone(tempdir, local_plugin_version) / DEFAULT_PLUGIN_NAME
+        ).resolve()
         print(plugin_path_source)
         local_parameters["develop"] = False
     else:
         pass
 
     # Choose whether to copy the plugin path or symlink it
-
 
     if local_parameters["develop"]:
         os.symlink(plugin_path_source, plugin_path_target)
@@ -1065,18 +1067,19 @@ def main():
         "--plugin-version",
         default=None,
         help=(
-            "Plugin version (in the form 'vX.Y.Z') or git hash tag. " 
+            "Plugin version (in the form 'vX.Y.Z') or git hash tag. "
             "Note this option, if not None, discards the values from "
-            "--local-repo-path and --develop.")
-        ,
+            "--local-repo-path and --develop."
+        ),
     )
     parser.add_argument(
         "-p",
         "--local-repo-path",
         default=curdir,
-        help=("Path to root of the beautiful-atoms repo. " 
-        "Default is the same level as install.py. "
-        "If using install.py alone, download the latest version from github and install."
+        help=(
+            "Path to root of the beautiful-atoms repo. "
+            "Default is the same level as install.py. "
+            "If using install.py alone, download the latest version from github and install."
         ),
     )
     parser.add_argument(
@@ -1168,7 +1171,7 @@ def main():
         use_preferences=args.use_preferences,
         develop=args.develop,
         no_mamba=args.no_mamba,
-        plugin_version=args.plugin_version
+        plugin_version=args.plugin_version,
     )
 
     # Uninstallation does not need information about current environment
