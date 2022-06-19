@@ -53,6 +53,8 @@ classes = [
     ops_batoms.ApplyModelStyle,
     ops_batoms.ApplyRadiusStyle,
     ops_batoms.ApplyColorStyle,
+    ops_batoms.ApplyModelStyleSelected,
+    ops_batoms.ApplyLabel,
     ops_batoms.AddSurface,
     ops_batoms.AddRootSurface,
     ops_batoms.BatomsJoin,

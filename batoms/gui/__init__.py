@@ -23,6 +23,7 @@ from . import (
     ui_list_magres,
     view3d_mt_batoms_add,
     view3d_mt_object_context_menu,
+    view3d_mt_edit_mesh_context_menu,
 )
 
 class BatomsCollection(bpy.types.PropertyGroup):
@@ -71,6 +72,9 @@ classes = [
     view3d_mt_object_context_menu.VIEW3D_MT_object_context_batoms_radius_style,
     view3d_mt_object_context_menu.VIEW3D_MT_object_context_batoms_color_style,
     view3d_mt_object_context_menu.VIEW3D_MT_object_context_batoms,
+    view3d_mt_object_context_menu.VIEW3D_MT_object_context_batoms_label,
+    view3d_mt_edit_mesh_context_menu.VIEW3D_MT_edit_mesh_context_batoms_model_style,
+    view3d_mt_edit_mesh_context_menu.VIEW3D_MT_edit_mesh_context_batoms,
     ui_list_species.BATOMS_MT_species_context_menu,
     ui_list_species.BATOMS_UL_species,
     ui_list_species.BATOMS_PT_species,
@@ -122,10 +126,12 @@ def unregister_class():
 def register_menu():
     bpy.types.VIEW3D_MT_add.prepend(view3d_mt_batoms_add.menu_func)
     bpy.types.VIEW3D_MT_object_context_menu.prepend(view3d_mt_object_context_menu.menu_func)
+    bpy.types.VIEW3D_MT_edit_mesh_context_menu.prepend(view3d_mt_edit_mesh_context_menu.menu_func)
 
 def unregister_menu():
     bpy.types.VIEW3D_MT_add.remove(view3d_mt_batoms_add.menu_func)
     bpy.types.VIEW3D_MT_object_context_menu.remove(view3d_mt_object_context_menu.menu_func)
+    bpy.types.VIEW3D_MT_edit_mesh_context_menu.remove(view3d_mt_edit_mesh_context_menu.menu_func)
     
 
 
