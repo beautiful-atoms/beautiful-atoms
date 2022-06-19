@@ -63,7 +63,7 @@ jobs:
           cp install.py $HOME && cd $HOME
           $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} -t v2.1.0
           $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
-        if: ${{ matrix.blender-version != "3.2.0" }}
+        if: ${{ matrix.blender_ver != "3.2.0" }}
 
 
 
@@ -122,7 +122,7 @@ jobs:
           cp install.py $HOME && cd $HOME
           $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} -t v2.1.0
           $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
-        if: ${{ matrix.blender-version != "3.2.0" }}
+        if: ${{ matrix.blender_ver != "3.2.0" }}
 
       
 
@@ -179,6 +179,6 @@ jobs:
           cp install.py ${HOME} && cd ${HOME}
           python install.py --use-pip ${{ env.BLENDER_ROOT }} -t v2.1.0
           python install.py --use-pip --uninstall ${{ env.BLENDER_ROOT }}
-        if: ${{ matrix.blender-version != "3.2.0" }}
+        if: ${{ matrix.blender_ver != "3.2.0" }}
 
           
