@@ -715,6 +715,7 @@ def install(parameters):
     """
     local_parameters = parameters.copy()
     blender_root = Path(local_parameters["blender_root"])
+    print("blender_root", blender_root)
     blender_bin = Path(local_parameters["blender_bin"])
     repo_path = Path(local_parameters["repo_path"])
     conda_env_file = repo_path / "env.yml"
@@ -871,7 +872,8 @@ def install(parameters):
     local_plugin_version = local_parameters["plugin_version"]
     if local_plugin_version:
         tempdir = tempfile.mkdtemp()
-        plugin_path_source = _gitclone(tempdir, local_plugin_version)
+        plugin_path_source = (_gitclone(tempdir, local_plugin_version) / DEFAULT_PLUGIN_NAME).resolve()
+        print(plugin_path_source)
         local_parameters["develop"] = False
 
 
