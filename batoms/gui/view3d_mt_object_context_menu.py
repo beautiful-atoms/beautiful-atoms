@@ -64,6 +64,24 @@ class VIEW3D_MT_object_context_batoms_color_style(Menu):
         op1.color_style = '1'
         op2 = layout.operator("batoms.apply_color_style", text="CPK")
         op2.color_style = '2'
+
+
+class VIEW3D_MT_object_context_batoms_label(Menu):
+    bl_idname = "VIEW3D_MT_object_context_batoms_label"
+    bl_label = "add label"
+    # bl_icon = ""
+
+    def draw(self, _context):
+        layout = self.layout
+
+        layout.operator_context = 'INVOKE_REGION_WIN'
+
+        op0 = layout.operator("batoms.apply_label", text="None")
+        op0.label = ''
+        op1 = layout.operator("batoms.apply_label", text="Element")
+        op1.label = 'elements'
+        op2 = layout.operator("batoms.apply_label", text="Species")
+        op2.label = 'species'
     
 class VIEW3D_MT_object_context_batoms(Menu):
     bl_idname = "VIEW3D_MT_object_context_batoms"
@@ -80,6 +98,8 @@ class VIEW3D_MT_object_context_batoms(Menu):
                     text="Color Style", icon='LAYER_ACTIVE')
         layout.menu("VIEW3D_MT_object_context_batoms_radius_style",
                     text="Radius Style", icon='LAYER_ACTIVE')
+        layout.menu("VIEW3D_MT_object_context_batoms_label",
+                    text="Label", icon='LAYER_ACTIVE')
         layout.operator("batoms.join", text="Join", icon='LAYER_ACTIVE')
         layout.operator("batoms.separate", text="Separate", icon='LAYER_ACTIVE')
         layout.operator("batoms.delete_selected", text="Delete",
