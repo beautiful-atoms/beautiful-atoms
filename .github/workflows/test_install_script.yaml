@@ -122,10 +122,10 @@ jobs:
           $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
       - name: Run installation with version check and without local repo
         run: |
-          BLENDER_ROOT=$(readlink -f ${BLENDER_ROOT})
-          cp install.py $HOME && cd $HOME
-          $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} -t v2.1.0
-          $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
+          # BLENDER_ROOT=$(readlink -f ${BLENDER_ROOT})
+          cp install.py $HOME
+          $CONDA_PYTHON_EXE ${HOME}/install.py ${BLENDER_ROOT} -t v2.1.0
+          $CONDA_PYTHON_EXE ${HOME}/install.py --uninstall ${BLENDER_ROOT}
         if: ${{ matrix.blender_ver != '3.2.0' }}
 
       
