@@ -420,25 +420,37 @@ class ObjectGN(BaseObject):
             _type_: _description_
         """
         from batoms.utils import type_blender_to_py
+        from batoms.utils.butils import get_att_length
         # get the mesh
+        obj = self.obj
         att = self._attributes[key]
         if att.dimension == 0:
-            attribute = self.get_mesh_attribute(att.name)
+            if obj.mode == 'EDIT' and att.type in ['STRING', 'INT', 'FLOAT']:
+                attribute = self.get_mesh_attribute_bmesh(obj, att.name)
+            else:
+                attribute = self.get_mesh_attribute(obj, att.name)
         else:
-            n = att.natt
-            natom = len(self)
-            # init a large array has the size of natom*np.product(shape)
-            attribute = np.zeros(n*natom, dtype=type_blender_to_py(att.type))
-            for i in range(n):
+            natt = att.natt
+            name = "{}{}{}".format(att.name, att.delimiter, 0)
+            att = obj.data.attributes.get(name)
+            att = obj.data.attributes.get(name)
+            n = get_att_length(obj.data, att)
+            # init a large array has the size of n*np.product(shape)
+            attribute = np.zeros(natt*n, dtype=type_blender_to_py(att.type))
+            for i in range(natt):
                 name = "{}{}{}".format(att.name, att.delimiter, i)
-                attribute[i*natom:(i+1)*natom] = self.get_mesh_attribute(name)
-            # reshape to (natom, shape)
-            attribute = attribute.reshape((natom, ) + att.shape)
+                if obj.mode == 'EDIT' and att.type in ['STRING', 'INT', 'FLOAT']:
+                    attribute[i*n:(i+1)*n] = self.get_mesh_attribute_bmesh(obj, name)
+                else:
+                    attribute[i*n:(i+1)*n] = self.get_mesh_attribute(obj, name)
+            # reshape to (n, shape)
+            attribute = attribute.reshape((n, ) + att.shape)
         return attribute
 
     
-    def get_mesh_attribute(self, key):
+    def get_mesh_attribute_bmesh(self, obj, key):
         """Get the attribute of mesh by name
+        Edit mode, use bmesh
 
         Args:
             key (string): name of the attribute
@@ -449,31 +461,72 @@ class ObjectGN(BaseObject):
         Returns:
             array: _description_
         """
+        from batoms.utils.butils import get_att_length, get_bmesh_layer, get_bmesh_domain
+        from batoms.utils import type_blender_to_py
         # get the mesh
-        me = self.obj.data
+        obj = self.obj
+        me = obj.data
+        # get attribute data type for the attribute
+        att = me.attributes.get(key)
+        if att is None:
+            raise KeyError('{} is not exist.'.format(key))
+        # get type and domain
+        dtype = att.data_type
+        # get attribute length based on domain
+        n = get_att_length(obj.data, att)
+        # check mode
+        if obj.mode == 'EDIT':
+            bm =bmesh.from_edit_mesh(obj.data)  
+            domain = get_bmesh_domain(bm, att)
+            domain.ensure_lookup_table()
+            # init attribute array
+            attribute = np.zeros(n, dtype=type_blender_to_py(dtype, str = "U20"))
+            layer = get_bmesh_layer(domain, key, dtype)
+            for i in range(n):
+                # print(domain[i][layer])
+                attribute[i] = domain[i][layer]
+        else:
+            bm = bmesh.new()
+            bm.from_mesh(me)
+            domain.ensure_lookup_table()
+            domain = get_bmesh_domain(bm, att)
+            n = len(domain)
+            for i in range(n):
+                attribute[i] = domain[i][layer]
+            bm.free()
+        
+        return attribute
+        
+    def get_mesh_attribute(self, obj, key):
+        """Get the attribute of mesh by name
+        Object mode, read attribute directly
+
+        Args:
+            key (string): name of the attribute
+
+        Raises:
+            KeyError: _description_
+
+        Returns:
+            array: _description_
+        """
+        from batoms.utils.butils import get_att_length
+        from batoms.utils import type_blender_to_py
+        # get the mesh
+        me = obj.data
+        # get attribute data type for the attribute
         att = me.attributes.get(key)
         if att is None:
             raise KeyError('{} is not exist.'.format(key))
         dtype = att.data_type
-        domain = att.domain
-        if domain == 'POINT':
-            n = len(me.vertices)
-        elif domain == 'EDGE':
-            n = len(me.edges)
-        else:
-            n = len(me.polygons)
+        # get attribute length based on domain
+        n = get_att_length(obj.data, att)
+        # check mode
+        attribute = np.zeros(n, dtype=type_blender_to_py(dtype, str = "U20"))
         if dtype == 'STRING':
-            attribute = np.zeros(n, dtype='U20')
             for i in range(n):
                 attribute[i] = att.data[i].value
-        elif dtype == 'INT':
-            attribute = np.zeros(n, dtype=int)
-            att.data.foreach_get("value", attribute)
-        elif dtype == 'FLOAT':
-            attribute = np.zeros(n, dtype=float)
-            att.data.foreach_get("value", attribute)
-        elif dtype == 'BOOLEAN':
-            attribute = np.zeros(n, dtype=bool)
+        elif dtype in ["INT", "FLOAT", "BOOLEAN"]:
             att.data.foreach_get("value", attribute)
         else:
             raise KeyError('Attribute type: %s is not support.' % dtype)
@@ -482,6 +535,27 @@ class ObjectGN(BaseObject):
 
     def set_attributes(self, attributes):
         """Set attributes
+        
+        Args:
+            attributes (dict): attributes bound to every atoms
+        """
+        obj = self.obj
+        me = obj.data
+        # print(attributes)
+        for key, array in attributes.items():
+            # if key in self._attributes
+            if not self._attributes.find(key):
+                # try to create a new attribute
+                flag = self._attributes.from_array(key, array)
+                # if failed, do not add this attribute
+                if not flag:
+                    continue
+            self.set_attribute(obj, key, array)
+        me.update()
+
+    def set_attribute(self, obj, key, array):
+        """Set one attribute
+
         An attribute is a generic term to describe data stored per-element 
         in a geometry data-block. For example, every vertex can have an 
         associated number or vector. 
@@ -492,59 +566,114 @@ class ObjectGN(BaseObject):
         1) for single value data (dimension=0), treat it as normal
         2) for array data (dimension > 0), scatter the data.
 
+        Two mode:
+        1) Edit mode, use bmesh
+        2) Object mode, use data.attributes directly
+
+        Special case:
+        1) String, can not use foreach_set. Must use bmesh with encode, 
+            otherwise, can not read use bmesh.
+        2) Boolean, does not supported by bmesh. Must use Object mode.
+           We set all Boolean properties to INT.
+
         Args:
-            attributes (dict): attributes bound to every atoms
+            key (str): name of the attribute
+            array (np.array): value of the attribute
         """
+        from batoms.utils.butils import get_att_length
         tstart = time()
-        me = self.obj.data
-        # print(attributes)
-        for key, array in attributes.items():
-            # print(key)
-            # if key in self._attributes
-            if not self._attributes.find(key):
-                # try to create a new attribute
-                flag = self._attributes.from_array(key, array)
-                # if failed, do not add this attribute
-                if not flag:
-                    continue
-            att_coll = self._attributes[key]
-            shape = att_coll.shape
-            dimension = att_coll.dimension
-            delimiter = att_coll.delimiter
-            # single value data
-            if dimension == 0:
-                att = me.attributes.get(key)
-                if att.data_type == 'STRING':
-                    nvert = len(me.vertices)
-                    for i in range(nvert):
-                        att.data[i].value = array[i]
-                else:
-                    att.data.foreach_set("value", array)
-            # array data
+        me = obj.data
+        att_coll = self._attributes[key]
+        shape = att_coll.shape
+        dimension = att_coll.dimension
+        delimiter = att_coll.delimiter
+        # single value data
+        if dimension == 0:
+            att = me.attributes.get(key)
+            if att.data_type == 'STRING' or (obj.mode == 'EDIT' and att.data_type in ['INT', 'FLOAT']):
+                self.set_mesh_attribute_bmesh(obj, key, array)
             else:
-                # M is the number of sub-array
-                M = att_coll.natt
-                natom = len(self)
-                array = array.reshape(-1, 1)
-                for i in range(M):
-                    att = me.attributes.get("{}{}{}".format(key, delimiter, i))
-                    if att.data_type == 'STRING':
-                        nvert = len(me.vertices)
-                        for j in range(nvert):
-                            att.data[j].value = array[j]
-                    else:
-                        for j in range(M):
-                            att.data.foreach_set("value", array[i*natom:(i+1)*natom])
-            logger.info('Time: {:10s} {:5.2f}'.format(key, time() - tstart))
-        me.update()
+                self.set_mesh_attribute(obj, key, array)
+        # array data
+        else:
+            # M is the number of sub-array, for 2x2 array, M is 4
+            M = att_coll.natt
+            array = array.reshape(-1, 1)
+            for i in range(M):
+                sub_key = "{}{}{}".format(key, delimiter, i)
+                att = me.attributes.get(sub_key)
+                n = get_att_length(obj.data, att)
+                if obj.mode == 'EDIT' and att.data_type in ['STRING', 'INT', 'FLOAT']:
+                    self.set_mesh_attribute_bmesh(obj, sub_key, array[i*n:(i+1)*n])
+                else:
+                    self.set_mesh_attribute(obj, sub_key, array[i*n:(i+1)*n])
+        logger.info('Time: {:10s} {:5.2f}'.format(key, time() - tstart))
+    
+    def set_mesh_attribute_bmesh(self, obj, key, value):
+        """Set mesh attribute using bmesh method
+
+        Args:
+            obj (bpy.type.object): obj
+            key (str): name of the attribute
+            value (np.array): value of the attribute
+        """
+        from batoms.utils.butils import get_bmesh_domain, get_bmesh_layer
+        me = obj.data
+        # get attribute type
+        att = me.attributes.get(key)
+        dtype = att.data_type
+        if dtype == 'STRING':
+            value = np.char.encode(value)
+        # check object mode
+        if obj.mode == 'EDIT':
+            bm =bmesh.from_edit_mesh(me)
+            domain = get_bmesh_domain(bm, att)
+            domain.ensure_lookup_table()
+            layer = get_bmesh_layer(domain, key, dtype)
+            n = len(domain)
+            for i in range(n):
+                domain[i][layer] = value[i]
+            bmesh.update_edit_mesh(me)
+        else:
+            bm = bmesh.new()
+            bm.from_mesh(me)
+            domain = get_bmesh_domain(bm, att)
+            domain.ensure_lookup_table()
+            layer = get_bmesh_layer(domain, key, dtype)
+            n = len(domain)
+            for i in range(n):
+                domain[i][layer] = value[i]
+            bm.to_mesh(me)
+            bm.free()
+    
+    def set_mesh_attribute(self, obj, key, value):
+        """Set mesh attribute using bmesh method
+
+        Args:
+            obj (bpy.type.object): obj
+            key (str): name of the attribute
+            value (np.array): value of the attribute
+        """
+        from batoms.utils.butils import get_att_length
+        me = obj.data
+        # get attribute
+        att = me.attributes.get(key)
+        # get attribute domain and length
+        n = get_att_length(obj.data, att)
+        if att.data_type == 'STRING':
+            for j in range(n):
+                att.data[j].value = value[j]
+        else:
+            att.data.foreach_set("value", value)
+    
 
     def set_attribute_with_indices(self, name, indices, data):
-        data0 = self.attributes[name]
+        data0 = self.get_attribute(name)
         data0[indices] = data
         self.set_attributes({name: data0})
 
     def get_attribute_with_indices(self, name, indices):
-        return self.attributes[name][indices]
+        return self.get_attribute(name)[indices]
 
     @property
     def local_positions(self):
@@ -745,13 +874,13 @@ class ObjectGN(BaseObject):
 
 class childObjectGN():
     """
-    Child of Object with Geometry Node
+    Slice of Object with Geometry Node.
 
     """
 
-    def __init__(self, label, index, obj_name=None, parent=None):
+    def __init__(self, label, indices, obj_name=None, parent=None):
         self.label = label
-        self.index = index
+        self.indices = indices
         self.parent = parent
         if obj_name is None:
             self.obj_name = label
@@ -770,7 +899,7 @@ class childObjectGN():
 
     @property
     def vertice(self):
-        return self.obj.data.shape_keys.key_blocks[0].data[self.index]
+        return self.obj.data.shape_keys.key_blocks[0].data[self.indices]
 
     @property
     def bm(self):
@@ -782,25 +911,33 @@ class childObjectGN():
         return bm
 
     @property
-    def bm_vert(self):
-        return self.bm.verts[self.index]
-
-    @property
     def attributes(self):
         return self.obj.data.attributes
 
     @property
     def local_position(self):
-        return self.vertice.co
+        if isinstance(self.indices, int):
+            return self.vertice.co
+        else:
+            return self.parent.local_positions[self.indices]
+
 
     @property
     def position(self):
-        return self.get_position()
+        if isinstance(self.indices, int):
+            return self.get_position()
+        else:
+            return self.parent.positions[self.indices]
 
     @position.setter
-    def position(self, position):
-        self.set_position(position)
-
+    def position(self, value):
+        if isinstance(self.indices, int):
+            self.set_position(value)
+        else:
+            positions = self.parent.positions
+            positions[self.indices] = value
+            self.parent.positions[self.indices] = positions
+        
     def get_position(self):
         """
         Get global position.
@@ -810,13 +947,13 @@ class childObjectGN():
                                 np.array(self.obj.matrix_world))
         return position[0]
 
-    def set_position(self, position):
+    def set_position(self, value):
         """
         Set global position to local vertices
         """
         object_mode()
         from batoms.utils import local2global
-        position = np.array([position])
+        position = np.array([value])
         position = local2global(position,
                                 np.array(self.obj.matrix_world),
                                 reversed=True)
@@ -831,21 +968,36 @@ class childObjectGN():
             bm =bmesh.from_edit_mesh(self.obj.data)
             bm.verts.ensure_lookup_table()
             layer = bm.verts.layers.float.get("scale")
-            scale = bm.verts[self.index][layer]
+            if isinstance(self.indices, int):
+                scale = bm.verts[self.indices][layer]
+            else:
+                for i in self.indices:
+                    scale = bm.verts[i][layer]
+
         else:
-            scale = self.attributes['scale'].data[self.index].value
+            if isinstance(self.indices, int):
+                scale = self.attributes['scale'].data[self.indices].value
+            else:
+                scale = self.parent.get_attribute_with_indices('scale', self.indices)
         return scale
 
     @scale.setter
-    def scale(self, scale):
+    def scale(self, value):
         if self.obj.mode == 'EDIT':
             bm =bmesh.from_edit_mesh(self.obj.data)
             bm.verts.ensure_lookup_table()
             layer = bm.verts.layers.float.get("scale")
-            bm.verts[self.index][layer] = scale
+            if isinstance(self.indices, int):
+                bm.verts[self.indices][layer] = value
+            else:
+                for i in self.indices:
+                    bm.verts[i][layer] = value[i]
             bmesh.update_edit_mesh(self.obj.data)
         else:
-            self.attributes['scale'].data[self.index].value = scale
+            if isinstance(self.indices, int):
+                self.attributes['scale'].data[self.indices].value = scale
+            else:
+                scale = self.parent.get_attribute_with_indices('scale', self.indices)
 
     @property
     def show(self):
@@ -859,14 +1011,14 @@ class childObjectGN():
         if self.obj.mode == 'EDIT':
             bpy.context.view_layer.objects.active = self.obj
             bpy.ops.object.mode_set(mode="OBJECT")
-            show = self.attributes['show'].data[self.index].value
+            show = self.attributes['show'].data[self.indices].value
             bpy.ops.object.mode_set(mode="EDIT")
             #
         else:
-            show = self.attributes['show'].data[self.index].value
+            show = self.attributes['show'].data[self.indices].value
         return show
 
     @show.setter
     def show(self, show):
-        self.attributes['show'].data[self.index].value = show
+        self.attributes['show'].data[self.indices].value = show
         update_object(self.obj)
