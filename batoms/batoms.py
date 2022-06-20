@@ -1012,8 +1012,8 @@ class Batoms(BaseCollection, ObjectGN):
         bpy.ops.object.join()
         # update species and species_index
         self._species.extend(other._species)
-        self.selects.add(self.label[0:min(4, len(self.label))], indices1)
-        self.selects.add(other.label[0:min(4, len(other.label))], indices2)
+        self.selects.add(self.label, indices1)
+        self.selects.add(other.label, indices2)
         # remove shape key from mol
         sp = self.obj.data.shape_keys.key_blocks.get('Basis_%s' % other.label)
         self.obj.shape_key_remove(sp)
@@ -1118,6 +1118,9 @@ class Batoms(BaseCollection, ObjectGN):
             species[1].update(props)
             species[1]["elements"].update(props["elements"])
         if species[0] not in self.species:
+            if len(species[0]) > 4:
+                print("Warning: the name of the species: {}, should not be longer than four characters.".format(species[0]))
+                logger.warning("The name of the species: {}, should not be longer than four characters.".format(species[0]))
             self.species[species[0]] = species[1]
             # add geometry node
             self.add_geometry_node(
