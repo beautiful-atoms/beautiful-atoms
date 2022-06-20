@@ -97,8 +97,8 @@ class Battribute(Base):
     flag: BoolProperty(name="flag", default=False)
     name: StringProperty(name="name")
     label: StringProperty(name="label", default='batoms')
-    type: EnumProperty(
-        name="type",
+    data_type: EnumProperty(
+        name="data_type",
         description="data type",
         items=(('FLOAT', "FLOAT", "Floating-point value"),
                ('INT', "INT", "32-bit integer"),
@@ -148,7 +148,7 @@ class Battribute(Base):
             'flag': self.flag,
             'label': self.label,
             'name': self.name,
-            'type': self.type,
+            'data_type': self.data_type,
             'domain': self.domain,
             'dimension': self.dimension,
             'shape': self.shape,

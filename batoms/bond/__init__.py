@@ -21,18 +21,18 @@ import logging
 logger = logging.getLogger(__name__)
 
 default_attributes = [
-    {"name": 'atoms_index1', "type": 'INT', "dimension": 0},
-    {"name": 'atoms_index2', "type": 'INT', "dimension": 0},
-    {"name": 'atoms_index3', "type": 'INT', "dimension": 0},
-    {"name": 'atoms_index4', "type": 'INT', "dimension": 0},
-    {"name": 'species_index1', "type": 'INT', "dimension": 0},
-    {"name": 'species_index2', "type": 'INT', "dimension": 0},
-    {"name": 'order', "type": 'INT', "dimension": 0},
-    {"name": 'style', "type": 'INT', "dimension": 0},
-    {"name": 'show', "type": 'BOOLEAN', "dimension": 0},
-    {"name": 'model_style', "type": 'INT', "dimension": 0},
-    {"name": 'polyhedra', "type": 'BOOLEAN', "dimension": 0},
-    {"name": 'second_bond', "type": 'INT', "dimension": 0},
+    {"name": 'atoms_index1', "data_type": 'INT', "dimension": 0},
+    {"name": 'atoms_index2', "data_type": 'INT', "dimension": 0},
+    {"name": 'atoms_index3', "data_type": 'INT', "dimension": 0},
+    {"name": 'atoms_index4', "data_type": 'INT', "dimension": 0},
+    {"name": 'species_index1', "data_type": 'INT', "dimension": 0},
+    {"name": 'species_index2', "data_type": 'INT', "dimension": 0},
+    {"name": 'order', "data_type": 'INT', "dimension": 0},
+    {"name": 'style', "data_type": 'INT', "dimension": 0},
+    {"name": 'show', "data_type": 'INT', "dimension": 0},
+    {"name": 'model_style', "data_type": 'INT', "dimension": 0},
+    {"name": 'polyhedra', "data_type": 'INT', "dimension": 0},
+    {"name": 'second_bond', "data_type": 'INT', "dimension": 0},
 ]
 
 default_GroupInput = [
@@ -631,7 +631,7 @@ class Bonds(BaseCollection, ObjectGN):
         frames = self.batoms.get_frames()
         arrays = self.batoms.arrays
         array_b = self.batoms.get_arrays_with_boundary()
-        show = arrays['show']
+        show = arrays['show'].astype(bool)
         species = arrays['species'][show]
         # frames_boundary = self.batoms.get_frames(self.batoms.batoms_boundary)
         # frames_search = self.batoms.get_frames(self.batoms.batoms_search)

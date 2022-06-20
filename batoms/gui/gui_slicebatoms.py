@@ -8,7 +8,7 @@ from bpy.props import (FloatProperty,
                        )
 from batoms.gui.gui_batoms import get_active_batoms
 from batoms.utils.butils import get_selected_vertices
-from batoms.batom import Batom
+from batoms.slicebatoms import SliceBatoms
 
 class Batom_PT_prepare(Panel):
     bl_label = "Batom"
@@ -41,7 +41,7 @@ def get_active_batom():
     if context.object and context.object.batoms.type != 'OTHER':
         v = get_selected_vertices(context.object)
         if len(v) > 0:
-            batom = Batom(label=context.object.batoms.label, index=v[0])
+            batom = SliceBatoms(label=context.object.batoms.label, index=v[0])
             return batom
         else:
             return None

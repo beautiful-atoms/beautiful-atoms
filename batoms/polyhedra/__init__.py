@@ -18,12 +18,12 @@ logger = logging.getLogger(__name__)
 
 
 default_attributes = [
-    {"name":'atoms_index1', "type": 'INT', "dimension": 0},
-    {"name":'atoms_index2', "type": 'INT', "dimension": 0},
-    {"name":'species_index', "type": 'INT', "dimension": 0},
-    {"name":'face_species_index', "type": 'INT', "dimension": 0, "domain": 'FACE'},
-    {"name":'show', "type": 'BOOLEAN', "dimension": 0},
-    {"name":'style', "type": 'INT', "dimension": 0},
+    {"name":'atoms_index1', "data_type": 'INT', "dimension": 0},
+    {"name":'atoms_index2', "data_type": 'INT', "dimension": 0},
+    {"name":'species_index', "data_type": 'INT', "dimension": 0},
+    {"name":'face_species_index', "data_type": 'INT', "dimension": 0, "domain": 'FACE'},
+    {"name":'show', "data_type": 'INT', "dimension": 0},
+    {"name":'style', "data_type": 'INT', "dimension": 0},
 ]
 
 
@@ -349,7 +349,7 @@ class Polyhedras(ObjectGN):
         # clean_coll_objects(self.coll, 'bond')
         frames = self.batoms.get_frames()
         arrays = self.batoms.arrays
-        show = arrays['show']
+        show = arrays['show'].astype(bool)
         species = arrays['species']
         # frames_boundary = self.batoms.get_frames(self.batoms.batoms_boundary)
         # frames_search = self.batoms.get_frames(self.batoms.batoms_search)

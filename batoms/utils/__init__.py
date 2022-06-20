@@ -457,7 +457,7 @@ def calc_euler_angle(x, z, seq='xyz'):
     logger.debug('calc_euler_angle: {0:10.2f} s'.format(time() - tstart))
     return eulers
 
-def type_blender_to_py(dtype):
+def type_blender_to_py(dtype, str = "str"):
     """Change Blender data type to python data type
 
     Args:
@@ -466,7 +466,7 @@ def type_blender_to_py(dtype):
     type_dict = {
         "INT":"int",
         "FLOAT":"float",
-        "STRING":"str",
+        "STRING":str,
         "BOOLEAN":"bool",
     }
     return type_dict[dtype]

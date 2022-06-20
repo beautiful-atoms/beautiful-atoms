@@ -10,12 +10,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 default_attributes = [
-    {"name": 'atoms_index', "type": 'INT', "dimension": 0},
-    {"name": 'species_index', "type": 'INT', "dimension": 0},
-    {"name": 'show', "type": 'BOOLEAN', "dimension": 0},
-    {"name": 'select', "type": 'INT', "dimension": 0},
-    {"name": 'model_style', "type": 'INT', "dimension": 0},
-    {"name": 'scale', "type": 'FLOAT', "dimension": 0},
+    {"name": 'atoms_index', "data_type": 'INT', "dimension": 0},
+    {"name": 'species_index', "data_type": 'INT', "dimension": 0},
+    {"name": 'show', "data_type": 'INT', "dimension": 0},
+    {"name": 'select', "data_type": 'INT', "dimension": 0},
+    {"name": 'model_style', "data_type": 'INT', "dimension": 0},
+    {"name": 'scale', "data_type": 'FLOAT', "dimension": 0},
 ]
 
 default_GroupInput = [

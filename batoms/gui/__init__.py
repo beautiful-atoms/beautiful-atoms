@@ -3,7 +3,7 @@ from bpy.props import PointerProperty
 
 from . import (
     gui_batoms,
-    gui_batom,
+    gui_slicebatoms,
     gui_toolbar,
     gui_cell,
     gui_bond,
@@ -31,7 +31,7 @@ class BatomsCollection(bpy.types.PropertyGroup):
     Collection properties of all panel properties.
     """
     batoms: PointerProperty(type=gui_batoms.BatomsProperties)
-    batom: PointerProperty(type=gui_batom.BatomProperties)
+    batom: PointerProperty(type=gui_slicebatoms.BatomProperties)
     cell: PointerProperty(type=gui_cell.CellProperties)
     bond: PointerProperty(type=gui_bond.BondProperties)
     plane: PointerProperty(type=gui_plane.PlaneProperties)
@@ -44,8 +44,8 @@ class BatomsCollection(bpy.types.PropertyGroup):
 classes = [
     gui_batoms.Batoms_PT_prepare,
     gui_batoms.BatomsProperties,
-    gui_batom.Batom_PT_prepare,
-    gui_batom.BatomProperties,
+    gui_slicebatoms.Batom_PT_prepare,
+    gui_slicebatoms.BatomProperties,
     gui_bond.Bond_PT_prepare,
     gui_bond.BondProperties,
     gui_cell.Cell_PT_prepare,

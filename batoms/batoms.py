@@ -23,12 +23,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 default_attributes = [
-    {"name": 'select', "type": 'INT', "dimension": 0},
-    {"name": 'species_index', "type": 'INT', "dimension": 0},
-    {"name": 'species', "type": 'STRING', "dimension": 0},
-    {"name": 'show', "type": 'BOOLEAN', "dimension": 0},
-    {"name": 'scale', "type": 'FLOAT', "dimension": 0},
-    {"name": 'model_style', "type": 'INT', "dimension": 0},
+    {"name": 'select', "data_type": 'INT', "dimension": 0},
+    {"name": 'species_index', "data_type": 'INT', "dimension": 0},
+    {"name": 'species', "data_type": 'STRING', "dimension": 0},
+    {"name": 'show', "data_type": 'INT', "dimension": 0},
+    {"name": 'scale', "data_type": 'FLOAT', "dimension": 0},
+    {"name": 'model_style', "data_type": 'INT', "dimension": 0},
 ]
 
 
@@ -874,7 +874,7 @@ class Batoms(BaseCollection, ObjectGN):
         obj = self.obj
         self.set_obj_frames(name, obj, frames['positions'])
 
-    def __getitem__(self, index):
+    def __getitem__(self, indices):
         """Return a subset of the Batom.
 
         i -- int, describing which atom to return.
@@ -882,18 +882,17 @@ class Batoms(BaseCollection, ObjectGN):
         #todo: this is slow for large system
 
         """
-        from batoms.batom import Batom
-        if isinstance(index, int):
-            batom = Batom(self.label, index, batoms=self)
-            # bpy.ops.object.mode_set(mode=mode)
-            return batom
-        if isinstance(index, str):
-            bspecies = self.species[index]
+        from batoms.slicebatoms import SliceBatoms
+        if isinstance(indices, str):
+            bspecies = self.species[indices]
             return bspecies
         else:
-            return self.positions[index]
+            slicebatoms = SliceBatoms(self.label, indices, batoms=self)
+            # bpy.ops.object.mode_set(mode=mode)
+            return slicebatoms
+        
 
-    def __setitem__(self, index, value):
+    def __setitem__(self, indices, value):
         """Return a subset of the Batom.
 
         i -- int, describing which atom to return.
@@ -902,7 +901,7 @@ class Batoms(BaseCollection, ObjectGN):
 
         """
         positions = self.positions
-        positions[index] = value
+        positions[indices] = value
         self.set_positions(positions)
 
     def __imul__(self, m):
