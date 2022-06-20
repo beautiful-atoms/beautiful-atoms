@@ -102,6 +102,7 @@ class VIEW3D_MT_object_context_batoms(Menu):
                     text="Label", icon='LAYER_ACTIVE')
         layout.operator("batoms.join", text="Join", icon='LAYER_ACTIVE')
         layout.operator("batoms.separate", text="Separate", icon='LAYER_ACTIVE')
+        layout.operator("batoms.copy", text="Copy", icon='LAYER_ACTIVE')
         layout.operator("batoms.delete_selected", text="Delete",
                         icon='FORCE_LENNARDJONES')
 
