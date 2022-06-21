@@ -18,7 +18,7 @@ def test_boundary_scale():
     au = Batoms("au", from_ase=bulk("Au", cubic=True))
     au.scale = 0.5
     au.boundary = [1, 1, 1]
-    assert np.allclose(au.scale[0], 0.5)
+    assert np.allclose(au.boundary.get_attribute('scale')[0], 0.5)
     # repeat
 
 def test_boundary_off_origin():
