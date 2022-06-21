@@ -287,6 +287,7 @@ class Bpolyhedra(Base):
             'label': self.label,
             'species': self.species,
             'name': self.name,
+            'material_style': self.material_style,
             'color': self.color[:],
             'width': self.width,
             'show_edge': self.show_edge,
@@ -511,6 +512,7 @@ class Bsheet(Base):
             'color': self.color[:],
             'extrude': self.extrude,
             'depth': self.depth,
+            'material_style': self.material_style,
         }
         return setdict
 
@@ -556,6 +558,7 @@ class Bhelix(Base):
             'color': self.color[:],
             'extrude': self.extrude,
             'depth': self.depth,
+            'material_style': self.material_style,
         }
         return setdict
 
@@ -599,6 +602,7 @@ class Bturn(Base):
             'name': self.name,
             'color': self.color[:],
             'radius': self.radius,
+            'material_style': self.material_style,
         }
         return setdict
 
@@ -642,6 +646,7 @@ class Bms(Base):
             'probe': self.probe,
             'resolution': self.resolution,
             'select': self.select,
+            'material_style': self.material_style,
         }
         return setdict
 

@@ -37,8 +37,7 @@ class PolyhedraSettings(Setting):
             for key, data in polyhedrasetting.items():
                 self[key] = data
 
-    def build_materials(self, sp, node_inputs=None,
-                        material_style='default'):
+    def build_materials(self, sp, node_inputs=None):
         """
         """
         from batoms.material import create_material
@@ -49,7 +48,7 @@ class PolyhedraSettings(Setting):
         mat = create_material(name,
                         color=sp['color'],
                         node_inputs=node_inputs,
-                        material_style=material_style,
+                        material_style=sp["material_style"],
                         backface_culling=False)
         # logger.debug('build polyhedra materials: {}'.format(sp['color']))
         return mat

@@ -63,7 +63,6 @@ class PolyhedraDraw(OperatorBatoms):
         batoms = Batoms(label=obj.batoms.label)
         batoms.model_style = '2'
         batoms.draw()
-        batoms.obj.select_set(True)
         context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 
