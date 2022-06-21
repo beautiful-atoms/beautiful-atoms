@@ -8,6 +8,7 @@ from bpy.types import Menu
 
 def menu_func(self, context):
     self.layout.menu("VIEW3D_MT_object_context_batoms", icon="MESH_UVSPHERE")
+    self.layout.menu("VIEW3D_MT_object_context_bonds", icon="MESH_UVSPHERE")
 
 
 class VIEW3D_MT_object_context_batoms_model_style(Menu):
@@ -86,7 +87,6 @@ class VIEW3D_MT_object_context_batoms_label(Menu):
 class VIEW3D_MT_object_context_batoms(Menu):
     bl_idname = "VIEW3D_MT_object_context_batoms"
     bl_label = "Batoms"
-    bl_icon = "batoms_molecule"
 
     def draw(self, _context):
         layout = self.layout
@@ -107,4 +107,18 @@ class VIEW3D_MT_object_context_batoms(Menu):
                         icon='FORCE_LENNARDJONES')
 
         layout.separator()
+
+class VIEW3D_MT_object_context_bonds(Menu):
+    bl_idname = "VIEW3D_MT_object_context_bonds"
+    bl_label = "Bonds"
+
+    def draw(self, _context):
+        layout = self.layout
+
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        layout.operator("bond.bond_order_auto_set", text="Auto set bond order",
+                        icon='LAYER_ACTIVE')
+
+        layout.separator()
+
 

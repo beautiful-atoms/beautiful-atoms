@@ -6,7 +6,7 @@ from . import (
     gui_slicebatoms,
     gui_toolbar,
     gui_cell,
-    gui_bond,
+    gui_slicebonds,
     gui_plane,
     gui_render,
     gui_pymatgen,
@@ -33,7 +33,7 @@ class BatomsCollection(bpy.types.PropertyGroup):
     batoms: PointerProperty(type=gui_batoms.BatomsProperties)
     batom: PointerProperty(type=gui_slicebatoms.BatomProperties)
     cell: PointerProperty(type=gui_cell.CellProperties)
-    bond: PointerProperty(type=gui_bond.BondProperties)
+    bond: PointerProperty(type=gui_slicebonds.BondProperties)
     plane: PointerProperty(type=gui_plane.PlaneProperties)
     render: PointerProperty(type=gui_render.RenderProperties)
     pymatgen: PointerProperty(type=gui_pymatgen.PymatgenProperties)
@@ -46,8 +46,8 @@ classes = [
     gui_batoms.BatomsProperties,
     gui_slicebatoms.Batom_PT_prepare,
     gui_slicebatoms.BatomProperties,
-    gui_bond.Bond_PT_prepare,
-    gui_bond.BondProperties,
+    gui_slicebonds.Bond_PT_prepare,
+    gui_slicebonds.BondProperties,
     gui_cell.Cell_PT_prepare,
     gui_cell.CellProperties,
     gui_plane.Plane_PT_prepare,
@@ -71,8 +71,9 @@ classes = [
     view3d_mt_object_context_menu.VIEW3D_MT_object_context_batoms_model_style,
     view3d_mt_object_context_menu.VIEW3D_MT_object_context_batoms_radius_style,
     view3d_mt_object_context_menu.VIEW3D_MT_object_context_batoms_color_style,
-    view3d_mt_object_context_menu.VIEW3D_MT_object_context_batoms,
     view3d_mt_object_context_menu.VIEW3D_MT_object_context_batoms_label,
+    view3d_mt_object_context_menu.VIEW3D_MT_object_context_batoms,
+    view3d_mt_object_context_menu.VIEW3D_MT_object_context_bonds,
     view3d_mt_edit_mesh_context_menu.VIEW3D_MT_edit_mesh_context_batoms_model_style,
     view3d_mt_edit_mesh_context_menu.VIEW3D_MT_edit_mesh_context_batoms,
     ui_list_species.BATOMS_MT_species_context_menu,
