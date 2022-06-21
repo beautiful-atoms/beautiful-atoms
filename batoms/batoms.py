@@ -1710,12 +1710,16 @@ class Batoms(BaseCollection, ObjectGN):
         self.set_attribute_with_indices('show', mask, True)
         if self.polyhedra_style == 0:
             self.set_attribute_with_indices('scale', mask, scale)
+            self.boundary.hide = False
             self.bonds.hide = False
+            self.bonds.search_bond.hide = False
             # self.bonds.update()
         if self.polyhedra_style == 1:
+            # hide bonds
             self.set_attribute_with_indices('scale', mask, scale)
             self.bonds.hide = True
         elif self.polyhedra_style == 2:
+            # hide bonds and atoms, except center atoms
             for b in self.bonds.setting:
                 if b.polyhedra:
                     mask1 = np.where(
@@ -1724,12 +1728,17 @@ class Batoms(BaseCollection, ObjectGN):
                     mask[mask1] = False
             scale = 0
             self.set_attribute_with_indices('scale', mask, scale)
+            self.boundary.hide = True
             self.bonds.hide = True
+            self.bonds.search_bond.hide = True
             # self.set_attribute_with_indices('show', mask, False)
         elif self.polyhedra_style == 3:
+            # hide all bonds and atoms
             scale = 0
             self.set_attribute_with_indices('scale', mask, scale)
+            self.boundary.hide = True
             self.bonds.hide = True
+            self.bonds.search_bond.hide = True
             # self.set_attribute_with_indices('show', mask, False)
 
     def draw_wireframe(self):
