@@ -104,6 +104,9 @@ class SearchBond(ObjectGN):
         # Add attributes
         self._attributes.add(default_attributes)
         self.batoms.coll.objects.link(obj)
+        obj.batoms.type = 'BOND'
+        obj.batoms.label = self.batoms.label
+        obj.batoms.bond.label = self.batoms.label
         obj.parent = self.batoms.obj
         #
         name = '%s_search_bond_offset' % self.label
@@ -384,9 +387,7 @@ class SearchBond(ObjectGN):
         self.obj_o.data.shape_keys.key_blocks[0].data.foreach_set(
             'co', offsets)
         self.obj_o.data.update()
-        bpy.context.view_layer.objects.active = self.obj_o
-        bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.object.mode_set(mode='OBJECT')
+        self.update_mesh(self.obj_o)
 
     @property
     def bondlists(self):

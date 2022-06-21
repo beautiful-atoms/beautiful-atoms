@@ -116,6 +116,10 @@ class VIEW3D_MT_object_context_bonds(Menu):
         layout = self.layout
 
         layout.operator_context = 'INVOKE_REGION_WIN'
+        layout.operator("bond.show_hydrogen_bond", text="Show hydrogen bond",
+                        icon='LAYER_ACTIVE')
+        layout.operator("bond.show_search", text="Show atoms by searching bond",
+                        icon='LAYER_ACTIVE')
         layout.operator("bond.bond_order_auto_set", text="Auto set bond order",
                         icon='LAYER_ACTIVE')
 

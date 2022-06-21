@@ -136,3 +136,28 @@ class BondOrderAutoSet(OperatorBatoms):
         batoms.bonds.bond_order_auto_set()
         context.view_layer.objects.active = obj
         return {'FINISHED'}
+
+class BondShowHydrogenBond(OperatorBatoms):
+    bl_idname = "bond.show_hydrogen_bond"
+    bl_label = "Show hydrogen bond"
+    bl_description = ("Show hydrogen bond.")
+
+    def execute(self, context):
+        obj = context.object
+        batoms = Batoms(label=context.object.batoms.label)
+        batoms.bonds.show_hydrogen_bond = not batoms.bonds.show_hydrogen_bond
+        context.view_layer.objects.active = obj
+        return {'FINISHED'}
+
+class BondShowSearch(OperatorBatoms):
+    bl_idname = "bond.show_search"
+    bl_label = "Show atoms by searching bonds"
+    bl_description = ("Show atoms by searching bonds.")
+
+    def execute(self, context):
+        obj = context.object
+        batoms = Batoms(label=context.object.batoms.label)
+        batoms.bonds.show_search = not batoms.bonds.show_search
+        batoms.bonds.update()
+        context.view_layer.objects.active = batoms.obj
+        return {'FINISHED'}

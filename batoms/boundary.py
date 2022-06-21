@@ -187,6 +187,8 @@ class Boundary(ObjectGN):
         self._attributes.add(default_attributes)
         self.batoms.coll.objects.link(obj)
         obj.location = location
+        obj.batoms.type = 'BOUNDARY'
+        obj.batoms.label = self.batoms.label
         obj.parent = self.batoms.obj
         #
         name = '%s_boundary_offset' % self.label
@@ -345,7 +347,7 @@ class Boundary(ObjectGN):
         2) mearch all boundary list, and find the unique boundary list
         3) calculate all boundary data
         """
-        object_mode()
+        # object_mode()
         # clean_coll_objects(self.coll, 'bond')
         frames = self.batoms.get_frames()
         images = self.batoms.as_ase()
@@ -452,7 +454,7 @@ class Boundary(ObjectGN):
     def get_arrays(self):
         """
         """
-        object_mode()
+        # object_mode()
         # tstart = time()
         arrays = self.attributes
         arrays.update({'positions': self.positions})
@@ -514,7 +516,7 @@ class Boundary(ObjectGN):
         """
         Set global offsets to local vertices
         """
-        object_mode()
+        # object_mode()
         n = len(self.obj_o.data.vertices)
         if len(offsets) != n:
             raise ValueError('offsets has wrong shape %s != %s.' %

@@ -73,6 +73,8 @@ classes = [
     ops_bond.BondModify,
     ops_bond.BondDraw,
     ops_bond.BondOrderAutoSet,
+    ops_bond.BondShowHydrogenBond,
+    ops_bond.BondShowSearch,
     ops_polyhedra.PolyhedraAdd,
     ops_polyhedra.PolyhedraRemove,
     ops_polyhedra.PolyhedraDraw,
