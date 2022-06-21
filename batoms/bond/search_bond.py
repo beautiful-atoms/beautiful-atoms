@@ -291,10 +291,12 @@ class SearchBond(ObjectGN):
         elif dnvert < 0:
             self.delete_vertices_bmesh(range(-dnvert))
             self.delete_vertices_bmesh(range(-dnvert), self.obj_o)
+        if len(self) == 0:
+            self.update_mesh()
+            return
         self.positions = arrays["positions"][0]
         self.offsets = arrays["offsets"][0]
         self.set_frames(arrays)
-        self.update_mesh()
         species_index = [string2Number(sp) for sp in arrays['species']]
         self.set_attributes({
                             'atoms_index': arrays["atoms_index"],
