@@ -105,6 +105,7 @@ class VIEW3D_MT_object_context_batoms(Menu):
         layout.operator("batoms.copy", text="Copy", icon='LAYER_ACTIVE')
         layout.operator("batoms.delete_selected", text="Delete",
                         icon='FORCE_LENNARDJONES')
+        layout.operator("batoms.auto_build_species", text="Auto build species", icon='LAYER_ACTIVE')
 
         layout.separator()
 

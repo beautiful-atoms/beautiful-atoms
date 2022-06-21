@@ -56,6 +56,7 @@ classes = [
     ops_batoms.BatomsCopy,
     ops_batoms.ApplyModelStyleSelected,
     ops_batoms.ApplyLabel,
+    ops_batoms.BatomsAutoBuildSpecies,
     ops_batoms.AddSurface,
     ops_batoms.AddRootSurface,
     ops_batoms.BatomsJoin,
