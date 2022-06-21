@@ -857,7 +857,7 @@ class Bonds(BaseCollection, ObjectGN):
         self.setting.coll.batoms.show_hydrogen_bond = show_hydrogen_bond
         self.update()
 
-    def __getitem__(self, index):
+    def __getitem__(self, indices):
         """Return a subset of the Bbond.
 
         i -- int, describing which atom to return.
@@ -865,15 +865,11 @@ class Bonds(BaseCollection, ObjectGN):
         #todo: this is slow for large system
 
         """
-        from batoms.bond.bond import Bond
-        if isinstance(index, int):
-            bond = Bond(self.label, index, bonds=self)
-            # bpy.ops.object.mode_set(mode=mode)
-            return bond
-        else:
-            return self.positions[index]
+        from batoms.bond.slicebonds import SliceBonds
+        slicebonds = SliceBonds(self.label, indices, bonds=self)
+        return slicebonds
 
-    def __setitem__(self, index, value):
+    def __setitem__(self, indices, value):
         """Return a subset of the Bbond.
 
         i -- int, describing which atom to return.
@@ -882,7 +878,7 @@ class Bonds(BaseCollection, ObjectGN):
 
         """
         positions = self.positions
-        positions[index] = value
+        positions[indices] = value
         self.set_positions(positions)
 
     def repeat(self, m, cell):

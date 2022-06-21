@@ -323,6 +323,9 @@ def test_set_arrays_precision():
 
 def test_repeat():
     """Repeat"""
+    from ase.build import molecule, bulk
+    from batoms import Batoms
+    import numpy as np
     bpy.ops.batoms.delete()
     h2o = molecule("H2O")
     h2o = Batoms(label="h2o", from_ase=h2o)
@@ -330,6 +333,7 @@ def test_repeat():
     h2o.pbc = True
     h2o.repeat([2, 2, 2])
     assert len(h2o) == 24
+    assert np.isclose(h2o.positions[3] - h2o.positions[0], np.array([0, 0, 3])).all()
 
 
 def test_get_geometry():

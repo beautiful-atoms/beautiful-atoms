@@ -490,12 +490,9 @@ class Batoms(BaseCollection, ObjectGN):
         elif dnvert < 0:
             self.delete_vertices_bmesh(-dnvert)
         self.set_frames(arrays)
-        self.set_attributes({'species_index': arrays['species_index']})
-        self.set_attributes({'species': arrays['species']})
-        self.set_attributes({'scale': arrays['scale']})
-        self.set_attributes({'show': arrays['show']})
-        self.set_attributes({'model_style': arrays['model_style']})
-        self.set_attributes({'select': arrays['select']})
+        for key, value in arrays.items():
+            if key == "positions": continue
+            self.set_attributes({key: value})
         self.update_mesh()
 
     @property
@@ -654,7 +651,7 @@ class Batoms(BaseCollection, ObjectGN):
     @property
     def radii_vdw(self):
         from ase.data import vdw_radii, chemical_symbols
-        object_mode()
+        # object_mode()
         radii = []
         elements = self.arrays['elements']
         for element in elements:
@@ -696,7 +693,7 @@ class Batoms(BaseCollection, ObjectGN):
     def get_arrays(self, batoms=None, local=False, X=False, sort=True):
         """
         """
-        object_mode()
+        # object_mode()
         # tstart = time()
         arrays = self.attributes
         arrays.update({'positions': self.positions})
@@ -908,9 +905,10 @@ class Batoms(BaseCollection, ObjectGN):
         """
         In-place repeat of atoms.
 
-        >>> from batoms.batom import Batom
-        >>> c = Batom('co', 'C', [[0, 0, 0], [1.2, 0, 0]])
-        >>> c.repeat([3, 3, 3], np.array([[5, 0, 0], [0, 5, 0], [0, 0, 5]]))
+        >>> from batoms.batoms import Batoms
+        >>> co = Batoms('co', ['C', 'O'], [[0, 0, 0], [1.2, 0, 0]])
+        >>> co.cell = [3, 3, 3]
+        >>> co *= [2, 2, 1]
         """
         cell = self.cell
         if isinstance(m, int):
@@ -976,7 +974,7 @@ class Batoms(BaseCollection, ObjectGN):
         >>> h_new = h.copy(label = 'h_new', species = 'H')
         # TODO Support copy of other prroperties: materials, info ...
         """
-        object_mode()
+        # object_mode()
         # copy object first
         arrays = self.arrays
         batoms = self.__class__(label=label,
@@ -996,7 +994,7 @@ class Batoms(BaseCollection, ObjectGN):
         todo: merge bonds setting
         """
         # could also use self.add_arrays(other.positions)
-        object_mode()
+        # object_mode()
         # merge bondsetting
         self.bonds.setting.extend(other.bonds.setting)
         # creat new selections
@@ -1043,7 +1041,7 @@ class Batoms(BaseCollection, ObjectGN):
         >>> co=Batoms('co')
         """
         # could also use self.add_arrays(other.positions)
-        object_mode()
+        # object_mode()
         arrays = self.arrays
         selects = self.selects.selects
         self_indices = []
@@ -1146,7 +1144,7 @@ class Batoms(BaseCollection, ObjectGN):
         """
         from batoms.utils import local2global
         import bmesh
-        object_mode()
+        # object_mode()
         n0 = len(self)
         positions = arrays.pop('positions')
         n1 = n0 + len(positions)

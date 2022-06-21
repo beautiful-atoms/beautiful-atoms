@@ -180,8 +180,10 @@ class BaseObject():
         # bpy.context.view_layer.update()
         # I don't why the shape key is not udpate in background mode, so we need this.
         bpy.context.view_layer.objects.active = self.obj
+        mode = self.obj.mode
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.ops.object.mode_set(mode=mode)
 
     def add_verts(self, count, obj=None):
         import bmesh
@@ -486,7 +488,7 @@ class ObjectGN(BaseObject):
             domain.ensure_lookup_table()
             layer = get_bmesh_layer(domain, key, dtype)
             if index is not None:
-                return domain[index][layer]
+                return np.array([domain[index][layer]])
             # init attribute array
             attribute = np.zeros(n, dtype=type_blender_to_py(dtype, str = "U20"))
             for i in range(n):
@@ -498,7 +500,7 @@ class ObjectGN(BaseObject):
             domain.ensure_lookup_table()
             domain = get_bmesh_domain(bm, att)
             if index is not None:
-                return domain[index][layer]
+                return np.array([domain[index][layer]])
             n = len(domain)
             for i in range(n):
                 attribute[i] = domain[i][layer]
@@ -534,7 +536,7 @@ class ObjectGN(BaseObject):
         dtype = att.data_type
         # get single attribute value
         if index is not None:
-            return att.data[index].value
+            return np.array([att.data[index].value])
         else:
             # get attribute length based on domain
             n = get_att_length(obj.data, att)
@@ -605,6 +607,12 @@ class ObjectGN(BaseObject):
         shape = att_coll.shape
         dimension = att_coll.dimension
         delimiter = att_coll.delimiter
+        #
+        array = np.array(array)
+        if len(array.shape) == 0:
+            array = np.array([array])
+        if len(array) == 0:
+            return
         # single value data
         if dimension == 0:
             att = me.attributes.get(key)
@@ -640,8 +648,6 @@ class ObjectGN(BaseObject):
         # get attribute type
         att = me.attributes.get(key)
         dtype = att.data_type
-        if len(value) == 0:
-            return
         if dtype == 'STRING':
             value = np.char.encode(value)
         # check object mode
@@ -651,7 +657,7 @@ class ObjectGN(BaseObject):
             domain.ensure_lookup_table()
             layer = get_bmesh_layer(domain, key, dtype)
             if index is not None:
-                domain[index][layer] = value
+                domain[index][layer] = value[0]
             else:
                 n = len(domain)
                 for i in range(n):
@@ -686,7 +692,7 @@ class ObjectGN(BaseObject):
         # get attribute
         att = me.attributes.get(key)
         if index is not None:
-            att.data[index].value = value
+            att.data[index].value = value[0]
         else:
             # get attribute domain and length
             n = get_att_length(obj.data, att)
@@ -801,7 +807,7 @@ class ObjectGN(BaseObject):
         self.shape_keys.key_blocks[0].data.foreach_set(
             'co', positions)
         self.obj.data.update()
-        self.update_mesh(obj=object)
+        self.update_mesh()
 
     @property
     def nframe(self):
@@ -881,7 +887,9 @@ class ObjectGN(BaseObject):
         positions = frames[0]
         vertices = positions.reshape(nvert*3)
         sk.data.foreach_set('co', vertices)
+        # self.obj.data.update()
         if only_basis:
+            self.update_mesh(obj)
             return
         for i in range(1, nframe):
             name = str(i)
@@ -905,6 +913,7 @@ class ObjectGN(BaseObject):
             positions = frames[i]
             vertices = positions.reshape((nvert*3, 1))
             sk.data.foreach_set('co', vertices)
+        self.update_mesh(obj)
 
     def delete_obj(self, name):
         if name in bpy.data.objects:

@@ -26,13 +26,13 @@ class SliceBatoms(childObjectGN):
         childObjectGN.__init__(self, label, indices, parent=batoms)
 
     def __repr__(self):
-        bpy.context.view_layer.objects.active = self.obj
-        mode = self.obj.mode
-        bpy.ops.object.mode_set(mode='OBJECT')
+        # bpy.context.view_layer.objects.active = self.obj
+        # mode = self.obj.mode
+        # bpy.ops.object.mode_set(mode='OBJECT')
         s = "SliceBatoms(species = %s, " % np.unique(self.species)
         # s += "elements = %s, " % str(self.elements)
         s += "positions = %s)" % np.round(self.position, 2)
-        bpy.ops.object.mode_set(mode=mode)
+        # bpy.ops.object.mode_set(mode=mode)
         return s
 
     @property
@@ -62,8 +62,9 @@ class SliceBatoms(childObjectGN):
 
     @polyhedra.setter
     def polyhedra(self, polyhedra):
+        model_style = np.array(polyhedra).astype(int)
         if len(self.indices) == 1:
-            self.attributes['model_style'].data[self.indices].value = 2 if polyhedra else 1
+            self.attributes['model_style'].data[self.indices[0]].value = 2 if polyhedra else 1
         else:
             self.parent.set_attribute_with_indices('model_style', 
                 self.indices, [2 if polyhedra else 1]*len(self.indices))
@@ -76,9 +77,6 @@ class SliceBatoms(childObjectGN):
 
     @bond.setter
     def bond(self, bond):
-        if len(self.indices) == 1:
-            self.attributes['model_style'].data[self.indices].value = 1 if bond else 0
-        else:
-            self.parent.set_attribute_with_indices('model_style', 
-                self.indices, [1 if bond else 0]*len(self.indices))
+        model_style = np.array(bond).astype(int)
+        self.set_attribute('model_style', model_style)
         self.parent.draw_ball_and_stick()
