@@ -94,7 +94,7 @@ def test_logging_level_emit():
     preferences.logging_level = "INFO"
     create_molecule()
     lines1 = read_log_lines(root_logger)
-    assert any(["set_attributes" in line for line in lines1])
+    assert any(["set_attribute" in line for line in lines1])
     # WARNING level suppresses timing info
     preferences.logging_level = "WARNING"
     create_molecule()

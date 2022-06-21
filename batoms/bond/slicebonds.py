@@ -62,8 +62,6 @@ class SliceBonds(childObjectGN):
 
     @order.setter
     def order(self, value):
-        if isinstance(value, (int, float)):
-            value = np.array([value])
         self.set_attribute('order', value)
         # find plane for high order
         a3, a4 = self.secondBond()
@@ -71,7 +69,7 @@ class SliceBonds(childObjectGN):
         self.set_attribute('atoms_index4', a4)
         # if order not exist, add one
         sp = self.species
-        sp['order'] = value[0]
+        sp['order'] = value
         self.parent.setting.build_instancer(sp)
         self.parent.add_geometry_node(sp)
 
@@ -82,12 +80,10 @@ class SliceBonds(childObjectGN):
 
     @style.setter
     def style(self, value):
-        if isinstance(value, (int, float)):
-            value = np.array([value])
         self.set_attribute('style', value)
         # if stule not exist, add one
         sp = self.species
-        sp['style'] = value[0]
+        sp['style'] = value
         self.parent.setting.build_instancer(sp)
         self.parent.add_geometry_node(sp)
 
@@ -96,8 +92,8 @@ class SliceBonds(childObjectGN):
         determine the plane of high order bond
         """
         arrays = self.parent.arrays
-        ai = arrays['atoms_index1'][self.indices]
-        aj = arrays['atoms_index2'][self.indices]
+        ai = arrays['atoms_index1'][self.indices[0]]
+        aj = arrays['atoms_index2'][self.indices[0]]
         indi = np.where((arrays['atoms_index1'] == ai) |
                         (arrays['atoms_index2'] == ai) |
                         (arrays['atoms_index1'] == aj) |
