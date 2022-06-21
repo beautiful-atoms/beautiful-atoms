@@ -27,21 +27,12 @@ def test_polyhedra_species():
     tio2.replace([0], 'Ti_1')
     tio2.bonds.setting
     tio2.model_style = 2
-    assert len(tio2.polyhedras) == 6
-    # add a bond between Ti_1 and O
-    tio2.bonds.setting.add(('Ti_1', 'O'))
-    tio2.bonds.setting
-    # In the Bondpair Ti_1-O, the Polyhedra is False, we can set it to True by:
-    tio2.bonds.setting[('Ti_1', 'O')].polyhedra = True
-    tio2.bonds.setting
-    # Also add Ti_1 to polyhedras.
-    tio2.polyhedras.setting.add('Ti_1')
-    assert len(tio2.polyhedras.setting) == 2
-    # To make the polyhedra different from another Ti species, we change its color.
-    tio2.polyhedras.setting['Ti_1'].color = (0, 1, 1, 0.8)
-    tio2.polyhedras.setting
-    tio2.model_style = 2
     assert len(tio2.polyhedras) == 12
+    # remove Ti_1 to polyhedras.
+    tio2.polyhedras.setting.remove('Ti_1')
+    assert len(tio2.polyhedras.setting) == 1
+    tio2.model_style = 2
+    assert len(tio2.polyhedras) == 6
 
 
 def test_polyhedra_molecule():

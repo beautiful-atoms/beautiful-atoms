@@ -505,7 +505,6 @@ class BondSettings(Setting):
         for b in other:
             self[(b.species1, b.species2)] = b.as_dict()
         # new
-
         species1 = set(self.batoms.species.species_props)
         species2 = set(other.batoms.species.species_props)
         nspecies1 = species1 - species2
@@ -556,8 +555,10 @@ class BondSettings(Setting):
         Args:
             key (str): _description_
         """
-        species_props = {
-                sp: self.batoms.species.species_props[sp] for sp in key}
+        species_props = {}
+        for sp in key:
+            if sp in self.batoms.species.keys():
+                species_props[sp] = self.batoms.species.species_props[sp]
         if value:
             species_props.update(value)
         bond = self.get_bondtable(key, species_props, dcutoff=0.5)

@@ -210,6 +210,8 @@ def test_replace():
 
 def test_batoms_add():
     """Merge two Batoms objects"""
+    from batoms import Batoms
+    from ase.build import molecule
     bpy.ops.batoms.delete()
     h2o = Batoms("h2o", from_ase=molecule("H2O"))
     co = Batoms("co", from_ase=molecule("CO"))
