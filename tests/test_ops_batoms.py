@@ -34,10 +34,10 @@ def test_batoms_apply_model_style():
     bpy.ops.batoms.delete()
     bpy.ops.batoms.molecule_add(label="nh3", formula="NH3")
     nh3 = Batoms('nh3')
-    assert nh3.model_style[0] == 1
+    assert nh3.model_style == 1
     # model_style
     bpy.ops.batoms.apply_model_style(model_style='0')
-    assert nh3.model_style[0] == 0
+    assert nh3.model_style == 0
     # radius_style
     bpy.ops.batoms.apply_radius_style(radius_style='1')
     assert nh3.radius_style == '1'
@@ -158,6 +158,7 @@ def test_ase_surface():
 # Below for edit mode
 #==============================================
 def test_batoms_apply_model_style_selected():
+    import numpy as np
     from batoms import Batoms
     bpy.ops.batoms.delete()
     bpy.ops.batoms.molecule_add(label="nh3", formula="NH3")
@@ -165,13 +166,16 @@ def test_batoms_apply_model_style_selected():
     nh3 = Batoms('nh3')
     au111 = Batoms('au111')
     au111 += nh3
+    au111.model_style = 0
     bpy.context.view_layer.objects.active = au111.obj
     # only select nh3
     au111.obj.data.vertices.foreach_set('select', [0, 0, 0, 0, 1, 1, 1, 1])
     # change model_style for selected atoms
     bpy.ops.batoms.apply_model_style_selected(model_style='1')
-    assert au111.model_style[0] == 0
-    assert au111.model_style[-1] == 1
+    assert au111.get_attribute('model_style')[0] == 0
+    assert au111.get_attribute('model_style')[-1] == 1
+    assert np.isclose(au111.get_attribute('scale')[0], 1)
+    assert np.isclose(au111.get_attribute('scale')[-1], 0.4)
 
 
 if __name__ == "__main__":

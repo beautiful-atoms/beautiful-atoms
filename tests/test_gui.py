@@ -13,7 +13,7 @@ def test_batoms():
     # model_style
     assert bpy.context.scene.batoms.batoms.model_style.upper() == "BALL-AND-STICK"
     bpy.context.scene.batoms.batoms.model_style = "Space-filling"
-    assert ch4.model_style[0] == 0
+    assert ch4.model_style == 0
     # radius_style
     assert bpy.context.scene.batoms.batoms.radius_style.upper() == "COVALENT"
     bpy.context.scene.batoms.batoms.radius_style = "VDW"

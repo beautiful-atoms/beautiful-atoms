@@ -56,6 +56,19 @@ def test_batoms_crystal():
     assert au.pbc == [True, True, True]
     assert np.isclose(au.cell[0, 0], a)
 
+def test_batoms_parameters():
+    """Create a Batoms object from scratch"""
+    bpy.ops.batoms.delete()
+    from batoms import Batoms
+    h2o = Batoms(
+        "h2o",
+        species=["O", "H", "H"],
+        positions=[[0, 0, 0.40], [0, -0.76, -0.2], [0, 0.76, -0.2]],
+        model_style=1,
+        scale=0.5,
+    )
+    assert h2o.model_style == 1
+    assert np.isclose(h2o.scale, 0.5)
 
 def test_batoms_species():
     """Setting properties of species"""
@@ -216,7 +229,7 @@ def test_set_arrays():
     )
     h2o.show = [1, 0, 1]
     assert not h2o[1].show
-    h2o.scale = [1, 1, 1]
+    h2o.scale = 1
     h2o.set_attributes({"scale": np.array([0.3, 0.3, 0.3])})
     # attributes
     h2o.show = 1

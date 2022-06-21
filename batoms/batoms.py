@@ -63,13 +63,11 @@ class Batoms(BaseCollection, ObjectGN):
                  show_unit_cell=True,
                  scale=1.0,
                  model_style=0,
-                 polyhedra_style=0,
                  radius_style='0',
                  color_style='0',
                  from_ase=None,
                  from_pymatgen=None,
                  from_pybel=None,
-                 metaball=False,
                  movie=True,
                  segments=None,
                  ):
@@ -108,8 +106,6 @@ class Batoms(BaseCollection, ObjectGN):
                 Scale factor for all atoms. Defaults to 1.0.
             model_style (int, optional):
                 Enum in [0, 1, 2, 3]. Defaults to 0.
-            polyhedra_style (int, optional):
-                Enum in [0, 1, 2]. Defaults to 0.
             from_ase (ASE Atoms, optional):
                 Import structure from ASE. Defaults to None.
             from_pymatgen (Pymatgen structure, optional):
@@ -152,18 +148,16 @@ class Batoms(BaseCollection, ObjectGN):
                 positions = self._frames["positions"][0]
             else:
                 self._frames = {"positions": np.array([positions])}
-            #
+            # init attributes
             natom = len(positions)
-            if isinstance(scale, (int, float)):
-                scale = np.ones(natom)*scale
-            show = np.ones(natom, dtype=int)
-            species_index = [string2Number(sp) for sp in species]
+            self.coll.batoms.scale = scale
+            self.coll.batoms.model_style = str(model_style)
             arrays = {
                       'species': species,
-                      'species_index': species_index,
-                      'scale': scale,
-                      'show': show,
-                      'model_style': np.zeros(natom, dtype=int),
+                      'species_index': [string2Number(sp) for sp in species],
+                      'scale': np.ones(natom)*scale,
+                      'show': np.ones(natom, dtype=int),
+                      'model_style': np.ones(natom, dtype=int)*model_style,
                       'select': np.zeros(natom, dtype=int),
                       }
             if attributes is not None:
@@ -518,23 +512,19 @@ class Batoms(BaseCollection, ObjectGN):
         self.set_scale(scale)
 
     def get_scale(self):
-        scale = self.attributes['scale']
+        # scale = self.attributes['scale']
+        scale = self.coll.batoms.scale
         return scale
 
     def set_scale(self, scale):
         """
         """
-        if isinstance(scale, (int, float)):
-            scale = np.ones(len(self))*scale
-        # for species
-        elif isinstance(scale, dict):
-            species = self.attributes['species']
-            scale0 = self.scale
-            for key, value in scale.items():
-                scale0[np.where(species == key)] = value
-            scale = scale0
-        self.set_attributes({'scale': scale})
-        self.coll.batoms.scale = scale[0]
+        self.coll.batoms.scale = scale
+        scale_array = np.ones(len(self))*scale
+        self.set_scale_array(scale_array)
+
+    def set_scale_array(self, scale_array):
+        self.set_attributes({'scale': scale_array})
 
 
     @property
@@ -572,11 +562,19 @@ class Batoms(BaseCollection, ObjectGN):
         self.set_model_style(model_style)
 
     def get_model_style(self):
-        return self.attributes['model_style']
+        return int(self.coll.batoms.model_style)
 
     def set_model_style(self, model_style):
         self.coll.batoms.model_style = str(model_style)
         model_style_array = np.ones(len(self), dtype=int)*int(model_style)
+        self.set_model_style_array(model_style_array)
+
+    @property
+    def model_style_array(self):
+        return self.get_attribute('model_style')
+
+    @model_style_array.setter
+    def model_style_array(self, model_style_array):
         self.set_model_style_array(model_style_array)
 
     def set_model_style_array(self, model_style_array):
@@ -1687,11 +1685,11 @@ class Batoms(BaseCollection, ObjectGN):
         self.draw_wireframe()
 
     def draw_space_filling(self, scale=1.0):
-        mask = np.where(self.model_style == 0, True, False)
+        mask = np.where(self.model_style_array == 0, True, False)
         self.set_attribute_with_indices('scale', mask, scale)
 
     def draw_ball_and_stick(self, scale=0.4):
-        mask = np.where(self.model_style >= 1, True, False)
+        mask = np.where(self.model_style_array >= 1, True, False)
         if not mask.any():
             from batoms.bond import default_bond_datas
             self.bonds.set_arrays(default_bond_datas.copy())
@@ -1701,7 +1699,7 @@ class Batoms(BaseCollection, ObjectGN):
         self.bonds.update()
 
     def draw_polyhedra(self, scale=0.4):
-        mask = np.where(self.model_style == 2, True, False)
+        mask = np.where(self.model_style_array == 2, True, False)
         if not mask.any():
             from batoms.polyhedra import default_polyhedra_datas
             self.polyhedras.set_arrays(default_polyhedra_datas)
@@ -1742,7 +1740,7 @@ class Batoms(BaseCollection, ObjectGN):
             # self.set_attribute_with_indices('show', mask, False)
 
     def draw_wireframe(self):
-        mask = np.where(self.model_style == 3, True, False)
+        mask = np.where(self.model_style_array == 3, True, False)
         # self.set_attribute_with_indices('show', mask, 0)
         self.set_attribute_with_indices('scale', mask, 0.0001)
         # self.update(mask)
