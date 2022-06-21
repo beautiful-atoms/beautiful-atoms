@@ -287,6 +287,14 @@ def get_equivalent_indices(no, indices):
     indices = indices.tolist()
     return indices
 
+def get_equivalent_atoms(atoms, tol = 1e-5):
+    """Get equivalent atoms using spglib.
+    """
+    import spglib
+    atoms = (atoms.get_cell(), atoms.get_scaled_positions(),
+                   atoms.numbers)
+    symmetry_data = spglib.get_symmetry_dataset(atoms, symprec=tol)
+    return symmetry_data['equivalent_atoms']
 
 def local2global(positions, matrix, reversed=False):
     if reversed:

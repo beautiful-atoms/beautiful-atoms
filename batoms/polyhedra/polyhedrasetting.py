@@ -32,7 +32,7 @@ class PolyhedraSettings(Setting):
         self.batoms = batoms
         self.polyhedras = polyhedras
         if len(self) == 0:
-            self.set_default(self.batoms.species.species_props)
+            self.add_species_list(self.batoms.species.keys())
         if polyhedrasetting is not None:
             for key, data in polyhedrasetting.items():
                 self[key] = data
@@ -80,14 +80,23 @@ class PolyhedraSettings(Setting):
             self[sp] = props
             
 
-    def add(self, polyhedras):
-        if isinstance(polyhedras, str):
-            polyhedras = [polyhedras]
-        for sp in polyhedras:
-            props = self.batoms.species.species_props[sp]
-            props['color'] = (props['color'][0], props['color'][1], props['color'][2], 0.8)
-            props['species'] = sp
-            self[sp] = props
+    def add(self, key, value = None):
+        props = self.batoms.species.species_props[key]
+        if value:
+            props.update(value)
+        props['color'] = (props['color'][0], props['color'][1], props['color'][2], 0.8)
+        props['species'] = key
+        self[key] = props
+    
+    def add_species_list(self, species_list, only_default=True):
+        for sp in species_list:
+            self.add_species(sp, only_default)
+
+    def add_species(self, name, only_default=True):
+        species_props = self.batoms.species.species_props[name]
+        if only_default and species_props['element'] not in default_polyhedras:
+            return
+        self.add(name, species_props)
 
     def __repr__(self) -> str:
         s = "-"*60 + "\n"
