@@ -569,6 +569,14 @@ class Batoms(BaseCollection, ObjectGN):
         model_style_array = np.ones(len(self), dtype=int)*int(model_style)
         self.set_model_style_array(model_style_array)
 
+    @property
+    def model_style_array(self):
+        return self.get_attribute('model_style')
+
+    @model_style_array.setter
+    def model_style_array(self, model_style_array):
+        self.set_model_style_array(model_style_array)
+
     def set_model_style_array(self, model_style_array):
         model_style = {'model_style': model_style_array}
         self.set_attributes(model_style)
@@ -1677,11 +1685,11 @@ class Batoms(BaseCollection, ObjectGN):
         self.draw_wireframe()
 
     def draw_space_filling(self, scale=1.0):
-        mask = np.where(self.model_style == 0, True, False)
+        mask = np.where(self.model_style_array == 0, True, False)
         self.set_attribute_with_indices('scale', mask, scale)
 
     def draw_ball_and_stick(self, scale=0.4):
-        mask = np.where(self.model_style >= 1, True, False)
+        mask = np.where(self.model_style_array >= 1, True, False)
         if not mask.any():
             from batoms.bond import default_bond_datas
             self.bonds.set_arrays(default_bond_datas.copy())
@@ -1691,7 +1699,7 @@ class Batoms(BaseCollection, ObjectGN):
         self.bonds.update()
 
     def draw_polyhedra(self, scale=0.4):
-        mask = np.where(self.model_style == 2, True, False)
+        mask = np.where(self.model_style_array == 2, True, False)
         if not mask.any():
             from batoms.polyhedra import default_polyhedra_datas
             self.polyhedras.set_arrays(default_polyhedra_datas)
@@ -1732,7 +1740,7 @@ class Batoms(BaseCollection, ObjectGN):
             # self.set_attribute_with_indices('show', mask, False)
 
     def draw_wireframe(self):
-        mask = np.where(self.model_style == 3, True, False)
+        mask = np.where(self.model_style_array == 3, True, False)
         # self.set_attribute_with_indices('show', mask, 0)
         self.set_attribute_with_indices('scale', mask, 0.0001)
         # self.update(mask)
