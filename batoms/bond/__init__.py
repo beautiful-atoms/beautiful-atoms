@@ -21,18 +21,18 @@ import logging
 logger = logging.getLogger(__name__)
 
 default_attributes = [
-    {"name": 'atoms_index1', "type": 'INT', "dimension": 0},
-    {"name": 'atoms_index2', "type": 'INT', "dimension": 0},
-    {"name": 'atoms_index3', "type": 'INT', "dimension": 0},
-    {"name": 'atoms_index4', "type": 'INT', "dimension": 0},
-    {"name": 'species_index1', "type": 'INT', "dimension": 0},
-    {"name": 'species_index2', "type": 'INT', "dimension": 0},
-    {"name": 'order', "type": 'INT', "dimension": 0},
-    {"name": 'style', "type": 'INT', "dimension": 0},
-    {"name": 'show', "type": 'BOOLEAN', "dimension": 0},
-    {"name": 'model_style', "type": 'INT', "dimension": 0},
-    {"name": 'polyhedra', "type": 'BOOLEAN', "dimension": 0},
-    {"name": 'second_bond', "type": 'INT', "dimension": 0},
+    {"name": 'atoms_index1', "data_type": 'INT', "dimension": 0},
+    {"name": 'atoms_index2', "data_type": 'INT', "dimension": 0},
+    {"name": 'atoms_index3', "data_type": 'INT', "dimension": 0},
+    {"name": 'atoms_index4', "data_type": 'INT', "dimension": 0},
+    {"name": 'species_index1', "data_type": 'INT', "dimension": 0},
+    {"name": 'species_index2', "data_type": 'INT', "dimension": 0},
+    {"name": 'order', "data_type": 'INT', "dimension": 0},
+    {"name": 'style', "data_type": 'INT', "dimension": 0},
+    {"name": 'show', "data_type": 'INT', "dimension": 0},
+    {"name": 'model_style', "data_type": 'INT', "dimension": 0},
+    {"name": 'polyhedra', "data_type": 'INT', "dimension": 0},
+    {"name": 'second_bond', "data_type": 'INT', "dimension": 0},
 ]
 
 default_GroupInput = [
@@ -631,7 +631,7 @@ class Bonds(BaseCollection, ObjectGN):
         frames = self.batoms.get_frames()
         arrays = self.batoms.arrays
         array_b = self.batoms.get_arrays_with_boundary()
-        show = arrays['show']
+        show = arrays['show'].astype(bool)
         species = arrays['species'][show]
         # frames_boundary = self.batoms.get_frames(self.batoms.batoms_boundary)
         # frames_search = self.batoms.get_frames(self.batoms.batoms_search)
@@ -857,7 +857,7 @@ class Bonds(BaseCollection, ObjectGN):
         self.setting.coll.batoms.show_hydrogen_bond = show_hydrogen_bond
         self.update()
 
-    def __getitem__(self, index):
+    def __getitem__(self, indices):
         """Return a subset of the Bbond.
 
         i -- int, describing which atom to return.
@@ -865,15 +865,11 @@ class Bonds(BaseCollection, ObjectGN):
         #todo: this is slow for large system
 
         """
-        from batoms.bond.bond import Bond
-        if isinstance(index, int):
-            bond = Bond(self.label, index, bonds=self)
-            # bpy.ops.object.mode_set(mode=mode)
-            return bond
-        else:
-            return self.positions[index]
+        from batoms.bond.slicebonds import SliceBonds
+        slicebonds = SliceBonds(self.label, indices, bonds=self)
+        return slicebonds
 
-    def __setitem__(self, index, value):
+    def __setitem__(self, indices, value):
         """Return a subset of the Bbond.
 
         i -- int, describing which atom to return.
@@ -882,7 +878,7 @@ class Bonds(BaseCollection, ObjectGN):
 
         """
         positions = self.positions
-        positions[index] = value
+        positions[indices] = value
         self.set_positions(positions)
 
     def repeat(self, m, cell):

@@ -20,7 +20,7 @@ class CrystalShapeSettings(Setting):
     """
 
     def __init__(self, label, parent=None, plane=None) -> None:
-        Setting.__init__(self, label, coll_name='%s_plane' % label)
+        Setting.__init__(self, label, coll_name='%s' % label)
         self.name = 'bcrystalshape'
         self.parent = parent
         if plane is not None:

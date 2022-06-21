@@ -8,7 +8,8 @@ from bpy.props import (FloatProperty,
                        )
 from batoms.gui.gui_batoms import get_active_batoms
 from batoms.utils.butils import get_selected_vertices
-from batoms.batom import Batom
+from batoms.slicebatoms import SliceBatoms
+from batoms.batoms import Batoms
 
 class Batom_PT_prepare(Panel):
     bl_label = "Batom"
@@ -39,10 +40,11 @@ class Batom_PT_prepare(Panel):
 def get_active_batom():
     context = bpy.context
     if context.object and context.object.batoms.type != 'OTHER':
-        v = get_selected_vertices(context.object)
-        if len(v) > 0:
-            batom = Batom(label=context.object.batoms.label, index=v[0])
-            return batom
+        indices = get_selected_vertices(context.object)
+        if len(indices) > 0:
+            batoms = Batoms(label=context.object.batoms.label)
+            slicebatoms = batoms[indices]
+            return slicebatoms
         else:
             return None
     return None
@@ -58,7 +60,7 @@ def set_batom_attr(key, value):
 def get_scale(self):
     batom = get_active_batom()
     if batom is not None:
-        return batom.scale
+        return batom.scale[0]
     else:
         return 0
 

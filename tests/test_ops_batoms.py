@@ -74,6 +74,16 @@ def test_batoms_join_seperate():
     assert len(nh3) == 4
     assert len(h2o) == 3
 
+def test_batoms_apply_label():
+    from batoms import Batoms
+    bpy.ops.batoms.delete()
+    bpy.ops.batoms.molecule_add(label="nh3", formula="NH3")
+    nh3 = Batoms('nh3')
+    bpy.ops.batoms.apply_label(label = 'elements')
+    assert nh3.show_label == 'elements'
+    bpy.ops.batoms.apply_label(label = '')
+    assert nh3.show_label == ''
+    
 def test_ase_molecule():
     """Create a molecule use GUI ASE"""
     bpy.ops.batoms.delete()
@@ -144,8 +154,33 @@ def test_ase_surface():
     assert len(c111)==4
 
 
+#==============================================
+# Below for edit mode
+#==============================================
+def test_batoms_apply_model_style_selected():
+    from batoms import Batoms
+    bpy.ops.batoms.delete()
+    bpy.ops.batoms.molecule_add(label="nh3", formula="NH3")
+    bpy.ops.surface.fcc111_add(label="au111", symbol = 'Au', size=(1, 1, 4))
+    nh3 = Batoms('nh3')
+    au111 = Batoms('au111')
+    au111 += nh3
+    bpy.context.view_layer.objects.active = au111.obj
+    # only select nh3
+    au111.obj.data.vertices.foreach_set('select', [0, 0, 0, 0, 1, 1, 1, 1])
+    # change model_style for selected atoms
+    bpy.ops.batoms.apply_model_style_selected(model_style='1')
+    assert au111.model_style[0] == 0
+    assert au111.model_style[-1] == 1
+
+
 if __name__ == "__main__":
+    test_batoms_delete()
+    test_batoms_apply_model_style()
+    test_batoms_join_seperate()
+    test_batoms_apply_label()
     test_ase_molecule()
     test_ase_bulk()
     test_ase_surface()
+    test_batoms_apply_model_style_selected()
     print("\n Ops: All pass! \n")

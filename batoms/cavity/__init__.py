@@ -18,10 +18,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 default_attributes = [
-    {"name": 'species_index', "type": 'INT', "dimension": 0},
-    {"name": 'species', "type": 'STRING', "dimension": 0},
-    {"name": 'show', "type": 'BOOLEAN', "dimension": 0},
-    {"name": 'scale', "type": 'FLOAT', "dimension": 0},
+    {"name": 'species_index', "data_type": 'INT', "dimension": 0},
+    {"name": 'species', "data_type": 'STRING', "dimension": 0},
+    {"name": 'show', "data_type": 'INT', "dimension": 0},
+    {"name": 'scale', "data_type": 'FLOAT', "dimension": 0},
 ]
 
 default_GroupInput = [

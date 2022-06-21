@@ -33,6 +33,7 @@ def test_bonds():
 
 
 def test_bonds_high_order():
+    from ase.build import molecule, bulk
     bpy.ops.batoms.delete()
     c6h6 = Batoms("c6h6", from_ase=molecule("C6H6"))
     c6h6.model_style = 1
@@ -43,6 +44,8 @@ def test_bonds_high_order():
 
 
 def test_bonds_performance():
+    from ase.build import molecule, bulk
+    from batoms.batoms import Batoms
     bpy.ops.batoms.delete()
     h2o = Batoms("h2o", from_ase=molecule("H2O"))
     h2o.cell = [3, 3, 3]

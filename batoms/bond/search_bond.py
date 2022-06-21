@@ -10,12 +10,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 default_attributes = [
-    {"name": 'atoms_index', "type": 'INT', "dimension": 0},
-    {"name": 'species_index', "type": 'INT', "dimension": 0},
-    {"name": 'show', "type": 'BOOLEAN', "dimension": 0},
-    {"name": 'select', "type": 'INT', "dimension": 0},
-    {"name": 'model_style', "type": 'INT', "dimension": 0},
-    {"name": 'scale', "type": 'FLOAT', "dimension": 0},
+    {"name": 'atoms_index', "data_type": 'INT', "dimension": 0},
+    {"name": 'species_index', "data_type": 'INT', "dimension": 0},
+    {"name": 'show', "data_type": 'INT', "dimension": 0},
+    {"name": 'select', "data_type": 'INT', "dimension": 0},
+    {"name": 'model_style', "data_type": 'INT', "dimension": 0},
+    {"name": 'scale', "data_type": 'FLOAT', "dimension": 0},
 ]
 
 default_GroupInput = [
@@ -104,6 +104,9 @@ class SearchBond(ObjectGN):
         # Add attributes
         self._attributes.add(default_attributes)
         self.batoms.coll.objects.link(obj)
+        obj.batoms.type = 'BOND'
+        obj.batoms.label = self.batoms.label
+        obj.batoms.bond.label = self.batoms.label
         obj.parent = self.batoms.obj
         #
         name = '%s_search_bond_offset' % self.label
@@ -291,10 +294,12 @@ class SearchBond(ObjectGN):
         elif dnvert < 0:
             self.delete_vertices_bmesh(range(-dnvert))
             self.delete_vertices_bmesh(range(-dnvert), self.obj_o)
+        if len(self) == 0:
+            self.update_mesh()
+            return
         self.positions = arrays["positions"][0]
         self.offsets = arrays["offsets"][0]
         self.set_frames(arrays)
-        self.update_mesh()
         species_index = [string2Number(sp) for sp in arrays['species']]
         self.set_attributes({
                             'atoms_index': arrays["atoms_index"],
@@ -382,9 +387,7 @@ class SearchBond(ObjectGN):
         self.obj_o.data.shape_keys.key_blocks[0].data.foreach_set(
             'co', offsets)
         self.obj_o.data.update()
-        bpy.context.view_layer.objects.active = self.obj_o
-        bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.object.mode_set(mode='OBJECT')
+        self.update_mesh(self.obj_o)
 
     @property
     def bondlists(self):

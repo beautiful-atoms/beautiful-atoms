@@ -23,12 +23,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 default_attributes = [
-    {"name": 'select', "type": 'INT', "dimension": 0},
-    {"name": 'species_index', "type": 'INT', "dimension": 0},
-    {"name": 'species', "type": 'STRING', "dimension": 0},
-    {"name": 'show', "type": 'BOOLEAN', "dimension": 0},
-    {"name": 'scale', "type": 'FLOAT', "dimension": 0},
-    {"name": 'model_style', "type": 'INT', "dimension": 0},
+    {"name": 'select', "data_type": 'INT', "dimension": 0},
+    {"name": 'species_index', "data_type": 'INT', "dimension": 0},
+    {"name": 'species', "data_type": 'STRING', "dimension": 0},
+    {"name": 'show', "data_type": 'INT', "dimension": 0},
+    {"name": 'scale', "data_type": 'FLOAT', "dimension": 0},
+    {"name": 'model_style', "data_type": 'INT', "dimension": 0},
 ]
 
 
@@ -490,12 +490,9 @@ class Batoms(BaseCollection, ObjectGN):
         elif dnvert < 0:
             self.delete_vertices_bmesh(-dnvert)
         self.set_frames(arrays)
-        self.set_attributes({'species_index': arrays['species_index']})
-        self.set_attributes({'species': arrays['species']})
-        self.set_attributes({'scale': arrays['scale']})
-        self.set_attributes({'show': arrays['show']})
-        self.set_attributes({'model_style': arrays['model_style']})
-        self.set_attributes({'select': arrays['select']})
+        for key, value in arrays.items():
+            if key == "positions": continue
+            self.set_attributes({key: value})
         self.update_mesh()
 
     @property
@@ -579,8 +576,11 @@ class Batoms(BaseCollection, ObjectGN):
 
     def set_model_style(self, model_style):
         self.coll.batoms.model_style = str(model_style)
-        model_style = {'model_style': np.ones(
-            len(self), dtype=int)*int(model_style)}
+        model_style_array = np.ones(len(self), dtype=int)*int(model_style)
+        self.set_model_style_array(model_style_array)
+
+    def set_model_style_array(self, model_style_array):
+        model_style = {'model_style': model_style_array}
         self.set_attributes(model_style)
         self.draw()
         if self._boundary is not None:
@@ -651,7 +651,7 @@ class Batoms(BaseCollection, ObjectGN):
     @property
     def radii_vdw(self):
         from ase.data import vdw_radii, chemical_symbols
-        object_mode()
+        # object_mode()
         radii = []
         elements = self.arrays['elements']
         for element in elements:
@@ -693,7 +693,7 @@ class Batoms(BaseCollection, ObjectGN):
     def get_arrays(self, batoms=None, local=False, X=False, sort=True):
         """
         """
-        object_mode()
+        # object_mode()
         # tstart = time()
         arrays = self.attributes
         arrays.update({'positions': self.positions})
@@ -871,7 +871,7 @@ class Batoms(BaseCollection, ObjectGN):
         obj = self.obj
         self.set_obj_frames(name, obj, frames['positions'])
 
-    def __getitem__(self, index):
+    def __getitem__(self, indices):
         """Return a subset of the Batom.
 
         i -- int, describing which atom to return.
@@ -879,18 +879,17 @@ class Batoms(BaseCollection, ObjectGN):
         #todo: this is slow for large system
 
         """
-        from batoms.batom import Batom
-        if isinstance(index, int):
-            batom = Batom(self.label, index, batoms=self)
-            # bpy.ops.object.mode_set(mode=mode)
-            return batom
-        if isinstance(index, str):
-            bspecies = self.species[index]
+        from batoms.slicebatoms import SliceBatoms
+        if isinstance(indices, str):
+            bspecies = self.species[indices]
             return bspecies
         else:
-            return self.positions[index]
+            slicebatoms = SliceBatoms(self.label, indices, batoms=self)
+            # bpy.ops.object.mode_set(mode=mode)
+            return slicebatoms
+        
 
-    def __setitem__(self, index, value):
+    def __setitem__(self, indices, value):
         """Return a subset of the Batom.
 
         i -- int, describing which atom to return.
@@ -899,16 +898,17 @@ class Batoms(BaseCollection, ObjectGN):
 
         """
         positions = self.positions
-        positions[index] = value
+        positions[indices] = value
         self.set_positions(positions)
 
     def __imul__(self, m):
         """
         In-place repeat of atoms.
 
-        >>> from batoms.batom import Batom
-        >>> c = Batom('co', 'C', [[0, 0, 0], [1.2, 0, 0]])
-        >>> c.repeat([3, 3, 3], np.array([[5, 0, 0], [0, 5, 0], [0, 0, 5]]))
+        >>> from batoms.batoms import Batoms
+        >>> co = Batoms('co', ['C', 'O'], [[0, 0, 0], [1.2, 0, 0]])
+        >>> co.cell = [3, 3, 3]
+        >>> co *= [2, 2, 1]
         """
         cell = self.cell
         if isinstance(m, int):
@@ -974,7 +974,7 @@ class Batoms(BaseCollection, ObjectGN):
         >>> h_new = h.copy(label = 'h_new', species = 'H')
         # TODO Support copy of other prroperties: materials, info ...
         """
-        object_mode()
+        # object_mode()
         # copy object first
         arrays = self.arrays
         batoms = self.__class__(label=label,
@@ -994,7 +994,7 @@ class Batoms(BaseCollection, ObjectGN):
         todo: merge bonds setting
         """
         # could also use self.add_arrays(other.positions)
-        object_mode()
+        # object_mode()
         # merge bondsetting
         self.bonds.setting.extend(other.bonds.setting)
         # creat new selections
@@ -1009,8 +1009,8 @@ class Batoms(BaseCollection, ObjectGN):
         bpy.ops.object.join()
         # update species and species_index
         self._species.extend(other._species)
-        self.selects.add(self.label[0:min(4, len(self.label))], indices1)
-        self.selects.add(other.label[0:min(4, len(other.label))], indices2)
+        self.selects.add(self.label, indices1)
+        self.selects.add(other.label, indices2)
         # remove shape key from mol
         sp = self.obj.data.shape_keys.key_blocks.get('Basis_%s' % other.label)
         self.obj.shape_key_remove(sp)
@@ -1041,7 +1041,7 @@ class Batoms(BaseCollection, ObjectGN):
         >>> co=Batoms('co')
         """
         # could also use self.add_arrays(other.positions)
-        object_mode()
+        # object_mode()
         arrays = self.arrays
         selects = self.selects.selects
         self_indices = []
@@ -1115,6 +1115,9 @@ class Batoms(BaseCollection, ObjectGN):
             species[1].update(props)
             species[1]["elements"].update(props["elements"])
         if species[0] not in self.species:
+            if len(species[0]) > 4:
+                print("Warning: the name of the species: {}, should not be longer than four characters.".format(species[0]))
+                logger.warning("The name of the species: {}, should not be longer than four characters.".format(species[0]))
             self.species[species[0]] = species[1]
             # add geometry node
             self.add_geometry_node(
@@ -1141,7 +1144,7 @@ class Batoms(BaseCollection, ObjectGN):
         """
         from batoms.utils import local2global
         import bmesh
-        object_mode()
+        # object_mode()
         n0 = len(self)
         positions = arrays.pop('positions')
         n1 = n0 + len(positions)
@@ -1694,6 +1697,7 @@ class Batoms(BaseCollection, ObjectGN):
             self.bonds.set_arrays(default_bond_datas.copy())
             return
         self.set_attribute_with_indices('scale', mask, scale)
+        self.bonds.hide = False
         self.bonds.update()
 
     def draw_polyhedra(self, scale=0.4):
@@ -1706,10 +1710,16 @@ class Batoms(BaseCollection, ObjectGN):
         self.set_attribute_with_indices('show', mask, True)
         if self.polyhedra_style == 0:
             self.set_attribute_with_indices('scale', mask, scale)
+            self.boundary.hide = False
+            self.bonds.hide = False
+            self.bonds.search_bond.hide = False
             # self.bonds.update()
         if self.polyhedra_style == 1:
+            # hide bonds
             self.set_attribute_with_indices('scale', mask, scale)
+            self.bonds.hide = True
         elif self.polyhedra_style == 2:
+            # hide bonds and atoms, except center atoms
             for b in self.bonds.setting:
                 if b.polyhedra:
                     mask1 = np.where(
@@ -1718,10 +1728,17 @@ class Batoms(BaseCollection, ObjectGN):
                     mask[mask1] = False
             scale = 0
             self.set_attribute_with_indices('scale', mask, scale)
+            self.boundary.hide = True
+            self.bonds.hide = True
+            self.bonds.search_bond.hide = True
             # self.set_attribute_with_indices('show', mask, False)
         elif self.polyhedra_style == 3:
+            # hide all bonds and atoms
             scale = 0
             self.set_attribute_with_indices('scale', mask, scale)
+            self.boundary.hide = True
+            self.bonds.hide = True
+            self.bonds.search_bond.hide = True
             # self.set_attribute_with_indices('show', mask, False)
 
     def draw_wireframe(self):

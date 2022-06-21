@@ -277,6 +277,10 @@ class Selects(Setting):
             indices = elect_expression(expre, self.batoms)
         else:
             indices = None
+        if len(name) > 4:
+            print("Warning: the name of the select: {}, longer than four characters. Has been renamed to {}".format(name, name[:4]))
+            logger.warning("The name of the select: {}, longer than four characters. Has been renamed to {}".format(name, name[:4]))
+            name = name[:4]
         # select = self.batoms.attributes['select']
         # select[indices] = string2Number(name)
         # select = {'select': select}

@@ -14,61 +14,6 @@ from batoms import Batoms
 from batoms.ops.base import OperatorBatoms, OperatorBatomsEdit
 from batoms.utils.butils import get_selected_vertices
 
-class BatomsReplace(OperatorBatomsEdit):
-    bl_idname = "batoms.replace"
-    bl_label = "Replace"
-    bl_description = "Replace selected atoms by new species"
-
-    species: StringProperty(
-        name="species", default='O',
-        description="Replaced by this species")
-
-    def execute(self, context):
-        obj = context.object
-        v = get_selected_vertices(obj)
-        batoms = Batoms(label=obj.batoms.label)
-        batoms.replace(v, self.species)
-        bpy.ops.object.mode_set(mode='EDIT')
-        return {'FINISHED'}
-
-
-class BatomModify(OperatorBatomsEdit):
-    bl_idname = "batoms.batom_modify"
-    bl_label = "Modify batom"
-    bl_options = {'REGISTER', 'UNDO'}
-    bl_description = ("Modify batom")
-
-    key: StringProperty(
-        name="key", default='scale',
-        description="Replaced by this species")
-
-    scale: FloatProperty(name="scale", default=0.6,
-                         min=0, soft_max=2, description="scale",
-                         )
-    bond: BoolProperty(name="Bond", default=True,
-                       )
-
-    show: BoolProperty(name="Show", default=True,
-                       )
-
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
-        if obj:
-            return obj.batoms.type == 'BATOMS' and obj.mode == 'EDIT'
-        else:
-            return False
-
-    def execute(self, context):
-        obj = context.object
-        v = get_selected_vertices(obj)
-        batoms = Batoms(label=obj.batoms.label)
-        for i in v:
-            setattr(batoms[i], self.key, getattr(self, self.key))
-        context.view_layer.objects.active = obj
-        bpy.ops.object.mode_set(mode="EDIT")
-        return {'FINISHED'}
-
 
 class ApplyCell(OperatorBatoms):
     bl_idname = "batoms.apply_cell"
@@ -343,13 +288,15 @@ class ApplyModelStyle(OperatorBatoms):
         batoms.model_style = int(self.model_style)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Model style of {} is changed to {}"
+            .format(context.object.batoms.label, self.model_style))
         return {'FINISHED'}
     
 class ApplyRadiusStyle(OperatorBatoms):
     bl_idname = "batoms.apply_radius_style"
     bl_label = "Apply Radius Style"
     bl_options = {'REGISTER', 'UNDO'}
-    bl_description = ("Apply new.radius_style parameters")
+    bl_description = ("Apply new radius_style parameters")
 
     radius_style: EnumProperty(
         name="radius_style",
@@ -366,6 +313,8 @@ class ApplyRadiusStyle(OperatorBatoms):
         batoms.radius_style = int(self.radius_style)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Radius style of {} is changed to {}"
+            .format(context.object.batoms.label, self.radius_style))
         return {'FINISHED'}
 
 
@@ -390,6 +339,159 @@ class ApplyColorStyle(OperatorBatoms):
         batoms.color_style = int(self.color_style)
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Color style of {} is changed to {}"
+            .format(context.object.batoms.label, self.color_style))
         return {'FINISHED'}
 
 
+class BatomsCopy(OperatorBatoms):
+    bl_idname = "batoms.copy"
+    bl_label = "Copy"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = ("Copy a batoms")
+
+    label: StringProperty(
+        name="label", default='',
+        description="The label of the copy.")
+
+
+    def execute(self, context):
+        if self.label == '':
+            return {'FINISHED'}
+        batoms = Batoms(label=context.object.batoms.label)
+        batoms1 = batoms.copy(self.label)
+        # batoms.obj.select_set(True)
+        # batoms1.obj.select_set(False)
+        bpy.context.view_layer.objects.active = batoms1.obj
+        self.report({"INFO"}, "Copy {} to {}"
+            .format(batoms.label, self.label))
+        return {'FINISHED'}
+
+
+class ApplyLabel(OperatorBatoms):
+    bl_idname = "batoms.apply_label"
+    bl_label = "Apply Label"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = ("Apply new label parameters")
+
+    label: StringProperty(
+        name="label", default='',
+        description="Show label")
+
+    def execute(self, context):
+        batoms = Batoms(label=context.object.batoms.label)
+        batoms.show_label = self.label
+        batoms.obj.select_set(True)
+        bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Show label {} for {}"
+            .format(self.label, context.object.batoms.label))
+        return {'FINISHED'}
+
+
+# ===========================================
+# Below for Edit mode
+# ===========================================
+
+
+class BatomsReplace(OperatorBatomsEdit):
+    bl_idname = "batoms.replace"
+    bl_label = "Replace"
+    bl_description = "Replace selected atoms by new species"
+
+    species: StringProperty(
+        name="species", default='',
+        description="Replaced by this species")
+
+    def execute(self, context):
+        if self.species == '':
+            return {'FINISHED'}
+        obj = context.object
+        v = get_selected_vertices(obj)
+        batoms = Batoms(label=obj.batoms.label)
+        batoms.replace(v, self.species)
+        bpy.ops.object.mode_set(mode='EDIT')
+        return {'FINISHED'}
+
+
+class BatomModify(OperatorBatomsEdit):
+    bl_idname = "batoms.batom_modify"
+    bl_label = "Modify batom"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = ("Modify batom")
+
+    key: StringProperty(
+        name="key", default='scale',
+        description="Replaced by this species")
+
+    scale: FloatProperty(name="scale", default=0.6,
+                         min=0, soft_max=2, description="scale",
+                         )
+    bond: BoolProperty(name="Bond", default=True,
+                       )
+
+    show: BoolProperty(name="Show", default=True,
+                       )
+
+    def execute(self, context):
+        obj = context.object
+        v = get_selected_vertices(obj)
+        batoms = Batoms(label=obj.batoms.label)
+        for i in v:
+            setattr(batoms[i], self.key, getattr(self, self.key))
+        context.view_layer.objects.active = obj
+        bpy.ops.object.mode_set(mode="EDIT")
+        return {'FINISHED'}
+
+
+class ApplyModelStyleSelected(OperatorBatoms):
+    bl_idname = "batoms.apply_model_style_selected"
+    bl_label = "Apply Model Style Selected"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = ("Apply new model_style parameters to selected atoms")
+
+    model_style: EnumProperty(
+        name="model_style",
+        description="Structural models",
+        items=[('0', "Space-filling", "Use ball and stick"),
+               ('1', "Ball-and-stick", "Use ball"),
+               ('2', "Polyhedral", "Use polyhedral"),
+               ('3', "Stick", "Use stick")
+            ],
+        default='0',
+    )
+
+    def execute(self, context):
+        batoms = Batoms(label=context.object.batoms.label)
+        indices = get_selected_vertices(context.object)
+        model_style_array = batoms.get_attribute("model_style")
+        model_style_array[indices] = int(self.model_style)
+        batoms.set_model_style_array(model_style_array)
+        batoms.obj.select_set(True)
+        self.report({"INFO"}, "Model style of {} atoms are changed to {}".format(len(indices), self.model_style))
+        bpy.context.view_layer.objects.active = batoms.obj
+        return {'FINISHED'}
+
+class BatomsCopySelected(OperatorBatoms):
+    bl_idname = "batoms.copy_selected"
+    bl_label = "Copy selected atoms"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = ("Copy selected atoms")
+
+    select: StringProperty(
+        name="select", default='',
+        description="New select for the copied atoms.")
+    
+    label: StringProperty(
+        name="label", default='',
+        description="Label for the new batoms.")
+
+
+    def execute(self, context):
+        batoms = Batoms(label=context.object.batoms.label)
+        indices = get_selected_vertices(context.object)
+        batoms.obj.select_set(True)
+        self.report({"INFO"}, "Copy {} atoms".format(len(indices)))
+        bpy.context.view_layer.objects.active = batoms.obj
+        return {'FINISHED'}
+  
+  

@@ -374,6 +374,56 @@ def build_modifier(obj, name):
         modifier.node_group = group
     modifier.node_group.name = name
     return modifier
+
+def get_att_length(mesh, att):
+    """get attribute length based on domain
+
+    Args:
+        att (bpy.types.Attribute): attribute of a mesh
+    Returns:
+        int: length of the attribute
+    """
+    domain = att.domain
+    if domain == 'POINT':
+        n = len(mesh.vertices)
+    elif domain == 'EDGE':
+        n = len(mesh.edges)
+    else:
+        n = len(mesh.polygons)
+    return n
+
+def get_bmesh_domain(bm, att):
+    """Get bmesh domain
+
+    Args:
+        bm (_type_): _description_
+        att (_type_): _description_
+    """
+    if att.domain == 'POINT':
+        domain = getattr(bm, "verts")
+    elif att.domain == 'EDGE':
+        domain = getattr(bm, "edges")
+    elif att.domain == 'FACE':
+        domain = getattr(bm, "faces")
+    return domain
+
+def get_bmesh_layer(domain, key, dtype):
+    """Get bmesh layer
+
+    Args:
+        domain (bm.verts, bm.edges, bm.faces): _description_
+        key (str): _description_
+        dtype (str): _description_
+    """
+    if dtype == 'STRING':
+        layer = domain.layers.string.get(key)
+    elif dtype == 'INT':
+        layer = domain.layers.int.get(key)
+    elif dtype == 'FLOAT':
+        layer = domain.layers.float.get(key)
+    
+    return layer
+
 # ========================================================
 if bpy.app.version_string >= '3.1.0':
     compareNodeType = 'FunctionNodeCompare'

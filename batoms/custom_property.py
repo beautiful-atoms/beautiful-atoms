@@ -97,8 +97,8 @@ class Battribute(Base):
     flag: BoolProperty(name="flag", default=False)
     name: StringProperty(name="name")
     label: StringProperty(name="label", default='batoms')
-    type: EnumProperty(
-        name="type",
+    data_type: EnumProperty(
+        name="data_type",
         description="data type",
         items=(('FLOAT', "FLOAT", "Floating-point value"),
                ('INT', "INT", "32-bit integer"),
@@ -148,7 +148,7 @@ class Battribute(Base):
             'flag': self.flag,
             'label': self.label,
             'name': self.name,
-            'type': self.type,
+            'data_type': self.data_type,
             'domain': self.domain,
             'dimension': self.dimension,
             'shape': self.shape,
@@ -287,6 +287,7 @@ class Bpolyhedra(Base):
             'label': self.label,
             'species': self.species,
             'name': self.name,
+            'material_style': self.material_style,
             'color': self.color[:],
             'width': self.width,
             'show_edge': self.show_edge,
@@ -511,6 +512,7 @@ class Bsheet(Base):
             'color': self.color[:],
             'extrude': self.extrude,
             'depth': self.depth,
+            'material_style': self.material_style,
         }
         return setdict
 
@@ -556,6 +558,7 @@ class Bhelix(Base):
             'color': self.color[:],
             'extrude': self.extrude,
             'depth': self.depth,
+            'material_style': self.material_style,
         }
         return setdict
 
@@ -599,6 +602,7 @@ class Bturn(Base):
             'name': self.name,
             'color': self.color[:],
             'radius': self.radius,
+            'material_style': self.material_style,
         }
         return setdict
 
@@ -642,6 +646,7 @@ class Bms(Base):
             'probe': self.probe,
             'resolution': self.resolution,
             'select': self.select,
+            'material_style': self.material_style,
         }
         return setdict
 
@@ -748,6 +753,7 @@ class BatomsCollection(bpy.types.PropertyGroup):
                ('BATOMS', "Batoms", "Batoms"),
                ('VOLUME', "Volume", "Volume"),
                ('BOND', "Bond", "Bond"),
+               ('BOUNDARY', "Boundary", "Boundary"),
                ('POLYHEDRA', "Polyhedra", "Polyhedra"),
                ('CRYSTALSHAPE', "Crystal Shape", "Crystal Shape"),
                ('LATTICEPLANE', "LatticePlane", "LatticePlane"),
@@ -887,6 +893,7 @@ class BatomsObject(bpy.types.PropertyGroup):
                ('VOLUME', "Volume", "Volume"),
                ('CELL', "Cell", "Cell"),
                ('BOND', "Bond", "Bond"),
+               ('BOUNDARY', "Boundary", "Boundary"),
                ('INSTANCER', "Instancer", "Instancer"),
                ('POLYHEDRA', "Polyhedra", "Polyhedra"),
                ('CRYSTALSHAPE', "Crystal Shape", "Crystal Shape"),

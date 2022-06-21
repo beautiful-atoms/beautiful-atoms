@@ -50,7 +50,9 @@ class Attributes(Setting):
             # is single value, no delimiter needed
             if data['dimension'] == 0:
                 mesh.attributes.new(name=data["name"],
-                        type=att.type, domain=att.domain)
+                        type=att.data_type, domain=att.domain)
+                logger.debug("add attribute: {} {} {}"
+                    .format(att.name, att.data_type, att.domain))
             else:
                 # is array, scatter to new attribute,
                 # with name = "{}{}{}".format(name, delimiter, index)
@@ -64,7 +66,7 @@ class Attributes(Setting):
                 for i in range(M):
                     name = "{}{}{}".format(att.name, att.delimiter, i)
                     mesh.attributes.new(name=name,
-                                type=att.type, domain=att.domain)
+                                type=att.data_type, domain=att.domain)
     
     def find_delimiter(self, name_list, name, M, delimiter):
         """find delimiter recursively
@@ -111,7 +113,7 @@ class Attributes(Setting):
             return False
         shape = array[0].shape
         dimension = len(shape)
-        data = {"name": name, "type": dtype_bl, "domain": "POINT", 
+        data = {"name": name, "data_type": dtype_bl, "domain": "POINT", 
                 "dimension": dimension, "shape": shape}
         self.add(data)
         return True
@@ -131,7 +133,7 @@ class Attributes(Setting):
         s = "{:20s}{:10s}{:10s}{:10s}   {:20s}\n".format("Name", "Type", "Domain", "Dimension", "Shape")
         for att in self.collection:
             s += "{:20s}{:10s}{:10s}{:10d}  [".format(
-                att.name, att.type, att.domain, att.dimension)
+                att.name, att.data_type, att.domain, att.dimension)
             for i in range(att.dimension):
                 s += "  {}  ".format(att.shape[i])
             s += "] \n"

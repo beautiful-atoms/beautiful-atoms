@@ -22,6 +22,7 @@ class MSAdd(OperatorBatoms):
         obj = context.object
         batoms = Batoms(label=context.object.batoms.label)
         batoms.ms.setting.add(self.name)
+        batoms.coll.batoms.ms_index = len(batoms.ms.setting) - 1
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 
@@ -119,6 +120,7 @@ class IsosurfaceAdd(OperatorBatoms):
         obj = context.object
         batoms = Batoms(label=context.object.batoms.label)
         batoms.isosurfaces.setting.add(self.name)
+        batoms.coll.batoms.isosurface_index = len(batoms.isosurfaces.setting) - 1
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 
@@ -217,6 +219,7 @@ class MagresAdd(OperatorBatoms):
         obj = context.object
         batoms = Batoms(label=context.object.batoms.label)
         batoms.magres.setting.add(self.name)
+        batoms.coll.batoms.magres_index = len(batoms.magres.setting) - 1
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 

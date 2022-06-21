@@ -3,10 +3,10 @@ from bpy.props import PointerProperty
 
 from . import (
     gui_batoms,
-    gui_batom,
+    gui_slicebatoms,
     gui_toolbar,
     gui_cell,
-    gui_bond,
+    gui_slicebonds,
     gui_plane,
     gui_render,
     gui_pymatgen,
@@ -23,6 +23,7 @@ from . import (
     ui_list_magres,
     view3d_mt_batoms_add,
     view3d_mt_object_context_menu,
+    view3d_mt_edit_mesh_context_menu,
 )
 
 class BatomsCollection(bpy.types.PropertyGroup):
@@ -30,9 +31,9 @@ class BatomsCollection(bpy.types.PropertyGroup):
     Collection properties of all panel properties.
     """
     batoms: PointerProperty(type=gui_batoms.BatomsProperties)
-    batom: PointerProperty(type=gui_batom.BatomProperties)
+    batom: PointerProperty(type=gui_slicebatoms.BatomProperties)
     cell: PointerProperty(type=gui_cell.CellProperties)
-    bond: PointerProperty(type=gui_bond.BondProperties)
+    bond: PointerProperty(type=gui_slicebonds.BondProperties)
     plane: PointerProperty(type=gui_plane.PlaneProperties)
     render: PointerProperty(type=gui_render.RenderProperties)
     pymatgen: PointerProperty(type=gui_pymatgen.PymatgenProperties)
@@ -43,10 +44,10 @@ class BatomsCollection(bpy.types.PropertyGroup):
 classes = [
     gui_batoms.Batoms_PT_prepare,
     gui_batoms.BatomsProperties,
-    gui_batom.Batom_PT_prepare,
-    gui_batom.BatomProperties,
-    gui_bond.Bond_PT_prepare,
-    gui_bond.BondProperties,
+    gui_slicebatoms.Batom_PT_prepare,
+    gui_slicebatoms.BatomProperties,
+    gui_slicebonds.Bond_PT_prepare,
+    gui_slicebonds.BondProperties,
     gui_cell.Cell_PT_prepare,
     gui_cell.CellProperties,
     gui_plane.Plane_PT_prepare,
@@ -70,7 +71,11 @@ classes = [
     view3d_mt_object_context_menu.VIEW3D_MT_object_context_batoms_model_style,
     view3d_mt_object_context_menu.VIEW3D_MT_object_context_batoms_radius_style,
     view3d_mt_object_context_menu.VIEW3D_MT_object_context_batoms_color_style,
+    view3d_mt_object_context_menu.VIEW3D_MT_object_context_batoms_label,
     view3d_mt_object_context_menu.VIEW3D_MT_object_context_batoms,
+    view3d_mt_object_context_menu.VIEW3D_MT_object_context_bonds,
+    view3d_mt_edit_mesh_context_menu.VIEW3D_MT_edit_mesh_context_batoms_model_style,
+    view3d_mt_edit_mesh_context_menu.VIEW3D_MT_edit_mesh_context_batoms,
     ui_list_species.BATOMS_MT_species_context_menu,
     ui_list_species.BATOMS_UL_species,
     ui_list_species.BATOMS_PT_species,
@@ -122,10 +127,12 @@ def unregister_class():
 def register_menu():
     bpy.types.VIEW3D_MT_add.prepend(view3d_mt_batoms_add.menu_func)
     bpy.types.VIEW3D_MT_object_context_menu.prepend(view3d_mt_object_context_menu.menu_func)
+    bpy.types.VIEW3D_MT_edit_mesh_context_menu.prepend(view3d_mt_edit_mesh_context_menu.menu_func)
 
 def unregister_menu():
     bpy.types.VIEW3D_MT_add.remove(view3d_mt_batoms_add.menu_func)
     bpy.types.VIEW3D_MT_object_context_menu.remove(view3d_mt_object_context_menu.menu_func)
+    bpy.types.VIEW3D_MT_edit_mesh_context_menu.remove(view3d_mt_edit_mesh_context_menu.menu_func)
     
 
 

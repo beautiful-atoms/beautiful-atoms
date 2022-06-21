@@ -8,6 +8,7 @@ from bpy.types import Menu
 
 def menu_func(self, context):
     self.layout.menu("VIEW3D_MT_object_context_batoms", icon="MESH_UVSPHERE")
+    self.layout.menu("VIEW3D_MT_object_context_bonds", icon="MESH_UVSPHERE")
 
 
 class VIEW3D_MT_object_context_batoms_model_style(Menu):
@@ -64,11 +65,28 @@ class VIEW3D_MT_object_context_batoms_color_style(Menu):
         op1.color_style = '1'
         op2 = layout.operator("batoms.apply_color_style", text="CPK")
         op2.color_style = '2'
+
+
+class VIEW3D_MT_object_context_batoms_label(Menu):
+    bl_idname = "VIEW3D_MT_object_context_batoms_label"
+    bl_label = "add label"
+    # bl_icon = ""
+
+    def draw(self, _context):
+        layout = self.layout
+
+        layout.operator_context = 'INVOKE_REGION_WIN'
+
+        op0 = layout.operator("batoms.apply_label", text="None")
+        op0.label = ''
+        op1 = layout.operator("batoms.apply_label", text="Element")
+        op1.label = 'elements'
+        op2 = layout.operator("batoms.apply_label", text="Species")
+        op2.label = 'species'
     
 class VIEW3D_MT_object_context_batoms(Menu):
     bl_idname = "VIEW3D_MT_object_context_batoms"
     bl_label = "Batoms"
-    bl_icon = "batoms_molecule"
 
     def draw(self, _context):
         layout = self.layout
@@ -80,10 +98,31 @@ class VIEW3D_MT_object_context_batoms(Menu):
                     text="Color Style", icon='LAYER_ACTIVE')
         layout.menu("VIEW3D_MT_object_context_batoms_radius_style",
                     text="Radius Style", icon='LAYER_ACTIVE')
+        layout.menu("VIEW3D_MT_object_context_batoms_label",
+                    text="Label", icon='LAYER_ACTIVE')
         layout.operator("batoms.join", text="Join", icon='LAYER_ACTIVE')
         layout.operator("batoms.separate", text="Separate", icon='LAYER_ACTIVE')
+        layout.operator("batoms.copy", text="Copy", icon='LAYER_ACTIVE')
         layout.operator("batoms.delete_selected", text="Delete",
                         icon='FORCE_LENNARDJONES')
 
         layout.separator()
+
+class VIEW3D_MT_object_context_bonds(Menu):
+    bl_idname = "VIEW3D_MT_object_context_bonds"
+    bl_label = "Bonds"
+
+    def draw(self, _context):
+        layout = self.layout
+
+        layout.operator_context = 'INVOKE_REGION_WIN'
+        layout.operator("bond.show_hydrogen_bond", text="Show hydrogen bond",
+                        icon='LAYER_ACTIVE')
+        layout.operator("bond.show_search", text="Show atoms by searching bond",
+                        icon='LAYER_ACTIVE')
+        layout.operator("bond.bond_order_auto_set", text="Auto set bond order",
+                        icon='LAYER_ACTIVE')
+
+        layout.separator()
+
 
