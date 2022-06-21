@@ -1697,6 +1697,7 @@ class Batoms(BaseCollection, ObjectGN):
             self.bonds.set_arrays(default_bond_datas.copy())
             return
         self.set_attribute_with_indices('scale', mask, scale)
+        self.bonds.hide = False
         self.bonds.update()
 
     def draw_polyhedra(self, scale=0.4):
@@ -1709,9 +1710,11 @@ class Batoms(BaseCollection, ObjectGN):
         self.set_attribute_with_indices('show', mask, True)
         if self.polyhedra_style == 0:
             self.set_attribute_with_indices('scale', mask, scale)
+            self.bonds.hide = False
             # self.bonds.update()
         if self.polyhedra_style == 1:
             self.set_attribute_with_indices('scale', mask, scale)
+            self.bonds.hide = True
         elif self.polyhedra_style == 2:
             for b in self.bonds.setting:
                 if b.polyhedra:
@@ -1721,10 +1724,12 @@ class Batoms(BaseCollection, ObjectGN):
                     mask[mask1] = False
             scale = 0
             self.set_attribute_with_indices('scale', mask, scale)
+            self.bonds.hide = True
             # self.set_attribute_with_indices('show', mask, False)
         elif self.polyhedra_style == 3:
             scale = 0
             self.set_attribute_with_indices('scale', mask, scale)
+            self.bonds.hide = True
             # self.set_attribute_with_indices('show', mask, False)
 
     def draw_wireframe(self):
