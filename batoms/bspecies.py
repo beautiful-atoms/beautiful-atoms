@@ -521,12 +521,12 @@ class Bspecies(Setting):
         species_props = {}
         instancers = self.instancers
         species_props = {}
-        for sp in self.species:
-            radius = instancers[sp].batoms.atom.radius
-            matname = instancers[sp].material_slots[0].name
-            mat = bpy.data.materials.get(matname)
-            color = mat.node_tree.nodes[0].inputs[0].default_value[:]
-            species_props[sp] = {'radius': radius, 'color': color}
+        species = self.species
+        for name, sp in self.species.items():
+            radius = sp.radius
+            color = sp.color
+            species_props[name] = {'radius': radius, 'color': color,
+                'element': sp.main_element}
         return species_props
 
     def __add__(self, other):

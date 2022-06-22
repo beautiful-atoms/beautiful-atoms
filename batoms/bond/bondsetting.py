@@ -182,7 +182,7 @@ class BondSettings(Setting):
         self.batoms = batoms
         self.bonds = bonds
         if len(self) == 0:
-            self.add_from_species(self.batoms.species.keys(), dcutoff)
+            self.add_species_list(self.batoms.species.keys(), dcutoff)
         if bondsetting is not None:
             for key, data in bondsetting.items():
                 self[key] = data
@@ -505,7 +505,6 @@ class BondSettings(Setting):
         for b in other:
             self[(b.species1, b.species2)] = b.as_dict()
         # new
-
         species1 = set(self.batoms.species.species_props)
         species2 = set(other.batoms.species.species_props)
         nspecies1 = species1 - species2
@@ -517,39 +516,53 @@ class BondSettings(Setting):
                          sp2: other.batoms.species.species_props[sp2]}
                 self.add(pair, props)
 
-    def add_from_species(self, speciesList,
-                         only_default_bonds=False):
+    def add_species_list(self, speciesList,
+                         only_default=True):
+        for sp in speciesList:
+            self.add_species(sp, only_default)
+
+    def add_species(self, name,
+                         only_default=True):
         """_summary_
 
         Args:
             speciesList (_type_): _description_
             self_interaction (bool, optional): _description_. Defaults to True.
-            only_default_bonds (bool, optional): _description_. Defaults to False.
+            only_default (bool, optional): _description_. Defaults to False.
         """
         from batoms.data import default_bonds
+        species_props = self.batoms.species.species_props
         pairs = []
-        for sp1 in speciesList:
-            ele1 = sp1.split('_')[0]
-            for sp2 in speciesList:
-                ele2 = sp2.split('_')[0]
-                pair = (ele1, ele2)
-                if only_default_bonds and pair not in default_bonds:
-                    continue
-                pairs.append(pair)
+        ele = species_props[name]['element']
+        for name1, props in species_props.items():
+            ele1 = props['element']
+            if only_default:
+                pair = (ele, ele1)
+                if pair in default_bonds:
+                    pairs.append((name, name1))
+                pair = (ele1, ele)
+                if pair in default_bonds:
+                    pairs.append((name1, name))
+            else:
+                pairs.append((name, name1))
+                pairs.append((name1, name))
         for pair in pairs:
             self.add(pair)
 
-    def add(self, pair, species_props = None):
+    def add(self, key, value = None):
         """_summary_
 
         Args:
-            pair (_type_): _description_
+            key (str): _description_
         """
-        if species_props is None:
-            species_props = {
-                sp: self.batoms.species.species_props[sp] for sp in pair}
-        bond = self.get_bondtable(pair, species_props, dcutoff=0.5)
-        self[pair] = bond
+        species_props = {}
+        for sp in key:
+            if sp in self.batoms.species.keys():
+                species_props[sp] = self.batoms.species.species_props[sp]
+        if value:
+            species_props.update(value)
+        bond = self.get_bondtable(key, species_props, dcutoff=0.5)
+        self[key] = bond
 
     def remove(self, index):
         """
@@ -669,10 +682,11 @@ class BondSettings(Setting):
         sp2 = pair[1]
         bondmax = props[sp1]['radius'] + \
             props[sp2]['radius'] + dcutoff
-        if pair in default_bonds:
-            search = default_bonds[pair][0]
-            polyhedra = default_bonds[pair][1]
-            bondtype = default_bonds[pair][2]
+        pair_ele = (props[sp1]['element'], props[sp2]['element'])
+        if pair_ele in default_bonds:
+            search = default_bonds[pair_ele][0]
+            polyhedra = default_bonds[pair_ele][1]
+            bondtype = default_bonds[pair_ele][2]
         else:
             search = 1
             polyhedra = 0

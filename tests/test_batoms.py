@@ -100,6 +100,15 @@ def test_batoms_species():
     h2o.replace([0], "X")
     h2o["X"].color = [0.8, 0.8, 0.0, 0.3]
 
+def test_auto_build_species():
+    """auto build species use spglib"""
+    from batoms.bio.bio import read
+    bpy.ops.batoms.delete()
+    magnetite = read("../tests/datas/magnetite.cif")
+    magnetite.auto_build_species()
+    assert len(magnetite.species) == 5
+    assert len(magnetite.bonds.setting) == 10
+    assert len(magnetite.polyhedras.setting) == 3
 
 def test_batoms_write():
     """Export Batoms to structure file
@@ -201,6 +210,8 @@ def test_replace():
 
 def test_batoms_add():
     """Merge two Batoms objects"""
+    from batoms import Batoms
+    from ase.build import molecule
     bpy.ops.batoms.delete()
     h2o = Batoms("h2o", from_ase=molecule("H2O"))
     co = Batoms("co", from_ase=molecule("CO"))

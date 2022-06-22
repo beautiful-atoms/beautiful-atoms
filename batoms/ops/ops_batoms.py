@@ -387,7 +387,23 @@ class ApplyLabel(OperatorBatoms):
             .format(self.label, context.object.batoms.label))
         return {'FINISHED'}
 
+class BatomsAutoBuildSpecies(OperatorBatoms):
+    bl_idname = "batoms.auto_build_species"
+    bl_label = "Auto build species"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = ("Auto build species")
 
+    tol: FloatProperty(
+        name="tol", default=1e-5,
+        description="tol")
+
+    def execute(self, context):
+        batoms = Batoms(label=context.object.batoms.label)
+        batoms.auto_build_species(self.tol)
+        bpy.context.view_layer.objects.active = batoms.obj
+        self.report({"INFO"}, "Auto build species for {}"
+            .format(context.object.batoms.label))
+        return {'FINISHED'}
 # ===========================================
 # Below for Edit mode
 # ===========================================

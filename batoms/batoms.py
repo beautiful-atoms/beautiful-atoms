@@ -1133,8 +1133,37 @@ class Batoms(BaseCollection, ObjectGN):
         bpy.ops.object.mode_set(mode=mode)
         # print(self.species)
         # for sp in self.species:
-        # self.bonds.setting.add([(species[0], sp.name)])
-        # self.polyhedrasetting.add([species[0]])
+        self.bonds.setting.add_species(species[0])
+        self.polyhedras.setting.add_species(species[0])
+
+    def auto_build_species(self, tol = 1e-5):
+        """Auto build species based on equivalent_atoms.
+
+        Args:
+            tol (float, optional): _description_. Defaults to 1e-5.
+        """
+        from batoms.data import jmol_colors
+        from batoms.utils import get_equivalent_atoms
+        equivalent_atoms = get_equivalent_atoms(self.as_ase(), tol)
+        species = self.species
+        species_array = self.get_attribute('species')
+        icolor = 1
+        for name, sp in species.items():
+            n = 0
+            atoms_sp = equivalent_atoms[sp.indices]
+            unique_species = np.unique(atoms_sp)
+            for usp in unique_species:
+                indices = np.where(equivalent_atoms==usp)[0]
+                if len(indices) > 0:
+                    if n > 0:
+                        name = '{}_{}'.format(species_array[indices[0]], n)
+                        self.replace(indices, name)
+                        # self.species[name].color = jmol_colors[icolor]
+                    n += 1
+                    icolor += 1
+            if n > 10:
+                logger.critical("Name of species longer than 4 characters.")
+            logger.info("{} kinds of species are found for {}".format(n, name))
 
     def add_atoms(self, arrays):
         """ Used to add small number of atoms
