@@ -511,3 +511,27 @@ class BatomsCopySelected(OperatorBatoms):
         return {'FINISHED'}
   
   
+class BatomsDeleteSelectedAtoms(OperatorBatoms):
+    """Delete selected vertices
+
+    Args:
+        OperatorBatoms (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    bl_idname = "batoms.delete_selected_atoms"
+    bl_label = "Delete selected atoms"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = ("Delete selected atoms")
+
+
+    def execute(self, context):
+        batoms = Batoms(label=context.object.batoms.label)
+        indices = get_selected_vertices(context.object)
+        del batoms[indices]
+        self.report({"INFO"}, "Delete {} atoms".format(len(indices)))
+        bpy.context.view_layer.objects.active = batoms.obj
+        bpy.ops.object.mode_set(mode="EDIT")
+        return {'FINISHED'}
+

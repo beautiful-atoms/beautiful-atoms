@@ -47,9 +47,6 @@ def register():
     # class
     ops.register_class()
     gui.register_class()
-    if bpy.context.preferences.addons['batoms'].preferences.real_plugin:
-        from . import modal
-        modal.register_class()
     # manual
     ops.register_manual_map()
     # menu
@@ -59,6 +56,8 @@ def register():
     gui.register_keymap()
     # hook
     console.register_hook()
+    #
+    preferences.enable_plugin()
     logger.root_logger.info("Batoms init time: {:.2f}".format(time() - tstart0))
     logger.update_logging_level()
 
@@ -71,9 +70,6 @@ def unregister():
     custom_property.unregister_class()
     ops.unregister_class()
     gui.unregister_class()
-    if bpy.context.preferences.addons['batoms'].preferences.real_plugin:
-        from . import modal
-        modal.unregister_class()
     # manual
     ops.unregister_manual_map()
     # menu
@@ -83,6 +79,7 @@ def unregister():
     gui.unregister_keymap()
     # hook
     console.unregister_hook()
+    preferences.disable_plugin()
     preferences.unregister_class()
 
 if __name__ == "__main__":

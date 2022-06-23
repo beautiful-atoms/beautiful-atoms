@@ -1604,7 +1604,7 @@ class Batoms(BaseCollection, ObjectGN):
     @property
     def cavity(self):
         """cavity object."""
-        from batoms.cavity import Cavity, default_cavity_datas
+        from batoms.cavity.cavity import Cavity, default_cavity_datas
         if self._cavity is not None:
             return self._cavity
         cavity = Cavity(self.label, cavity_datas=default_cavity_datas.copy(),

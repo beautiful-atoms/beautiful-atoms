@@ -44,6 +44,36 @@ DEFAULT_GITHUB_ACCOUNT = "beautiful-atoms"
 DEFAULT_REPO_NAME = "beautiful-atoms"
 DEFAULT_PLUGIN_NAME = "batoms"
 
+def get_plugin(key):
+    """Helper function to get plugin
+    Args:
+        key (_type_): _description_
+    """
+    def getter(self):
+        # self.get: returns the value of the custom property assigned to
+        # key or default when not found 
+        value = self.bl_rna.properties[key].default
+        return self.get(key, value)
+    return getter
+
+def set_plugin(key):
+    """Helper function to set plugin
+
+    Args:
+        key (_type_): _description_
+        value (_type_): _description_
+    """
+    def setter(self, value):
+        import importlib
+        self[key] = value
+        plugin = importlib.import_module("batoms.{}".format(key))
+        if value:
+            plugin.register_class()
+            logger.info("Enable {} plugin.".format(key))
+        else:
+            plugin.unregister_class()
+            logger.info("Disnable {} plugin.".format(key))
+    return setter
 
 class BatomsDefaultPreference(bpy.types.Operator):
     """Update Batoms"""
@@ -125,21 +155,7 @@ class BatomsAddonPreferences(AddonPreferences):
         # if global level is higher than INFO
         logger.info("Set logging level to: {}".format(level))
     
-    def get_real_plugin(self):
-        # self.get: returns the value of the custom property assigned to
-        # key or default when not found 
-        return self.get("real_plugin", False)
 
-    def set_real_plugin(self, value):
-        self["real_plugin"] = value
-        if value:
-            from batoms import modal
-            modal.register_class()
-            logger.info("Enable real module.")
-        else:
-            from batoms import modal
-            modal.unregister_class()
-            logger.info("Disnable real module.")
 
     def batoms_setting_path_update(self, context):
         import os
@@ -193,12 +209,44 @@ class BatomsAddonPreferences(AddonPreferences):
         default=2,
         )
     
-    real_plugin: BoolProperty(
-        name="real",
-        description="Enable real module",
-        get=get_real_plugin,
-        set=set_real_plugin,
+    real_interaction: BoolProperty(
+        name="real_interaction",
+        description="Enable real_interaction module",
+        get=get_plugin("real_interaction"),
+        set=set_plugin("real_interaction"),
         default=False,
+    )
+
+    magres: BoolProperty(
+        name="magres",
+        description="Enable magres module",
+        get=get_plugin("magres"),
+        set=set_plugin("magres"),
+        default=False,
+    )
+
+    cavity: BoolProperty(
+        name="cavity",
+        description="Enable cavity module",
+        get=get_plugin("cavity"),
+        set=set_plugin("cavity"),
+        default=True,
+    )
+
+    crystal_shape: BoolProperty(
+        name="crystal_shape",
+        description="Enable crystal_shape module",
+        get=get_plugin("crystal_shape"),
+        set=set_plugin("crystal_shape"),
+        default=True,
+    )
+
+    lattice_plane: BoolProperty(
+        name="lattice_plane",
+        description="Enable lattice_plane module",
+        get=get_plugin("lattice_plane"),
+        set=set_plugin("lattice_plane"),
+        default=True,
     )
 
     def draw(self, context):
@@ -237,7 +285,11 @@ class BatomsAddonPreferences(AddonPreferences):
         layout.separator()
         box = layout.box().column()
         box.label(text="Custom Plugins")
-        box.prop(self, "real_plugin")
+        box.prop(self, "crystal_shape")
+        box.prop(self, "lattice_plane")
+        box.prop(self, "cavity")
+        box.prop(self, "magres")
+        box.prop(self, "real_interaction")
         # custom folder
         layout.separator()
         box = layout.box().column()
@@ -264,3 +316,24 @@ def unregister_class():
     for cls in reversed(classes):
         unregister_class(cls)
 
+plugins = [
+    'lattice_plane',
+    'crystal_shape',
+    'cavity',
+    'magres',
+    'real_interaction',
+]
+
+def enable_plugin():
+    import importlib
+    for key in plugins:
+        if getattr(bpy.context.preferences.addons['batoms'].preferences, key):    
+            plugin = importlib.import_module("batoms.{}".format(key))
+            plugin.register_class()   
+
+def disable_plugin():
+    import importlib
+    for key in plugins:
+        if getattr(bpy.context.preferences.addons['batoms'].preferences, key):    
+            plugin = importlib.import_module("batoms.{}".format(key))
+            plugin.unregister_class()   
