@@ -87,8 +87,13 @@ class BatomsDefaultStartup(bpy.types.Operator):
         ###################################################
         bpy.context.scene.unit_settings.system = "NONE"
         # viewport overlayrs
-        bpy.context.space_data.overlay.show_extras = False
-        bpy.context.space_data.overlay.show_relationship_lines = False
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_3D':
+                for space in area.spaces:
+                    if space.type == 'VIEW_3D':
+                        space.overlay.show_extras = False
+                        space.overlay.show_relationship_lines = False
+                        break
         ###################################################
         bpy.ops.wm.save_homefile()
         self.report({"INFO"}, "Load default startup successfully!")
