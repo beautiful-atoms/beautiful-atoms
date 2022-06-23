@@ -20,7 +20,7 @@ def set_logger(version):
     # formatter = ('%(levelname)-8s '
     #                             '[%(funcName)-20s]: %(message)s')
     formatter = ('%(levelname)s '
-                    '[%(name)s %(funcName)s]: %(message)s')
+                    '[%(name)-10s %(funcName)-10s]: %(message)s')
     logging.basicConfig(stream=sys.stdout,
                         format=formatter,
                         level=logging.INFO

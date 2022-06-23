@@ -55,7 +55,7 @@ class Batoms_PT_prepare(Panel):
         layout.prop(batoms, "show_label", expand=True, text="label")
         layout.prop(batoms, "scale")
 
-        layout.operator("batoms.replace")
+        # layout.operator("batoms.replace")
 
 
 def get_active_collection():

@@ -5,10 +5,6 @@ from . import (
             rigid_body,
             force_field,
             )
-import logging
-# logger = logging.getLogger('batoms')
-logger = logging.getLogger(__name__)
-
 
 
 classes = [
