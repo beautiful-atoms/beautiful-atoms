@@ -177,6 +177,8 @@ class Batoms(BaseCollection, ObjectGN):
             self.color_style = color_style
             if movie:
                 self.set_frames()
+            self.show_unit_cell = show_unit_cell
+            
         self.ribbon = Ribbon(self.label, batoms=self, datas=info, update=True)
         self._render = None
         self._bonds = None
@@ -190,7 +192,6 @@ class Batoms(BaseCollection, ObjectGN):
         self._cavity = None
         show_index()
         self.hideOneLevel()
-        self.show_unit_cell = show_unit_cell
 
     def set_collection(self, label):
         """Build main collection and its child collections.
