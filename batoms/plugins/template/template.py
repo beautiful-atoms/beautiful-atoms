@@ -8,7 +8,7 @@ import bpy
 from time import time
 import numpy as np
 from batoms.base.object import BaseObject
-from batoms.plugin_template.templatesetting import TemplateSetting
+from .templatesetting import TemplateSetting
 import logging
 logger = logging.getLogger(__name__)
 

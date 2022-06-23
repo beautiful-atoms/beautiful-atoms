@@ -1,4 +1,4 @@
-from batoms.cavity.cavity import Cavity
+from .cavity import Cavity
 
 from . import (
     ops,

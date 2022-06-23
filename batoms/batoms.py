@@ -1548,7 +1548,7 @@ class Batoms(BaseCollection, ObjectGN):
     @property
     def lattice_plane(self):
         """lattice_plane object."""
-        from batoms.lattice_plane import LatticePlane
+        from batoms.plugins.lattice_plane import LatticePlane
         if self._lattice_plane is not None:
             return self._lattice_plane
         lattice_plane = LatticePlane(self.label, batoms=self)
@@ -1562,7 +1562,7 @@ class Batoms(BaseCollection, ObjectGN):
     @property
     def crystal_shape(self):
         """crystal_shape object."""
-        from batoms.crystal_shape import CrystalShape
+        from batoms.plugins.crystal_shape import CrystalShape
         if self._crystal_shape is not None:
             return self._crystal_shape
         crystal_shape = CrystalShape(self.label, batoms=self)
@@ -1590,7 +1590,7 @@ class Batoms(BaseCollection, ObjectGN):
     @property
     def magres(self):
         """magres object."""
-        from batoms.magres import Magres
+        from batoms.plugins.magres import Magres
         if self._magres is not None:
             return self._magres
         magres = Magres(self.label, batoms=self)
@@ -1604,7 +1604,7 @@ class Batoms(BaseCollection, ObjectGN):
     @property
     def cavity(self):
         """cavity object."""
-        from batoms.cavity.cavity import Cavity, default_cavity_datas
+        from batoms.plugins.cavity.cavity import Cavity, default_cavity_datas
         if self._cavity is not None:
             return self._cavity
         cavity = Cavity(self.label, cavity_datas=default_cavity_datas.copy(),

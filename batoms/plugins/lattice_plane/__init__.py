@@ -1,4 +1,4 @@
-from batoms.lattice_plane.lattice_plane import LatticePlane
+from .lattice_plane import LatticePlane
 
 from . import (
     ops,

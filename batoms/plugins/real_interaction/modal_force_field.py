@@ -15,7 +15,7 @@ import bpy
 import numpy as np
 from batoms.utils.butils import get_selected_batoms, get_selected_objects, get_selected_vertices, object_mode
 from batoms import Batoms
-from batoms.real_interaction.rigid_body import mouse2positions
+from .modal_rigid_body import mouse2positions
 from bpy.props import (StringProperty,
                        IntProperty,
                        FloatProperty,

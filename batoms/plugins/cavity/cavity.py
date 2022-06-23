@@ -9,7 +9,7 @@ from time import time
 import numpy as np
 from batoms.attribute import Attributes
 from batoms.base.object import ObjectGN
-from batoms.cavity.cavitysetting import CavitySettings
+from .cavitysetting import CavitySettings
 from scipy import spatial
 from batoms.utils.butils import object_mode, get_nodes_by_name
 from batoms.utils import string2Number

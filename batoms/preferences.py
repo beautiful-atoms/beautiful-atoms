@@ -315,25 +315,3 @@ def unregister_class():
     from bpy.utils import unregister_class
     for cls in reversed(classes):
         unregister_class(cls)
-
-plugins = [
-    'lattice_plane',
-    'crystal_shape',
-    'cavity',
-    'magres',
-    'real_interaction',
-]
-
-def enable_plugin():
-    import importlib
-    for key in plugins:
-        if getattr(bpy.context.preferences.addons['batoms'].preferences, key):    
-            plugin = importlib.import_module("batoms.{}".format(key))
-            plugin.register_class()   
-
-def disable_plugin():
-    import importlib
-    for key in plugins:
-        if getattr(bpy.context.preferences.addons['batoms'].preferences, key):    
-            plugin = importlib.import_module("batoms.{}".format(key))
-            plugin.unregister_class()   

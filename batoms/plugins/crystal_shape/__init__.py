@@ -1,4 +1,4 @@
-from batoms.crystal_shape.crystal_shape import CrystalShape
+from .crystal_shape import CrystalShape
 
 from . import (
     ops,

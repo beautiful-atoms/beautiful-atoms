@@ -1,4 +1,4 @@
-from batoms.magres.magres import Magres
+from .magres import Magres
 
 from . import (
     ops,

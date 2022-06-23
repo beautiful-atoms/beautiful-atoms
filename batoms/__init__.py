@@ -26,6 +26,7 @@ from batoms.batoms import Batoms
 from . import (
     logger,
     preferences,
+    plugins,
     custom_property,
     pip_dependencies,
     ops,
@@ -57,7 +58,7 @@ def register():
     # hook
     console.register_hook()
     #
-    preferences.enable_plugin()
+    plugins.enable_plugin()
     logger.root_logger.info("Batoms init time: {:.2f}".format(time() - tstart0))
     logger.update_logging_level()
 
@@ -79,7 +80,7 @@ def unregister():
     gui.unregister_keymap()
     # hook
     console.unregister_hook()
-    preferences.disable_plugin()
+    plugins.disable_plugin()
     preferences.unregister_class()
 
 if __name__ == "__main__":
