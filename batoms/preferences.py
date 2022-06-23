@@ -86,6 +86,9 @@ class BatomsDefaultStartup(bpy.types.Operator):
         # Add additional settings to the startup file here
         ###################################################
         bpy.context.scene.unit_settings.system = "NONE"
+        # viewport overlayrs
+        bpy.context.space_data.overlay.show_extras = False
+        bpy.context.space_data.overlay.show_relationship_lines = False
         ###################################################
         bpy.ops.wm.save_homefile()
         self.report({"INFO"}, "Load default startup successfully!")
@@ -116,6 +119,22 @@ class BatomsAddonPreferences(AddonPreferences):
         # Note the following logging info might not emit 
         # if global level is higher than INFO
         logger.info("Set logging level to: {}".format(level))
+    
+    def get_real_module(self):
+        # self.get: returns the value of the custom property assigned to
+        # key or default when not found 
+        return self.get("real_module", False)
+
+    def set_real_module(self, value):
+        self["real_module"] = value
+        if value:
+            from batoms import modal
+            modal.register_class()
+            logger.info("Enable real module.")
+        else:
+            from batoms import modal
+            modal.unregister_class()
+            logger.info("Disnable real module.")
 
     def batoms_setting_path_update(self, context):
         import os
@@ -169,8 +188,16 @@ class BatomsAddonPreferences(AddonPreferences):
         default=2,
         )
     
+    real_module: BoolProperty(
+        name="real_module",
+        description="Enable real module",
+        get=get_real_module,
+        set=set_real_module,
+        default=False,
+    )
 
     def draw(self, context):
+
         layout = self.layout
 
         layout.label(text="Welcome to Batoms!")
@@ -182,31 +209,37 @@ class BatomsAddonPreferences(AddonPreferences):
         box = layout.box().column()
         row = box.row(align=True)
         row.operator("batoms.update", icon="FILE_REFRESH")
-        layout.separator()
-        #
-        layout.operator("batoms.use_batoms_startup", icon="FILE_REFRESH")
-        layout.operator("batoms.use_batoms_preference", icon="FILE_REFRESH")
+        layout.label(text="Use default setting.")
+        box = layout.box().column()
+        row = box.row(align=True)
+        row.operator("batoms.use_batoms_startup", text = "Use startup", icon="FILE_REFRESH")
+        row.operator("batoms.use_batoms_preference", text = "Use Preferences", icon="FILE_REFRESH")
         layout.separator()
 
-        row = layout.row()
-        col = row.column()
-        col.label(text="Dependencies:")
+        box = layout.box().column()
+        box.label(text="Dependencies:")
         #
         for package, modname in dependencies.items():
             if not has_module(modname):
-                op = layout.operator("batoms.pip_install_package",
-                                     icon='GREASEPENCIL', text="Install {}".format(package))
+                op = box.operator("batoms.pip_install_package",
+                                     icon='IMPORT', text="Install {}".format(package))
                 op.package = package
                 op.modname = modname
             else:
                 setattr(self, modname, True)
-                col.prop(self, modname, text=package)
+                box.prop(self, modname, text=package)
+        #
+        layout.separator()
+        box = layout.box().column()
+        box.label(text="Custom Modules")
+        box.prop(self, "real_module")
         # custom folder
         layout.separator()
         box = layout.box().column()
         box.label(text="Custom Settings")
         box.prop(self, "logging_level")
         box.prop(self, "batoms_setting_path")
+        
 
 classes = [BatomsDefaultPreference,
             BatomsDefaultStartup,
