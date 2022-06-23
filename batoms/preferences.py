@@ -120,13 +120,13 @@ class BatomsAddonPreferences(AddonPreferences):
         # if global level is higher than INFO
         logger.info("Set logging level to: {}".format(level))
     
-    def get_real_module(self):
+    def get_real_plugin(self):
         # self.get: returns the value of the custom property assigned to
         # key or default when not found 
-        return self.get("real_module", False)
+        return self.get("real_plugin", False)
 
-    def set_real_module(self, value):
-        self["real_module"] = value
+    def set_real_plugin(self, value):
+        self["real_plugin"] = value
         if value:
             from batoms import modal
             modal.register_class()
@@ -188,11 +188,11 @@ class BatomsAddonPreferences(AddonPreferences):
         default=2,
         )
     
-    real_module: BoolProperty(
-        name="real_module",
+    real_plugin: BoolProperty(
+        name="real",
         description="Enable real module",
-        get=get_real_module,
-        set=set_real_module,
+        get=get_real_plugin,
+        set=set_real_plugin,
         default=False,
     )
 
@@ -231,8 +231,8 @@ class BatomsAddonPreferences(AddonPreferences):
         #
         layout.separator()
         box = layout.box().column()
-        box.label(text="Custom Modules")
-        box.prop(self, "real_module")
+        box.label(text="Custom Plugins")
+        box.prop(self, "real_plugin")
         # custom folder
         layout.separator()
         box = layout.box().column()

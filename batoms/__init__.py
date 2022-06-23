@@ -47,7 +47,7 @@ def register():
     # class
     ops.register_class()
     gui.register_class()
-    if bpy.context.preferences.addons['batoms'].preferences.real_module:
+    if bpy.context.preferences.addons['batoms'].preferences.real_plugin:
         from . import modal
         modal.register_class()
     # manual
@@ -71,7 +71,7 @@ def unregister():
     custom_property.unregister_class()
     ops.unregister_class()
     gui.unregister_class()
-    if bpy.context.preferences.addons['batoms'].preferences.real_module:
+    if bpy.context.preferences.addons['batoms'].preferences.real_plugin:
         from . import modal
         modal.unregister_class()
     # manual
