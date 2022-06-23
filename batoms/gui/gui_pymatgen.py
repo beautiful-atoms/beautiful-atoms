@@ -4,7 +4,7 @@ from bpy.types import (Panel,
                        )
 from bpy.props import (StringProperty,
                        )
-from batoms.plugins.pymatgen import pymatgen_search
+from batoms.database.pymatgen import pymatgen_search
 
 
 class Pymatgen_PT_prepare(Panel):

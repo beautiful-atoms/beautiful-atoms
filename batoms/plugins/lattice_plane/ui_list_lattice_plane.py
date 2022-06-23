@@ -19,7 +19,7 @@ class BATOMS_MT_lattice_plane_context_menu(Menu):
         op.all = True
 
 
-class BATOMS_UL_lattice_planes(UIList):
+class BATOMS_UL_lattice_plane(UIList):
     def draw_item(self, _context, layout, _data, item, icon, active_data, _active_propname, index):
         lattice_plane = item
         custom_icon = 'OBJECT_DATAMODE'
@@ -35,10 +35,10 @@ class BATOMS_UL_lattice_planes(UIList):
             layout.label(text="", icon=custom_icon)
 
 
-class BATOMS_PT_lattice_planes(Panel):
+class BATOMS_PT_lattice_plane(Panel):
     bl_label = "Lattice Plane"
     bl_category = "Surface"
-    bl_idname = "BATOMS_PT_Lattice_Planes"
+    bl_idname = "BATOMS_PT_Lattice_Plane"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     # bl_options = {'DEFAULT_CLOSED'}
@@ -69,7 +69,7 @@ class BATOMS_PT_lattice_planes(Panel):
         if kb:
             rows = 5
 
-        row.template_list("BATOMS_UL_lattice_planes", "", ba,
+        row.template_list("BATOMS_UL_lattice_plane", "", ba,
                           "blatticeplane", ba, "latticeplane_index", rows=rows)
 
         col = row.column(align=True)

@@ -12,6 +12,8 @@ rendering atomic structures using blender.""",
     "tracker_url": "https://github.com/beautiful-atoms/beautiful-atoms/issues/new/choose",
 }
 
+from time import time
+tstart0 = time()
 import bpy
 # install pip dependencies
 from .install import pip_dependencies
@@ -21,16 +23,15 @@ from batoms.batoms import Batoms
 
 
 
-
 from . import (
     logger,
     preferences,
+    plugins,
     custom_property,
     pip_dependencies,
     ops,
     gui,
     console,
-    modal,
 )
 
 logger.set_logger(bl_info["version"])
@@ -42,13 +43,11 @@ def register():
     # dependencies
     pip_dependencies.register_class()
     preferences.register_class()
-    logger.update_logging_level()
     # class
     custom_property.register_class()
     # class
     ops.register_class()
     gui.register_class()
-    modal.register_class()
     # manual
     ops.register_manual_map()
     # menu
@@ -58,17 +57,20 @@ def register():
     gui.register_keymap()
     # hook
     console.register_hook()
+    #
+    plugins.enable_plugin()
+    logger.root_logger.info("Batoms init time: {:.2f}".format(time() - tstart0))
+    logger.update_logging_level()
+
 
 
 def unregister():
     # dependencies
     pip_dependencies.unregister_class()
-    preferences.unregister_class()
     # class
     custom_property.unregister_class()
     ops.unregister_class()
     gui.unregister_class()
-    modal.unregister_class()
     # manual
     ops.unregister_manual_map()
     # menu
@@ -78,6 +80,8 @@ def unregister():
     gui.unregister_keymap()
     # hook
     console.unregister_hook()
+    plugins.disable_plugin()
+    preferences.unregister_class()
 
 if __name__ == "__main__":
 

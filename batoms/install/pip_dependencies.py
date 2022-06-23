@@ -1,6 +1,7 @@
 import sys
 import subprocess
 import importlib
+from time import time
 from bpy.types import Operator
 from bpy.props import (StringProperty,
                        )
@@ -51,8 +52,10 @@ def install_module(package, modname):
     return has_module(modname)
 
 def install():
+    tstart = time()
     for package, modname in dependencies.items():
         install_module(package, modname)
+    logger.debug("Pip install time: {:.2f}".format(time() - tstart))
 
 
 

@@ -103,7 +103,7 @@ class VIEW3D_MT_object_context_batoms(Menu):
         layout.operator("batoms.join", text="Join", icon='LAYER_ACTIVE')
         layout.operator("batoms.separate", text="Separate", icon='LAYER_ACTIVE')
         layout.operator("batoms.copy", text="Copy", icon='LAYER_ACTIVE')
-        layout.operator("batoms.delete_selected", text="Delete",
+        layout.operator("batoms.delete_selected_batoms", text="Delete",
                         icon='FORCE_LENNARDJONES')
         layout.operator("batoms.auto_build_species", text="Auto build species", icon='LAYER_ACTIVE')
 

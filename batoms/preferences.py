@@ -44,6 +44,36 @@ DEFAULT_GITHUB_ACCOUNT = "beautiful-atoms"
 DEFAULT_REPO_NAME = "beautiful-atoms"
 DEFAULT_PLUGIN_NAME = "batoms"
 
+def get_plugin(key):
+    """Helper function to get plugin
+    Args:
+        key (_type_): _description_
+    """
+    def getter(self):
+        # self.get: returns the value of the custom property assigned to
+        # key or default when not found 
+        value = self.bl_rna.properties[key].default
+        return self.get(key, value)
+    return getter
+
+def set_plugin(key):
+    """Helper function to set plugin
+
+    Args:
+        key (_type_): _description_
+        value (_type_): _description_
+    """
+    def setter(self, value):
+        import importlib
+        self[key] = value
+        plugin = importlib.import_module("batoms.{}".format(key))
+        if value:
+            plugin.register_class()
+            logger.info("Enable {} plugin.".format(key))
+        else:
+            plugin.unregister_class()
+            logger.info("Disnable {} plugin.".format(key))
+    return setter
 
 class BatomsDefaultPreference(bpy.types.Operator):
     """Update Batoms"""
@@ -86,6 +116,14 @@ class BatomsDefaultStartup(bpy.types.Operator):
         # Add additional settings to the startup file here
         ###################################################
         bpy.context.scene.unit_settings.system = "NONE"
+        # viewport overlayrs
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_3D':
+                for space in area.spaces:
+                    if space.type == 'VIEW_3D':
+                        space.overlay.show_extras = False
+                        space.overlay.show_relationship_lines = False
+                        break
         ###################################################
         bpy.ops.wm.save_homefile()
         self.report({"INFO"}, "Load default startup successfully!")
@@ -116,6 +154,8 @@ class BatomsAddonPreferences(AddonPreferences):
         # Note the following logging info might not emit 
         # if global level is higher than INFO
         logger.info("Set logging level to: {}".format(level))
+    
+
 
     def batoms_setting_path_update(self, context):
         import os
@@ -169,8 +209,48 @@ class BatomsAddonPreferences(AddonPreferences):
         default=2,
         )
     
+    real_interaction: BoolProperty(
+        name="real_interaction",
+        description="Enable real_interaction module",
+        get=get_plugin("real_interaction"),
+        set=set_plugin("real_interaction"),
+        default=False,
+    )
+
+    magres: BoolProperty(
+        name="magres",
+        description="Enable magres module",
+        get=get_plugin("magres"),
+        set=set_plugin("magres"),
+        default=False,
+    )
+
+    cavity: BoolProperty(
+        name="cavity",
+        description="Enable cavity module",
+        get=get_plugin("cavity"),
+        set=set_plugin("cavity"),
+        default=True,
+    )
+
+    crystal_shape: BoolProperty(
+        name="crystal_shape",
+        description="Enable crystal_shape module",
+        get=get_plugin("crystal_shape"),
+        set=set_plugin("crystal_shape"),
+        default=True,
+    )
+
+    lattice_plane: BoolProperty(
+        name="lattice_plane",
+        description="Enable lattice_plane module",
+        get=get_plugin("lattice_plane"),
+        set=set_plugin("lattice_plane"),
+        default=True,
+    )
 
     def draw(self, context):
+
         layout = self.layout
 
         layout.label(text="Welcome to Batoms!")
@@ -182,31 +262,41 @@ class BatomsAddonPreferences(AddonPreferences):
         box = layout.box().column()
         row = box.row(align=True)
         row.operator("batoms.update", icon="FILE_REFRESH")
-        layout.separator()
-        #
-        layout.operator("batoms.use_batoms_startup", icon="FILE_REFRESH")
-        layout.operator("batoms.use_batoms_preference", icon="FILE_REFRESH")
+        layout.label(text="Use default setting.")
+        box = layout.box().column()
+        row = box.row(align=True)
+        row.operator("batoms.use_batoms_startup", text = "Use startup", icon="FILE_REFRESH")
+        row.operator("batoms.use_batoms_preference", text = "Use Preferences", icon="FILE_REFRESH")
         layout.separator()
 
-        row = layout.row()
-        col = row.column()
-        col.label(text="Dependencies:")
+        box = layout.box().column()
+        box.label(text="Dependencies:")
         #
         for package, modname in dependencies.items():
             if not has_module(modname):
-                op = layout.operator("batoms.pip_install_package",
-                                     icon='GREASEPENCIL', text="Install {}".format(package))
+                op = box.operator("batoms.pip_install_package",
+                                     icon='IMPORT', text="Install {}".format(package))
                 op.package = package
                 op.modname = modname
             else:
                 setattr(self, modname, True)
-                col.prop(self, modname, text=package)
+                box.prop(self, modname, text=package)
+        #
+        layout.separator()
+        box = layout.box().column()
+        box.label(text="Custom Plugins")
+        box.prop(self, "crystal_shape")
+        box.prop(self, "lattice_plane")
+        box.prop(self, "cavity")
+        box.prop(self, "magres")
+        box.prop(self, "real_interaction")
         # custom folder
         layout.separator()
         box = layout.box().column()
         box.label(text="Custom Settings")
         box.prop(self, "logging_level")
         box.prop(self, "batoms_setting_path")
+        
 
 classes = [BatomsDefaultPreference,
             BatomsDefaultStartup,
@@ -225,4 +315,3 @@ def unregister_class():
     from bpy.utils import unregister_class
     for cls in reversed(classes):
         unregister_class(cls)
-

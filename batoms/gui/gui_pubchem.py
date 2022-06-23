@@ -2,7 +2,7 @@ import bpy
 from bpy.types import Panel, Operator
 from bpy.props import (StringProperty,
                        )
-from batoms.plugins.pubchem import pubchem_search
+from batoms.database.pubchem import pubchem_search
 
 
 class Pubchem_PT_prepare(Panel):
