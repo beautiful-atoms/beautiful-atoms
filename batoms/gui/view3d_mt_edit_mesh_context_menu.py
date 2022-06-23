@@ -8,6 +8,7 @@ from bpy.types import Menu
 
 def menu_func(self, context):
     self.layout.menu("VIEW3D_MT_edit_mesh_context_batoms", icon="MESH_UVSPHERE")
+    
 
 
 class VIEW3D_MT_edit_mesh_context_batoms_model_style(Menu):
@@ -49,9 +50,9 @@ class VIEW3D_MT_edit_mesh_context_batoms(Menu):
         # layout.menu("VIEW3D_MT_edit_mesh_context_batoms_radius_style",
                     # text="Radius Style", icon='LAYER_ACTIVE')
         layout.operator("batoms.replace", text="Replace", icon='LAYER_ACTIVE')
-        # layout.operator("batoms.separate", text="Separate", icon='LAYER_ACTIVE')
-        # layout.operator("batoms.delete_selected", text="Delete",
-                        # icon='FORCE_LENNARDJONES')
+        # layout.operator("batoms.select", text="Select", icon='LAYER_ACTIVE')
+        layout.operator("batoms.delete_selected_atoms", text="Delete",
+                        icon='FORCE_LENNARDJONES')
 
         layout.separator()
 
