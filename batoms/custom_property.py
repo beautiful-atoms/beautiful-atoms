@@ -336,40 +336,6 @@ class Bisosurface(Base):
         return s
 
 
-class Bcavity(Base):
-    """
-    """
-    flag: BoolProperty(name="flag", default=False)
-    name: StringProperty(name="name")
-    label: StringProperty(name="label", default='')
-    min: FloatProperty(name="min", default=5)
-    max: FloatProperty(name="max", default=6)
-    resolution: FloatProperty(name="resolution", soft_min=0.5, soft_max=2,
-                              default=1.0)
-    color: FloatVectorProperty(name="color", size=4,
-                               subtype='COLOR',
-                               min=0, max=1,
-                               default=[1, 1, 0, 1.0],
-                               )
-
-    def as_dict(self) -> dict:
-        setdict = {
-            'flag': self.flag,
-            'min': self.min,
-            'max': self.max,
-            'name': self.name,
-            'material_style': self.material_style,
-            'color': self.color[:],
-        }
-        return setdict
-
-    def __repr__(self) -> str:
-        s = '-'*60 + '\n'
-        s = 'Name      min    max        color            \n'
-        s += '{:10s}   {:1.2f} {:1.2f} [{:1.2f}  {:1.2f}  {:1.2f}   {:1.2f}] \n'.format(
-            self.name, self.min, self.max, self.color[0], self.color[1], self.color[2], self.color[3])
-        s += '-'*60 + '\n'
-        return s
 
 
 class Bplane(Base):
@@ -702,6 +668,48 @@ class Bmagres(Base):
         s += '-'*60 + '\n'
         return s
 
+
+
+class Bboundary(Base):
+    """
+    """
+    flag: BoolProperty(name="flag", default=False)
+    name: StringProperty(name="name")
+    label: StringProperty(name="label", default='batoms')
+    boundary: FloatVectorProperty(name="boundary", default=[
+                                  0.0, 1.0, 0.0, 1.0, 0.0, 1.0], size=6)
+    scale: FloatProperty(name="scale", soft_min=0.01, soft_max=1, default=0.01)
+    select: StringProperty(name="select", default='all')
+    color: FloatVectorProperty(name="color", size=4,
+                               subtype='COLOR',
+                               min=0, max=1,
+                               default=[0, 1, 1, 0.5])
+
+    def as_dict(self) -> dict:
+        setdict = {
+            'flag': self.flag,
+            'label': self.label,
+            'name': self.name,
+            'color': self.color[:],
+            'boundary': self.boundary[:],
+            'scale': self.scale,
+            'select': self.select,
+            'material_style': self.material_style,
+        }
+        return setdict
+
+    def __repr__(self) -> str:
+        import numpy as np
+        s = '-'*60 + '\n'
+        s = 'Name   select   scale   color  \n'
+        s += '{:6s}  {:6s}  {:1.3f}  [{:1.2f}  {:1.2f}  {:1.2f}   {:1.2f}] \n'.format(
+            self.name, self.select, self.scale, self.color[0], self.color[1], self.color[2], self.color[3])
+        boundary = np.array(self.boundary)
+        s += ' %s \n '.format(boundary)
+        s += '-'*60 + '\n'
+        return s
+
+
 class Bselect(bpy.types.PropertyGroup):
     """
     """
@@ -817,7 +825,7 @@ class BatomsCollection(bpy.types.PropertyGroup):
                               type=Bbond)
 
     bond_index: IntProperty(name="bond_index",
-                            default=0)
+                            default=0)    
 
     blatticeplane: CollectionProperty(name='Blatticeplane',
                                       type=Bplane)
@@ -842,12 +850,6 @@ class BatomsCollection(bpy.types.PropertyGroup):
 
     polyhedra_index: IntProperty(name="polyhedra_index",
                                  default=0)
-
-    bcavity: CollectionProperty(name='Bcavity',
-                                type=Bcavity)
-
-    cavity_index: IntProperty(name="cavity_index",
-                              default=0)
 
     bsheet: CollectionProperty(name='Bsheet',
                                type=Bsheet)
@@ -940,7 +942,6 @@ classes = [
     Bbond,
     Bpolyhedra,
     Bisosurface,
-    Bcavity,
     Bvolume,
     Bplane,
     Blight,
