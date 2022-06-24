@@ -53,7 +53,18 @@ def test_boundary_animation():
     tio2.boundary = 0.01
     assert len(tio2.boundary.obj.data.vertices) == 9
 
-
+def test_boundary_reload():
+    """save to blend file and reload
+    """
+    bpy.ops.batoms.delete()
+    au = Batoms("au", from_ase=bulk("Au", cubic=True))
+    au.boundary = 0.1
+    bpy.ops.wm.save_as_mainfile(filepath="./test.blend")
+    bpy.ops.batoms.delete()
+    bpy.ops.wm.open_mainfile(filepath="./test.blend")
+    au = Batoms("au")
+    np.isclose(au.boundary[0,0], -1)
+    assert len(au.boundary) == 10
 
 
 

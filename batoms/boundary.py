@@ -49,75 +49,12 @@ default_boundary_datas = {
 }
 
 
-def search_boundary(atoms,
-                    boundary=[[0, 1], [0, 1], [0, 1]],
-                    ):
-    """Search atoms in the boundary
-
-    Args:
-        atoms: _description_
-        boundary (list, optional): _description_.
-            Defaults to [[0, 1], [0, 1], [0, 1]].
-
-    Returns:
-        _type_: _description_
-    """
-    # tstart = time()
-    cell = atoms.cell
-    positions = atoms.positions
-    species = atoms.arrays['species']
-    if isinstance(boundary, float):
-        boundary = [[-boundary, 1 + boundary],
-                    [-boundary, 1+boundary], [-boundary, 1+boundary]]
-    boundary = np.array(boundary)
-    # find supercell
-    f = np.floor(boundary)
-    c = np.ceil(boundary)
-    ib = np.array([f[:, 0], c[:, 1]]).astype(int)
-    M = np.product(ib[1] - ib[0] + 1)
-    # get scaled positions
-    positions = np.linalg.solve(complete_cell(cell).T,
-                                positions.T).T
-    n = len(positions)
-    npositions = np.tile(positions, (M - 1,) + (1,)
-                         * (len(positions.shape) - 1))
-    i0 = 0
-    # index
-    offsets = np.zeros((M*n, 4), dtype=int)
-    ind0 = np.arange(n).reshape(-1, 1)
-    species0 = species
-    species = []
-    # repeat the positions so that
-    # it completely covers the boundary
-    for m0 in range(ib[0, 0], ib[1, 0] + 1):
-        for m1 in range(ib[0, 1], ib[1, 1] + 1):
-            for m2 in range(ib[0, 2], ib[1, 2] + 1):
-                if m0 == 0 and m1 == 0 and m2 == 0:
-                    continue
-                i1 = i0 + n
-                npositions[i0:i1] += (m0, m1, m2)
-                offsets[i0:i1] = np.append(
-                    ind0, np.array([[m0, m1, m2]]*n), axis=1)
-                species.extend(species0)
-                i0 = i1
-    # boundary condition
-    ind1 = np.where((npositions[:, 0] > boundary[0][0]) &
-                    (npositions[:, 0] < boundary[0][1]) &
-                    (npositions[:, 1] > boundary[1][0]) &
-                    (npositions[:, 1] < boundary[1][1]) &
-                    (npositions[:, 2] > boundary[2][0]) &
-                    (npositions[:, 2] < boundary[2][1]))[0]
-    offsets_b = offsets[ind1]
-    # print('search boundary: {0:10.2f} s'.format(time() - tstart))
-    return offsets_b
-
-
 class Boundary(ObjectGN):
     def __init__(self,
                  label=None,
-                 boundary=np.array([[-0.0, 1.0], [-0.0, 1.0], [-0.0, 1.0]]),
-                 boundary_datas=None,
                  batoms=None,
+                 boundary = None,
+                 boundary_datas=None,
                  location=(0, 0, 0)
                  ):
         """_summary_
@@ -139,14 +76,13 @@ class Boundary(ObjectGN):
         name = 'boundary'
         ObjectGN.__init__(self, label, name)
         if boundary_datas is not None:
-            if batoms is not None:
-                location = batoms.location
             self.build_object(boundary_datas)  # , location=location)
-        else:
-            self.load(label)
+        elif self.batoms is not None and self.batoms.coll.batoms.boundary.flag:
             self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
-
-        self.boundary = boundary
+        else:
+            self.build_object(default_boundary_datas)  # , location=location)
+        if boundary is not None:
+            self.boundary = boundary
 
     def build_object(self, datas, location=[0, 0, 0], attributes={}):
         """
@@ -190,6 +126,7 @@ class Boundary(ObjectGN):
         obj.batoms.type = 'BOUNDARY'
         obj.batoms.label = self.batoms.label
         obj.parent = self.batoms.obj
+        self.batoms.coll.batoms.boundary.flag = True
         #
         name = '%s_boundary_offset' % self.label
         self.delete_obj(name)
@@ -613,3 +550,69 @@ class Boundary(ObjectGN):
     def __repr__(self) -> str:
         s = self.boundary.__repr__()
         return s
+
+
+
+
+def search_boundary(atoms,
+                    boundary=[[0, 1], [0, 1], [0, 1]],
+                    ):
+    """Search atoms in the boundary
+
+    Args:
+        atoms: _description_
+        boundary (list, optional): _description_.
+            Defaults to [[0, 1], [0, 1], [0, 1]].
+
+    Returns:
+        _type_: _description_
+    """
+    # tstart = time()
+    cell = atoms.cell
+    positions = atoms.positions
+    species = atoms.arrays['species']
+    if isinstance(boundary, float):
+        boundary = [[-boundary, 1 + boundary],
+                    [-boundary, 1+boundary], [-boundary, 1+boundary]]
+    boundary = np.array(boundary)
+    # find supercell
+    f = np.floor(boundary)
+    c = np.ceil(boundary)
+    ib = np.array([f[:, 0], c[:, 1]]).astype(int)
+    M = np.product(ib[1] - ib[0] + 1)
+    # get scaled positions
+    positions = np.linalg.solve(complete_cell(cell).T,
+                                positions.T).T
+    n = len(positions)
+    npositions = np.tile(positions, (M - 1,) + (1,)
+                         * (len(positions.shape) - 1))
+    i0 = 0
+    # index
+    offsets = np.zeros((M*n, 4), dtype=int)
+    ind0 = np.arange(n).reshape(-1, 1)
+    species0 = species
+    species = []
+    # repeat the positions so that
+    # it completely covers the boundary
+    for m0 in range(ib[0, 0], ib[1, 0] + 1):
+        for m1 in range(ib[0, 1], ib[1, 1] + 1):
+            for m2 in range(ib[0, 2], ib[1, 2] + 1):
+                if m0 == 0 and m1 == 0 and m2 == 0:
+                    continue
+                i1 = i0 + n
+                npositions[i0:i1] += (m0, m1, m2)
+                offsets[i0:i1] = np.append(
+                    ind0, np.array([[m0, m1, m2]]*n), axis=1)
+                species.extend(species0)
+                i0 = i1
+    # boundary condition
+    ind1 = np.where((npositions[:, 0] > boundary[0][0]) &
+                    (npositions[:, 0] < boundary[0][1]) &
+                    (npositions[:, 1] > boundary[1][0]) &
+                    (npositions[:, 1] < boundary[1][1]) &
+                    (npositions[:, 2] > boundary[2][0]) &
+                    (npositions[:, 2] < boundary[2][1]))[0]
+    offsets_b = offsets[ind1]
+    # print('search boundary: {0:10.2f} s'.format(time() - tstart))
+    return offsets_b
+

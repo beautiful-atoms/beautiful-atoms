@@ -1529,8 +1529,7 @@ class Batoms(BaseCollection, ObjectGN):
         from batoms.boundary import Boundary, default_boundary_datas
         if self._boundary is not None:
             return self._boundary
-        boundary = Boundary(self.label, boundary_datas=default_boundary_datas.copy(),
-                            batoms=self,
+        boundary = Boundary(self.label, batoms=self,
                             location=self.location)
         self._boundary = boundary
         return boundary
