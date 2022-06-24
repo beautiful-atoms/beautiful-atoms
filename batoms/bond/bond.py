@@ -1491,7 +1491,7 @@ class Bond(BaseCollection, ObjectGN):
         from openbabel import pybel
         species = self.batoms.arrays['species']
 
-        mol = self.batoms.as_pybel(export_bonds=False)
+        mol = self.batoms.as_pybel(export_bond=False)
         bondlists = [[b.GetBeginAtom().GetIndex(),
                         b.GetEndAtom().GetIndex(),
                         0, 0, 0, 0, 0, 0, 0, 0, 0]
