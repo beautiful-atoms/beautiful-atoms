@@ -129,16 +129,20 @@ def test_hydrogen_bond():
 def test_bond_reload():
     """save to blend file and reload
     """
+    import os
     from ase.io import read
+    from batoms import Batoms
     bpy.ops.batoms.delete()
     tio2 = read("../tests/datas/tio2.cif", ":")
     tio2 = Batoms("tio2", from_ase=tio2)
     tio2.boundary = 0.01
     tio2.model_style = 1
     tio2.bond.show_search = True
-    bpy.ops.wm.save_as_mainfile(filepath="./test.blend")
+    cwd = os.getcwd()
+    filepath = os.path.join(cwd, "test.blend")
+    bpy.ops.wm.save_as_mainfile(filepath=filepath)
     bpy.ops.batoms.delete()
-    bpy.ops.wm.open_mainfile(filepath="./test.blend")
+    bpy.ops.wm.open_mainfile(filepath=filepath)
     tio2 = Batoms("tio2")
     assert len(tio2.bond.search_bond) == 43
 
