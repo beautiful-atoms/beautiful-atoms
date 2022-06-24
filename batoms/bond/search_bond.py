@@ -106,7 +106,7 @@ class SearchBond(ObjectGN):
         self.batoms.coll.objects.link(obj)
         obj.batoms.type = 'BOND'
         obj.batoms.label = self.batoms.label
-        obj.batoms.bond.label = self.batoms.label
+        obj.Bbond.label = self.batoms.label
         obj.parent = self.batoms.obj
         #
         name = '%s_search_bond_offset' % self.label
@@ -394,7 +394,7 @@ class SearchBond(ObjectGN):
         return self.get_bondlists()
 
     def get_bondlists(self):
-        bondlists = self.batoms.bonds.arrays
+        bondlists = self.batoms.bond.arrays
         return bondlists
 
     def get_frames(self):

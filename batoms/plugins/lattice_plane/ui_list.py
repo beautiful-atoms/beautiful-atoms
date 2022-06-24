@@ -57,9 +57,9 @@ class BATOMS_PT_lattice_plane(Panel):
         layout = self.layout
 
         ob = context.object
-        ba = bpy.data.collections[ob.batoms.label].bLatticePlane
-        if len(ba.setting) > 0:
-            kb = ba.setting[ba.ui_list_index]
+        ba = bpy.data.collections[ob.batoms.label].Blatticeplane
+        if len(ba.settings) > 0:
+            kb = ba.settings[ba.ui_list_index]
         else:
             kb = None
 
@@ -70,7 +70,7 @@ class BATOMS_PT_lattice_plane(Panel):
             rows = 5
 
         row.template_list("BATOMS_UL_lattice_plane", "", ba,
-                          "setting", ba, "ui_list_index", rows=rows)
+                          "settings", ba, "ui_list_index", rows=rows)
 
         col = row.column(align=True)
         op = col.operator("plane.lattice_plane_add", icon='ADD', text="")

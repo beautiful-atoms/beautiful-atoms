@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 
-class MolecularSurfaceSetting(Setting):
+class MolecularSurfaceSettings(Setting):
     def __init__(self, label, parent, probe=1.4,
                  resolution=0.5,
                  ) -> None:
@@ -31,7 +31,7 @@ class MolecularSurfaceSetting(Setting):
         """
         Setting.__init__(self, label, coll_name=label)
         self.label = label
-        self.name = 'bMolecularSurface'
+        self.name = 'Bmolecularsurface'
         self.probe = probe
         self.parent = parent
         self.sas_name = '%s_sas' % self.label
@@ -40,17 +40,6 @@ class MolecularSurfaceSetting(Setting):
         if len(self) == 0:
             self['1'] = {'select': 'all'}
 
-    def get_collection(self):
-        if self.coll_name:
-            coll = bpy.data.collections.get(self.coll_name)
-            collection = getattr(coll, self.name)
-        elif self.obj_name:
-            obj = bpy.data.objects.get(self.obj_name)
-            collection = getattr(obj, self.name)
-        else:
-            raise KeyError("The collection property {} not exist!".format(self.name))
-        return collection.setting
-        
     def add(self, name, datas={}):
         self[name] = datas
 
@@ -66,7 +55,7 @@ class MolecularSurfaceSetting(Setting):
     def __repr__(self) -> str:
         s = "-"*60 + "\n"
         s = "name  type select  probe   resolution    color  \n"
-        for ms in self.collection:
+        for ms in self.bpy_setting:
             s += "{:4s}   {:6s}   {:6s}   {:1.3f}  {:1.3f} ".format(
                 ms.name, ms.type, ms.select, ms.probe, ms.resolution)
             s += "[{:1.1f}  {:1.1f}  {:1.1f}  {:1.1f}] \n".format(

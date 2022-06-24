@@ -23,8 +23,8 @@ class PolyhedraAdd(OperatorBatoms):
             return {'FINISHED'}
         obj = context.object
         batoms = Batoms(label=context.object.batoms.label)
-        batoms.polyhedras.setting.add(self.species)
-        batoms.coll.batoms.polyhedra_index = len(batoms.polyhedras.setting) - 1
+        batoms.polyhedra.settings.add(self.species)
+        batoms.coll.Bpolyhedra.ui_list_index = len(batoms.polyhedra.settings) - 1
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 
@@ -45,10 +45,10 @@ class PolyhedraRemove(OperatorBatoms):
     def execute(self, context):
         obj = context.object
         batoms = Batoms(label=obj.batoms.label)
-        index = batoms.coll.batoms.polyhedra_index
-        batoms.polyhedras.setting.remove((self.species))
-        batoms.coll.batoms.polyhedra_index = min(max(0, index - 1),
-                                                 len(batoms.polyhedras.setting) - 1)
+        index = batoms.coll.Bpolyhedra.ui_list_index
+        batoms.polyhedra.settings.remove((self.species))
+        batoms.coll.Bpolyhedra.ui_list_index = min(max(0, index - 1),
+                                                 len(batoms.polyhedra.settings) - 1)
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 

@@ -48,7 +48,7 @@ class Isosurface(bpy.types.PropertyGroup):
     Blender’s internal data.
 
     """
-    setting: CollectionProperty(name='IsosurfaceSetting',
+    settings: CollectionProperty(name='IsosurfaceSetting',
                                 type=IsosurfaceSetting)
 
     ui_list_index: IntProperty(name="ui_list_index",

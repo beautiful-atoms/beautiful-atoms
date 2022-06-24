@@ -12,8 +12,6 @@ from . import (
     ops_surface,
     measure,
     manual_mapping,
-    ops_bond,
-    ops_polyhedra,
     ops_render,
     )
 
@@ -68,17 +66,6 @@ classes = [
     ops_species.SpeciesRemove,
     ops_species.SpeciesUpdate,
     ops_species.SpeciesModify,
-    ops_bond.BondPairAdd,
-    ops_bond.BondPairRemove,
-    ops_bond.BondModify,
-    ops_bond.BondDraw,
-    ops_bond.BondOrderAutoSet,
-    ops_bond.BondShowHydrogenBond,
-    ops_bond.BondShowSearch,
-    ops_polyhedra.PolyhedraAdd,
-    ops_polyhedra.PolyhedraRemove,
-    ops_polyhedra.PolyhedraDraw,
-    ops_polyhedra.PolyhedraModify,
     ops_render.RenderAdd,
     measure.MeasureButton,
 ]

@@ -27,9 +27,9 @@ def register_class():
     for cls in classes:
         register_class(cls)
     # attach to blender internal data
-    Collection.bIsosurface = PointerProperty(name='BIsosurface',
+    Collection.Bisosurface = PointerProperty(name='Bisosurface',
                                         type=bpy_data.Isosurface)
-    Object.bIsosurface = PointerProperty(name='BIsosurface',
+    Object.Bisosurface = PointerProperty(name='Bisosurface',
                                     type=bpy_data.Isosurface)
 
 
@@ -39,5 +39,5 @@ def unregister_class():
     for cls in reversed(classes):
         unregister_class(cls)
 
-    del Collection.bIsosurface
-    del Object.bIsosurface
+    del Collection.Bisosurface
+    del Object.Bisosurface

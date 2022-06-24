@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 
-class MagresSetting(Setting):
+class MagresSettings(Setting):
     def __init__(self, label, parent, scale=1.4,
                  resolution=0.5,
                  ) -> None:
@@ -32,7 +32,7 @@ class MagresSetting(Setting):
         """
         Setting.__init__(self, label, coll_name=label)
         self.label = label
-        self.name = 'bmagres'
+        self.name = 'Bmagres'
         self.scale = scale
         self.parent = parent
         self.ms_name = '%s_ms' % self.label
@@ -56,7 +56,7 @@ class MagresSetting(Setting):
     def __repr__(self) -> str:
         s = "-"*60 + "\n"
         s = "name  type select  scale   resolution    color  \n"
-        for magres in self.collection:
+        for magres in self.bpy_setting:
             s += "{:4s}   {:6s}   {:6s}   {:1.3f}  {:1.3f} ".format(
                 magres.name, magres.type, magres.select, magres.scale, magres.resolution)
             s += "[{:1.1f}  {:1.1f}  {:1.1f}  {:1.1f}] \n".format(

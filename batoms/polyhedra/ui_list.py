@@ -57,9 +57,9 @@ class BATOMS_PT_polyhedra(Panel):
         layout = self.layout
 
         ob = context.object
-        ba = bpy.data.collections[ob.batoms.label].batoms
-        if len(ba.bpolyhedra) > 0:
-            kb = ba.bpolyhedra[ba.polyhedra_index]
+        ba = bpy.data.collections[ob.batoms.label].Bpolyhedra
+        if len(ba.settings) > 0:
+            kb = ba.settings[ba.ui_list_index]
         else:
             kb = None
 
@@ -70,7 +70,7 @@ class BATOMS_PT_polyhedra(Panel):
             rows = 5
 
         row.template_list("BATOMS_UL_polyhedra", "", ba,
-                          "bpolyhedra", ba, "polyhedra_index", rows=rows)
+                          "settings", ba, "ui_list_index", rows=rows)
 
         col = row.column(align=True)
         op = col.operator("batoms.polyhedra_add", icon='ADD', text="")

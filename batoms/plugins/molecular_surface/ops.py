@@ -21,8 +21,8 @@ class MolecularSurfaceAdd(OperatorBatoms):
     def execute(self, context):
         obj = context.object
         batoms = Batoms(label=context.object.batoms.label)
-        batoms.molecular_surface.setting.add(self.name)
-        batoms.coll.bMolecularSurface.ui_list_index = len(batoms.molecular_surface.setting) - 1
+        batoms.molecular_surface.settings.add(self.name)
+        batoms.coll.Bmolecularsurface.ui_list_index = len(batoms.molecular_surface.settings) - 1
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 
@@ -43,10 +43,10 @@ class MolecularSurfaceRemove(OperatorBatoms):
     def execute(self, context):
         obj = context.object
         batoms = Batoms(label=obj.batoms.label)
-        index = batoms.coll.bMolecularSurface.ui_list_index
-        batoms.molecular_surface.setting.remove((self.name))
-        batoms.coll.bMolecularSurface.ui_list_index = min(max(0, index - 1),
-                                          len(batoms.molecular_surface.setting) - 1)
+        index = batoms.coll.Bmolecularsurface.ui_list_index
+        batoms.molecular_surface.settings.remove((self.name))
+        batoms.coll.Bmolecularsurface.ui_list_index = min(max(0, index - 1),
+                                          len(batoms.molecular_surface.settings) - 1)
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 

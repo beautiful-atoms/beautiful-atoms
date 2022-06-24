@@ -57,9 +57,9 @@ class BATOMS_PT_molecular_surface(Panel):
         layout = self.layout
 
         ob = context.object
-        ba = bpy.data.collections[ob.batoms.label].bMolecularSurface
-        if len(ba.setting) > 0:
-            kb = ba.setting[ba.ui_list_index]
+        ba = bpy.data.collections[ob.batoms.label].Bmolecularsurface
+        if len(ba.settings) > 0:
+            kb = ba.settings[ba.ui_list_index]
         else:
             kb = None
 
@@ -69,7 +69,7 @@ class BATOMS_PT_molecular_surface(Panel):
         if kb:
             rows = 5
 
-        row.template_list("BATOMS_UL_molecular_surface", "", ba, "setting",
+        row.template_list("BATOMS_UL_molecular_surface", "", ba, "settings",
                           ba, "ui_list_index", rows=rows)
 
         col = row.column(align=True)

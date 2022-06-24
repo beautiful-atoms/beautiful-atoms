@@ -28,7 +28,7 @@ class PolyhedraSettings(Setting):
                  polyhedrasetting=None,
                  ) -> None:
         Setting.__init__(self, label, coll_name='%s' % label)
-        self.name = 'bpolyhedra'
+        self.name = 'Bpolyhedra'
         self.batoms = batoms
         self.polyhedras = polyhedras
         if len(self) == 0:
@@ -61,7 +61,7 @@ class PolyhedraSettings(Setting):
         name = tuple2string(index)
         subset = self.find(name)
         if subset is None:
-            subset = self.collection.add()
+            subset = self.bpy_setting.add()
         subset.species = index
         subset.name = name
         for key, value in setdict.items():
@@ -101,7 +101,7 @@ class PolyhedraSettings(Setting):
     def __repr__(self) -> str:
         s = "-"*60 + "\n"
         s = "Center                color         width \n"
-        for p in self.collection:
+        for p in self.bpy_setting:
             s += "{:10s}   ".format(p.species)
             s += "[{:1.2f}  {:1.2f}  {:1.2f}  {:1.2f}]   ".format(p.color[0],
                                                                   p.color[1],

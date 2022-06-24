@@ -60,7 +60,7 @@ class MolecularSurface(bpy.types.PropertyGroup):
     Blender’s internal data.
 
     """
-    setting: CollectionProperty(name='MolecularSurfaceSetting',
+    settings: CollectionProperty(name='MolecularSurfaceSetting',
                                 type=MolecularSurfaceSetting)
 
     ui_list_index: IntProperty(name="ui_list_index",

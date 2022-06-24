@@ -17,7 +17,7 @@ class BondSetting():
         self.coll_name = label
         self.name = name
         self.bonds = bonds
-        self.type = 'bbond'
+        self.type = 'Bbond'
 
     @property
     def coll(self):
@@ -31,107 +31,107 @@ class BondSetting():
         return coll
 
     @property
-    def collection(self):
-        return self.get_collection()
+    def bpy_setting(self):
+        return self.get_bpy_setting()
 
-    def get_collection(self):
-        collection = getattr(self.coll.batoms, self.type)
-        return collection
+    def get_bpy_setting(self):
+        bpy_setting = getattr(self.coll, self.type).settings
+        return bpy_setting
 
     @property
     def species1(self):
-        return self.collection[self.name].species1
+        return self.bpy_setting[self.name].species1
 
     @property
     def species2(self):
-        return self.collection[self.name].species2
+        return self.bpy_setting[self.name].species2
 
     @property
     def min(self):
-        return self.collection[self.name].min
+        return self.bpy_setting[self.name].min
 
     @min.setter
     def min(self, min):
-        self.collection[self.name].min = min
+        self.bpy_setting[self.name].min = min
 
     @property
     def max(self):
-        return self.collection[self.name].max
+        return self.bpy_setting[self.name].max
 
     @max.setter
     def max(self, max):
-        self.collection[self.name].max = max
+        self.bpy_setting[self.name].max = max
 
     @property
     def search(self):
-        return self.collection[self.name].search
+        return self.bpy_setting[self.name].search
 
     @search.setter
     def search(self, search):
-        self.collection[self.name].search = search
+        self.bpy_setting[self.name].search = search
 
     @property
     def polyhedra(self):
-        return self.collection[self.name].polyhedra
+        return self.bpy_setting[self.name].polyhedra
 
     @polyhedra.setter
     def polyhedra(self, polyhedra):
-        self.collection[self.name].polyhedra = polyhedra
+        self.bpy_setting[self.name].polyhedra = polyhedra
     
     @property
     def width(self):
-        return self.collection[self.name].width
+        return self.bpy_setting[self.name].width
 
     @width.setter
     def width(self, width):
-        self.collection[self.name].width = width
+        self.bpy_setting[self.name].width = width
 
     @property
     def order(self):
-        return self.collection[self.name].order
+        return self.bpy_setting[self.name].order
 
     @order.setter
     def order(self, order):
-        self.collection[self.name].order = order
+        self.bpy_setting[self.name].order = order
         self.bonds.set_attribute_with_indices('order', self.indices, order)
         # if instancer with this order not exist, add one
         sp = self.as_dict()
-        self.bonds.setting.build_instancer(sp)
+        self.bonds.settings.build_instancer(sp)
         self.bonds.add_geometry_node(sp)
 
     @property
     def style(self):
-        return self.collection[self.name].style
+        return self.bpy_setting[self.name].style
 
     @style.setter
     def style(self, style):
-        self.collection[self.name].style = str(style)
+        self.bpy_setting[self.name].style = str(style)
         self.bonds.set_attribute_with_indices('style', self.indices, style)
         # if instancer with this style not exist, add one
         sp = self.as_dict()
-        self.bonds.setting.build_instancer(sp)
+        self.bonds.settings.build_instancer(sp)
         self.bonds.add_geometry_node(sp)
 
     @property
     def color1(self):
-        return self.collection[self.name].color1
+        return self.bpy_setting[self.name].color1
 
     @color1.setter
     def color1(self, color1):
-        self.collection[self.name].color1 = color1
+        self.bpy_setting[self.name].color1 = color1
         sp = self.as_dict()
-        self.bonds.setting.build_instancer(sp)
+        self.bonds.settings.build_instancer(sp)
         self.bonds.add_geometry_node(sp)
 
     @property
     def color2(self):
-        return self.collection[self.name].color2
+        return self.bpy_setting[self.name].color2
 
     @color2.setter
     def color2(self, color2):
-        self.collection[self.name].color2 = color2
+        self.bpy_setting[self.name].color2 = color2
         sp = self.as_dict()
-        self.bonds.setting.build_instancer(sp)
+        self.bonds.settings.build_instancer(sp)
         self.bonds.add_geometry_node(sp)
 
     @property
@@ -156,14 +156,14 @@ class BondSetting():
         return s
 
     def as_dict(self) -> dict:
-        data = self.collection[self.name].as_dict()
+        data = self.bpy_setting[self.name].as_dict()
         return data
 
 
 class BondSettings(Setting):
     def __init__(self, label, batoms=None,
                  bonds=None,
-                 bondsetting=None,
+                 bondsettings=None,
                  dcutoff=0.5) -> None:
         """
         BondSettings object
@@ -177,15 +177,27 @@ class BondSettings(Setting):
         """
         Setting.__init__(self, label, coll_name=label)
         self.label = label
-        self.name = 'bbond'
+        self.name = 'Bbond'
         self.dcutoff = dcutoff
         self.batoms = batoms
         self.bonds = bonds
         if len(self) == 0:
             self.add_species_list(self.batoms.species.keys(), dcutoff)
-        if bondsetting is not None:
-            for key, data in bondsetting.items():
+        if bondsettings is not None:
+            for key, data in bondsettings.items():
                 self[key] = data
+
+    def get_collection(self):
+        if self.coll_name:
+            coll = bpy.data.collections.get(self.coll_name)
+            collection = getattr(coll, self.name)
+        elif self.obj_name:
+            obj = bpy.data.objects.get(self.obj_name)
+            collection = getattr(obj, self.name)
+        else:
+            raise KeyError("The collection property {} not exist!".format(self.name))
+        return collection.settings
+
 
     def build_materials(self, sp, order=None, style = None, node_inputs=None,
                         material_style='default'):
@@ -235,7 +247,7 @@ class BondSettings(Setting):
         else:
             obj = self.cylinder(name, order=order, style=style,
                                 vertices=vertices, depth=1, radius=radius)
-        obj.batoms.bond.width = sp['width']
+        obj.Bbond.width = sp['width']
         obj.batoms.type = 'INSTANCER'
         #
         for coll in obj.users_collection:
@@ -474,7 +486,7 @@ class BondSettings(Setting):
         name = tuple2string(index)
         subset = self.find(name)
         if subset is None:
-            subset = self.collection.add()
+            subset = self.bpy_setting.add()
         subset.name = name
         subset.species1 = index[0]
         subset.species2 = index[1]
@@ -496,7 +508,7 @@ class BondSettings(Setting):
 
     def items(self):
         items = []
-        for b in self.collection:
+        for b in self.bpy_setting:
             item = BondSetting(label=self.label, name=b.name, bonds=self.bonds)
             items.append(item)
         return items
@@ -574,10 +586,10 @@ class BondSettings(Setting):
             index = [index]
         for key in index:
             name = tuple2string(key)
-            i = self.collection.find(name)
+            i = self.bpy_setting.find(name)
             if i != -1:
-                self.collection.remove(i)
-                self.coll.batoms.bond_index -= 1
+                self.bpy_setting.remove(i)
+                self.coll.Bbond.ui_list_index -= 1
             else:
                 raise Exception('%s is not in %s' % (name, self.name))
 
@@ -592,7 +604,7 @@ class BondSettings(Setting):
     def __repr__(self) -> str:
         s = "-"*60 + "\n"
         s = "Bondpair    min     max   Search_bond    Polyhedra style\n"
-        for b in self.collection:
+        for b in self.bpy_setting:
             s += "{:10s}  {:4.3f}   {:4.3f}      ".format(b.name, b.min, b.max)
             s += "{:10s}   {:10s}  {:4s} \n".format(str(b.search),
                                                     str(b.polyhedra), b.style)
@@ -601,14 +613,14 @@ class BondSettings(Setting):
 
     def as_dict(self) -> dict:
         bondsetting = {}
-        for b in self.collection:
+        for b in self.bpy_setting:
             bondsetting[(b.species1, b.species2)] = b.as_dict()
         return bondsetting
 
     @property
     def cutoff_dict(self):
         cutoff_dict = {}
-        for b in self.collection:
+        for b in self.bpy_setting:
             cutoff_dict[(b.species1, b.species2)] = [b.min, b.max]
             # if b.search == 2:
             # cutoff_dict[(b.species2, b.species1)] = [b.min, b.max]
@@ -617,7 +629,7 @@ class BondSettings(Setting):
     @property
     def search_dict(self):
         search_dict = {}
-        for b in self.collection:
+        for b in self.bpy_setting:
             search_dict[(b.species1, b.species2)] = b.search
             # if b.search == 2:
             # search_dict[(b.species2, b.species1)] = b.search
@@ -626,7 +638,7 @@ class BondSettings(Setting):
     @property
     def polyhedra_dict(self):
         polyhedra_dict = {}
-        for b in self.collection:
+        for b in self.bpy_setting:
             polyhedra_dict[(b.species1, b.species2)] = b.polyhedra
             # if b.polyhedra == 2:
             # polyhedra_dict[(b.species2, b.species1)] = b.polyhedra

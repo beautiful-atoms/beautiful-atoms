@@ -13,8 +13,6 @@ from . import (
     gui_pubchem,
     gui_rscb,
     ui_list_species,
-    ui_list_bond,
-    ui_list_polyhedra,
     view3d_mt_batoms_add,
     view3d_mt_object_context_menu,
     view3d_mt_edit_mesh_context_menu,
@@ -73,12 +71,6 @@ classes = [
     ui_list_species.BATOMS_MT_species_context_menu,
     ui_list_species.BATOMS_UL_species,
     ui_list_species.BATOMS_PT_species,
-    ui_list_bond.BATOMS_MT_bond_pair_context_menu,
-    ui_list_bond.BATOMS_UL_bond_pairs,
-    ui_list_bond.BATOMS_PT_bond_pairs,
-    ui_list_polyhedra.BATOMS_MT_polyhedra_context_menu,
-    ui_list_polyhedra.BATOMS_UL_polyhedra,
-    ui_list_polyhedra.BATOMS_PT_polyhedra,
     BatomsCollection,
 ]
 

@@ -19,11 +19,11 @@ def test_crystal_shape():
     bpy.ops.batoms.delete()
     au = bulk("Au", cubic=True)
     au = Batoms("au", from_ase=au)
-    au.crystal_shape.setting[(1, 1, 1)] = {
+    au.crystal_shape.settings[(1, 1, 1)] = {
         "distance": 3, "crystal": True, "symmetry": True}
-    au.crystal_shape.setting[(0, 0, 1)] = {'distance': 3, 
+    au.crystal_shape.settings[(0, 0, 1)] = {'distance': 3, 
     'crystal': True, 'symmetry': True}
-    print(au.crystal_shape.setting)
+    print(au.crystal_shape.settings)
     au.crystal_shape.draw(origin=au.cell.center)
     if use_cycles:
         set_cycles_res(au)
@@ -36,15 +36,27 @@ def test_crystal_shape_ops():
     au = Batoms('Au')
     bpy.context.view_layer.objects.active = au.obj
     bpy.ops.plane.crystal_shape_add(indices=(1, 1, 1))
-    au.crystal_shape.setting["1-1-1"].symmetry = True
-    au.crystal_shape.setting["1-1-1"].distance = 3.0
+    au.crystal_shape.settings["1-1-1"].symmetry = True
+    au.crystal_shape.settings["1-1-1"].distance = 3.0
     bpy.ops.plane.crystal_shape_add(indices=(1, 0, 0))
-    assert len(au.crystal_shape.setting) == 2
+    assert len(au.crystal_shape.settings) == 2
     bpy.ops.plane.crystal_shape_draw()
     bpy.ops.plane.crystal_shape_remove(name="1-0-0")
-    assert len(au.crystal_shape.setting) == 8
-    print(au.crystal_shape.setting)
+    assert len(au.crystal_shape.settings) == 8
+    print(au.crystal_shape.settings)
     bpy.ops.plane.crystal_shape_draw()
+
+def test_crystalshape_uilist():
+    """crystalshape panel"""
+    from batoms.batoms import Batoms
+    bpy.ops.batoms.delete()
+    bpy.ops.batoms.bulk_add(formula="Au", cubic=True)
+    au = Batoms('Au')
+    au.obj.select_set(True)
+    assert au.coll.Bcrystalshape.ui_list_index==0
+    bpy.ops.plane.crystal_shape_add(indices=(1, 1, 1))
+    bpy.ops.plane.crystal_shape_add(indices=(1, 0, 0))
+    assert au.coll.Bcrystalshape.ui_list_index==1
 
 
 if __name__ == "__main__":

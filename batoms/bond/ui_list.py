@@ -21,7 +21,7 @@ class BATOMS_MT_bond_pair_context_menu(Menu):
         op.all = True
 
 
-class BATOMS_UL_bond_pairs(UIList):
+class BATOMS_UL_bond_pair(UIList):
     def draw_item(self, _context, layout, _data, item, icon, active_data, _active_propname, index):
         bond_pair = item
         custom_icon = 'OBJECT_DATAMODE'
@@ -37,10 +37,10 @@ class BATOMS_UL_bond_pairs(UIList):
             layout.label(text="", icon=custom_icon)
 
 
-class BATOMS_PT_bond_pairs(Panel):
+class BATOMS_PT_bond_pair(Panel):
     bl_label = "Bond Pair"
     bl_category = "Bond"
-    bl_idname = "BATOMS_PT_Pairs"
+    bl_idname = "BATOMS_PT_Pair"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     # bl_options = {'DEFAULT_CLOSED'}
@@ -59,9 +59,9 @@ class BATOMS_PT_bond_pairs(Panel):
         layout = self.layout
 
         ob = context.object
-        ba = bpy.data.collections[ob.batoms.label].batoms
-        if len(ba.bbond) > 0:
-            kb = ba.bbond[ba.bond_index]
+        ba = bpy.data.collections[ob.batoms.label].Bbond
+        if len(ba.settings) > 0:
+            kb = ba.settings[ba.ui_list_index]
         else:
             kb = None
 
@@ -71,8 +71,8 @@ class BATOMS_PT_bond_pairs(Panel):
         if kb:
             rows = 5
 
-        row.template_list("BATOMS_UL_bond_pairs", "", ba,
-                          "bbond", ba, "bond_index", rows=rows)
+        row.template_list("BATOMS_UL_bond_pair", "", ba,
+                          "settings", ba, "ui_list_index", rows=rows)
 
         col = row.column(align=True)
         op = col.operator("bond.bond_pair_add", icon='ADD', text="")

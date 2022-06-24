@@ -50,7 +50,7 @@ class Cavity(bpy.types.PropertyGroup):
     Blender’s internal data.
 
     """
-    setting: CollectionProperty(name='CavitySetting',
+    settings: CollectionProperty(name='CavitySetting',
                                 type=CavitySetting)
 
     ui_list_index: IntProperty(name="ui_list_index",

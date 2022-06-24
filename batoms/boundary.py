@@ -416,11 +416,11 @@ class Boundary(ObjectGN):
                     boundary = np.array(boundary)
             else:
                 raise Exception('Wrong boundary setting!')
-            self.batoms.coll.batoms.boundary = boundary[:].flatten()
+            self.batoms.coll.batoms.boundary.boundary = boundary[:].flatten()
         self.update()
 
     def get_boundary(self):
-        boundary = np.array(self.batoms.coll.batoms.boundary)
+        boundary = np.array(self.batoms.coll.batoms.boundary.boundary)
         return boundary.reshape(3, -1)
 
     def set_arrays(self, arrays):

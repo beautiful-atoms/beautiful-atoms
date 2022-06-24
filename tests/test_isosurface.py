@@ -22,10 +22,10 @@ def test_slice():
         pytest.skip("Skip tests on cube files since $NOTEST_CUBE provided.")
     bpy.ops.batoms.delete()
     h2o = read("../tests/datas/h2o-homo.cube")
-    h2o.isosurfaces.setting["1"] = {"level": -0.001}
-    h2o.isosurfaces.setting["2"] = {"level": 0.001, "color": [0, 0, 0.8, 0.5]}
-    h2o.isosurfaces.draw()
-    h2o.lattice_plane.setting[(1, 0, 0)] = {"distance": 6, "slicing": True}
+    h2o.isosurface.settings["1"] = {"level": -0.001}
+    h2o.isosurface.settings["2"] = {"level": 0.001, "color": [0, 0, 0.8, 0.5]}
+    h2o.isosurface.draw()
+    h2o.lattice_plane.settings[(1, 0, 0)] = {"distance": 6, "slicing": True}
     h2o.lattice_plane.draw()
     if use_cycles:
         set_cycles_res(h2o)
@@ -40,10 +40,10 @@ def test_diff():
     volume = h2o.volume
     h2o.volume = volume + 0.1
     assert np.allclose(h2o.volume, volume + 0.1)
-    h2o.isosurfaces.setting[1].level = 0.008
-    h2o.isosurfaces.setting[2] = {"level": -0.008, "color": [0, 0, 1, 0.8]}
+    h2o.isosurface.settings[1].level = 0.008
+    h2o.isosurface.settings[2] = {"level": -0.008, "color": [0, 0, 1, 0.8]}
     h2o.model_style = 1
-    h2o.isosurfaces.draw()
+    h2o.isosurface.draw()
     if use_cycles:
         set_cycles_res(h2o)
     else:
@@ -57,16 +57,27 @@ def test_isosurface_ops():
     h2o = read("../tests/datas/h2o-homo.cube")
     bpy.context.view_layer.objects.active = h2o.obj
     bpy.ops.surface.isosurface_draw()
-    assert len(h2o.isosurfaces.setting) == 1
+    assert len(h2o.isosurface.settings) == 1
     bpy.ops.surface.isosurface_remove(name="1")
-    print(h2o.isosurfaces.setting)
-    assert len(h2o.isosurfaces.setting) == 0
+    print(h2o.isosurface.settings)
+    assert len(h2o.isosurface.settings) == 0
     bpy.ops.surface.isosurface_add(name="1")
-    assert len(h2o.isosurfaces.setting) == 1
+    assert len(h2o.isosurface.settings) == 1
     bpy.ops.surface.isosurface_draw()
+
+
+def test_isosurface_uilist():
+    """isosurface panel"""
+    bpy.ops.batoms.delete()
+    h2o = read("../tests/datas/h2o-homo.cube")
+    bpy.context.view_layer.objects.active = h2o.obj
+    h2o.obj.select_set(True)
+    assert h2o.coll.Bisosurface.ui_list_index==0
+    bpy.ops.surface.isosurface_add(name="2")
+    assert h2o.coll.Bisosurface.ui_list_index==1
 
 
 if __name__ == "__main__":
     test_slice()
     test_diff()
-    print("\n Isosurfaces.setting: All pass! \n")
+    print("\n Isosurface.setting: All pass! \n")

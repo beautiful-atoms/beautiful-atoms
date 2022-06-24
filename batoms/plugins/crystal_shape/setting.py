@@ -21,7 +21,7 @@ class CrystalShapeSettings(Setting):
 
     def __init__(self, label, parent=None, plane=None) -> None:
         Setting.__init__(self, label, coll_name='%s' % label)
-        self.name = 'bCrystalShape'
+        self.name = 'Bcrystalshape'
         self.parent = parent
         if plane is not None:
             for key, data in plane.items():
@@ -36,7 +36,7 @@ class CrystalShapeSettings(Setting):
             collection = getattr(obj, self.name)
         else:
             raise KeyError("The collection property {} not exist!".format(self.name))
-        return collection.setting
+        return collection.settings
 
     def __setitem__(self, index, setdict):
         """
@@ -45,7 +45,7 @@ class CrystalShapeSettings(Setting):
         name = tuple2string(index)
         p = self.find(name)
         if p is None:
-            p = self.collection.add()
+            p = self.bpy_setting.add()
         p.indices = index
         p.name = name
         p.flag = True
@@ -59,7 +59,7 @@ class CrystalShapeSettings(Setting):
     def __repr__(self) -> str:
         s = "-"*60 + "\n"
         s = "Indices   distance  symmetry  \n"
-        for p in self.collection:
+        for p in self.bpy_setting:
             s += "{0:10s}   {1:1.3f}   ".format(p.name, p.distance)
             s += "{:10s} \n".format(
                 str(p.symmetry))
@@ -78,7 +78,7 @@ class CrystalShapeSettings(Setting):
                     name = tuple2string(index)
                     p1 = self.find(name)
                     if p1 is None:
-                        p1 = self.collection.add()
+                        p1 = self.bpy_setting.add()
                         for key, value in setdict.items():
                             setattr(p1, key, value)
                         p1.name = name

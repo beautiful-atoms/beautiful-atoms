@@ -1,3 +1,4 @@
+import bpy
 from batoms.base.collection import Setting
 import numpy as np
 from batoms.utils import string2Number
@@ -30,6 +31,14 @@ class Select():
         self.coll_name = '%s_%s' % (label, name)
         if indices is not None:
             self.indices = indices
+
+    def get_bpy_setting(self):
+        if self.coll_name:
+            coll = bpy.data.collections.get(self.coll_name)
+            data = getattr(coll.batoms, self.name)
+        else:
+            raise KeyError("The collection property {} not exist!".format(self.name))
+        return data.setting
 
     @property
     def positions(self):
@@ -194,7 +203,7 @@ class Select():
         radius depends on radius style, thus could be with select
         """
         radius = {}
-        for sp in self.collection:
+        for sp in self.bpy_setting:
             radius[sp.name] = sp.radius
         return radius
 
@@ -230,8 +239,16 @@ class Selects(Setting):
     def __init__(self, label, batoms=None) -> None:
         Setting.__init__(self, label, coll_name=label)
         self.label = label
-        self.name = 'bselect'
+        self.name = 'batoms'
         self.batoms = batoms
+
+    def get_bpy_setting(self):
+        if self.coll_name:
+            coll = bpy.data.collections.get(self.coll_name)
+            data = getattr(coll, self.name)
+        else:
+            raise KeyError("The collection property {} not exist!".format(self.name))
+        return data.settings_select
 
     @property
     def selects(self):
@@ -239,7 +256,7 @@ class Selects(Setting):
 
     def get_selects(self):
         selects = {}
-        for b in self.collection:
+        for b in self.bpy_setting:
             selects[b.name] = Select(self.label, name=b.name,
                                      batoms=self.batoms)
         for vg in self.batoms.obj.vertex_groups:
@@ -288,7 +305,7 @@ class Selects(Setting):
         sel = None
         subset = self.find(name)
         if subset is None:
-            subset = self.collection.add()
+            subset = self.bpy_setting.add()
         subset.name = name
         subset.label = self.label
         subset.flag = True

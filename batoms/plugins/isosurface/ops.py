@@ -22,8 +22,8 @@ class IsosurfaceAdd(OperatorBatoms):
     def execute(self, context):
         obj = context.object
         batoms = Batoms(label=context.object.batoms.label)
-        batoms.isosurfaces.setting.add(self.name)
-        batoms.coll.bIsosurface.ui_list_index = len(batoms.isosurfaces.setting) - 1
+        batoms.isosurface.settings.add(self.name)
+        batoms.coll.Bisosurface.ui_list_index = len(batoms.isosurface.settings) - 1
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 
@@ -44,10 +44,10 @@ class IsosurfaceRemove(OperatorBatoms):
     def execute(self, context):
         obj = context.object
         batoms = Batoms(label=obj.batoms.label)
-        index = batoms.coll.bIsosurface.ui_list_index
-        batoms.isosurfaces.setting.remove((self.name))
-        batoms.coll.bIsosurface.ui_list_index = min(max(0, index - 1),
-                                                  len(batoms.isosurfaces.setting) - 1)
+        index = batoms.coll.Bisosurface.ui_list_index
+        batoms.isosurface.settings.remove((self.name))
+        batoms.coll.Bisosurface.ui_list_index = min(max(0, index - 1),
+                                                  len(batoms.isosurface.settings) - 1)
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 
@@ -64,7 +64,7 @@ class IsosurfaceDraw(OperatorBatoms):
     def execute(self, context):
         obj = context.object
         batoms = Batoms(label=obj.batoms.label)
-        batoms.isosurfaces.draw(self.name)
+        batoms.isosurface.draw(self.name)
         context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 

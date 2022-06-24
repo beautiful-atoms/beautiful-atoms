@@ -28,9 +28,9 @@ def register_class():
     for cls in classes:
         register_class(cls)
     # attach to blender internal data
-    Collection.bLatticePlane = PointerProperty(name='bLatticePlane',
+    Collection.Blatticeplane = PointerProperty(name='Blatticeplane',
                                         type=bpy_data.LatticePlane)
-    Object.bLatticePlane = PointerProperty(name='bLatticePlane',
+    Object.Blatticeplane = PointerProperty(name='Blatticeplane',
                                     type=bpy_data.LatticePlane)
 
 
@@ -40,5 +40,5 @@ def unregister_class():
     for cls in reversed(classes):
         unregister_class(cls)
 
-    del Collection.bLatticePlane
-    del Object.bLatticePlane
+    del Collection.Blatticeplane
+    del Object.Blatticeplane

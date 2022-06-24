@@ -27,9 +27,9 @@ def register_class():
     for cls in classes:
         register_class(cls)
     # attach to blender internal data
-    Collection.bCavity = PointerProperty(name='BCavity',
+    Collection.Bcavity = PointerProperty(name='Bcavity',
                                         type=bpy_data.Cavity)
-    Object.bCavity = PointerProperty(name='BCavity',
+    Object.Bcavity = PointerProperty(name='Bcavity',
                                     type=bpy_data.Cavity)
 
 
@@ -39,5 +39,5 @@ def unregister_class():
     for cls in reversed(classes):
         unregister_class(cls)
 
-    del Collection.bCavity
-    del Object.bCavity
+    del Collection.Bcavity
+    del Object.Bcavity

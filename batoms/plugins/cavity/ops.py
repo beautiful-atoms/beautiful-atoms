@@ -20,8 +20,8 @@ class CavityAdd(OperatorBatoms):
     def execute(self, context):
         obj = context.object
         batoms = Batoms(label=context.object.batoms.label)
-        batoms.cavity.setting.add(self.name)
-        batoms.coll.bCavity.ui_list_index = len(batoms.cavity.setting) - 1
+        batoms.cavity.settings.add(self.name)
+        batoms.coll.Bcavity.ui_list_index = len(batoms.cavity.settings) - 1
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 
@@ -42,10 +42,10 @@ class CavityRemove(OperatorBatoms):
     def execute(self, context):
         obj = context.object
         batoms = Batoms(label=obj.batoms.label)
-        index = batoms.coll.bCavity.ui_list_index
-        batoms.cavity.setting.remove((self.name))
-        batoms.coll.bCavity.ui_list_index = min(max(0, index - 1),
-                                                  len(batoms.cavity.setting) - 1)
+        index = batoms.coll.Bcavity.ui_list_index
+        batoms.cavity.settings.remove((self.name))
+        batoms.coll.Bcavity.ui_list_index = min(max(0, index - 1),
+                                                  len(batoms.cavity.settings) - 1)
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 

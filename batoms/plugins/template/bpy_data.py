@@ -39,5 +39,5 @@ class Template(bpy.types.PropertyGroup):
     show: BoolProperty(name="show", default=True)
     ui_list_index: IntProperty(name="ui_list_index",
                               default=0)
-    setting: CollectionProperty(name='TemplateSetting',
+    settings: CollectionProperty(name='TemplateSetting',
                                 type=TemplateSetting)

@@ -135,7 +135,7 @@ class Setting():
             dict: dict of properties.
         """
         data = {}
-        for b in self.collection:
+        for b in self.bpy_setting:
             data[b.name] = b
         return data
 
@@ -171,24 +171,24 @@ class Setting():
         return obj
 
     @property
-    def collection(self):
-        """Collection properties
+    def bpy_setting(self):
+        """bpy_setting properties
 
         Returns:
-            bpy.props.CollectionProperty: colleciton of the properties
+            bpy.props.bpy_settingProperty: colleciton of the properties
         """
-        return self.get_collection()
+        return self.get_bpy_setting()
 
-    def get_collection(self):
+    def get_bpy_setting(self):
         if self.coll_name:
             coll = bpy.data.collections.get(self.coll_name)
-            collection = getattr(coll.batoms, self.name)
+            data = getattr(coll, self.name)
         elif self.obj_name:
             obj = bpy.data.objects.get(self.obj_name)
-            collection = getattr(obj.batoms, self.name)
+            data = getattr(obj, self.name)
         else:
             raise KeyError("The collection property {} not exist!".format(self.name))
-        return collection
+        return data.settings
 
     @property
     def data(self):
@@ -208,7 +208,7 @@ class Setting():
         name = tuple2string(index)
         subset = self.find(name)
         if subset is None:
-            subset = self.collection.add()
+            subset = self.bpy_setting.add()
         subset.name = name
         for key, value in setdict.items():
             setattr(subset, key, value)
@@ -221,7 +221,7 @@ class Setting():
         for data in datas:
             subset = self.find(data['name'])
             if subset is None:
-                subset = self.collection.add()
+                subset = self.bpy_setting.add()
             for key, value in data.items():
                 setattr(subset, key, value)
             subset.label = self.label
@@ -244,9 +244,9 @@ class Setting():
             index = [index]
         for key in index:
             name = tuple2string(key)
-            i = self.collection.find(name)
+            i = self.bpy_setting.find(name)
             if i != -1:
-                self.collection.remove(i)
+                self.bpy_setting.remove(i)
             else:
                 raise Exception('%s is not in %s' % (name, self.name))
 
@@ -267,25 +267,25 @@ class Setting():
         return self
 
     def __iter__(self):
-        item = self.collection
+        item = self.bpy_setting
         for i in range(len(item)):
             yield item[i]
 
     def __len__(self):
-        return len(self.collection)
+        return len(self.bpy_setting)
 
     def find(self, name):
-        i = self.collection.find(str(name))
+        i = self.bpy_setting.find(str(name))
         if i == -1:
             # print('%s is not in %s'%(name, self.name))
             return None
         else:
-            return self.collection[i]
+            return self.bpy_setting[i]
 
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
         s = 'Name\n'
-        for b in self.collection:
+        for b in self.bpy_setting:
             s += '{0:10s}  \n'.format(
                 b.name)
         s += '-'*60 + '\n'

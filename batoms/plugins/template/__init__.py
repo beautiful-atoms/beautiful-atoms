@@ -26,9 +26,9 @@ def register_class():
     for cls in classes:
         register_class(cls)
     # attach to blender internal data
-    Collection.btemplate = PointerProperty(name='Btemplate',
+    Collection.Btemplate = PointerProperty(name='Btemplate',
                                         type=bpy_data.Template)
-    Object.btemplate = PointerProperty(name='Btemplate',
+    Object.Btemplate = PointerProperty(name='Btemplate',
                                     type=bpy_data.Template)
 
 
@@ -38,5 +38,5 @@ def unregister_class():
     for cls in reversed(classes):
         unregister_class(cls)
 
-    del Collection.btemplate
-    del Object.btemplate
+    del Collection.Btemplate
+    del Object.Btemplate

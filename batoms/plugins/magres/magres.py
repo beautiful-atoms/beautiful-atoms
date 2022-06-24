@@ -9,7 +9,7 @@ import bmesh
 from time import time
 import numpy as np
 from batoms.base.object import BaseObject
-from .setting import MagresSetting
+from .setting import MagresSettings
 import logging
 # logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ class Magres(BaseObject):
         self.tensors = tensors
         name = 'magres'
         BaseObject.__init__(self, label, name)
-        self.setting = MagresSetting(
+        self.settings = MagresSettings(
             self.label, parent=self)
 
     def build_materials(self, name, color, node_inputs=None,
@@ -57,7 +57,7 @@ class Magres(BaseObject):
         from batoms.utils.butils import clean_coll_object_by_type
         # delete old plane
         clean_coll_object_by_type(self.batoms.coll, 'MAGRES')
-        for magres in self.setting.collection:
+        for magres in self.settings.bpy_setting:
             if magres_name.upper() != "ALL" and magres.name != magres_name:
                 continue
             if magres.type == 'MS':
@@ -68,7 +68,7 @@ class Magres(BaseObject):
     @property
     def ms_objs(self):
         ms_objs = {}
-        for magres in self.setting.collection:
+        for magres in self.settings.bpy_setting:
             ms_name = '%s_%s_ms' % (self.label, magres.name)
             obj = bpy.data.objects.get(ms_name)
             ms_objs[magres.name] = obj
@@ -81,7 +81,7 @@ class Magres(BaseObject):
     @property
     def cs_objs(self):
         cs_objs = {}
-        for magres in self.setting.collection:
+        for magres in self.settings.bpy_setting:
             ms_name = '%s_%s_cs' % (self.label, magres.name)
             obj = bpy.data.objects.get(ms_name)
             cs_objs[magres.name] = obj

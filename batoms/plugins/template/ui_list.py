@@ -57,9 +57,9 @@ class BATOMS_PT_template(Panel):
         layout = self.layout
 
         ob = context.object
-        ba = bpy.data.collections[ob.batoms.label].batoms
-        if len(ba.btemplate) > 0:
-            kb = ba.btemplate[ba.template_index]
+        ba = bpy.data.collections[ob.batoms.label].Btemplate
+        if len(ba.setting) > 0:
+            kb = ba.setting[ba.ui_list_index]
         else:
             kb = None
 
@@ -69,8 +69,8 @@ class BATOMS_PT_template(Panel):
         if kb:
             rows = 5
 
-        row.template_list("BATOMS_UL_template", "", ba, "btemplate",
-                          ba, "template_index", rows=rows)
+        row.template_list("BATOMS_UL_template", "", ba, "setting",
+                          ba, "ui_list_index", rows=rows)
 
         col = row.column(align=True)
         op = col.operator("surface.template_add", icon='ADD', text="")

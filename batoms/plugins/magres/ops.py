@@ -18,8 +18,8 @@ class MagresAdd(OperatorBatoms):
     def execute(self, context):
         obj = context.object
         batoms = Batoms(label=context.object.batoms.label)
-        batoms.magres.setting.add(self.name)
-        batoms.coll.batoms.magres_index = len(batoms.magres.setting) - 1
+        batoms.magres.settings.add(self.name)
+        batoms.coll.Bmagres.ui_list_index = len(batoms.magres.settings) - 1
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 
@@ -40,10 +40,10 @@ class MagresRemove(OperatorBatoms):
     def execute(self, context):
         obj = context.object
         batoms = Batoms(label=obj.batoms.label)
-        index = batoms.coll.batoms.magres_index
-        batoms.magres.setting.remove((self.name))
-        batoms.coll.batoms.magres_index = min(max(0, index - 1),
-                                          len(batoms.magres.setting) - 1)
+        index = batoms.coll.Bmagres.ui_list_index
+        batoms.magres.settings.remove((self.name))
+        batoms.coll.Bmagres.ui_list_index = min(max(0, index - 1),
+                                          len(batoms.magres.settings) - 1)
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 

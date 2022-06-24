@@ -29,8 +29,8 @@ class BondPairAdd(OperatorBatoms):
         obj = context.object
         batoms = Batoms(label=context.object.batoms.label)
         pair = (self.species1, self.species2)
-        batoms.bonds.setting.add(pair)
-        batoms.coll.batoms.bond_index = len(batoms.bonds.setting) - 1
+        batoms.bond.settings.add(pair)
+        batoms.coll.Bbond.ui_list_index = len(batoms.bond.settings) - 1
         context.view_layer.objects.active = obj
         self.report({"INFO"}, "Add bond pair {} {}".format(
             self.species1, self.species2))
@@ -53,10 +53,10 @@ class BondPairRemove(OperatorBatoms):
     def execute(self, context):
         obj = context.object
         batoms = Batoms(label=obj.batoms.label)
-        index = batoms.coll.batoms.bond_index
-        batoms.bonds.setting.remove((self.name))
-        batoms.coll.batoms.bond_index = min(max(0, index - 1),
-                                            len(batoms.bonds.setting) - 1)
+        index = batoms.coll.Bbond.ui_list_index
+        batoms.bond.settings.remove((self.name))
+        batoms.coll.Bbond.ui_list_index = min(max(0, index - 1),
+                                            len(batoms.bond.settings) - 1)
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 
@@ -133,7 +133,7 @@ class BondOrderAutoSet(OperatorBatoms):
     def execute(self, context):
         obj = context.object
         batoms = Batoms(label=context.object.batoms.label)
-        batoms.bonds.bond_order_auto_set()
+        batoms.bond.bond_order_auto_set()
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 
@@ -145,7 +145,7 @@ class BondShowHydrogenBond(OperatorBatoms):
     def execute(self, context):
         obj = context.object
         batoms = Batoms(label=context.object.batoms.label)
-        batoms.bonds.show_hydrogen_bond = not batoms.bonds.show_hydrogen_bond
+        batoms.bond.show_hydrogen_bond = not batoms.bond.show_hydrogen_bond
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 
@@ -157,7 +157,7 @@ class BondShowSearch(OperatorBatoms):
     def execute(self, context):
         obj = context.object
         batoms = Batoms(label=context.object.batoms.label)
-        batoms.bonds.show_search = not batoms.bonds.show_search
-        batoms.bonds.update()
+        batoms.bond.show_search = not batoms.bond.show_search
+        batoms.bond.update()
         context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}

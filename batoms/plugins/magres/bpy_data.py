@@ -3,6 +3,7 @@ from bpy.props import (StringProperty,
                        BoolProperty,
                        IntProperty,
                        FloatProperty,
+                       EnumProperty,
                        FloatVectorProperty,
                        CollectionProperty,
                        )
@@ -10,48 +11,58 @@ from bpy.props import (StringProperty,
 from batoms.custom_property import Base
 
 
-class CavitySetting(Base):
+class MagresSetting(Base):
     """
     """
     flag: BoolProperty(name="flag", default=False)
     name: StringProperty(name="name")
-    label: StringProperty(name="label", default='')
-    min: FloatProperty(name="min", default=5)
-    max: FloatProperty(name="max", default=6)
-    resolution: FloatProperty(name="resolution", soft_min=0.5, soft_max=2,
-                              default=1.0)
+    label: StringProperty(name="label", default='batoms')
+    type: EnumProperty(
+        name="type",
+        description="Surface type",
+        items=(('MS', "MS", ""),
+               ('CS', "CS", ""),
+               ),
+        default='MS')
+    scale: FloatProperty(name="scale", soft_min=0.01, soft_max=1, default=0.01)
+    resolution: FloatProperty(name="resolution", soft_min=0.2, soft_max=2,
+                              default=0.5)
+    select: StringProperty(name="select", default='all')
     color: FloatVectorProperty(name="color", size=4,
                                subtype='COLOR',
                                min=0, max=1,
-                               default=[1, 1, 0, 1.0],
-                               )
+                               default=[0, 1, 1, 0.5])
 
     def as_dict(self) -> dict:
         setdict = {
             'flag': self.flag,
-            'min': self.min,
-            'max': self.max,
+            'label': self.label,
             'name': self.name,
-            'material_style': self.material_style,
             'color': self.color[:],
+            'scale': self.scale,
+            'resolution': self.resolution,
+            'select': self.select,
+            'material_style': self.material_style,
         }
         return setdict
 
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
-        s = 'Name      min    max        color            \n'
-        s += '{:10s}   {:1.2f} {:1.2f} [{:1.2f}  {:1.2f}  {:1.2f}   {:1.2f}] \n'.format(
-            self.name, self.min, self.max, self.color[0], self.color[1], self.color[2], self.color[3])
+        s = 'Name   select     scale   resolution    color  \n'
+        s += '{:6s}  {:6s}  {:1.3f}  {:1.3f}  [{:1.2f}  {:1.2f}  {:1.2f}   {:1.2f}] \n'.format(
+            self.name, self.select, self.scale, self.resolution, self.color[0], self.color[1], self.color[2], self.color[3])
         s += '-'*60 + '\n'
         return s
 
-class Cavity(bpy.types.PropertyGroup):
-    """This module defines the cavity properties to extend 
+
+
+class Magres(bpy.types.PropertyGroup):
+    """This module defines the Magres properties to extend 
     Blender’s internal data.
 
     """
-    setting: CollectionProperty(name='CavitySetting',
-                                type=CavitySetting)
+    settings: CollectionProperty(name='MagresSetting',
+                                type=MagresSetting)
 
     ui_list_index: IntProperty(name="ui_list_index",
                               default=0)

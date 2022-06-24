@@ -28,9 +28,9 @@ def register_class():
     for cls in classes:
         register_class(cls)
     # attach to blender internal data
-    Collection.bCrystalShape = PointerProperty(name='bCrystalShape',
+    Collection.Bcrystalshape = PointerProperty(name='Bcrystalshape',
                                         type=bpy_data.CrystalShape)
-    Object.bCrystalShape = PointerProperty(name='bCrystalShape',
+    Object.Bcrystalshape = PointerProperty(name='Bcrystalshape',
                                     type=bpy_data.CrystalShape)
 
 
@@ -40,5 +40,5 @@ def unregister_class():
     for cls in reversed(classes):
         unregister_class(cls)
 
-    del Collection.bCrystalShape
-    del Object.bCrystalShape
+    del Collection.Bcrystalshape
+    del Object.Bcrystalshape

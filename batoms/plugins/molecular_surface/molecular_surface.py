@@ -9,7 +9,7 @@ import bmesh
 from time import time
 import numpy as np
 from batoms.base.object import BaseObject
-from .setting import MolecularSurfaceSetting
+from .setting import MolecularSurfaceSettings
 import logging
 # logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ class MolecularSurface(BaseObject):
         self.label = label
         name = 'plane'
         BaseObject.__init__(self, label, name)
-        self.setting = MolecularSurfaceSetting(
+        self.settings = MolecularSurfaceSettings(
             self.label, parent=self)
 
     def build_materials(self, name, color, node_inputs=None,
@@ -55,7 +55,7 @@ class MolecularSurface(BaseObject):
         from batoms.utils.butils import clean_coll_object_by_type
         # delete old plane
         clean_coll_object_by_type(self.batoms.coll, 'MS')
-        for ms in self.setting.collection:
+        for ms in self.settings.bpy_setting:
             if ms_name.upper() != "ALL" and ms.name != ms_name:
                 continue
             if ms.type == 'SAS':
@@ -66,7 +66,7 @@ class MolecularSurface(BaseObject):
     @property
     def sas_objs(self):
         sas_objs = {}
-        for ms in self.setting.collection:
+        for ms in self.settings.bpy_setting:
             sas_name = '%s_%s_sas' % (self.label, ms.name)
             obj = bpy.data.objects.get(sas_name)
             sas_objs[ms.name] = obj
@@ -83,7 +83,7 @@ class MolecularSurface(BaseObject):
     @property
     def ses_objs(self):
         ses_objs = {}
-        for ms in self.setting.collection:
+        for ms in self.settings.bpy_setting:
             sas_name = '%s_%s_ses' % (self.label, ms.name)
             obj = bpy.data.objects.get(sas_name)
             ses_objs[ms.name] = obj
@@ -129,7 +129,7 @@ class MolecularSurface(BaseObject):
                       'edges': [],
                       'faces': faces,
                       'color': color,
-                      'battr_inputs': {'bMolecularSurface': {}}
+                      'battr_inputs': {'Bmolecularsurface': {}}
                       }
         logger.debug('Marching_cube: %s' % (time() - tstart))
         return isosurface

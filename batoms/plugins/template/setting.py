@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 
-class TemplateSetting(Setting):
+class TemplateSettings(Setting):
     def __init__(self, label, parent) -> None:
         """Template object
         This object store the plugin setting.
@@ -21,7 +21,7 @@ class TemplateSetting(Setting):
         """
         Setting.__init__(self, label, coll_name=label)
         self.label = label
-        self.name = 'btemplate'
+        self.name = 'Btemplate'
         self.parent = parent
         # initialize a default setting
         if len(self) == 0:
@@ -42,7 +42,7 @@ class TemplateSetting(Setting):
     def __repr__(self) -> str:
         s = "-"*60 + "\n"
         s = "name  type select\n"
-        for setting in self.collection:
+        for setting in self.bpy_setting:
             s += "{:4s}   {:6s}   {:6s}".format(
                 setting.name, setting.type, setting.select)
         s += "-"*60 + "\n"

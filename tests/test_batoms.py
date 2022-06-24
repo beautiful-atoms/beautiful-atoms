@@ -107,8 +107,8 @@ def test_auto_build_species():
     magnetite = read("../tests/datas/magnetite.cif")
     magnetite.auto_build_species()
     assert len(magnetite.species) == 5
-    assert len(magnetite.bonds.setting) == 10
-    assert len(magnetite.polyhedras.setting) == 3
+    assert len(magnetite.bond.settings) == 10
+    assert len(magnetite.polyhedra.settings) == 3
 
 def test_batoms_write():
     """Export Batoms to structure file
@@ -399,7 +399,7 @@ def test_export_mesh_x3d():
     tio2 = read("../tests/datas/tio2.cif")
     tio2.boundary = 0.01
     tio2.model_style = 2
-    tio2.bonds.show_search = True
+    tio2.bond.show_search = True
     tio2.export_mesh("tio2.x3d", with_cell=True,
                      with_polyhedra=True,
                      with_boundary=True,
@@ -420,7 +420,7 @@ def test_export_mesh_obj():
     tio2 = read("../tests/datas/tio2.cif")
     tio2.boundary = 0.01
     tio2.model_style = 2
-    tio2.bonds.show_search = True
+    tio2.bond.show_search = True
     tio2.export_mesh("tio2.obj", with_cell=True,
                      with_polyhedra=True,
                      with_boundary=True,

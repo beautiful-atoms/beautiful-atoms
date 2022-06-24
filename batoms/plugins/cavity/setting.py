@@ -32,7 +32,7 @@ class CavitySettings(Setting):
         self.label = label
         self.batoms = batoms
         self.parent = parent
-        self.name = 'bCavity'
+        self.name = 'Bcavity'
         # add a default level
         if cavitysetting is not None:
             for key, data in cavitysetting.items():
@@ -41,17 +41,6 @@ class CavitySettings(Setting):
         if volume is not None:
             if len(self) == 0:
                 self['1'] = {'level': volume.max()/8, 'color': [1, 1, 0, 0.8]}
-
-    def get_collection(self):
-        if self.coll_name:
-            coll = bpy.data.collections.get(self.coll_name)
-            collection = getattr(coll, self.name)
-        elif self.obj_name:
-            obj = bpy.data.objects.get(self.obj_name)
-            collection = getattr(obj, self.name)
-        else:
-            raise KeyError("The collection property {} not exist!".format(self.name))
-        return collection.setting
 
     def add(self, cavity):
         if isinstance(cavity, str):
@@ -62,14 +51,14 @@ class CavitySettings(Setting):
     def remove_cavitys(self, cavity):
         for key in cavity:
             name = '%s-%s' % (key[0], key[1])
-            i = self.collection.find(name)
+            i = self.bpy_setting.find(name)
             if i != -1:
-                self.collection.remove(i)
+                self.bpy_setting.remove(i)
 
     def __repr__(self) -> str:
         s = "-"*60 + "\n"
         s = "Name     min   max              color  \n"
-        for cav in self.collection:
+        for cav in self.bpy_setting:
             s += "{:10s}   {:1.6f}   {:1.6f}".format(cav.name, cav.min, cav.max)
             s += "[{:1.2f}  {:1.2f}  {:1.2f}  {:1.2f}] \n".format(
                 cav.color[0], cav.color[1], cav.color[2], cav.color[3])
@@ -83,7 +72,7 @@ class CavitySettings(Setting):
         name = str(name)
         subset = self.find(name)
         if subset is None:
-            subset = self.collection.add()
+            subset = self.bpy_setting.add()
         subset.name = name
         for key, value in setdict.items():
             setattr(subset, key, value)

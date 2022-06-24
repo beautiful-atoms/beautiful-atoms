@@ -60,10 +60,10 @@ def test_cavity_ops():
     mof = read("../tests/datas/mof-5.cif")
     bpy.context.view_layer.objects.active = mof.obj
     bpy.ops.surface.cavity_draw()
-    assert len(mof.cavity.setting) == 1
+    assert len(mof.cavity.settings) == 1
     bpy.ops.surface.cavity_remove(name="0")
-    print(mof.cavity.setting)
-    assert len(mof.cavity.setting) == 0
+    print(mof.cavity.settings)
+    assert len(mof.cavity.settings) == 0
 
 
 if __name__ == "__main__":

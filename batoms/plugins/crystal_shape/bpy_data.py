@@ -72,7 +72,7 @@ class CrystalShape(bpy.types.PropertyGroup):
     Blender’s internal data.
 
     """
-    setting: CollectionProperty(name='CrystalShapeSetting',
+    settings: CollectionProperty(name='CrystalShapeSetting',
                                 type=CrystalShapeSetting)
 
     ui_list_index: IntProperty(name="ui_list_index",

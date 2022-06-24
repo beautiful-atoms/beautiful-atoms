@@ -12,6 +12,15 @@ logger = logging.getLogger(__name__)
 
 
 class Attributes(Setting):
+    """Attribute information for bpy.data.object.
+
+    It should be bounded to an object, because each object 
+    has different attributes. One collection, however, could have
+    many objects.
+
+    Args:
+        Setting (_type_): _description_
+    """
     def __init__(self, label, parent, obj_name = None,
                  ) -> None:
         """Attributes object
@@ -25,8 +34,16 @@ class Attributes(Setting):
         """
         Setting.__init__(self, label, obj_name=obj_name)
         self.label = label
-        self.name = 'battribute'
+        self.name = 'batoms'
         self.parent = parent
+    
+    def get_bpy_setting(self):
+        if self.obj_name:
+            coll = bpy.data.objects.get(self.obj_name)
+            data = getattr(coll, self.name)
+        else:
+            raise KeyError("The collection property {} not exist!".format(self.name))
+        return data.settings_attribute
 
     def add(self, datas=None):
         """Add new attribute
@@ -131,7 +148,7 @@ class Attributes(Setting):
     def __repr__(self) -> str:
         s = "-"*60 + "\n"
         s = "{:20s}{:10s}{:10s}{:10s}   {:20s}\n".format("Name", "Type", "Domain", "Dimension", "Shape")
-        for att in self.collection:
+        for att in self.bpy_setting:
             s += "{:20s}{:10s}{:10s}{:10d}  [".format(
                 att.name, att.data_type, att.domain, att.dimension)
             for i in range(att.dimension):

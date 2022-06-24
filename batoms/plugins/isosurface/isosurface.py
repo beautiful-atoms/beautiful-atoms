@@ -32,20 +32,20 @@ class Isosurface(BaseObject):
         self.label = label
         name = 'isosurface'
         BaseObject.__init__(self, label, name)
-        self.setting = IsosurfaceSettings(
+        self.settings = IsosurfaceSettings(
             self.label, batoms=batoms, parent=self)
 
     def build_isosurface(self, cell):
         volume = self.batoms.volume
         isosurface = {}
-        for iso in self.setting.collection:
+        for iso in self.settings.bpy_setting:
             verts, faces = calc_isosurface(volume, cell, iso.level)
             isosurface[iso.name] = {'vertices': verts,
                                     'edges': [],
                                     'faces': faces,
                                     'material_style': iso.material_style,
                                     'color': iso.color,
-                                    'battr_inputs': {'bIsosurface': iso.as_dict()}
+                                    'battr_inputs': {'Bisosurface': iso.as_dict()}
                                     }
         return isosurface
 

@@ -57,9 +57,9 @@ class BATOMS_PT_magres(Panel):
         layout = self.layout
 
         ob = context.object
-        ba = bpy.data.collections[ob.batoms.label].batoms
-        if len(ba.bmagres) > 0:
-            kb = ba.bmagres[ba.magres_index]
+        ba = bpy.data.collections[ob.batoms.label].Bmagres
+        if len(ba.settings) > 0:
+            kb = ba.settings[ba.ui_list_index]
         else:
             kb = None
 
@@ -69,8 +69,8 @@ class BATOMS_PT_magres(Panel):
         if kb:
             rows = 5
 
-        row.template_list("BATOMS_UL_magres", "", ba, "bmagres",
-                          ba, "magres_index", rows=rows)
+        row.template_list("BATOMS_UL_magres", "", ba, "settings",
+                          ba, "ui_list_index", rows=rows)
 
         col = row.column(align=True)
         op = col.operator("surface.magres_add", icon='ADD', text="")
