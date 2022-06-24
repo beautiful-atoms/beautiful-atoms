@@ -5,7 +5,7 @@ env:
   BASE_IMAGE_NAME: blender-env
   IMAGE_NAME: beautiful-atoms
   TEST_TAG: beautiful-atoms:tests
-  LATEST_VERSION: "3.1"
+  LATEST_VERSION: "3.2"
 
 on:
   push:

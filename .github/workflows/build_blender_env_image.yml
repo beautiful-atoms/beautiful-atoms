@@ -4,7 +4,7 @@ env:
   DOCKERHUB_USERNAME: luciusm
   IMAGE_NAME: blender-env
   TEST_TAG: blender-env:tests
-  LATEST_VERSION: "3.1"
+  LATEST_VERSION: "3.2"
 
 on:
   push:
