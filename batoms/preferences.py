@@ -238,7 +238,7 @@ class BatomsAddonPreferences(AddonPreferences):
         description="Enable magres plugin",
         get=get_plugin("magres"),
         set=set_plugin("magres"),
-        default=False,
+        default=True,
     )
 
     cavity: BoolProperty(
