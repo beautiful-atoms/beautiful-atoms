@@ -21,7 +21,7 @@ class LatticePlaneAdd(OperatorBatoms):
         obj = context.object
         batoms = Batoms(label=context.object.batoms.label)
         batoms.lattice_plane.setting.add(self.indices)
-        batoms.coll.batoms.latticeplane_index = len(batoms.lattice_plane.setting) - 1
+        batoms.coll.bLatticePlane.ui_list_index = len(batoms.lattice_plane.setting) - 1
         context.view_layer.objects.active = obj
         self.report({"INFO"}, "Add lattice plane ({}{}{})."
             .format(self.indices[0], self.indices[1], self.indices[2]))
@@ -44,9 +44,9 @@ class LatticePlaneRemove(OperatorBatoms):
     def execute(self, context):
         obj = context.object
         batoms = Batoms(label=obj.batoms.label)
-        index = batoms.coll.batoms.latticeplane_index
+        index = batoms.coll.bLatticePlane.ui_list_index
         batoms.lattice_plane.setting.remove((self.name))
-        batoms.coll.batoms.latticeplane_index = min(max(0, index - 1),
+        batoms.coll.bLatticePlane.ui_list_index = min(max(0, index - 1),
                                                     len(batoms.lattice_plane.setting) - 1)
         context.view_layer.objects.active = obj
         return {'FINISHED'}

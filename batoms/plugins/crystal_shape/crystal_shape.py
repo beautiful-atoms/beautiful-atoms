@@ -113,7 +113,7 @@ class CrystalShape(BaseObject):
                                         'width': p.width,
                                         'battr_inputs': {},
                                         },
-                     'battr_inputs': {'plane': p.as_dict()},
+                     'battr_inputs': {'bCrystalShape': p.as_dict()},
                      'show_edge': p.show_edge,
                      'slicing': p.slicing,
                      'boundary': p.boundary,

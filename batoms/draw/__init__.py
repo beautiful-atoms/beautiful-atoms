@@ -87,7 +87,7 @@ def draw_surface_from_vertices(name,
     obj.data = mesh
     #
     for name, inputs in datas['battr_inputs'].items():
-        battr = getattr(obj.batoms, name)
+        battr = getattr(obj, name)
         for key, value in inputs.items():
             setattr(battr, key, value)
     bpy.ops.object.shade_smooth()

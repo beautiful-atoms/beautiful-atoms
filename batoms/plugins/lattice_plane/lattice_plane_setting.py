@@ -28,11 +28,22 @@ class LatticePlaneSettings(Setting):
 
     def __init__(self, label, parent = None, plane=None) -> None:
         Setting.__init__(self, label, coll_name='%s' % label)
-        self.name = 'blatticeplane'
+        self.name = 'bLatticePlane'
         self.parent = parent
         if plane is not None:
             for key, data in plane.items():
                 self[key] = data
+
+    def get_collection(self):
+        if self.coll_name:
+            coll = bpy.data.collections.get(self.coll_name)
+            collection = getattr(coll, self.name)
+        elif self.obj_name:
+            obj = bpy.data.objects.get(self.obj_name)
+            collection = getattr(obj, self.name)
+        else:
+            raise KeyError("The collection property {} not exist!".format(self.name))
+        return collection.setting
 
     @property
     def no(self, ):

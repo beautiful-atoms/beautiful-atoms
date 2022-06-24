@@ -53,7 +53,6 @@ class CavitySettings(Setting):
             raise KeyError("The collection property {} not exist!".format(self.name))
         return collection.setting
 
-
     def add(self, cavity):
         if isinstance(cavity, str):
             self[cavity] = {}
