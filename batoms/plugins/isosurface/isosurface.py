@@ -38,7 +38,7 @@ class Isosurface(BaseObject):
     def build_isosurface(self, cell):
         volume = self.batoms.volume
         isosurface = {}
-        for iso in self.settings.bpy:
+        for iso in self.settings.bpy_setting:
             verts, faces = calc_isosurface(volume, cell, iso.level)
             isosurface[iso.name] = {'vertices': verts,
                                     'edges': [],
