@@ -35,13 +35,19 @@ def draw_cylinder(
     Draw cylinder.
     """
     from batoms.data.source_data import bond_source
-    if len(datas['centers']) == 0:
-        return 0
+    # materials
     material = create_material(name,
                                datas['color'],
                                node_type=node_type,
                                node_inputs=node_inputs,
                                material_style=material_style)
+    #
+    mesh = bpy.data.meshes.new(name)
+    obj = bpy.data.objects.new(name, mesh)
+    obj.data.materials.append(material)
+    if len(datas['centers']) == 0:
+        return obj
+    
     source = bond_source[datas['vertices']]
     # tstart = time()
     verts, faces = cylinder_mesh_from_vec(
@@ -51,9 +57,7 @@ def draw_cylinder(
     mesh.from_pydata(verts, [], faces)
     mesh.update()
     mesh.polygons.foreach_set('use_smooth', [True]*len(mesh.polygons))
-    obj = bpy.data.objects.new(name, mesh)
     obj.data = mesh
-    obj.data.materials.append(material)
     #
     for name, inputs in datas['battr_inputs'].items():
         battr = getattr(obj, name)

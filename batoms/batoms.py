@@ -177,6 +177,8 @@ class Batoms(BaseCollection, ObjectGN):
             self.color_style = color_style
             if movie:
                 self.set_frames()
+            self.show_unit_cell = show_unit_cell
+            
         self.ribbon = Ribbon(self.label, batoms=self, datas=info, update=True)
         self._render = None
         self._bonds = None
@@ -599,8 +601,12 @@ class Batoms(BaseCollection, ObjectGN):
 
     @show_unit_cell.setter
     def show_unit_cell(self, show_unit_cell):
-        self.coll.batoms.show_unit_cell = show_unit_cell
-        self.cell.draw_cell()
+        if show_unit_cell:
+            self.coll.batoms.show_unit_cell = show_unit_cell
+            self.cell.draw()
+        else:
+            name = '%s_%s_%s' % (self.label, 'cell', 'cylinder')
+            self.cell.delete_obj(name)
 
     @property
     def radius(self):
@@ -1712,6 +1718,8 @@ class Batoms(BaseCollection, ObjectGN):
         self.draw_ball_and_stick()
         self.draw_polyhedra()
         self.draw_wireframe()
+        if self.show_unit_cell:
+            self.cell.draw()
 
     def draw_space_filling(self, scale=1.0):
         mask = np.where(self.model_style_array == 0, True, False)
