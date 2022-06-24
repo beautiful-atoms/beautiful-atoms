@@ -126,6 +126,22 @@ def test_hydrogen_bond():
         set_cycles_res(ch3oh)
     ch3oh.get_image([1, 0, 0], output="bond-hb.png", **extras)
 
+def test_bond_reload():
+    """save to blend file and reload
+    """
+    from ase.io import read
+    bpy.ops.batoms.delete()
+    tio2 = read("../tests/datas/tio2.cif", ":")
+    tio2 = Batoms("tio2", from_ase=tio2)
+    tio2.boundary = 0.01
+    tio2.model_style = 1
+    tio2.bond.show_search = True
+    bpy.ops.wm.save_as_mainfile(filepath="./test.blend")
+    bpy.ops.batoms.delete()
+    bpy.ops.wm.open_mainfile(filepath="./test.blend")
+    tio2 = Batoms("tio2")
+    assert len(tio2.bond.search_bond) == 43
+
 
 if __name__ == "__main__":
     test_bond()

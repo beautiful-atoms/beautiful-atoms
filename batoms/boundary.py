@@ -77,12 +77,25 @@ class Boundary(ObjectGN):
         ObjectGN.__init__(self, label, name)
         if boundary_datas is not None:
             self.build_object(boundary_datas)  # , location=location)
-        elif self.batoms is not None and self.batoms.coll.batoms.boundary.flag:
+        elif self.loadable():
             self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
         else:
             self.build_object(default_boundary_datas)  # , location=location)
         if boundary is not None:
             self.boundary = boundary
+
+    def loadable(self):
+        """Check loadable or not
+        """
+        # object exist
+        obj = bpy.data.objects.get(self.obj_name)
+        if obj is None:
+            return False
+        # batoms exist, and flag is True
+        coll = bpy.data.collections.get(self.label)
+        if coll is None:
+            return False
+        return coll.batoms.boundary.flag
 
     def build_object(self, datas, location=[0, 0, 0], attributes={}):
         """

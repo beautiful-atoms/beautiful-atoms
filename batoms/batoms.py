@@ -1492,8 +1492,7 @@ class Batoms(BaseCollection, ObjectGN):
         from batoms.bond.bond import Bond, default_bond_datas
         if self._bond is not None:
             return self._bond
-        bond = Bond(self.label, bond_datas=default_bond_datas.copy(),
-                      batoms=self)
+        bond = Bond(self.label, batoms=self)
         self.bond = bond
         return bond
 

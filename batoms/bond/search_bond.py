@@ -62,10 +62,25 @@ class SearchBond(ObjectGN):
         ObjectGN.__init__(self, label, name)
         if search_bond_datas is not None:
             self.build_object(search_bond_datas)
-        else:
-            self.load(label)
+        elif self.loadable():
             self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
-
+        else:
+            self.build_object(default_search_bond_datas)
+    
+    def loadable(self):
+        """Check loadable or not
+        """
+        # object exist
+        obj = bpy.data.objects.get(self.obj_name)
+        if obj is None:
+            return False
+        # batoms exist, and flag is True
+        # coll = bpy.data.collections.get(self.label)
+        # if coll is None:
+            # return False
+        # return coll.Bbond.flag
+        return True
+        
     def build_object(self, datas, attributes={}):
         """
         build child object and add it to main objects.

@@ -86,9 +86,9 @@ class Bond(BaseCollection, ObjectGN):
 
     def __init__(self,
                  label=None,
+                 batoms=None,
                  bond_datas=None,
                  location=np.array([0, 0, 0]),
-                 batoms=None,
                  ):
         #
         self.batoms = batoms
@@ -96,15 +96,34 @@ class Bond(BaseCollection, ObjectGN):
         name = 'bond'
         ObjectGN.__init__(self, label, name)
         BaseCollection.__init__(self, coll_name=label)
-        flag = self.load()
-        if not flag and bond_datas is not None:
+        if bond_datas is not None:
+            # overwrite old object
             self.build_object(bond_datas)
             self.settings = BondSettings(self.label, batoms=batoms, bonds=self)
             self.update_geometry_nodes()
-        else:
+        elif self.loadable():
+            # load old object
             self.settings = BondSettings(self.label, batoms=batoms, bonds=self)
             self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
+        else:
+            # create empty new object
+            self.build_object(default_bond_datas)
+            self.settings = BondSettings(self.label, batoms=batoms, bonds=self)
+            self.update_geometry_nodes()
         self._search_bond = None
+
+    def loadable(self):
+        """Check loadable or not
+        """
+        # object exist
+        obj = bpy.data.objects.get(self.obj_name)
+        if obj is None:
+            return False
+        # batoms exist, and flag is True
+        coll = bpy.data.collections.get(self.label)
+        if coll is None:
+            return False
+        return coll.Bbond.flag
 
     def build_object(self, bond_datas, attributes={}):
         object_mode()
@@ -165,6 +184,7 @@ class Bond(BaseCollection, ObjectGN):
         obj.batoms.type = 'BOND'
         obj.batoms.label = self.batoms.label
         obj.Bbond.label = self.batoms.label
+        self.batoms.coll.Bbond.flag = True
         #
         offsets = [offsets1, offsets2, offsets3, offsets4]
         for i in range(4):
@@ -829,9 +849,7 @@ class Bond(BaseCollection, ObjectGN):
         """search_bond object."""
         if self._search_bond is not None:
             return self._search_bond
-        search_bond = SearchBond(self.label,
-                                 search_bond_datas=default_search_bond_datas,
-                                 batoms=self.batoms)
+        search_bond = SearchBond(self.label, batoms=self.batoms)
         self._search_bond = search_bond
         return search_bond
 

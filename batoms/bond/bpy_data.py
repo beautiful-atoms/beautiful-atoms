@@ -92,6 +92,7 @@ class BondSetting(Base):
 
 
 class Bond(Base):
+    flag: BoolProperty(name="flag", default=False)
     label: StringProperty(name="label", default='batoms')
     show_search: BoolProperty(name="show_search", default=False)
     show_hydrogen_bond: BoolProperty(name="show_hydrogen_bond", default=False)
