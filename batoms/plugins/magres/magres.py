@@ -171,3 +171,9 @@ class Magres(BaseObject):
         """
         pass
     
+    @property
+    def setting(self):
+        from batoms.utils import deprecated
+        """setting object."""
+        deprecated('"setting" will be deprecated in the furture, please use "settings".')
+        return self.settings

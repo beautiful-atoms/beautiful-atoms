@@ -14,7 +14,7 @@ from batoms.base.object import ObjectGN
 from batoms.ribbon.ribbon import Ribbon
 from batoms.utils.butils import object_mode, show_index, \
     get_nodes_by_name
-from batoms.utils import string2Number, read_from_others
+from batoms.utils import string2Number, read_from_others, deprecated
 import numpy as np
 from time import time
 
@@ -1481,6 +1481,12 @@ class Batoms(BaseCollection, ObjectGN):
             lock_to(instancer, obj, location=False, rotation=True)
 
     @property
+    def bonds(self):
+        """bonds object."""
+        deprecated('"bonds" will be deprecated in the furture, please use "bond".')
+        return self.bond
+
+    @property
     def bond(self):
         """bond object."""
         from batoms.bond.bond import Bond, default_bond_datas
@@ -1494,6 +1500,12 @@ class Batoms(BaseCollection, ObjectGN):
     @bond.setter
     def bond(self, bond):
         self._bond = bond
+
+    @property
+    def polyhedras(self):
+        """polyhedras object."""
+        deprecated('"polyhedras" will be deprecated in the furture, please use "polyhedra".')
+        return self.polyhedra
 
     @property
     def polyhedra(self):
@@ -1536,6 +1548,12 @@ class Batoms(BaseCollection, ObjectGN):
                 boundary = np.array(boundary)
         self.update_gn_cell()
         self.boundary[:] = boundary
+
+    @property
+    def isosurfaces(self):
+        """isosurfaces object."""
+        deprecated('"isosurfaces" will be deprecated in the furture, please use "isosurface".')
+        return self.isosurface
 
     @property
     def isosurface(self):

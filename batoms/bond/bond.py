@@ -1514,4 +1514,10 @@ class Bond(BaseCollection, ObjectGN):
         orders = [b.GetBondOrder()
             for b in pybel.ob.OBMolBondIter(mol.OBMol)]
         self.update(bondlists, orders = orders)
-        
+    
+    @property
+    def setting(self):
+        from batoms.utils import deprecated
+        """setting object."""
+        deprecated('"setting" will be deprecated in the furture, please use "settings".')
+        return self.settings

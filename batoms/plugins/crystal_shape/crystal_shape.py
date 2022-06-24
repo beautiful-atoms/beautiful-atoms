@@ -169,6 +169,12 @@ class CrystalShape(BaseObject):
                 obj.batoms.type = 'CRYSTALSHAPE'
                 obj.batoms.label = self.batoms.label
 
+    @property
+    def setting(self):
+        from batoms.utils import deprecated
+        """setting object."""
+        deprecated('"setting" will be deprecated in the furture, please use "settings".')
+        return self.settings
 
 def save_image(data, filename, interpolation='bicubic'):
     """

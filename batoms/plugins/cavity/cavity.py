@@ -446,3 +446,10 @@ class Cavity(ObjectGN):
         name = '%s_cavity' % (self.label)
         obj = self.obj
         self.set_obj_frames(name, obj, frames['centers'])
+
+    @property
+    def setting(self):
+        from batoms.utils import deprecated
+        """setting object."""
+        deprecated('"setting" will be deprecated in the furture, please use "settings".')
+        return self.settings

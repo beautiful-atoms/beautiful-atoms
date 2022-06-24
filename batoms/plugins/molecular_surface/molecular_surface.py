@@ -800,3 +800,10 @@ class MolecularSurface(BaseObject):
         self.SAS_Shrake_Rupley = SAS_Shrake_Rupley
         bpy.data.objects.remove(source, do_unlink=True)
         # return 0
+
+    @property
+    def setting(self):
+        from batoms.utils import deprecated
+        """setting object."""
+        deprecated('"setting" will be deprecated in the furture, please use "settings".')
+        return self.settings

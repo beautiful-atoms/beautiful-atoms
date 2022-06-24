@@ -522,3 +522,10 @@ if __name__ == '__main__':
     # origin = calc_origin(p, p0, p1, r0, r1, r)
     origin = calc_origin_3(p, p0, p1, p2, r0, r1, r2, r)
     print(origin)
+
+def deprecated(msg):
+    """Helper function print deprecating warning.
+    """
+    logger.warning(msg)
+    msg = "="*80 + "\n" + "Warning: " + msg + "\n" + "="*80 + "\n"
+    print(msg)

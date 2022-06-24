@@ -631,3 +631,10 @@ class Polyhedra(ObjectGN):
         # print('datas: ', datas)
         logger.debug('calc_polyhedra_data: {0:10.2f} s'.format(time() - tstart))
         return datas
+    
+    @property
+    def setting(self):
+        from batoms.utils import deprecated
+        """setting object."""
+        deprecated('"setting" will be deprecated in the furture, please use "settings".')
+        return self.settings

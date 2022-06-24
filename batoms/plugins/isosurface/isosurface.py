@@ -38,7 +38,7 @@ class Isosurface(BaseObject):
     def build_isosurface(self, cell):
         volume = self.batoms.volume
         isosurface = {}
-        for iso in self.settings.bpy_setting:
+        for iso in self.settings.bpy:
             verts, faces = calc_isosurface(volume, cell, iso.level)
             isosurface[iso.name] = {'vertices': verts,
                                     'edges': [],
@@ -90,6 +90,12 @@ class Isosurface(BaseObject):
                                        )
             obj.data.materials.append(mat)
 
+    @property
+    def setting(self):
+        from batoms.utils import deprecated
+        """setting object."""
+        deprecated('"setting" will be deprecated in the furture, please use "settings".')
+        return self.settings
 
 def calc_isosurface(volume, cell, level,
                     gradient_direction='descent',
