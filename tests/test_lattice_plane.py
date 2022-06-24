@@ -45,6 +45,21 @@ def test_boundary():
     h2o.get_image([1, 0, 0], output="plane-boundary.png", **extras)
 
 
+def test_lattice_plane_ops():
+    bpy.ops.batoms.delete()
+    bpy.ops.batoms.bulk_add(formula="Au")
+    au = Batoms('Au')
+    bpy.context.view_layer.objects.active = au.obj
+    bpy.ops.plane.lattice_plane_add(indices=(1, 1, 1))
+    au.lattice_plane.setting["1-1-1"].distance = 3.0
+    bpy.ops.plane.lattice_plane_add(indices=(1, 0, 0))
+    assert len(au.lattice_plane.setting) == 2
+    bpy.ops.plane.lattice_plane_draw()
+    bpy.ops.plane.lattice_plane_remove(name="1-0-0")
+    assert len(au.lattice_plane.setting) == 1
+    print(au.lattice_plane.setting)
+    bpy.ops.plane.lattice_plane_draw()
+
 if __name__ == "__main__":
     test_lattice_plane()
     test_boundary()

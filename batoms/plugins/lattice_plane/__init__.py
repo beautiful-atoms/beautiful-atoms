@@ -3,7 +3,7 @@ from .lattice_plane import LatticePlane
 from . import (
     bpy_data,
     ops,
-    ui_list_lattice_plane,
+    ui_list,
 )
 
 
@@ -15,9 +15,9 @@ classes = [
     ops.LatticePlaneRemove,
     ops.LatticePlaneDraw,
     ops.LatticePlaneModify,
-    ui_list_lattice_plane.BATOMS_MT_lattice_plane_context_menu,
-    ui_list_lattice_plane.BATOMS_UL_lattice_plane,
-    ui_list_lattice_plane.BATOMS_PT_lattice_plane,
+    ui_list.BATOMS_MT_lattice_plane_context_menu,
+    ui_list.BATOMS_UL_lattice_plane,
+    ui_list.BATOMS_PT_lattice_plane,
 ]
 
 

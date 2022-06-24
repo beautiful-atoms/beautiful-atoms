@@ -30,6 +30,23 @@ def test_crystal_shape():
     au.get_image([0, 0, 1], output="plane-crystal.png", **extras)
 
 
+def test_crystal_shape_ops():
+    bpy.ops.batoms.delete()
+    bpy.ops.batoms.bulk_add(formula="Au", cubic=True)
+    au = Batoms('Au')
+    bpy.context.view_layer.objects.active = au.obj
+    bpy.ops.plane.crystal_shape_add(indices=(1, 1, 1))
+    au.crystal_shape.setting["1-1-1"].symmetry = True
+    au.crystal_shape.setting["1-1-1"].distance = 3.0
+    bpy.ops.plane.crystal_shape_add(indices=(1, 0, 0))
+    assert len(au.crystal_shape.setting) == 2
+    bpy.ops.plane.crystal_shape_draw()
+    bpy.ops.plane.crystal_shape_remove(name="1-0-0")
+    assert len(au.crystal_shape.setting) == 8
+    print(au.crystal_shape.setting)
+    bpy.ops.plane.crystal_shape_draw()
+
+
 if __name__ == "__main__":
     test_crystal_shape()
     print("\n Crystal shape: All pass! \n")

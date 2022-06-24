@@ -15,8 +15,6 @@ from . import (
     ui_list_species,
     ui_list_bond,
     ui_list_polyhedra,
-    ui_list_isosurface,
-    ui_list_ms,
     view3d_mt_batoms_add,
     view3d_mt_object_context_menu,
     view3d_mt_edit_mesh_context_menu,
@@ -81,12 +79,6 @@ classes = [
     ui_list_polyhedra.BATOMS_MT_polyhedra_context_menu,
     ui_list_polyhedra.BATOMS_UL_polyhedra,
     ui_list_polyhedra.BATOMS_PT_polyhedra,
-    ui_list_isosurface.BATOMS_MT_isosurface_context_menu,
-    ui_list_isosurface.BATOMS_UL_isosurface,
-    ui_list_isosurface.BATOMS_PT_isosurface,
-    ui_list_ms.BATOMS_MT_ms_context_menu,
-    ui_list_ms.BATOMS_UL_ms,
-    ui_list_ms.BATOMS_PT_ms,
     BatomsCollection,
 ]
 

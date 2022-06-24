@@ -8,7 +8,7 @@ import bpy
 from time import time
 import numpy as np
 from batoms.base.object import BaseObject
-from batoms.isosurface.isosurfacesetting import IsosurfaceSettings
+from .setting import IsosurfaceSettings
 import logging
 # logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ class Isosurface(BaseObject):
                                     'faces': faces,
                                     'material_style': iso.material_style,
                                     'color': iso.color,
-                                    'battr_inputs': {'isosurface': iso.as_dict()}
+                                    'battr_inputs': {'bIsosurface': iso.as_dict()}
                                     }
         return isosurface
 

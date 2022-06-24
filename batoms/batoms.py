@@ -187,7 +187,7 @@ class Batoms(BaseCollection, ObjectGN):
         self._isosurfaces = None
         self._lattice_plane = None
         self._crystal_shape = None
-        self._ms = None
+        self._molecular_surface = None
         self._magres = None
         self._cavity = None
         show_index()
@@ -1540,7 +1540,7 @@ class Batoms(BaseCollection, ObjectGN):
     @property
     def isosurfaces(self):
         """isosurfaces object."""
-        from batoms.isosurface import Isosurface
+        from batoms.plugins.isosurface import Isosurface
         if self._isosurfaces is not None:
             return self._isosurfaces
         isosurfaces = Isosurface(self.label, batoms=self)
@@ -1580,18 +1580,18 @@ class Batoms(BaseCollection, ObjectGN):
         self._crystal_shape = crystal_shape
 
     @property
-    def ms(self):
-        """ms object."""
-        from batoms.ms import MS
-        if self._ms is not None:
-            return self._ms
-        ms = MS(self.label, batoms=self)
-        self.ms = ms
-        return ms
+    def molecular_surface(self):
+        """molecular_surface object."""
+        from batoms.plugins.molecular_surface import MolecularSurface
+        if self._molecular_surface is not None:
+            return self._molecular_surface
+        molecular_surface = MolecularSurface(self.label, batoms=self)
+        self.molecular_surface = molecular_surface
+        return molecular_surface
 
-    @ms.setter
-    def ms(self, ms):
-        self._ms = ms
+    @molecular_surface.setter
+    def molecular_surface(self, molecular_surface):
+        self._molecular_surface = molecular_surface
     
     @property
     def magres(self):

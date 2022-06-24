@@ -52,6 +52,20 @@ def test_diff():
     h2o.get_image([1, 0, 0], output="h2o-homo-diff-side.png", **extras)
 
 
+def test_isosurface_ops():
+    bpy.ops.batoms.delete()
+    h2o = read("../tests/datas/h2o-homo.cube")
+    bpy.context.view_layer.objects.active = h2o.obj
+    bpy.ops.surface.isosurface_draw()
+    assert len(h2o.isosurfaces.setting) == 1
+    bpy.ops.surface.isosurface_remove(name="1")
+    print(h2o.isosurfaces.setting)
+    assert len(h2o.isosurfaces.setting) == 0
+    bpy.ops.surface.isosurface_add(name="1")
+    assert len(h2o.isosurfaces.setting) == 1
+    bpy.ops.surface.isosurface_draw()
+
+
 if __name__ == "__main__":
     test_slice()
     test_diff()

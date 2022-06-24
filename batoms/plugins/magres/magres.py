@@ -9,7 +9,7 @@ import bmesh
 from time import time
 import numpy as np
 from batoms.base.object import BaseObject
-from .magressetting import MagresSetting
+from .setting import MagresSetting
 import logging
 # logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)

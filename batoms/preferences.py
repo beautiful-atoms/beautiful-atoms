@@ -209,9 +209,25 @@ class BatomsAddonPreferences(AddonPreferences):
         default=2,
         )
     
+    isosurface: BoolProperty(
+        name="isosurface",
+        description="Enable isosurface plugin",
+        get=get_plugin("isosurface"),
+        set=set_plugin("isosurface"),
+        default=True,
+    )
+
+    molecular_surface: BoolProperty(
+        name="molecular_surface",
+        description="Enable molecular_surface plugin",
+        get=get_plugin("molecular_surface"),
+        set=set_plugin("molecular_surface"),
+        default=True,
+    )
+
     real_interaction: BoolProperty(
         name="real_interaction",
-        description="Enable real_interaction module",
+        description="Enable real_interaction plugin",
         get=get_plugin("real_interaction"),
         set=set_plugin("real_interaction"),
         default=False,
@@ -219,7 +235,7 @@ class BatomsAddonPreferences(AddonPreferences):
 
     magres: BoolProperty(
         name="magres",
-        description="Enable magres module",
+        description="Enable magres plugin",
         get=get_plugin("magres"),
         set=set_plugin("magres"),
         default=False,
@@ -227,7 +243,7 @@ class BatomsAddonPreferences(AddonPreferences):
 
     cavity: BoolProperty(
         name="cavity",
-        description="Enable cavity module",
+        description="Enable cavity plugin",
         get=get_plugin("cavity"),
         set=set_plugin("cavity"),
         default=True,
@@ -235,7 +251,7 @@ class BatomsAddonPreferences(AddonPreferences):
 
     crystal_shape: BoolProperty(
         name="crystal_shape",
-        description="Enable crystal_shape module",
+        description="Enable crystal_shape plugin",
         get=get_plugin("crystal_shape"),
         set=set_plugin("crystal_shape"),
         default=True,
@@ -243,7 +259,7 @@ class BatomsAddonPreferences(AddonPreferences):
 
     lattice_plane: BoolProperty(
         name="lattice_plane",
-        description="Enable lattice_plane module",
+        description="Enable lattice_plane plugin",
         get=get_plugin("lattice_plane"),
         set=set_plugin("lattice_plane"),
         default=True,
@@ -285,6 +301,8 @@ class BatomsAddonPreferences(AddonPreferences):
         layout.separator()
         box = layout.box().column()
         box.label(text="Custom Plugins")
+        box.prop(self, "isosurface")
+        box.prop(self, "molecular_surface")
         box.prop(self, "crystal_shape")
         box.prop(self, "lattice_plane")
         box.prop(self, "cavity")

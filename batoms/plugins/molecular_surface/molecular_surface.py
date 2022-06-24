@@ -9,13 +9,13 @@ import bmesh
 from time import time
 import numpy as np
 from batoms.base.object import BaseObject
-from batoms.ms.mssetting import MSsetting
+from .setting import MolecularSurfaceSetting
 import logging
 # logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 
 
-class MS(BaseObject):
+class MolecularSurface(BaseObject):
     def __init__(self,
                  label=None,
                  location=np.array([0, 0, 0]),
@@ -33,7 +33,7 @@ class MS(BaseObject):
         self.label = label
         name = 'plane'
         BaseObject.__init__(self, label, name)
-        self.setting = MSsetting(
+        self.setting = MolecularSurfaceSetting(
             self.label, parent=self)
 
     def build_materials(self, name, color, node_inputs=None,
@@ -129,7 +129,7 @@ class MS(BaseObject):
                       'edges': [],
                       'faces': faces,
                       'color': color,
-                      'battr_inputs': {'isosurface': {}}
+                      'battr_inputs': {'bMolecularSurface': {}}
                       }
         logger.debug('Marching_cube: %s' % (time() - tstart))
         return isosurface

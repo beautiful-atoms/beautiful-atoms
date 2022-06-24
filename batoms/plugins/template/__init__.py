@@ -3,7 +3,7 @@ from .template import Template
 from . import (
     bpy_data,
     ops,
-    ui_list_template,
+    ui_list,
 )
 
 
@@ -13,9 +13,9 @@ classes = [
     ops.TemplateAdd,
     ops.TemplateRemove,
     ops.TemplateDraw,
-    ui_list_template.BATOMS_MT_template_context_menu,
-    ui_list_template.BATOMS_UL_template,
-    ui_list_template.BATOMS_PT_template,
+    ui_list.BATOMS_MT_template_context_menu,
+    ui_list.BATOMS_UL_template,
+    ui_list.BATOMS_PT_template,
 ]
 
 

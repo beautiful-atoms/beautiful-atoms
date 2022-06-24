@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 
-class MSsetting(Setting):
+class MolecularSurfaceSetting(Setting):
     def __init__(self, label, parent, probe=1.4,
                  resolution=0.5,
                  ) -> None:
@@ -31,7 +31,7 @@ class MSsetting(Setting):
         """
         Setting.__init__(self, label, coll_name=label)
         self.label = label
-        self.name = 'bms'
+        self.name = 'bMolecularSurface'
         self.probe = probe
         self.parent = parent
         self.sas_name = '%s_sas' % self.label
@@ -40,6 +40,17 @@ class MSsetting(Setting):
         if len(self) == 0:
             self['1'] = {'select': 'all'}
 
+    def get_collection(self):
+        if self.coll_name:
+            coll = bpy.data.collections.get(self.coll_name)
+            collection = getattr(coll, self.name)
+        elif self.obj_name:
+            obj = bpy.data.objects.get(self.obj_name)
+            collection = getattr(obj, self.name)
+        else:
+            raise KeyError("The collection property {} not exist!".format(self.name))
+        return collection.setting
+        
     def add(self, name, datas={}):
         self[name] = datas
 

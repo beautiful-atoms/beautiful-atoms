@@ -3,7 +3,7 @@ from .crystal_shape import CrystalShape
 from . import (
     bpy_data,
     ops,
-    ui_list_crystal_shape,
+    ui_list,
 )
 
 
@@ -15,9 +15,9 @@ classes = [
     ops.CrystalShapeRemove,
     ops.CrystalShapeDraw,
     ops.CrystalShapeModify,
-    ui_list_crystal_shape.BATOMS_MT_crystal_shape_context_menu,
-    ui_list_crystal_shape.BATOMS_UL_crystal_shape,
-    ui_list_crystal_shape.BATOMS_PT_crystal_shape,
+    ui_list.BATOMS_MT_crystal_shape_context_menu,
+    ui_list.BATOMS_UL_crystal_shape,
+    ui_list.BATOMS_PT_crystal_shape,
 ]
 
 

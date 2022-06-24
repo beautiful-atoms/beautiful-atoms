@@ -34,7 +34,7 @@ class IsosurfaceSettings(Setting):
         self.label = label
         self.batoms = batoms
         self.parent = parent
-        self.name = 'bisosurface'
+        self.name = 'bIsosurface'
         # add a default level
         if isosurfacesetting is not None:
             for key, data in isosurfacesetting.items():
@@ -44,6 +44,17 @@ class IsosurfaceSettings(Setting):
             if len(self) == 0:
                 self['1'] = {'level': volume.max()/8, 'color': [1, 1, 0, 0.8]}
 
+    def get_collection(self):
+        if self.coll_name:
+            coll = bpy.data.collections.get(self.coll_name)
+            collection = getattr(coll, self.name)
+        elif self.obj_name:
+            obj = bpy.data.objects.get(self.obj_name)
+            collection = getattr(obj, self.name)
+        else:
+            raise KeyError("The collection property {} not exist!".format(self.name))
+        return collection.setting
+        
     def add(self, isosurface):
         if isinstance(isosurface, str):
             self[isosurface] = {}

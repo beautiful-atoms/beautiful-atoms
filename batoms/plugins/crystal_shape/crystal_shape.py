@@ -6,7 +6,7 @@ import bpy
 from time import time
 import numpy as np
 from batoms.base.object import BaseObject
-from .crystal_shape_setting import CrystalShapeSettings
+from .setting import CrystalShapeSettings
 from batoms.draw import draw_cylinder, draw_surface_from_vertices
 import logging
 # logger = logging.getLogger('batoms')

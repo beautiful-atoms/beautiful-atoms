@@ -5,21 +5,21 @@ import bpy
 from bpy.types import Menu, Panel, UIList
 
 
-class BATOMS_MT_ms_context_menu(Menu):
+class BATOMS_MT_molecular_surface_context_menu(Menu):
     bl_label = "Molecular Surface Specials"
-    bl_idname = "BATOMS_MT_ms_context_menu"
+    bl_idname = "BATOMS_MT_molecular_surface_context_menu"
 
     def draw(self, _context):
         layout = self.layout
-        op = layout.operator("surface.ms_add", icon='ADD',
+        op = layout.operator("surface.molecular_surface_add", icon='ADD',
                              text="Add Molecular Surface")
         layout.separator()
-        op = layout.operator("surface.ms_remove", icon='X',
+        op = layout.operator("surface.molecular_surface_remove", icon='X',
                              text="Delete All Molecular Surface")
         op.all = True
 
 
-class BATOMS_UL_ms(UIList):
+class BATOMS_UL_molecular_surface(UIList):
     def draw_item(self, _context, layout, _data, item, icon, active_data, _active_propname, index):
         ms = item
         custom_icon = 'OBJECT_DATAMODE'
@@ -35,10 +35,10 @@ class BATOMS_UL_ms(UIList):
             layout.label(text="", icon=custom_icon)
 
 
-class BATOMS_PT_ms(Panel):
+class BATOMS_PT_molecular_surface(Panel):
     bl_label = "Molecular Surface"
     bl_category = "Surface"
-    bl_idname = "BATOMS_PT_ms"
+    bl_idname = "BATOMS_PT_molecular_surface"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     # bl_options = {'DEFAULT_CLOSED'}
@@ -57,9 +57,9 @@ class BATOMS_PT_ms(Panel):
         layout = self.layout
 
         ob = context.object
-        ba = bpy.data.collections[ob.batoms.label].batoms
-        if len(ba.bms) > 0:
-            kb = ba.bms[ba.ms_index]
+        ba = bpy.data.collections[ob.batoms.label].bMolecularSurface
+        if len(ba.setting) > 0:
+            kb = ba.setting[ba.ui_list_index]
         else:
             kb = None
 
@@ -69,17 +69,17 @@ class BATOMS_PT_ms(Panel):
         if kb:
             rows = 5
 
-        row.template_list("BATOMS_UL_ms", "", ba, "bms",
-                          ba, "ms_index", rows=rows)
+        row.template_list("BATOMS_UL_molecular_surface", "", ba, "setting",
+                          ba, "ui_list_index", rows=rows)
 
         col = row.column(align=True)
-        op = col.operator("surface.ms_add", icon='ADD', text="")
-        op = col.operator("surface.ms_remove", icon='REMOVE', text="")
+        op = col.operator("surface.molecular_surface_add", icon='ADD', text="")
+        op = col.operator("surface.molecular_surface_remove", icon='REMOVE', text="")
         if kb is not None:
             op.name = kb.name
         col.separator()
 
-        col.menu("BATOMS_MT_ms_context_menu", icon='DOWNARROW_HLT', text="")
+        col.menu("BATOMS_MT_molecular_surface_context_menu", icon='DOWNARROW_HLT', text="")
 
         if kb:
             col.separator()
@@ -108,4 +108,4 @@ class BATOMS_PT_ms(Panel):
             col.prop(kb, "color",  text="color")
             col.separator()
             op = layout.operator(
-                "surface.ms_draw", icon='GREASEPENCIL', text="Draw")
+                "surface.molecular_surface_draw", icon='GREASEPENCIL', text="Draw")

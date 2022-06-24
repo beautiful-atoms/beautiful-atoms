@@ -303,38 +303,6 @@ class Bpolyhedra(Base):
         return s
 
 
-class Bisosurface(Base):
-    """
-    """
-    flag: BoolProperty(name="flag", default=False)
-    name: StringProperty(name="name")
-    label: StringProperty(name="label", default='')
-    level: FloatProperty(name="level", default=0.10)
-    color: FloatVectorProperty(name="color", size=4,
-                               subtype='COLOR',
-                               min=0, max=1,
-                               default=[1, 1, 0, 0.5],
-                               )
-
-    def as_dict(self) -> dict:
-        setdict = {
-            'flag': self.flag,
-            'label': self.label,
-            'name': self.name,
-            'material_style': self.material_style,
-            'color': self.color[:],
-            'level': self.level,
-        }
-        return setdict
-
-    def __repr__(self) -> str:
-        s = '-'*60 + '\n'
-        s = 'Name        level        color            \n'
-        s += '{0:10s}   {1:1.6f}  [{2:1.2f}  {3:1.2f}  {4:1.2f}   {5:1.2f}] \n'.format(
-            self.name, self.level, self.color[0], self.color[1], self.color[2], self.color[3])
-        s += '-'*60 + '\n'
-        return s
-
 
 
 
@@ -527,48 +495,6 @@ class Bturn(Base):
         return s
 
 
-class Bms(Base):
-    """
-    """
-    flag: BoolProperty(name="flag", default=False)
-    name: StringProperty(name="name")
-    label: StringProperty(name="label", default='batoms')
-    type: EnumProperty(
-        name="type",
-        description="Surface type",
-        items=(('SAS', "SAS", "Solvent Accessible Surface"),
-               ('SES', "SES", "solvent-excluded surfaces"),
-               ),
-        default='SAS')
-    probe: FloatProperty(name="probe", soft_min=0.4, soft_max=2, default=1.4)
-    resolution: FloatProperty(name="resolution", soft_min=0.2, soft_max=2,
-                              default=0.5)
-    select: StringProperty(name="select", default='all')
-    color: FloatVectorProperty(name="color", size=4,
-                               subtype='COLOR',
-                               min=0, max=1,
-                               default=[0, 1, 1, 1.0])
-
-    def as_dict(self) -> dict:
-        setdict = {
-            'flag': self.flag,
-            'label': self.label,
-            'name': self.name,
-            'color': self.color[:],
-            'probe': self.probe,
-            'resolution': self.resolution,
-            'select': self.select,
-            'material_style': self.material_style,
-        }
-        return setdict
-
-    def __repr__(self) -> str:
-        s = '-'*60 + '\n'
-        s = 'Name   select     probe   resolution    color  \n'
-        s += '{:6s}  {:6s}  {:1.3f}  {:1.3f}  [{:1.2f}  {:1.2f}  {:1.2f}   {:1.2f}] \n'.format(
-            self.name, self.select, self.probe, self.resolution, self.color[0], self.color[1], self.color[2], self.color[3])
-        s += '-'*60 + '\n'
-        return s
 
 
 class Bmagres(Base):
@@ -773,12 +699,6 @@ class BatomsCollection(bpy.types.PropertyGroup):
     bond_index: IntProperty(name="bond_index",
                             default=0)    
 
-    bisosurface: CollectionProperty(name='Bisosurface',
-                                    type=Bisosurface)
-
-    isosurface_index: IntProperty(name="isosurface_index",
-                                  default=1)
-
     bpolyhedra: CollectionProperty(name='Bpolyhedra',
                                    type=Bpolyhedra)
 
@@ -805,12 +725,6 @@ class BatomsCollection(bpy.types.PropertyGroup):
 
     species_index: IntProperty(name="species_index",
                                default=0)
-
-    bms: CollectionProperty(name='Bms',
-                            type=Bms)
-
-    ms_index: IntProperty(name="ms_index",
-                          default=1)
 
     bmagres: CollectionProperty(name='Bmagres',
                             type=Bmagres)
@@ -849,8 +763,6 @@ class BatomsObject(bpy.types.PropertyGroup):
                           type=Bbond)
     volume: PointerProperty(name='Bvolume',
                             type=Bvolume)
-    isosurface: PointerProperty(name='Bisosurface',
-                                type=Bisosurface)
     polyhedra: PointerProperty(name='Bpolyhedra',
                                type=Bpolyhedra)
     sheet: PointerProperty(name='Bsheet',
@@ -873,7 +785,6 @@ classes = [
     Bcell,
     Bbond,
     Bpolyhedra,
-    Bisosurface,
     Bvolume,
     Blight,
     Bcamera,
@@ -882,7 +793,6 @@ classes = [
     Bhelix,
     Bturn,
     Bselect,
-    Bms,
     Bmagres,
     BatomsCollection,
     BatomsObject,

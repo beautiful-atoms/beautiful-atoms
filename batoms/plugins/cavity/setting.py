@@ -32,7 +32,7 @@ class CavitySettings(Setting):
         self.label = label
         self.batoms = batoms
         self.parent = parent
-        self.name = 'bcavity'
+        self.name = 'bCavity'
         # add a default level
         if cavitysetting is not None:
             for key, data in cavitysetting.items():

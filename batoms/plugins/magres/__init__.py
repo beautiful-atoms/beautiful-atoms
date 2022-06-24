@@ -2,7 +2,7 @@ from .magres import Magres
 
 from . import (
     ops,
-    ui_list_magres,
+    ui_list,
 )
 
 
@@ -10,9 +10,9 @@ classes = [
     ops.MagresAdd,
     ops.MagresRemove,
     ops.MagresDraw,
-    ui_list_magres.BATOMS_MT_magres_context_menu,
-    ui_list_magres.BATOMS_UL_magres,
-    ui_list_magres.BATOMS_PT_magres,
+    ui_list.BATOMS_MT_magres_context_menu,
+    ui_list.BATOMS_UL_magres,
+    ui_list.BATOMS_PT_magres,
 ]
 
 

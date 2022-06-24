@@ -58,7 +58,7 @@ class BATOMS_PT_cavity(Panel):
         layout = self.layout
 
         ob = context.object
-        ba = bpy.data.collections[ob.batoms.label].bcavity
+        ba = bpy.data.collections[ob.batoms.label].bCavity
         if len(ba.setting) > 0:
             kb = ba.setting[ba.ui_list_index]
         else:
