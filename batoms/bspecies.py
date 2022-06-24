@@ -114,7 +114,7 @@ class Species(BaseObject):
         #
         self.build_materials(material_style = sp.material_style)
         self.assign_materials()
-        self.color = sp.color
+        # self.color = sp.color
         bpy.context.view_layer.update()
         self.parent.batoms.add_geometry_node(sp.name, obj)
         return obj
@@ -316,6 +316,7 @@ class Species(BaseObject):
             if 'Alpha' in node.inputs:
                 node.inputs['Alpha'].default_value = color[3]
         self.data.elements[self.main_element].color = color
+        self.data.color = color
 
     @property
     def material_style(self):
