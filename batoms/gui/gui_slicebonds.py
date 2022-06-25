@@ -8,7 +8,7 @@ from bpy.props import (BoolProperty,
 
 from batoms.utils.butils import get_selected_vertices
 from batoms.batoms import Batoms
-from batoms.bond import Bonds
+from batoms.bond import Bond
 from batoms.bond.slicebonds import SliceBonds
 from batoms.gui.gui_batoms import get_attr, set_attr, get_enum_attr
 
@@ -48,7 +48,7 @@ def get_active_bond():
         indices = get_selected_vertices(context.object)
         if len(indices) > 0:
             batoms = Batoms(label=context.object.batoms.label)
-            slicebonds = batoms.bonds[indices]
+            slicebonds = batoms.bond[indices]
             return slicebonds
         else:
             return None
@@ -61,7 +61,7 @@ def set_bond_attr_by_batoms(key):
         slicebonds = get_active_bond()
         if slicebonds is not None:
             # batoms = Batoms(label=slicebonds.label)
-            # slicebonds = batoms.bonds[slicebonds.indices]
+            # slicebonds = batoms.bond[slicebonds.indices]
             setattr(slicebonds, key, value)
             # bpy.ops.object.mode_set(mode="EDIT")
             bpy.context.view_layer.objects.active = slicebonds.obj
@@ -75,7 +75,7 @@ def get_bond_attr(key):
         bond = get_active_bond()
         if bond is not None:
             # batoms = Batoms(label=bond.label)
-            # bpy.context.view_layer.objects.active = batoms.bonds.obj
+            # bpy.context.view_layer.objects.active = batoms.bond.obj
             value = getattr(bond, key)[0]
             # bpy.ops.object.mode_set(mode="EDIT")
             return value

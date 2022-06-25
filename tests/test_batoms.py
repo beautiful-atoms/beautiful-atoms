@@ -361,7 +361,7 @@ def test_export_mesh_x3d():
     tio2 = read("../tests/datas/tio2.cif")
     tio2.boundary = 0.01
     tio2.model_style = 2
-    tio2.bonds.show_search = True
+    tio2.bond.show_search = True
     tio2.export_mesh("tio2.x3d", with_cell=True,
                      with_polyhedra=True,
                      with_boundary=True,
@@ -382,7 +382,7 @@ def test_export_mesh_obj():
     tio2 = read("../tests/datas/tio2.cif")
     tio2.boundary = 0.01
     tio2.model_style = 2
-    tio2.bonds.show_search = True
+    tio2.bond.show_search = True
     tio2.export_mesh("tio2.obj", with_cell=True,
                      with_polyhedra=True,
                      with_boundary=True,

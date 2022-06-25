@@ -9,7 +9,7 @@ import bmesh
 from time import time
 import numpy as np
 from batoms.base.object import BaseObject
-from .lattice_plane_setting import LatticePlaneSettings
+from .setting import LatticePlaneSettings
 from batoms.draw import draw_cylinder, draw_surface_from_vertices
 import logging
 # logger = logging.getLogger('batoms')
@@ -34,7 +34,7 @@ class LatticePlane(BaseObject):
         self.label = label
         name = 'plane'
         BaseObject.__init__(self, label, name)
-        self.setting = LatticePlaneSettings(
+        self.settings = LatticePlaneSettings(
             self.label, parent=self)
 
     def build_materials(self, name, color, node_inputs=None,
@@ -60,7 +60,7 @@ class LatticePlane(BaseObject):
         cellEdges = bcell.edges
         cellVerts = bcell.local_positions
         planes = {}
-        for p in self.setting:
+        for p in self.settings:
             intersect_points = []
             normal = np.dot(p.indices, bcell.reciprocal)
             normal = normal/np.linalg.norm(normal)
@@ -99,7 +99,7 @@ class LatticePlane(BaseObject):
                                         'width': p.width,
                                         'battr_inputs': {},
                                         },
-                     'battr_inputs': {'plane': p.as_dict()},
+                     'battr_inputs': {'Blatticeplane': p.as_dict()},
                      'show_edge': p.show_edge,
                      'slicing': p.slicing,
                      'boundary': p.boundary,
@@ -242,7 +242,7 @@ class LatticePlane(BaseObject):
         """
         Remove vertices above the plane
         """
-        p = self.setting[indices]
+        p = self.settings[indices]
         normal = np.dot(np.array(p.indices), self.batoms.cell.reciprocal)
         normal = normal/np.linalg.norm(normal)
         point = p.distance*normal
@@ -334,7 +334,13 @@ class LatticePlane(BaseObject):
                                        cuts=cuts,
                                        cmap=cmap)
 
-
+    @property
+    def setting(self):
+        from batoms.utils import deprecated
+        """setting object."""
+        deprecated('"setting" will be deprecated in the furture, please use "settings".')
+        return self.settings
+        
 def save_image(data, filename, interpolation='bicubic'):
     """
     """

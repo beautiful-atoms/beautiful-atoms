@@ -115,7 +115,7 @@ def get_active_render_collection():
         bpy.type.collection: _description_
     """
     if 'batoms_render' in bpy.data.collections:
-        return bpy.data.collections['batoms_render'].batoms.brender
+        return bpy.data.collections['batoms_render'].Brender
     return None
 
 
@@ -216,7 +216,7 @@ def get_light_direction(i):
     def getter(self):
         light = get_default_light()
         if light is not None:
-            return light.batoms.light.direction[i]
+            return light.Blight.direction[i]
         else:
             return 0
     return getter
@@ -228,7 +228,7 @@ def set_light_direction(i):
     def setter(self, value):
         light = get_default_light()
         if light is not None:
-            light_direction = light.batoms.light.direction
+            light_direction = light.Blight.direction
             light_direction[i] = value
             set_light_attr('direction', light_direction)
     return setter

@@ -399,7 +399,7 @@ class Bspecies(Setting):
                  ) -> None:
         Setting.__init__(self, label, coll_name=coll_name)
         self.label = label
-        self.name = 'bspecies'
+        self.name = 'batoms'
         self.batoms = batoms
         #
         self.calc_segments(segments)
@@ -408,6 +408,14 @@ class Bspecies(Setting):
             self.add(species)
         # for sp, data in species.items():
             # self[sp] = data
+
+    def get_bpy_setting(self):
+        if self.coll_name:
+            coll = bpy.data.collections.get(self.coll_name)
+            data = getattr(coll, self.name)
+        else:
+            raise KeyError("The collection property {} not exist!".format(self.name))
+        return data.settings_species
 
     def calc_segments(self, segments):
         if segments is not None:
@@ -463,7 +471,7 @@ class Bspecies(Setting):
             # data['radius_style'] = '0'
             sp = self.find(name)
             if sp is None:
-                sp = self.collection.add()
+                sp = self.bpy_setting.add()
             sp.name = name
             sp.label = self.label
             sp.segments = self.segments
@@ -504,7 +512,7 @@ class Bspecies(Setting):
 
     def get_species(self):
         species = {}
-        for sp in self.collection:
+        for sp in self.bpy_setting:
             species[sp.name] = Species(sp.name, parent=self)
         return species
 
@@ -586,7 +594,7 @@ class Bspecies(Setting):
         return self
 
     def __iter__(self):
-        item = self.collection
+        item = self.bpy_setting
         for i in range(len(item)):
             yield item[i]
 
@@ -595,3 +603,10 @@ class Bspecies(Setting):
             self.segments = segments
         for name, sp in self.species.items():
             sp.build_instancer()
+
+    @property
+    def setting(self):
+        from batoms.utils import deprecated
+        """setting object."""
+        deprecated('"setting" will be deprecated in the furture, please use "settings".')
+        return self.settings

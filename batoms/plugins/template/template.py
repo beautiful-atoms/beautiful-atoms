@@ -8,7 +8,7 @@ import bpy
 from time import time
 import numpy as np
 from batoms.base.object import BaseObject
-from .templatesetting import TemplateSetting
+from .setting import TemplateSettings
 import logging
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ class Template(BaseObject):
         self.tensors = tensors
         name = 'plugin'
         BaseObject.__init__(self, label, name)
-        self.setting = TemplateSetting(
+        self.settings = TemplateSettings(
             self.label, parent=self)
     
     def build_materials(self, name, color,
@@ -65,7 +65,7 @@ class Template(BaseObject):
         from batoms.utils.butils import clean_coll_object_by_type
         # delete old object
         clean_coll_object_by_type(self.batoms.coll, 'TEMPLATE')
-        for setting in self.setting.collection:
+        for setting in self.settings.collection:
             self.draw_plugin(setting)
 
     
@@ -83,7 +83,7 @@ class Template(BaseObject):
     @property
     def objs(self):
         objs = {}
-        for setting in self.setting.collection:
+        for setting in self.settings.collection:
             ms_name = '%s_%s' % (self.label, setting.name)
             obj = bpy.data.objects.get(ms_name)
             objs[setting.name] = obj

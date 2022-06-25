@@ -9,7 +9,7 @@ from time import time
 import numpy as np
 from batoms.attribute import Attributes
 from batoms.base.object import ObjectGN
-from .cavitysetting import CavitySettings
+from .setting import CavitySettings
 from scipy import spatial
 from batoms.utils.butils import object_mode, get_nodes_by_name
 from batoms.utils import string2Number
@@ -64,10 +64,10 @@ class Cavity(ObjectGN):
         flag = self.load()
         if not flag and cavity_datas is not None:
             self.build_object(cavity_datas)
-            self.setting = CavitySettings(
+            self.settings = CavitySettings(
                 self.label, batoms=batoms, parent=self)
         else:
-            self.setting = CavitySettings(
+            self.settings = CavitySettings(
                 self.label, batoms=batoms, parent=self)
             self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
 
@@ -171,22 +171,22 @@ class Cavity(ObjectGN):
         ic = 0
         for r in spheres['radii']:
             has_r = False
-            for cav in self.setting.collection:
+            for cav in self.settings.bpy_setting:
                 if r > cav.min and r < cav.max:
                     has_r = True
             if not has_r:
-                name = len(self.setting.collection)
+                name = len(self.settings.bpy_setting)
                 cav = {'min': np.floor(r), 'max': np.ceil(
                     r), 'color': basic_colors[color_names[ic]]}
-                self.setting[name] = cav
+                self.settings[name] = cav
                 ic += 1
                 if ic == len(color_names):
                     ic = 0
         species_index = np.zeros(ns, dtype = int)
         show = np.ones(ns, dtype=int)
-        ncollection = len(self.setting.collection)
+        ncollection = len(self.settings.bpy_setting)
         for i in range(ncollection):
-            cav = self.setting.collection[i]
+            cav = self.settings.bpy_setting[i]
             indices = np.where((spheres['radii'] > cav.min) & (
                 spheres['radii'] < cav.max))[0]
             species_index[indices] = string2Number(cav.name)
@@ -414,8 +414,8 @@ class Cavity(ObjectGN):
     def update_geometry_node_instancer(self):
         """
         """
-        for sp in self.setting.collection:
-            self.setting.build_instancer(sp.as_dict())
+        for sp in self.settings.bpy_setting:
+            self.settings.build_instancer(sp.as_dict())
 
     def set_arrays(self, arrays):
         """
@@ -446,3 +446,10 @@ class Cavity(ObjectGN):
         name = '%s_cavity' % (self.label)
         obj = self.obj
         self.set_obj_frames(name, obj, frames['centers'])
+
+    @property
+    def setting(self):
+        from batoms.utils import deprecated
+        """setting object."""
+        deprecated('"setting" will be deprecated in the furture, please use "settings".')
+        return self.settings
