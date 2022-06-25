@@ -1596,6 +1596,12 @@ class Batoms(BaseCollection, ObjectGN):
         self._crystal_shape = crystal_shape
 
     @property
+    def ms(self):
+        """ms object."""
+        deprecated('"ms" will be deprecated in the furture, please use "molecular_surface".')
+        return self.molecular_surface
+
+    @property
     def molecular_surface(self):
         """molecular_surface object."""
         from batoms.plugins.molecular_surface import MolecularSurface
