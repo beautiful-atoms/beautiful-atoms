@@ -184,9 +184,7 @@ class Boundary(ObjectGN):
         gn.node_group.links.new(
             JoinGeometry.outputs['Geometry'], GroupOutput.inputs['Geometry'])
         # ------------------------------------------------------------------
-        # calculate bond vector, length, rotation based on the index
-        # Get four positions from batoms, bond and the second bond for
-        # high order bond plane
+        # transform postions of batoms to boundary
         ObjectBatoms = get_nodes_by_name(gn.node_group.nodes,
                                          '%s_ObjectBatoms' % self.label,
                                          'GeometryNodeObjectInfo')
@@ -206,7 +204,7 @@ class Boundary(ObjectGN):
         gn.node_group.links.new(GroupInput.outputs[1],
                                 TransferBatoms.inputs['Index'])
         # ------------------------------------------------------------------
-        # add positions with offsets
+        # calculate offset for boundary atoms
         # transfer offsets from object self.obj_o
         ObjectOffsets = get_nodes_by_name(gn.node_group.nodes,
                                           '%s_ObjectOffsets' % (self.label),
@@ -231,6 +229,8 @@ class Boundary(ObjectGN):
         VectorAdd = get_nodes_by_name(gn.node_group.nodes,
                                       '%s_VectorAdd' % (self.label),
                                       'ShaderNodeVectorMath')
+        # ------------------------------------------------------------------
+        # add positions with offsets
         VectorAdd.operation = 'ADD'
         gn.node_group.links.new(TransferBatoms.outputs[0], VectorAdd.inputs[0])
         gn.node_group.links.new(OffsetNode.outputs[0], VectorAdd.inputs[1])
@@ -242,6 +242,27 @@ class Boundary(ObjectGN):
             GroupInput.outputs['Geometry'], SetPosition.inputs['Geometry'])
         gn.node_group.links.new(
             VectorAdd.outputs[0], SetPosition.inputs['Position'])
+        #
+        # ------------------------------------------------------------------
+        # transform scale of batoms to boundary
+        if bpy.app.version_string >= '3.2.0':
+            ScaleBatoms = get_nodes_by_name(gn.node_group.nodes,
+                                            '%s_ScaleBatoms' % (self.label),
+                                            'GeometryNodeInputNamedAttribute')
+            # need to be "FLOAT_VECTOR", because scale is "FLOAT_VECTOR"
+            ScaleBatoms.data_type = "FLOAT_VECTOR"
+            ScaleBatoms.inputs[0].default_value = "scale"
+            TransferScale = get_nodes_by_name(gn.node_group.nodes,
+                                            '%s_TransferScale' % (self.label),
+                                            'GeometryNodeAttributeTransfer')
+            TransferScale.mapping = 'INDEX'
+            TransferScale.data_type = 'FLOAT_VECTOR'
+            gn.node_group.links.new(ObjectBatoms.outputs['Geometry'],
+                                    TransferScale.inputs[0])
+            gn.node_group.links.new(ScaleBatoms.outputs['Attribute'],
+                                    TransferScale.inputs['Attribute'])
+            gn.node_group.links.new(GroupInput.outputs[1],
+                                    TransferScale.inputs['Index'])
 
     def add_geometry_node(self, spname):
         """
@@ -281,8 +302,16 @@ class Boundary(ObjectGN):
         gn.node_group.links.new(
             GroupInput.outputs[2], CompareSpecies.inputs[0])
         gn.node_group.links.new(GroupInput.outputs[3], BoolShow.inputs[0])
-        gn.node_group.links.new(
-            GroupInput.outputs[6], InstanceOnPoint.inputs['Scale'])
+        # transfer scale
+        if bpy.app.version_string >= '3.2.0':
+            TransferScale = get_nodes_by_name(gn.node_group.nodes,
+                                            '%s_TransferScale' % (self.label),
+                                            'GeometryNodeAttributeTransfer')
+            gn.node_group.links.new(
+                TransferScale.outputs[0], InstanceOnPoint.inputs['Scale'])
+        else:
+            gn.node_group.links.new(
+                GroupInput.outputs[6], InstanceOnPoint.inputs['Scale'])
         gn.node_group.links.new(CompareSpecies.outputs[0], BoolShow.inputs[1])
         gn.node_group.links.new(
             BoolShow.outputs['Boolean'], InstanceOnPoint.inputs['Selection'])
@@ -299,6 +328,10 @@ class Boundary(ObjectGN):
         """
         # object_mode()
         # clean_coll_objects(self.coll, 'bond')
+        self.hide = False
+        if not self.active:
+            self.set_arrays(default_boundary_datas)
+            return
         frames = self.batoms.get_frames()
         images = self.batoms.as_ase()
         nframe = self.batoms.nframe
@@ -349,6 +382,14 @@ class Boundary(ObjectGN):
         return obj_o
 
     @property
+    def active(self):
+        return self.batoms.coll.batoms.boundary.active
+    
+    @active.setter
+    def active(self, value):
+        self.batoms.coll.batoms.boundary.active = value
+
+    @property
     def boundary(self):
         return self.get_boundary()
 
@@ -366,8 +407,15 @@ class Boundary(ObjectGN):
                     boundary = np.array(boundary)
             else:
                 raise Exception('Wrong boundary setting!')
+            if np.isclose(boundary[:].flatten(), np.array([0, 1, 0, 1, 0, 1])).all():
+                self.active = False
+            else:
+                self.active = True
             self.batoms.coll.batoms.boundary.boundary = boundary[:].flatten()
+        else:
+            self.active = False
         self.update()
+        # self.batoms.draw()
 
     def get_boundary(self):
         boundary = np.array(self.batoms.coll.batoms.boundary.boundary)
@@ -386,6 +434,8 @@ class Boundary(ObjectGN):
         elif dnvert < 0:
             self.delete_vertices_bmesh(range(-dnvert))
             self.delete_vertices_bmesh(range(-dnvert), self.obj_o)
+        if len(arrays["positions"]) == 0: 
+            return
         self.positions = arrays["positions"][0]
         self.offsets = arrays["offsets"][0]
         self.set_frames(arrays)
@@ -433,8 +483,11 @@ class Boundary(ObjectGN):
 
     def get_boundary_data(self, include_batoms=False):
         """
-        using foreach_get and foreach_set to improve performance.
         """
+        # check cell voluem
+        # if < 1e-6, invalid cell and boundary.
+        if self.batoms.cell.volume < 1e-6:
+            return None
         arrays = self.arrays
         boundary_data = {'positions': arrays['positions'],
                          'species': arrays['species'],

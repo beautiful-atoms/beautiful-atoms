@@ -197,6 +197,7 @@ class Bboundary(Base):
     """
     name: StringProperty(name="name")
     flag: BoolProperty(name="flag", default=False)
+    active: BoolProperty(name="active", default=False)
     label: StringProperty(name="label", default='batoms')
     boundary: FloatVectorProperty(name="boundary", default=[
                                   0.0, 1.0, 0.0, 1.0, 0.0, 1.0], size=6)
@@ -211,6 +212,7 @@ class Bboundary(Base):
             'name': self.name,
             'flag': self.flag,
             'label': self.label,
+            'active': self.active,
             'color': self.color[:],
             'boundary': self.boundary[:],
             'scale': self.scale,

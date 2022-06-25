@@ -481,7 +481,18 @@ class ApplyModelStyleSelected(OperatorBatoms):
         indices = get_selected_vertices(context.object)
         model_style_array = batoms.get_attribute("model_style")
         model_style_array[indices] = int(self.model_style)
+        scale_array = batoms.get_attribute("scale")
+        if int(self.model_style) == 0:
+            scale = 1
+        elif int(self.model_style) == 1:
+            scale = 0.4
+        elif int(self.model_style) == 2:
+            scale = 0.4
+        elif int(self.model_style) == 3:
+            scale = 0.0001
+        scale_array[indices] = scale
         batoms.set_model_style_array(model_style_array)
+        batoms.set_attributes({'scale': scale_array})
         batoms.obj.select_set(True)
         self.report({"INFO"}, "Model style of {} atoms are changed to {}".format(len(indices), self.model_style))
         bpy.context.view_layer.objects.active = batoms.obj

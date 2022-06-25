@@ -71,6 +71,26 @@ def test_batoms_parameters():
     assert np.isclose(h2o.scale, 0.5)
 
 
+def test_model_style():
+    from batoms import Batoms
+    from batoms.bio.bio import read
+    tio2 = read("../tests/datas/tio2.cif")
+    tio2.boundary = 0.1
+    tio2.bond.show_search = True
+    tio2.model_style = 2
+    assert tio2.bond.search_bond.hide == False
+    assert tio2.boundary.hide == False
+    #
+    tio2.polyhedra_style = 2
+    assert tio2.bond.hide == True
+    assert tio2.bond.search_bond.hide == True
+    assert tio2.boundary.hide == False
+    #
+    tio2.polyhedra_style = 1
+    assert tio2.bond.hide == True
+    assert tio2.bond.search_bond.hide == False
+    assert tio2.boundary.hide == False
+
 
 def test_batoms_write():
     """Export Batoms to structure file

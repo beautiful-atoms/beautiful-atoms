@@ -81,6 +81,7 @@ def get_active_batoms():
     if context.object and context.object.batoms.type != 'OTHER':
         mode = context.object.mode
         batoms = Batoms(label=context.object.batoms.label)
+        bpy.context.view_layer.objects.active = batoms.obj
         bpy.ops.object.mode_set(mode=mode)
         return batoms
     return None
