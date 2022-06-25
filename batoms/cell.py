@@ -12,9 +12,9 @@ from batoms.draw import draw_cylinder
 class Bcell(ObjectGN):
     def __init__(self, label,
                  array=None,
-                 location=np.array([0, 0, 0]),
-                 color=(0.0, 0.0, 0.0, 1.0),
                  batoms=None,
+                 color=None,
+                 location=np.array([0, 0, 0]),
                  ) -> None:
         """
         Unit cell of three dimensions.
@@ -29,8 +29,8 @@ class Bcell(ObjectGN):
                       [3, 5], [2, 6], [7, 5], [7, 6],
                       [0, 2], [3, 6], [1, 5], [4, 7]
                       ]
-        self.width = 0.03
-        self.color = color
+        if color is not None:
+            self.color = color
         if array is not None:
             self.build_object(array, location)
         # if self.show_axes:
@@ -260,6 +260,22 @@ class Bcell(ObjectGN):
             raise ValueError('Cannot convert cell to array of type {}'
                              .format(dtype))
         return self.local_array
+
+    @property
+    def width(self):
+        return self.batoms.coll.batoms.cell.width
+
+    @width.setter
+    def width(self, width):
+        self.batoms.coll.batoms.cell.width = width
+    
+    @property
+    def color(self):
+        return self.batoms.coll.batoms.cell.color[:]
+
+    @color.setter
+    def color(self, color):
+        self.batoms.coll.batoms.cell.color = color
 
     @property
     def local_array(self):
