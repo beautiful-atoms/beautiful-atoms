@@ -140,6 +140,7 @@ class SearchBond(ObjectGN):
         # print('boundary: build_object: {0:10.2f} s'.format(time() - tstart))
 
     def update(self, bondlist, mollists, moldatas, arrays, cell):
+        self.hide = False
         search_bond_data = self.calc_search_bond_data(
             bondlist, mollists, moldatas, arrays, cell)
         self.set_arrays(search_bond_data)

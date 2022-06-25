@@ -1644,32 +1644,6 @@ class Batoms(BaseCollection, ObjectGN):
     def cavity(self, cavity):
         self._cavity = cavity
 
-    def get_arrays_with_boundary(self):
-        """
-        get arrays with boundary atoms
-        """
-        # arrays = self.arrays
-        arrays_b = None
-        if self._boundary is not None:
-            # arrays_b = {
-            #         'indices': np.arange(natom),
-            #         'species': arrays['species'],
-            #         'positions': arrays['positions'],
-            #         'offsets': np.zeros((natom, 3)),
-            #         }
-            arrays_b = self.boundary.boundary_data
-            # arrays_b['positions'] = np.append(arrays_b['positions'],
-            #             boundary_data['positions'], axis = 0)
-            # arrays_b['indices'] = np.append(arrays_b['indices'],
-            #             boundary_data['indices'])
-            # arrays_b['species'] = np.append(arrays_b['species'],
-            #             boundary_data['species'])
-            # arrays_b['offsets'] = np.append(arrays_b['offsets'],
-            #             boundary_data['offsets'], axis = 0)
-        else:
-            arrays_b = None
-        return arrays_b
-
     @property
     def render(self):
         """Render object."""
@@ -1746,6 +1720,8 @@ class Batoms(BaseCollection, ObjectGN):
     def draw_space_filling(self, scale=1.0):
         mask = np.where(self.model_style_array == 0, True, False)
         self.set_attribute_with_indices('scale', mask, scale)
+        self.boundary.update()
+
 
     def draw_ball_and_stick(self, scale=0.4):
         mask = np.where(self.model_style_array >= 1, True, False)
@@ -1755,6 +1731,7 @@ class Batoms(BaseCollection, ObjectGN):
             return
         self.set_attribute_with_indices('scale', mask, scale)
         self.bond.hide = False
+        self.boundary.hide = False
         self.bond.update()
 
     def draw_polyhedra(self, scale=0.4):
@@ -1772,9 +1749,13 @@ class Batoms(BaseCollection, ObjectGN):
             self.bond.search_bond.hide = False
             # self.bond.update()
         if self.polyhedra_style == 1:
-            # hide bond
+            # only hide bond
             self.set_attribute_with_indices('scale', mask, scale)
             self.bond.hide = True
+            # show atoms
+            if self.bond._search_bond is not None:
+                self.bond.search_bond.hide = False
+            self.boundary.hide = False
         elif self.polyhedra_style == 2:
             # hide bond and atoms, except center atoms
             for b in self.bond.settings:
@@ -1785,7 +1766,7 @@ class Batoms(BaseCollection, ObjectGN):
                     mask[mask1] = False
             scale = 0
             self.set_attribute_with_indices('scale', mask, scale)
-            self.boundary.hide = True
+            # self.boundary.hide = True
             self.bond.hide = True
             self.bond.search_bond.hide = True
             # self.set_attribute_with_indices('show', mask, False)

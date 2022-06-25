@@ -650,7 +650,7 @@ class Bond(BaseCollection, ObjectGN):
         # clean_coll_objects(self.coll, 'bond')
         frames = self.batoms.get_frames()
         arrays = self.batoms.arrays
-        array_b = self.batoms.get_arrays_with_boundary()
+        array_b = self.batoms.boundary.boundary_data
         show = arrays['show'].astype(bool)
         species = arrays['species'][show]
         # frames_boundary = self.batoms.get_frames(self.batoms.batoms_boundary)
@@ -668,15 +668,15 @@ class Bond(BaseCollection, ObjectGN):
                     self.build_bondlists(species, positions, self.batoms.cell,
                                         self.batoms.pbc, setting)
                 # build bondlist for boundary atoms
-                if array_b is not None:
-                    bondlist = self.build_bondlists_with_boundary(
-                        array_b, bondlist, bonddatas,
-                        peciesBondDatas,
-                        molPeciesDatas)
-                    bondlist = self.check_boundary(bondlist)
+                bondlist = self.build_bondlists_with_boundary(
+                    array_b, bondlist, bonddatas,
+                    peciesBondDatas,
+                    molPeciesDatas)
+                bondlist = self.check_boundary(bondlist)
                 # search molecule
                 # search bond
                 if self.show_search:
+                    self.search_bond.hide = False
                     self.search_bond.update(
                         bondlist, peciesBondDatas, molPeciesDatas,
                         arrays, self.batoms.cell)

@@ -299,6 +299,7 @@ class Boundary(ObjectGN):
         """
         # object_mode()
         # clean_coll_objects(self.coll, 'bond')
+        self.hide = False
         frames = self.batoms.get_frames()
         images = self.batoms.as_ase()
         nframe = self.batoms.nframe
@@ -368,6 +369,7 @@ class Boundary(ObjectGN):
                 raise Exception('Wrong boundary setting!')
             self.batoms.coll.batoms.boundary.boundary = boundary[:].flatten()
         self.update()
+        self.batoms.draw()
 
     def get_boundary(self):
         boundary = np.array(self.batoms.coll.batoms.boundary.boundary)
