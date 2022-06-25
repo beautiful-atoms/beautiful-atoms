@@ -181,7 +181,11 @@ class Bcell(bpy.types.PropertyGroup):
     label: StringProperty(name="label", default='')
     pbc: BoolVectorProperty(name="pbc", default=[False, False, False], size=3)
     show_unit_cell: BoolProperty(name="show_unit_cell", default=True)
-
+    width: FloatProperty(name="width", default=0.03)
+    color: FloatVectorProperty(name="color", size=4,
+                               subtype='COLOR',
+                               min=0, max=1,
+                               default=[0, 0, 0, 1])
 
 class Bvolume(bpy.types.PropertyGroup):
     """

@@ -58,6 +58,7 @@ def draw_cylinder(
     mesh.update()
     mesh.polygons.foreach_set('use_smooth', [True]*len(mesh.polygons))
     obj.data = mesh
+    obj.data.materials.append(material)
     #
     for name, inputs in datas['battr_inputs'].items():
         battr = getattr(obj, name)
