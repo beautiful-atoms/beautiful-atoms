@@ -122,7 +122,7 @@ class SearchBond(ObjectGN):
         obj.batoms.type = 'BOND'
         obj.batoms.label = self.batoms.label
         obj.Bbond.label = self.batoms.label
-        obj.parent = self.batoms.obj
+        obj.parent = self.obj
         #
         name = '%s_search_bond_offset' % self.label
         self.delete_obj(name)

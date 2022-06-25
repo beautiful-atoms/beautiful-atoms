@@ -149,7 +149,7 @@ class Boundary(ObjectGN):
         obj = bpy.data.objects.new(name, mesh)
         self.batoms.coll.objects.link(obj)
         obj.hide_set(True)
-        obj.parent = self.batoms.obj
+        obj.parent = self.obj
         bpy.context.view_layer.update()
         self.set_attributes(attributes)
         self.build_geometry_node()

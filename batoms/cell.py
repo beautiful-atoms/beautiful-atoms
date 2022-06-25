@@ -417,7 +417,7 @@ class Bcell(ObjectGN):
                             coll=coll
                             )
         if self.batoms is not None:
-            obj.parent = self.batoms.obj
+            obj.parent = self.obj
 
     @property
     def obj_cylinder(self):
