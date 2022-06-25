@@ -575,6 +575,8 @@ class Batoms(BaseCollection, ObjectGN):
             self.scale = 0.4
         elif int(model_style) == 3:
             self.scale = 0.0001
+        scale = np.ones(len(self))*self.scale
+        self.set_attribute('scale', scale)
         self.coll.batoms.model_style = str(model_style)
         model_style_array = np.ones(len(self), dtype=int)*int(model_style)
         self.set_model_style_array(model_style_array)
@@ -1726,8 +1728,8 @@ class Batoms(BaseCollection, ObjectGN):
             self.cell.draw()
 
     def draw_space_filling(self):
-        mask = np.where(self.model_style_array == 0, True, False)
-        self.set_attribute_with_indices('scale', mask, self.scale)
+        # mask = np.where(self.model_style_array == 0, True, False)
+        # self.set_attribute_with_indices('scale', mask, self.scale)
         self.boundary.update()
 
 
@@ -1737,7 +1739,7 @@ class Batoms(BaseCollection, ObjectGN):
             from batoms.bond.bond import default_bond_datas
             self.bond.set_arrays(default_bond_datas.copy())
             return
-        self.set_attribute_with_indices('scale', mask, self.scale)
+        # self.set_attribute_with_indices('scale', mask, self.scale)
         self.bond.hide = False
         self.boundary.hide = False
         self.bond.update()
@@ -1751,14 +1753,14 @@ class Batoms(BaseCollection, ObjectGN):
         self.polyhedra.update()
         self.set_attribute_with_indices('show', mask, True)
         if self.polyhedra_style == 0:
-            self.set_attribute_with_indices('scale', mask, self.scale)
+            # self.set_attribute_with_indices('scale', mask, self.scale)
             self.boundary.hide = False
             self.bond.hide = False
             self.bond.search_bond.hide = False
             # self.bond.update()
         if self.polyhedra_style == 1:
             # only hide bond
-            self.set_attribute_with_indices('scale', mask, self.scale)
+            # self.set_attribute_with_indices('scale', mask, self.scale)
             self.bond.hide = True
             # show atoms
             if self.bond._search_bond is not None:
@@ -1773,7 +1775,7 @@ class Batoms(BaseCollection, ObjectGN):
                     self.set_attribute_with_indices('scale', mask1, self.scale)
                     mask[mask1] = False
             scale = 0
-            self.set_attribute_with_indices('scale', mask, self.scale)
+            # self.set_attribute_with_indices('scale', mask, self.scale)
             # self.boundary.hide = True
             self.bond.hide = True
             self.bond.search_bond.hide = True
