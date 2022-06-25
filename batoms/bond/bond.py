@@ -185,7 +185,8 @@ class Bond(BaseCollection, ObjectGN):
         obj.batoms.label = self.batoms.label
         obj.Bbond.label = self.batoms.label
         self.batoms.coll.Bbond.flag = True
-        #
+        # The reason we use object to store offset instead of using vector attribute 
+        # of the mesh, is that we need shape key for offsets too.
         offsets = [offsets1, offsets2, offsets3, offsets4]
         for i in range(4):
             name = '%s_bond_offset%s' % (self.label, i)
@@ -196,7 +197,7 @@ class Bond(BaseCollection, ObjectGN):
             obj = bpy.data.objects.new(name, mesh)
             self.coll.objects.link(obj)
             obj.hide_set(True)
-            obj.parent = self.batoms.obj
+            obj.parent = self.obj
         #
         bpy.context.view_layer.update()
         self.set_attributes(attributes)
@@ -757,9 +758,11 @@ class Bond(BaseCollection, ObjectGN):
             for obj in objs:
                 self.delete_vertices_bmesh(range(-dnvert), obj)
         self.set_frames(arrays)
-        self.offsets = [arrays.pop('offsets1'), arrays.pop('offsets2'),
-                        arrays.pop('offsets3'), arrays.pop('offsets4')]
-        arrays.pop("centers")
+        self.offsets = [arrays['offsets1'], arrays['offsets2'],
+                        arrays['offsets3'], arrays['offsets4']]
+        arrays = {key:value for key, value in arrays.items()
+                if key not in ["centers", "offsets1", "offsets2", 
+                    "offsets3", "offsets4"]}
         self.set_attributes(arrays)
         self.update_geometry_node_species()
         self.update_geometry_node_instancer()
@@ -863,7 +866,7 @@ class Bond(BaseCollection, ObjectGN):
     def show_search(self, show_search):
         self.settings.coll.Bbond.show_search = show_search
         if not show_search:
-            self.search_bond.set_arrays(default_search_bond_datas)
+            self.search_bond.set_arrays(default_search_bond_datas.copy())
             self._search_bond = None
         else:
             self.update()
