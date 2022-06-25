@@ -70,45 +70,7 @@ def test_batoms_parameters():
     assert h2o.model_style == 1
     assert np.isclose(h2o.scale, 0.5)
 
-def test_batoms_species():
-    """Setting properties of species"""
-    bpy.ops.batoms.delete()
-    h2o = Batoms(
-        "h2o",
-        species=["O", "H", "H"],
-        positions=[[0, 0, 0.40], [0, -0.76, -0.2], [0, 0.76, -0.2]],
-    )
-    assert len(h2o.species) == 2
-    # default covalent radius
-    assert np.isclose(h2o.radius["H"], 0.31)
-    # vdw radius
-    h2o.radius_style = 1
-    assert np.isclose(h2o.radius["H"], 1.2)
-    # default Jmol color
-    assert np.isclose(h2o["H"].color, np.array([1, 1, 1, 1])).all()
-    # VESTA color
-    h2o.color_style = 2
-    assert np.isclose(h2o["H"].color, np.array([1, 0.8, 0.8, 1])).all()
-    # materials
-    h2o.species["H"].materials = {
-        "Metallic": 0.9, "Specular": 1.0, "Roughness": 0.01}
-    # elements
-    h2o.species["H"].elements = {"H": 0.5, "O": 0.4}
-    assert len(h2o["H"].elements) == 3
-    h2o["H"].material_style = "mirror"
-    # species X
-    h2o.replace([0], "X")
-    h2o["X"].color = [0.8, 0.8, 0.0, 0.3]
 
-def test_auto_build_species():
-    """auto build species use spglib"""
-    from batoms.bio.bio import read
-    bpy.ops.batoms.delete()
-    magnetite = read("../tests/datas/magnetite.cif")
-    magnetite.auto_build_species()
-    assert len(magnetite.species) == 5
-    assert len(magnetite.bond.settings) == 10
-    assert len(magnetite.polyhedra.settings) == 3
 
 def test_batoms_write():
     """Export Batoms to structure file
@@ -435,7 +397,6 @@ if __name__ == "__main__":
     test_empty()
     test_batoms_molecule()
     test_batoms_crystal()
-    test_batoms_species()
     test_batoms_write()
     test_batoms_transform()
     test_batoms_wrap()
