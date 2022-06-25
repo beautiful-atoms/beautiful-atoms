@@ -84,7 +84,7 @@ def test_model_style():
     tio2.polyhedra_style = 2
     assert tio2.bond.hide == True
     assert tio2.bond.search_bond.hide == True
-    assert tio2.boundary.hide == True
+    assert tio2.boundary.hide == False
     #
     tio2.polyhedra_style = 1
     assert tio2.bond.hide == True

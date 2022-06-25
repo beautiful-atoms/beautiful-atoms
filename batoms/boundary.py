@@ -398,7 +398,7 @@ class Boundary(ObjectGN):
                 raise Exception('Wrong boundary setting!')
             self.batoms.coll.batoms.boundary.boundary = boundary[:].flatten()
         self.update()
-        self.batoms.draw()
+        # self.batoms.draw()
 
     def get_boundary(self):
         boundary = np.array(self.batoms.coll.batoms.boundary.boundary)
@@ -464,8 +464,11 @@ class Boundary(ObjectGN):
 
     def get_boundary_data(self, include_batoms=False):
         """
-        using foreach_get and foreach_set to improve performance.
+        check cell voluem
+        if < 1e-6, invalid cell and boundary.
         """
+        if self.batoms.cell.volume < 1e-6:
+            return None
         arrays = self.arrays
         boundary_data = {'positions': arrays['positions'],
                          'species': arrays['species'],

@@ -567,6 +567,14 @@ class Batoms(BaseCollection, ObjectGN):
         return int(self.coll.batoms.model_style)
 
     def set_model_style(self, model_style):
+        if int(model_style) == 0:
+            self.scale = 1
+        elif int(model_style) == 1:
+            self.scale = 0.4
+        elif int(model_style) == 2:
+            self.scale = 0.4
+        elif int(model_style) == 3:
+            self.scale = 0.0001
         self.coll.batoms.model_style = str(model_style)
         model_style_array = np.ones(len(self), dtype=int)*int(model_style)
         self.set_model_style_array(model_style_array)
@@ -1717,24 +1725,24 @@ class Batoms(BaseCollection, ObjectGN):
         if self.show_unit_cell:
             self.cell.draw()
 
-    def draw_space_filling(self, scale=1.0):
+    def draw_space_filling(self):
         mask = np.where(self.model_style_array == 0, True, False)
-        self.set_attribute_with_indices('scale', mask, scale)
+        self.set_attribute_with_indices('scale', mask, self.scale)
         self.boundary.update()
 
 
-    def draw_ball_and_stick(self, scale=0.4):
+    def draw_ball_and_stick(self):
         mask = np.where(self.model_style_array >= 1, True, False)
         if not mask.any():
             from batoms.bond.bond import default_bond_datas
             self.bond.set_arrays(default_bond_datas.copy())
             return
-        self.set_attribute_with_indices('scale', mask, scale)
+        self.set_attribute_with_indices('scale', mask, self.scale)
         self.bond.hide = False
         self.boundary.hide = False
         self.bond.update()
 
-    def draw_polyhedra(self, scale=0.4):
+    def draw_polyhedra(self):
         mask = np.where(self.model_style_array == 2, True, False)
         if not mask.any():
             from batoms.polyhedra.polyhedra import default_polyhedra_datas
@@ -1743,14 +1751,14 @@ class Batoms(BaseCollection, ObjectGN):
         self.polyhedra.update()
         self.set_attribute_with_indices('show', mask, True)
         if self.polyhedra_style == 0:
-            self.set_attribute_with_indices('scale', mask, scale)
+            self.set_attribute_with_indices('scale', mask, self.scale)
             self.boundary.hide = False
             self.bond.hide = False
             self.bond.search_bond.hide = False
             # self.bond.update()
         if self.polyhedra_style == 1:
             # only hide bond
-            self.set_attribute_with_indices('scale', mask, scale)
+            self.set_attribute_with_indices('scale', mask, self.scale)
             self.bond.hide = True
             # show atoms
             if self.bond._search_bond is not None:
@@ -1762,17 +1770,17 @@ class Batoms(BaseCollection, ObjectGN):
                 if b.polyhedra:
                     mask1 = np.where(
                         self.attributes['species'] == b.species1, True, False)
-                    self.set_attribute_with_indices('scale', mask1, scale)
+                    self.set_attribute_with_indices('scale', mask1, self.scale)
                     mask[mask1] = False
             scale = 0
-            self.set_attribute_with_indices('scale', mask, scale)
+            self.set_attribute_with_indices('scale', mask, self.scale)
             # self.boundary.hide = True
             self.bond.hide = True
             self.bond.search_bond.hide = True
             # self.set_attribute_with_indices('show', mask, False)
         elif self.polyhedra_style == 3:
             # hide all bond and atoms
-            scale = 0
+            scale = 0.0001
             self.set_attribute_with_indices('scale', mask, scale)
             self.boundary.hide = True
             self.bond.hide = True
@@ -1782,7 +1790,7 @@ class Batoms(BaseCollection, ObjectGN):
     def draw_wireframe(self):
         mask = np.where(self.model_style_array == 3, True, False)
         # self.set_attribute_with_indices('show', mask, 0)
-        self.set_attribute_with_indices('scale', mask, 0.0001)
+        self.set_attribute_with_indices('scale', mask, self.scale)
         # self.update(mask)
 
     def as_ase(self, local=True, with_attribute=True):
