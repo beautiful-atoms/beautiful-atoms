@@ -9,7 +9,8 @@ from bpy.props import (
                        CollectionProperty,
                        )
 
-from batoms.custom_property import Base
+from batoms.internal_data import Base
+
 
 
 class LatticePlaneSetting(Base):

@@ -151,5 +151,5 @@ Dockerfiles/Dockerfile.base_3.0
 sandbox/
 batoms/data/startup_new.blend
 batoms/data/startup_old.blend
-tests/test.blend
+tests/test.blend*
 archive/
