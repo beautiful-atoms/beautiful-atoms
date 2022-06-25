@@ -329,6 +329,9 @@ class Boundary(ObjectGN):
         # object_mode()
         # clean_coll_objects(self.coll, 'bond')
         self.hide = False
+        if not self.active:
+            self.set_arrays(default_boundary_datas)
+            return
         frames = self.batoms.get_frames()
         images = self.batoms.as_ase()
         nframe = self.batoms.nframe
@@ -379,6 +382,14 @@ class Boundary(ObjectGN):
         return obj_o
 
     @property
+    def active(self):
+        return self.batoms.coll.batoms.boundary.active
+    
+    @active.setter
+    def active(self, value):
+        self.batoms.coll.batoms.boundary.active = value
+
+    @property
     def boundary(self):
         return self.get_boundary()
 
@@ -396,7 +407,13 @@ class Boundary(ObjectGN):
                     boundary = np.array(boundary)
             else:
                 raise Exception('Wrong boundary setting!')
+            if np.isclose(boundary[:].flatten(), np.array([0, 1, 0, 1, 0, 1])).all():
+                self.active = False
+            else:
+                self.active = True
             self.batoms.coll.batoms.boundary.boundary = boundary[:].flatten()
+        else:
+            self.active = False
         self.update()
         # self.batoms.draw()
 
@@ -417,6 +434,8 @@ class Boundary(ObjectGN):
         elif dnvert < 0:
             self.delete_vertices_bmesh(range(-dnvert))
             self.delete_vertices_bmesh(range(-dnvert), self.obj_o)
+        if len(arrays["positions"]) == 0: 
+            return
         self.positions = arrays["positions"][0]
         self.offsets = arrays["offsets"][0]
         self.set_frames(arrays)
@@ -464,9 +483,9 @@ class Boundary(ObjectGN):
 
     def get_boundary_data(self, include_batoms=False):
         """
-        check cell voluem
-        if < 1e-6, invalid cell and boundary.
         """
+        # check cell voluem
+        # if < 1e-6, invalid cell and boundary.
         if self.batoms.cell.volume < 1e-6:
             return None
         arrays = self.arrays
