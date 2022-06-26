@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Batoms toolbar",
     "author": "Xing Wang",
-    "version": (2, 1, 0),
+    "version": (2, 2, 0),
     "blender": (3, 0, 0),
     "location": "File -> Import -> Batoms (xyz, cif, pdb, ...)",
     "description": """Python module for drawing and
