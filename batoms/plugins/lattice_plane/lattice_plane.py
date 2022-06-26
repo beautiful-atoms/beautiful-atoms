@@ -58,15 +58,13 @@ class LatticePlane(BaseObject):
 
         """
         cellEdges = bcell.edges
-        cellVerts = bcell.local_positions
         planes = {}
         for p in self.settings:
             intersect_points = []
             normal = np.dot(p.indices, bcell.reciprocal)
             normal = normal/np.linalg.norm(normal)
             # get intersection point
-            for edge in cellEdges:
-                line = cellVerts[edge]
+            for line in cellEdges:
                 point = p.distance*normal
                 intersect_point = linePlaneIntersection(line, normal, point)
                 if intersect_point is not None:

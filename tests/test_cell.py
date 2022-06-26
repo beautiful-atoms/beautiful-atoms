@@ -73,7 +73,6 @@ def test_draw():
     au.cell = [2, 2, 2]
     au.cell.width = 0.1
     au.cell.color = [1, 0, 0, 1]
-    au.cell.draw()
 
 def test_bond_reload():
     """save to blend file and reload
@@ -85,7 +84,6 @@ def test_bond_reload():
     au = Batoms("au")
     au.cell.width = 0.01
     au.cell.color = [1, 0, 0, 0.5]
-    au.cell.draw()
     cwd = os.getcwd()
     filepath = os.path.join(cwd, "test.blend")
     bpy.ops.wm.save_as_mainfile(filepath=filepath)

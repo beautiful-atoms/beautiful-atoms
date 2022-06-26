@@ -180,8 +180,7 @@ class Bcell(bpy.types.PropertyGroup):
     flag: BoolProperty(name="flag", default=False)
     label: StringProperty(name="label", default='')
     pbc: BoolVectorProperty(name="pbc", default=[False, False, False], size=3)
-    show_unit_cell: BoolProperty(name="show_unit_cell", default=True)
-    width: FloatProperty(name="width", default=0.03)
+    width: FloatProperty(name="width", default=0.01)
     color: FloatVectorProperty(name="color", size=4,
                                subtype='COLOR',
                                min=0, max=1,
