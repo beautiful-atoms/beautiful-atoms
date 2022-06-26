@@ -137,7 +137,7 @@ class Bcell(ObjectGN):
         # Use an object with four vertices to represent a cell, instead of eight vertices.
         # We use curve to mesh methods to draw the edges (cylinder)
         # One does not need to call cell.draw() anymore.
-        # set quadrilaterial
+        # circle for profle of curve
         Circle = get_nodes_by_name(gn.node_group.nodes,
                                             '%s_Circle' % self.label,
                                             'GeometryNodeCurvePrimitiveCircle')
@@ -152,6 +152,8 @@ class Bcell(ObjectGN):
                 ]
         input_nodes = TransferCells + VectorAdds
         for i in range(6):
+            # set quadrilaterial
+            # maybe in the future, we have curve primitive: cube
             Quadrilateral = get_nodes_by_name(gn.node_group.nodes,
                                             '%s_Quadrilateral_%s' % (
                                                 self.label, i),
