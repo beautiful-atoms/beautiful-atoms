@@ -345,6 +345,7 @@ class BatomsCollection(bpy.types.PropertyGroup):
                              False, False, False], size=3)
     boundary: PointerProperty(name="Bboundary", type=Bboundary)
     cell: PointerProperty(name='Bcell', type=Bcell)
+    crystal_view: BoolProperty(name="crystal_view", default=False)
     ui_list_index_species: IntProperty(name="ui_list_index_species",
                                default=0)
     ui_list_index_select: IntProperty(name="ui_list_index_select",
