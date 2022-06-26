@@ -132,7 +132,11 @@ class Bcell(ObjectGN):
             TransferCells[3].outputs[0], VectorAdds[3].inputs[0])
         gn.node_group.links.new(
             VectorAdds[0].outputs[0], VectorAdds[3].inputs[1])
-        
+        #============================================================
+        # In this implementation.
+        # Use an object with four vertices to represent a cell, instead of eight vertices.
+        # We use curve to mesh methods to draw the edges (cylinder)
+        # One does not need to call cell.draw() anymore.
         # set quadrilaterial
         Circle = get_nodes_by_name(gn.node_group.nodes,
                                             '%s_Circle' % self.label,
