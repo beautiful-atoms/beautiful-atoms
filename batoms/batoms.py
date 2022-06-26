@@ -130,6 +130,17 @@ class Batoms(BaseCollection, ObjectGN):
         self.obj_name = label
         ObjectGN.__init__(self, label)
         BaseCollection.__init__(self, coll_name=label)
+        self._render = None
+        self._bond = None
+        self._polyhedra = None
+        self._boundary = None
+        self._isosurface = None
+        self._lattice_plane = None
+        self._crystal_shape = None
+        self._molecular_surface = None
+        self._magres = None
+        self._cavity = None
+        #
         if from_ase or from_pymatgen or from_pybel:
             species, positions, attributes, cell, pbc, info = read_from_others(from_ase,
                                                                                from_pymatgen,
@@ -140,7 +151,7 @@ class Batoms(BaseCollection, ObjectGN):
             if species is None:
                 species = []
                 positions = []
-            self.set_collection(label)
+            self.set_collection(label, color_style=color_style, radius_style=radius_style)
             self._cell = Bcell(label, cell, batoms=self)
             positions = np.array(positions)
             if len(positions.shape) == 3:
@@ -167,33 +178,22 @@ class Batoms(BaseCollection, ObjectGN):
             if species_props is None:
                 species_props = species
             self._species = Bspecies(
-                label, label, species_props, self, segments=segments)
+                label, species_props, self, segments=segments)
             self.selects.add('all', np.arange(len(self)))
             if volume is not None:
                 self.build_volume(volume)
             self.set_pbc(pbc)
             # self.label = label
-            self.radius_style = radius_style
-            self.color_style = color_style
             if movie:
                 self.set_frames()
             self.show_unit_cell = show_unit_cell
             
         self.ribbon = Ribbon(self.label, batoms=self, datas=info, update=True)
-        self._render = None
-        self._bond = None
-        self._polyhedra = None
-        self._boundary = None
-        self._isosurface = None
-        self._lattice_plane = None
-        self._crystal_shape = None
-        self._molecular_surface = None
-        self._magres = None
-        self._cavity = None
         show_index()
         self.hideOneLevel()
 
-    def set_collection(self, label):
+    def set_collection(self, label, color_style='0',
+                        radius_style='0'):
         """Build main collection and its child collections.
 
         Args:
@@ -211,6 +211,9 @@ class Batoms(BaseCollection, ObjectGN):
             coll.children.link(subcoll)
         coll.batoms.type = 'BATOMS'
         coll.batoms.label = label
+        # set internal data
+        self.coll.batoms.color_style = str(color_style)
+        self.coll.batoms.radius_style = str(radius_style)
 
     def hideOneLevel(self):
         """Hide one level of collecitons in the outline in Blender
@@ -429,7 +432,7 @@ class Batoms(BaseCollection, ObjectGN):
         self.coll_name = label
         self.obj_name = label
         self._cell = Bcell(label=label, batoms = self)
-        self._species = Bspecies(label, label, {}, self)
+        self._species = Bspecies(label, {}, self)
         self._attributes = Attributes(label=label, parent=self, obj_name=self.obj_name)
         self.selects = Selects(label, self)
 

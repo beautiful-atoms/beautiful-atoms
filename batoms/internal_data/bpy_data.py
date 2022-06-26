@@ -185,7 +185,7 @@ class Bcell(bpy.types.PropertyGroup):
     color: FloatVectorProperty(name="color", size=4,
                                subtype='COLOR',
                                min=0, max=1,
-                               default=[0, 0, 0, 1])
+                               default=[0.2, 0.2, 0.2, 1])
 
 class Bvolume(bpy.types.PropertyGroup):
     """

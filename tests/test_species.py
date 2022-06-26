@@ -61,8 +61,27 @@ def test_auto_build_species():
     assert len(magnetite.bonds.setting) == 10
     assert len(magnetite.polyhedras.setting) == 3
 
+def test_geometry_node_object():
+    """species instances are used in geometry node,
+    in batoms, boundary, search_bond. When instances are 
+    re-build, we need also update the geometry node."""
+    from batoms.bio.bio import read
+    bpy.ops.batoms.delete()
+    tio2 = read("../tests/datas/tio2.cif")
+    tio2.boundary = 0.01
+    tio2.bond.show_search = True
+    tio2.model_style = 1
+    tio2.species["Ti"].color = [1, 1, 0, 1]
+    tio2.species.update()
+    assert tio2.gnodes.node_group.nodes['ObjectInfo_tio2_Ti'].inputs['Object'].default_value is not None
+    assert tio2.boundary.gnodes.node_group.nodes['ObjectInfo_tio2_Ti'].inputs['Object'].default_value is not None
+    assert tio2.bond.search_bond.gnodes.node_group.nodes['ObjectInfo_tio2_Ti'].inputs['Object'].default_value is not None
+
+
 
 if __name__ == "__main__":
     test_batoms_species()
     test_species_color()
+    test_geometry_node_object()
     test_auto_build_species()
+    print("\n Batoms: All pass! \n")

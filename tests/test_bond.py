@@ -4,6 +4,7 @@ from batoms.batoms import Batoms
 from ase.build import molecule, bulk
 from batoms.bio.bio import read
 from time import time
+import numpy as np
 
 try:
     from _common_helpers import has_display, set_cycles_res
@@ -25,12 +26,25 @@ def test_bond():
     c2h6so.show = [0, 0, 1, 1, 1, 1, 1, 1, 1, 1]
     c2h6so.model_style = 1
     c2h6so.bond[0].order = 2
-    c2h6so.bond.settings["C-H"].color1 = [0, 1, 0, 1]
-    c2h6so.bond.settings["C-H"].color2 = [0, 1, 1, 1]
     c2h6so.bond.settings["C-H"].order = 2
     c2h6so.model_style = 1
     c2h6so.bond[0].order = 2
 
+def test_color():
+    bpy.ops.batoms.delete()
+    from batoms.batoms import Batoms
+    bpy.ops.batoms.molecule_add(label="c2h6so", formula="C2H6SO")
+    c2h6so = Batoms("c2h6so")
+    c2h6so.model_style = 1
+    assert np.isclose(c2h6so.bond.settings.\
+        instancers['C-H']['1_1'].data.materials[1].\
+            diffuse_color[:], np.array([1, 1, 1, 1])).all()
+    c2h6so.bond.settings["C-H"].color1 = [0, 1, 0, 1]
+    c2h6so.bond.settings["C-H"].color2 = [0, 1, 1, 1]
+    assert np.isclose(c2h6so.bond.settings.\
+        instancers['C-H']['1_1'].data.materials[1].\
+            diffuse_color[:], np.array([0, 1, 1, 1])).all()
+    
 
 def test_bond_high_order():
     from ase.build import molecule, bulk
@@ -72,7 +86,7 @@ def test_bond_search_bond_0():
     from batoms.bio.bio import read
     bpy.ops.batoms.delete()
     tio2 = read("../tests/datas/tio2.cif")
-    tio2.bond.settings[('Ti', 'O')].search = 0
+    tio2.bond.settings[("Ti", "O")].search = 0
     tio2.model_style = 1
     tio2.boundary = 0.01
     tio2.model_style = 1

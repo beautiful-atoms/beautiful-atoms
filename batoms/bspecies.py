@@ -117,6 +117,12 @@ class Species(BaseObject):
         # self.color = sp.color
         bpy.context.view_layer.update()
         self.parent.batoms.add_geometry_node(sp.name, obj)
+        # update boundary and search_bond
+        if hasattr(self.parent.batoms, '_species'):
+            # ignore for when init species
+            # only for update
+            self.parent.batoms.boundary.update_geometry_node_instancer(sp.name, obj)
+            self.parent.batoms.bond.search_bond.update_geometry_node_instancer(sp.name, obj)
         return obj
 
     def build_materials(self, node_inputs=None, material_style='default'):
@@ -132,16 +138,22 @@ class Species(BaseObject):
         mesh = self.obj.data
         mesh.materials.clear()
         elements = self.elements
+        i = 0
         for occ in self.sorted_occupancies:
             ele = elements[occ[0]]
             name = '%s_%s_%s' % (self.label, self.name, ele["name"])
             self.delete_material(name)
+            if i==0:
+                color = self.data.color
+            else:
+                color = ele["color"]
             mat = create_material(name,
-                                  color=ele["color"],
+                                  color=color,
                                   node_inputs=node_inputs,
                                   material_style=material_style,
                                   backface_culling=True)
             mesh.materials.append(mat)
+            i += 1
 
     def assign_materials(self):
         """Assign materials for instancer with order
@@ -391,13 +403,13 @@ class Bspecies(Setting):
     """Bspecies Class
     """
 
-    def __init__(self, label, coll_name, species=None,
+    def __init__(self, label, species=None,
                  batoms=None,
                  material_style='default',
                  segments=None,
                  subdivisions=2,
                  ) -> None:
-        Setting.__init__(self, label, coll_name=coll_name)
+        Setting.__init__(self, label, coll_name=label)
         self.label = label
         self.name = 'batoms'
         self.batoms = batoms
@@ -453,6 +465,7 @@ class Bspecies(Setting):
     def add(self, props, instancer=None):
         """
         """
+        from batoms.utils import get_default_species_data, default_element_prop
         if props is None:
             return
         if isinstance(props, str):
@@ -462,8 +475,10 @@ class Bspecies(Setting):
             props = {}
             for species in species_list:
                 ele = species.split('_')[0]
-                props[species] = {"elements": {ele: {"occupancy": 1.0,
-                                                     "color": (0.8, 0.8, 0, 1)}}}
+                props[species] = get_default_species_data({ele: {"occupancy": 1.0}},
+                                             radius_style=self.batoms.radius_style,
+                                             color_style=self.batoms.color_style)
+
         for name, data in props.items():
             # if 'color_style' not in data:
             # data['color_style'] = '0'
@@ -472,6 +487,10 @@ class Bspecies(Setting):
             sp = self.find(name)
             if sp is None:
                 sp = self.bpy_setting.add()
+            if 'color' not in data:
+                props = get_default_species_data(data['elements'], radius_style=self.batoms.radius_style,
+                                    color_style=self.batoms.color_style)
+                data.update(props)
             sp.name = name
             sp.label = self.label
             sp.segments = self.segments
@@ -603,10 +622,3 @@ class Bspecies(Setting):
             self.segments = segments
         for name, sp in self.species.items():
             sp.build_instancer()
-
-    @property
-    def setting(self):
-        from batoms.utils import deprecated
-        """setting object."""
-        deprecated('"setting" will be deprecated in the furture, please use "settings".')
-        return self.settings

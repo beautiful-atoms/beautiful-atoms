@@ -567,10 +567,11 @@ class BondSettings(Setting):
         Args:
             key (str): _description_
         """
+        species_props0 = self.batoms.species.species_props
         species_props = {}
         for sp in key:
             if sp in self.batoms.species.keys():
-                species_props[sp] = self.batoms.species.species_props[sp]
+                species_props[sp] = species_props0[sp]
         if value:
             species_props.update(value)
         bond = self.get_bondtable(key, species_props, dcutoff=0.5)
