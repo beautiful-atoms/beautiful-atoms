@@ -1982,3 +1982,28 @@ class Batoms(BaseCollection, ObjectGN):
             bpy.ops.export_scene.fbx(filepath=filename, use_selection=True)
         else:
             raise('File format %s is not supported.' % filename)
+
+    @property
+    def crystal_view(self):
+        return self.get_crystal_view()
+
+    @crystal_view.setter
+    def crystal_view(self, state):
+        self.set_crystal_view(state)
+
+    def get_crystal_view(self):
+        return self.coll.batoms.crystal_view
+
+    def set_crystal_view(self, crystal_view):
+        #
+        self.coll.batoms.crystal_view = crystal_view
+        if crystal_view:
+            self.boundary = 0.01
+            self.bond.show_search = True
+            self.bond.update()
+            self.polyhedra.update()
+        else:
+            self.boundary = 0
+            self.bond.show_search = False
+            self.bond.update()
+            self.polyhedra.update()
