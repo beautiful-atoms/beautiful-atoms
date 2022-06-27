@@ -66,7 +66,7 @@ def set_plugin(key):
     def setter(self, value):
         import importlib
         self[key] = value
-        plugin = importlib.import_module("batoms.{}".format(key))
+        plugin = importlib.import_module("batoms.plugins.{}".format(key))
         if value:
             plugin.register_class()
             logger.info("Enable {} plugin.".format(key))
@@ -299,15 +299,17 @@ class BatomsAddonPreferences(AddonPreferences):
                 box.prop(self, modname, text=package)
         #
         layout.separator()
-        box = layout.box().column()
-        box.label(text="Custom Plugins")
-        box.prop(self, "isosurface")
-        box.prop(self, "molecular_surface")
-        box.prop(self, "crystal_shape")
-        box.prop(self, "lattice_plane")
-        box.prop(self, "cavity")
-        box.prop(self, "magres")
-        box.prop(self, "real_interaction")
+        split = layout.split()
+        col = split.column()
+        col.label(text="Custom Plugins")
+        col.prop(self, "isosurface")
+        col.prop(self, "molecular_surface")
+        col.prop(self, "crystal_shape")
+        col.prop(self, "lattice_plane")
+        col.prop(self, "cavity")
+        col.prop(self, "magres")
+        col.prop(self, "real_interaction")
+        col = split.column()
         # custom folder
         layout.separator()
         box = layout.box().column()

@@ -147,13 +147,27 @@ def default_element_prop(element, radius_style='covalent',
 
 def get_default_species_data(elements, radius_style='covalent',
                              color_style="JMOL", props={}):
-    """
-    Set default color, radii for elements,
-    Todo fraction occupancy
+    """Set default color, radii for elements,
+
+    Args:
+        elements (dict): _description_
+        radius_style (str, optional): _description_. Defaults to 'covalent'.
+        color_style (str, optional): _description_. Defaults to "JMOL".
+        props (dict, optional): _description_. Defaults to {}.
+
+    exmaples:
+    elements = {"Fe": 0.8, "Cr": 0.2}
+    elements = {"Fe": {"occupancy": 0.8}, "Cr": {"occupancy": 0.2}}
+
+    Returns:
+        _type_: _description_
     """
     radius = 0
     species_props = {"elements": {}}
     for ele, eledata in elements.items():
+        if isinstance(eledata, (int, float)):
+            # only has occupancy data
+            eledata = {"occupancy": eledata}
         species_props["elements"][ele] = eledata
         data = default_element_prop(ele, radius_style=radius_style,
                                     color_style=color_style)

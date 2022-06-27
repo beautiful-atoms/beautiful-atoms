@@ -309,6 +309,22 @@ class SearchBond(ObjectGN):
         gn.node_group.links.new(InstanceOnPoint.outputs['Instances'],
                                 JoinGeometry.inputs['Geometry'])
 
+    def update_geometry_node_instancer(self, spname, instancer):
+        """When instances are re-build, we need also update 
+        the geometry node.
+
+        Args:
+            spname (str): name of the species
+        """
+        from batoms.utils.butils import get_nodes_by_name
+        # update  instancers
+        ObjectInfo = get_nodes_by_name(self.gnodes.node_group.nodes,
+                                       'ObjectInfo_%s_%s' % (
+                                           self.label, spname),
+                                       'GeometryNodeObjectInfo')
+        ObjectInfo.inputs['Object'].default_value = instancer
+        logger.debug('update boundary instancer: {}'.format(spname))
+        
     @property
     def obj_o(self):
         return self.get_obj_o()

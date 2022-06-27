@@ -10,6 +10,16 @@ addon = bpy.context.preferences.addons[package]
 preferences = addon.preferences
 
 
+def test_enable_disable_plugin():
+    from bpy.types import Collection, Object
+    assert preferences.magres==True
+    assert hasattr(Collection, 'Bmagres')
+    preferences.magres=False
+    assert not hasattr(Collection, 'Bmagres')
+    preferences.magres=True
+    assert hasattr(Collection, 'Bmagres')
+
+
 def create_molecule():
     bpy.ops.batoms.delete()
     from batoms import Batoms
