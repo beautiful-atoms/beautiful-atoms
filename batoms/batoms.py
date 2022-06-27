@@ -1341,12 +1341,10 @@ class Batoms(BaseCollection, ObjectGN):
     def get_show(self):
         return self.attributes['show']
 
-    def set_show(self, show, only_atoms=True):
+    def set_show(self, show, only_atoms=False):
         #
         if not only_atoms:
-            names = self.coll.all_objects.keys()
-            for name in names:
-                obj = bpy.data.objects.get(name)
+            for obj in self.obj.children:
                 obj.hide_render = not show
                 obj.hide_set(not show)
         #
