@@ -616,10 +616,9 @@ class Batoms(BaseCollection, ObjectGN):
     def show_unit_cell(self, show_unit_cell):
         if show_unit_cell:
             self.coll.batoms.show_unit_cell = show_unit_cell
-            self.cell.draw()
+            self.cell.hide = False
         else:
-            name = '%s_%s_%s' % (self.label, 'cell', 'cylinder')
-            self.cell.delete_obj(name)
+            self.cell.hide = True
 
     @property
     def radius(self):
@@ -1345,12 +1344,10 @@ class Batoms(BaseCollection, ObjectGN):
     def get_show(self):
         return self.attributes['show']
 
-    def set_show(self, show, only_atoms=True):
+    def set_show(self, show, only_atoms=False):
         #
         if not only_atoms:
-            names = self.coll.all_objects.keys()
-            for name in names:
-                obj = bpy.data.objects.get(name)
+            for obj in self.obj.children:
                 obj.hide_render = not show
                 obj.hide_set(not show)
         #
@@ -1727,8 +1724,6 @@ class Batoms(BaseCollection, ObjectGN):
         self.draw_ball_and_stick()
         self.draw_polyhedra()
         self.draw_wireframe()
-        if self.show_unit_cell:
-            self.cell.draw()
 
     def draw_space_filling(self):
         # mask = np.where(self.model_style_array == 0, True, False)
@@ -1955,8 +1950,7 @@ class Batoms(BaseCollection, ObjectGN):
         self.realize_instances = True
         objs = [self.obj]
         if with_cell:
-            self.cell.draw()
-            self.cell.obj_cylinder.select_set(True)
+            self.cell.obj.select_set(True)
         if with_bond:
             self.bond.realize_instances = True
             objs.insert(0, self.bond.obj)

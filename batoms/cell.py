@@ -13,7 +13,6 @@ class Bcell(ObjectGN):
     def __init__(self, label,
                  array=None,
                  batoms=None,
-                 color=None,
                  location=np.array([0, 0, 0]),
                  ) -> None:
         """
@@ -25,12 +24,6 @@ class Bcell(ObjectGN):
         name = 'cell'
         self.batoms = batoms
         ObjectGN.__init__(self, label, name)
-        self.edges = [[0, 3], [0, 1], [4, 2], [4, 1],
-                      [3, 5], [2, 6], [7, 5], [7, 6],
-                      [0, 2], [3, 6], [1, 5], [4, 7]
-                      ]
-        if color is not None:
-            self.color = color
         if array is not None:
             self.build_object(array, location)
         # if self.show_axes:
@@ -41,16 +34,12 @@ class Bcell(ObjectGN):
         Draw unit cell by edge, however, can not be rendered.
         """
         array = np.array(array)
+        positions = np.zeros([4, 3])
         if array is None:
-            positions = np.zeros([8, 3])
             self._frames = {'positions': [positions]}
         elif array.shape in [(3, ), (3, 1), (6, ), (6, 1), (3, 3)]:
             cell = Cell.new(array)
-            positions = self.array2verts(cell.array)
-            self._frames = {'positions': [positions]}
-        elif array.shape == (8, 3):
-            positions = array - array[0]
-            location = array[0]
+            positions[1:4, :] = cell.array
             self._frames = {'positions': [positions]}
         elif len(array.shape) == 3:
             positions = array[0]
@@ -60,7 +49,7 @@ class Bcell(ObjectGN):
 
         self.delete_obj(self.obj_name)
         mesh = bpy.data.meshes.new(self.obj_name)
-        mesh.from_pydata(positions, self.edges, [])
+        mesh.from_pydata(positions, [], [])
         mesh.update()
         for f in mesh.polygons:
             f.use_smooth = True
@@ -73,6 +62,9 @@ class Bcell(ObjectGN):
             self.batoms.coll.objects.link(obj)
         else:
             bpy.data.collections['Collection'].objects.link(obj)
+        # materials
+        mat = self.build_materials(self.label, color=self.color)
+        obj.data.materials.append(mat)
         self.build_geometry_node()
         self.set_frames(self._frames)
         bpy.context.view_layer.update()
@@ -89,6 +81,9 @@ class Bcell(ObjectGN):
         gn = modifier
         GroupInput = modifier.node_group.nodes[0]
         GroupOutput = gn.node_group.nodes[1]
+        JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
+                                         '%s_JoinGeometry' % self.label,
+                                         'GeometryNodeJoinGeometry')
         # ------------------------------------------------------------------
         # transfer first 4 positions of cell
         PositionCell = get_nodes_by_name(gn.node_group.nodes,
@@ -137,70 +132,63 @@ class Bcell(ObjectGN):
             TransferCells[3].outputs[0], VectorAdds[3].inputs[0])
         gn.node_group.links.new(
             VectorAdds[0].outputs[0], VectorAdds[3].inputs[1])
-        # calculate unit cell vector
-        VectorSubtracts = []
-        for i in range(4):
-            VectorSubtract = get_nodes_by_name(gn.node_group.nodes,
-                                               '%s_VectorSubtract_%s' % (
-                                                   self.label, i),
-                                               'ShaderNodeVectorMath')
-            VectorSubtract.operation = 'SUBTRACT'
-            gn.node_group.links.new(
-                VectorAdds[i].outputs[0], VectorSubtract.inputs[0])
-            gn.node_group.links.new(
-                TransferCells[0].outputs[0], VectorSubtract.inputs[1])
-            VectorSubtracts.append(VectorSubtract)
-        # for 7
-        VectorSubtract = get_nodes_by_name(gn.node_group.nodes,
-                                           '%s_VectorSubtract_%s' % (
-                                               self.label, 4),
-                                           'ShaderNodeVectorMath')
-        VectorSubtract.operation = 'SUBTRACT'
-        gn.node_group.links.new(
-            VectorSubtracts[3].outputs[0], VectorSubtract.inputs[0])
-        gn.node_group.links.new(
-            TransferCells[0].outputs[0], VectorSubtract.inputs[1])
-        VectorSubtracts.append(VectorSubtract)
-        # set positions
-        SetPositions = []
-        IndexCell = get_nodes_by_name(gn.node_group.nodes,
-                                      '%s_IndexCell' % (self.label),
-                                      'GeometryNodeInputIndex')
-        for i in range(4):
-            SetPosition = get_nodes_by_name(gn.node_group.nodes,
-                                            '%s_SetPosition_%s' % (
+        #============================================================
+        # In this implementation.
+        # Use an object with four vertices to represent a cell, instead of eight vertices.
+        # We use curve to mesh methods to draw the edges (cylinder)
+        # One does not need to call cell.draw() anymore.
+        # circle for profle of curve
+        Circle = get_nodes_by_name(gn.node_group.nodes,
+                                            '%s_Circle' % self.label,
+                                            'GeometryNodeCurvePrimitiveCircle')
+        Circle.inputs[4].default_value = self.width
+        # faces from vertices
+        faces = [[0, 2, 6, 3],
+                [1, 4, 7, 5],
+                [0, 1, 4, 2],
+                [3, 5, 7, 6],
+                [0, 1, 5, 3],
+                [2, 4, 7, 6],
+                ]
+        input_nodes = TransferCells + VectorAdds
+        for i in range(6):
+            # set quadrilaterial
+            # maybe in the future, we have curve primitive: cube
+            Quadrilateral = get_nodes_by_name(gn.node_group.nodes,
+                                            '%s_Quadrilateral_%s' % (
                                                 self.label, i),
-                                            'GeometryNodeSetPosition')
-            CompareSelect = get_nodes_by_name(gn.node_group.nodes,
-                                              'select_%s_%s' % (
-                                                  self.label, i),
-                                              compareNodeType)
+                                            'GeometryNodeCurvePrimitiveQuadrilateral')
+            Quadrilateral.mode = "POINTS"    
+            CurveToMesh = get_nodes_by_name(gn.node_group.nodes,
+                                            '%s_CurveToMesh_%s' % (
+                                                self.label, i),
+                                            'GeometryNodeCurveToMesh')
+            gn.node_group.links.new(Quadrilateral.outputs[0],
+                                CurveToMesh.inputs[0])
+            gn.node_group.links.new(Circle.outputs[0],
+                                CurveToMesh.inputs[1])
+            gn.node_group.links.new(CurveToMesh.outputs[0],
+                                JoinGeometry.inputs[0])
+            for j in range(4):
+                gn.node_group.links.new(input_nodes[faces[i][j]].outputs[0],
+                                Quadrilateral.inputs[j + 7])
+        setMaterial = get_nodes_by_name(self.gnodes.node_group.nodes,
+                                                '%s_setMaterial' % (self.label),
+                                                'GeometryNodeSetMaterial')
+        setMaterial.inputs[2].default_value = self.material
+        gn.node_group.links.new(JoinGeometry.outputs[0],
+                                setMaterial.inputs[0])
+        gn.node_group.links.new(setMaterial.outputs[0],
+                                GroupOutput.inputs[0])
 
-            CompareSelect.operation = 'EQUAL'
-            CompareSelect.inputs[1].default_value = i + 4
-            gn.node_group.links.new(
-                IndexCell.outputs[0], CompareSelect.inputs[0])
-            gn.node_group.links.new(
-                CompareSelect.outputs[0], SetPosition.inputs['Selection'])
-            SetPositions.append(SetPosition)
-        gn.node_group.links.new(GroupInput.outputs['Geometry'],
-                                SetPositions[0].inputs['Geometry'])
-        gn.node_group.links.new(SetPositions[0].outputs['Geometry'],
-                                SetPositions[1].inputs['Geometry'])
-        gn.node_group.links.new(SetPositions[1].outputs['Geometry'],
-                                SetPositions[2].inputs['Geometry'])
-        gn.node_group.links.new(SetPositions[2].outputs['Geometry'],
-                                SetPositions[3].inputs['Geometry'])
-        gn.node_group.links.new(SetPositions[3].outputs['Geometry'],
-                                GroupOutput.inputs['Geometry'])
-        gn.node_group.links.new(VectorSubtracts[0].outputs[0],
-                                SetPositions[0].inputs['Position'])
-        gn.node_group.links.new(VectorSubtracts[1].outputs[0],
-                                SetPositions[1].inputs['Position'])
-        gn.node_group.links.new(VectorSubtracts[2].outputs[0],
-                                SetPositions[2].inputs['Position'])
-        gn.node_group.links.new(VectorSubtracts[4].outputs[0],
-                                SetPositions[3].inputs['Position'])
+    @property
+    def material(self):
+        return self.get_material()
+
+    def get_material(self):
+        name = '%s_cell' % self.label
+        mat = bpy.data.materials.get(name)
+        return mat
 
     def set_frames(self, frames=None, frame_start=0, only_basis=False):
         if frames is None:
@@ -211,28 +199,6 @@ class Bcell(ObjectGN):
         name = self.label
         obj = self.obj
         self.set_obj_frames(name, obj, frames["positions"])
-
-    def build_cell_cylinder(self):
-        #
-        cell_cylinder = {'lengths': [],
-                         'centers': [],
-                         'normals': [],
-                         'vertices': 16,
-                         'width': self.width,
-                         'color': self.color,
-                         'battr_inputs': {},
-                         }
-        if np.max(abs(self.positions)) < 1e-6:
-            return cell_cylinder
-        for e in self.edges:
-            center = (self.positions[e[0]] + self.positions[e[1]])/2.0
-            vec = self.positions[e[0]] - self.positions[e[1]]
-            length = np.linalg.norm(vec)
-            nvec = vec/length
-            cell_cylinder['lengths'].append(length)
-            cell_cylinder['centers'].append(center)
-            cell_cylinder['normals'].append(nvec)
-        return cell_cylinder
 
     def __repr__(self) -> str:
         numbers = np.round(self.array, 3).tolist()
@@ -250,10 +216,9 @@ class Bcell(ObjectGN):
         Examples:
 
         """
-        array = self.array
-        array[index] = value
-        positions = self.array2verts(array)
-        self.local_positions = positions
+        local_positions = self.local_positions
+        local_positions[1:4, :][index] = value
+        self.local_positions = local_positions
 
     def __array__(self, dtype=float):
         if dtype != float:
@@ -267,15 +232,42 @@ class Bcell(ObjectGN):
 
     @width.setter
     def width(self, width):
+        from batoms.utils.butils import get_nodes_by_name
         self.batoms.coll.batoms.cell.width = width
+        Circle = get_nodes_by_name(self.gnodes.node_group.nodes,
+                                            '%s_Circle' % (
+                                                self.label),
+                                            'GeometryNodeCurvePrimitiveCircle')
+        Circle.inputs[4].default_value = width
     
     @property
     def color(self):
-        return self.batoms.coll.batoms.cell.color[:]
+        # Viewpoint_color = self.materials[self.main_element].diffuse_color
+        # for node in self.material.node_tree.nodes:
+        #     if 'Base Color' in node.inputs:
+        #         node_color = node.inputs['Base Color'].default_value[:]
+        #     if 'Alpha' in node.inputs:
+        #         Alpha = node.inputs['Alpha'].default_value
+        # color = [node_color[0], node_color[1], node_color[2], Alpha]
+        color = self.batoms.coll.batoms.cell.color
+        return color
 
     @color.setter
     def color(self, color):
+        from batoms.utils.butils import get_nodes_by_name
+        if len(color) == 3:
+            color = [color[0], color[1], color[2], 1]
         self.batoms.coll.batoms.cell.color = color
+        self.material.diffuse_color = color
+        for node in self.material.node_tree.nodes:
+            if 'Base Color' in node.inputs:
+                node.inputs['Base Color'].default_value = color
+            if 'Alpha' in node.inputs:
+                node.inputs['Alpha'].default_value = color[3]
+        setMaterial = get_nodes_by_name(self.gnodes.node_group.nodes,
+                                                '%s_setMaterial' % (self.label),
+                                                'GeometryNodeSetMaterial')
+        setMaterial.inputs[2].default_value = self.material
 
     @property
     def local_array(self):
@@ -317,10 +309,15 @@ class Bcell(ObjectGN):
     def origin(self):
         return self.positions[0]
 
-    def array2verts(self, array):
+    @property
+    def edges(self):
+        """Edges of the cell
         """
-        """
-        positions = np.array([[0, 0, 0],
+        edge_indices = [[0, 3], [0, 1], [4, 2], [4, 1],
+                      [3, 5], [2, 6], [7, 5], [7, 6],
+                      [0, 2], [3, 6], [1, 5], [4, 7]
+                      ]
+        basis = np.array([[0, 0, 0],
                               [1, 0, 0],
                               [0, 1, 0],
                               [0, 0, 1],
@@ -329,12 +326,15 @@ class Bcell(ObjectGN):
                               [0, 1, 1],
                               [1, 1, 1],
                               ])
-        positions = np.dot(positions, array)
-        return positions
-
+        positions = np.dot(basis, self.array)
+        edges = []
+        for indices in edge_indices:
+            edges.append(positions[indices])
+        return edges
+        
     def copy(self, label):
         object_mode()
-        cell = Bcell(label, array=self.array, location=self.obj.location)
+        cell = Bcell(label, batoms = self.batoms, array=self.array, location=self.obj.location)
         return cell
 
     def repeat(self, m):
@@ -363,30 +363,8 @@ class Bcell(ObjectGN):
         """
         return (self.array[0] + self.array[1] + self.array[2])/2.0
 
-    def draw_curve_from_vertices_nurbs(self, label, vertices, coll,
-                                       ):
-        """
-        """
-        name = '%s_cell' % label
-        crv = bpy.data.curves.new(name, 'CURVE')
-        crv.dimensions = '3D'
-        crv.resolution_u = 30
-        crv.fill_mode = 'FULL'
-        spline = crv.splines.new(type='POLY')
-        nvert = len(vertices)
-        spline.points.add(nvert-1)
-        # vertices = np.append(vertices, np.zeros((nvert, 1)), axis = 1)
-        vertices = np.append(vertices, np.ones((len(vertices), 1)), axis=1)
-        vertices = vertices.reshape(-1, 1)
-        spline.points.foreach_set('co', vertices)
-        crv.bevel_mode = 'OBJECT'
-        bpy.ops.object.mode_set(mode='OBJECT')
-        obj = bpy.data.objects.new(name, crv)
-        #
-        obj.data.materials.append(self.material)
-        coll.objects.link(obj)
 
-    def build_materials(self, label, color,
+    def build_materials(self, label, color=None,
                         node_type='Principled BSDF',
                         use_smooth=True,
                         node_inputs=None,
@@ -396,52 +374,17 @@ class Bcell(ObjectGN):
         """
         from batoms.material import create_material
         name = '%s_cell' % (label)
-        if name not in bpy.data.materials:
-            create_material(name,
-                            color=color,
-                            node_inputs=node_inputs,
-                            material_style=material_style,
-                            backface_culling=True)
+        if color is None:
+            color = [0.2, 0.2, 0.2, 1]
+        self.delete_material(name)
+        mat = create_material(name,
+                        color=color,
+                        node_inputs=node_inputs,
+                        material_style=material_style,
+                        backface_culling=True)
+        return mat
 
-    def build_bevel_object(self, label, radius):
-        # Create bevel control curve.
-        name = '%s_cell_bevel_object' % (label)
-        bpy.ops.curve.primitive_bezier_circle_add(radius=radius)
-        bevel_control = bpy.context.active_object
-        bevel_control.data.name = bevel_control.name = '%s_bevel' % name
-        # Set the main curve's bevel control to the bevel control curve.
-        self.obj.data.bevel_object = self.bevel_control
-
-    @property
-    def bevel_object(self):
-        name = '%s_cell_bevel_object' % (self.label)
-        return bpy.data.objects.get(name)
-
-    def draw(self):
-        """Draw unit cell
-        """
-        object_mode()
-        name = '%s_%s_%s' % (self.label, 'cell', 'cylinder')
-        self.delete_obj(name)
-        cell_cylinder = self.build_cell_cylinder()
-        if self.batoms is not None:
-            coll = self.batoms.coll
-        else:
-            coll = bpy.data.collections["Collection"]
-        obj = draw_cylinder(name=name,
-                            datas=cell_cylinder,
-                            coll=coll
-                            )
-        if self.batoms is not None:
-            obj.parent = self.obj
-
-    @property
-    def obj_cylinder(self):
-        obj = bpy.data.objects.get('%s_cylinder' % self.obj_name)
-        if obj is None:
-            raise KeyError('%s object is not exist.' % self.obj_name)
-        return obj
-
+    
 
     @property
     def draw_crystal_axes(self):
@@ -471,3 +414,8 @@ class Bcell(ObjectGN):
         self.draw_crystal_axes.remove_handle()
         if show_axes:
             self.draw_crystal_axes.add_handle(positions)
+
+    def draw(self):
+        from batoms.utils import deprecated
+        deprecated('"draw" will be deprecated in the furture. The cell is drawn automaticely now.')
+        pass

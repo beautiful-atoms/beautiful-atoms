@@ -19,7 +19,9 @@ def test_boundary_scale():
     au.scale = 0.5
     au.boundary = [1, 1, 1]
     assert np.allclose(au.boundary.get_attribute('scale')[0], 0.5)
-    # repeat
+    # if bpy.app.version_string >= '3.2.0':
+        # au.scale = 1.0
+        # assert np.allclose(au.boundary.get_attribute('scale')[0], 1)
 
 def test_boundary_off_origin():
     bpy.ops.batoms.delete()
