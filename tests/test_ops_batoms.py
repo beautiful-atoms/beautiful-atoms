@@ -26,7 +26,7 @@ def test_batoms_delete():
     h2o = Batoms('h2o')
     nh3.obj.select_set(False)
     h2o.obj.select_set(True)
-    bpy.ops.batoms.delete_selected()
+    bpy.ops.batoms.delete_selected_batoms()
     assert 'h2o' not in bpy.data.collections
 
 def test_batoms_apply_model_style():
