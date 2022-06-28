@@ -253,7 +253,7 @@ class deleteBatoms(Operator):
         return {'FINISHED'}
 
 class deleteSelectedBatoms(OperatorBatoms):
-    bl_idname = "batoms.delete_selected"
+    bl_idname = "batoms.delete_selected_batoms"
     bl_label = "Delete selected batoms"
     bl_description = ("Delete selected batoms")
 
