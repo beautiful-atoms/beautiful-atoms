@@ -165,7 +165,7 @@ class Polyhedra(ObjectGN):
         self.set_frames(self._frames, only_basis=True)
         # self.assign_materials()
         self.update_geometry_node_material()
-        obj.parent = self.batoms.obj
+        obj.parent = self.obj
         logger.debug('polyhedras: build_object: {0:10.2f} s'.format(time() - tstart))
 
     def assign_materials(self):

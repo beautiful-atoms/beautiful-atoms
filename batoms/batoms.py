@@ -2018,6 +2018,7 @@ class Batoms(BaseCollection, ObjectGN):
             segments = [segments, segments]
             # raise Exception('Segments should be int!')
         species = self._species
+        self.coll.batoms.segments = segments
         for name, sp in species.items():
             sp.data.segments = segments
             sp.update(sp.data.as_dict())
