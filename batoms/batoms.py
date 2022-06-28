@@ -2001,3 +2001,23 @@ class Batoms(BaseCollection, ObjectGN):
             self.bond.show_search = False
             self.bond.update()
             self.polyhedra.update()
+    
+    @property
+    def segments(self):
+        return self.get_segments()
+
+    @segments.setter
+    def segments(self, segments):
+        self.set_segments(segments)
+
+    def get_segments(self):
+        return self.coll.batoms.segments[:]
+
+    def set_segments(self, segments):
+        if isinstance(segments, int):
+            segments = [segments, segments]
+            # raise Exception('Segments should be int!')
+        species = self._species
+        for name, sp in species.items():
+            sp.data.segments = segments
+            sp.update(sp.data.as_dict())

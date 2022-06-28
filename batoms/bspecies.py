@@ -372,14 +372,14 @@ class Species(BaseObject):
         self.set_segments(segments)
 
     def get_segments(self):
-        nverts = len(self.instancer.data.vertices)
-        return nverts
+        return self.data.segmetns[:]
 
     def set_segments(self, segments):
-        if not isinstance(segments, int):
-            raise Exception('Segments should be int!')
-        self._species.update(segments=segments)
-        self.build_geometry_node()
+        if isinstance(segments, int):
+            segments = [segments, segments]
+            # raise Exception('Segments should be int!')
+        self.data.segments = segments
+        self.update(self.data.as_dict())
 
     def as_dict(self) -> dict:
         data = {

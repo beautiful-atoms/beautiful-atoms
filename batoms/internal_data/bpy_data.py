@@ -335,6 +335,7 @@ class BatomsCollection(bpy.types.PropertyGroup):
                ('3', "polyhedra", "polyhedra")),
         default='0')
 
+    segments: IntVectorProperty(name="segments", size=2, default=(24, 16))
     scale: FloatProperty(name="scale", default=1)
     show: BoolProperty(name="show", default=True)
     show_unit_cell: BoolProperty(name="show_unit_cell", default=True)
