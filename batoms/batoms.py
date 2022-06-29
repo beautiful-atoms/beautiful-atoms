@@ -487,7 +487,7 @@ class Batoms(BaseCollection, ObjectGN):
             self.add_vertices_bmesh(dnvert)
             # self.udpate_mesh(self.obj)
         elif dnvert < 0:
-            self.delete_vertices_bmesh(-dnvert)
+            self.delete_vertices_bmesh(range(-dnvert))
         self.set_frames(arrays)
         for key, value in arrays.items():
             if key == "positions": continue

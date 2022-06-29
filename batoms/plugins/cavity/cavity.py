@@ -164,40 +164,53 @@ class Cavity(ObjectGN):
         spheres = self.find_cage_spheres(distances)
         spheres = self.check_sphere_boundary(spheres, cell)
         spheres = self.refine_spheres(spheres)
-        cavities = {}
-        # init setting if not exist
         ns = len(spheres['centers'])
         color_names = list(basic_colors.keys())
         ic = 0
-        for r in spheres['radii']:
+        # the default setting
+        ncav = len(self.settings.bpy_setting)
+        #
+        indices = []
+        for i in range(ns):
             has_r = False
             for cav in self.settings.bpy_setting:
-                if r > cav.min and r < cav.max:
+                if spheres['radii'][i] > cav.min and spheres['radii'][i] < cav.max:
                     has_r = True
-            if not has_r:
+                    indices.append(i)
+            # init setting if not exist (ncav == 0)
+            if not has_r and ncav == 0:
                 name = len(self.settings.bpy_setting)
-                cav = {'min': np.floor(r), 'max': np.ceil(
-                    r), 'color': basic_colors[color_names[ic]]}
+                cav = {'min': np.floor(spheres['radii'][i]), 'max': np.ceil(
+                    spheres['radii'][i]), 'color': basic_colors[color_names[ic]]}
                 self.settings[name] = cav
+                indices.append(i)
                 ic += 1
                 if ic == len(color_names):
                     ic = 0
-        species_index = np.zeros(ns, dtype = int)
-        show = np.ones(ns, dtype=int)
-        scale = np.ones(ns, dtype=int)
+        #
+        cavities = {}
+        for key, value in spheres.items():
+            if len(spheres[key].shape)==2:
+                cavities[key] = spheres[key][indices, :]
+            else:
+                cavities[key] = spheres[key][indices]
+        nc = len(cavities['centers'])
+        species_index = np.zeros(nc, dtype = int)
+        show = np.ones(nc, dtype=int)
+        scale = np.ones(nc, dtype=int)
         ncollection = len(self.settings.bpy_setting)
         for i in range(ncollection):
             cav = self.settings.bpy_setting[i]
-            indices = np.where((spheres['radii'] > cav.min) & (
-                spheres['radii'] < cav.max))[0]
+            indices = np.where((cavities['radii'] > cav.min) & (
+                cavities['radii'] < cav.max))[0]
             species_index[indices] = string2Number(cav.name)
-            scale[indices] = spheres['radii'][indices]*cav.scale
-        logger.debug(scale)
-        spheres.update({'centers': np.array([spheres['centers']]),
+            scale[indices] = cavities['radii'][indices]*cav.scale
+        # logger.debug(scale)
+        cavities.update({'centers': np.array([cavities['centers']]),
                         'species_index': species_index,
                         'scale': scale,
                         'show': show})
-        return spheres
+        return cavities
 
     def find_cage_spheres(self, distances):
         """
@@ -432,7 +445,7 @@ class Cavity(ObjectGN):
         if dnvert > 0:
             self.add_vertices_bmesh(dnvert)
         elif dnvert < 0:
-            self.delete_vertices_bmesh(-dnvert)
+            self.delete_vertices_bmesh(range(-dnvert))
         self.set_frames(arrays)
         self.set_attributes({'species_index': arrays['species_index']})
         self.set_attributes({'scale': arrays['scale']})
