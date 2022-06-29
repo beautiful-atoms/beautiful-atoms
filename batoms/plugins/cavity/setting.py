@@ -57,9 +57,10 @@ class CavitySettings(Setting):
 
     def __repr__(self) -> str:
         s = "-"*60 + "\n"
-        s = "Name     min   max              color  \n"
+        s = "Name       min   max   scale                color  \n"
         for cav in self.bpy_setting:
-            s += "{:10s}   {:1.6f}   {:1.6f}".format(cav.name, cav.min, cav.max)
+            s += "{:4s}   {:1.3f}   {:1.3f}   {:1.3f}   " \
+                .format(cav.name, cav.min, cav.max, cav.scale)
             s += "[{:1.2f}  {:1.2f}  {:1.2f}  {:1.2f}] \n".format(
                 cav.color[0], cav.color[1], cav.color[2], cav.color[3])
         s += "-"*60 + "\n"

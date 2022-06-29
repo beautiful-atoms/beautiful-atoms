@@ -452,8 +452,7 @@ class BatomModify(OperatorBatomsEdit):
         obj = context.object
         v = get_selected_vertices(obj)
         batoms = Batoms(label=obj.batoms.label)
-        for i in v:
-            setattr(batoms[i], self.key, getattr(self, self.key))
+        setattr(batoms[v], self.key, getattr(self, self.key))
         context.view_layer.objects.active = obj
         bpy.ops.object.mode_set(mode="EDIT")
         return {'FINISHED'}
