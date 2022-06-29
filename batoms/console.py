@@ -1,6 +1,10 @@
 import bpy
 import console_python
 from batoms.batoms import Batoms
+import logging
+# logger = logging.getLogger('batoms')
+logger = logging.getLogger(__name__)
+
 
 def console_hook():
     """add batoms to namespace of python console
@@ -18,8 +22,12 @@ def console_hook():
                         item = item.replace('.', '')
                         if item[:1].isdigit():
                             item = 'b_' + item
+                        console.push("from batoms import Batoms")
                         if item not in console.locals:
-                            console.locals[item] = Batoms(item)
+                            logger.info("Python console: Add Batoms {}".format(item))
+                            console.push("{}=Batoms('{}')".format(item, item))
+                            console.push("".format(item))
+                            # console.locals[item] = Batoms(item)
 
 
 def register_hook():

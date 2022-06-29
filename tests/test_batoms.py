@@ -69,6 +69,10 @@ def test_batoms_parameters():
     )
     assert h2o.model_style == 1
     assert np.isclose(h2o.scale, 0.5)
+    # segments
+    assert h2o.segments[0] == 24
+    h2o.segments = [6, 6]
+    assert h2o.segments[0] == 6
 
 
 def test_model_style():
