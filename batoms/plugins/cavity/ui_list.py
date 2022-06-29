@@ -104,6 +104,7 @@ class BATOMS_PT_cavity(Panel):
             sub = col.column(align=True)
             sub.prop(kb, "min", text="min")
             sub.prop(kb, "max", text="max")
+            sub.prop(kb, "scale", text="scale")
             sub.prop(kb, "material_style", text="material_style")
             col.prop(kb, "color",  text="color")
             col.separator()

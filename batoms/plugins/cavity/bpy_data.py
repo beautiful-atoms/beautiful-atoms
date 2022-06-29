@@ -19,6 +19,7 @@ class CavitySetting(Base):
     label: StringProperty(name="label", default='')
     min: FloatProperty(name="min", default=5)
     max: FloatProperty(name="max", default=6)
+    scale: FloatProperty(name="scale", default=1.0)
     resolution: FloatProperty(name="resolution", soft_min=0.5, soft_max=2,
                               default=1.0)
     color: FloatVectorProperty(name="color", size=4,
@@ -32,6 +33,7 @@ class CavitySetting(Base):
             'flag': self.flag,
             'min': self.min,
             'max': self.max,
+            'scale': self.scale,
             'name': self.name,
             'material_style': self.material_style,
             'color': self.color[:],

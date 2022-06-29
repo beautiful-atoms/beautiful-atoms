@@ -184,15 +184,18 @@ class Cavity(ObjectGN):
                     ic = 0
         species_index = np.zeros(ns, dtype = int)
         show = np.ones(ns, dtype=int)
+        scale = np.ones(ns, dtype=int)
         ncollection = len(self.settings.bpy_setting)
         for i in range(ncollection):
             cav = self.settings.bpy_setting[i]
             indices = np.where((spheres['radii'] > cav.min) & (
                 spheres['radii'] < cav.max))[0]
             species_index[indices] = string2Number(cav.name)
+            scale[indices] = spheres['radii'][indices]*cav.scale
+        logger.debug(scale)
         spheres.update({'centers': np.array([spheres['centers']]),
                         'species_index': species_index,
-                        'scale': spheres['radii'],
+                        'scale': scale,
                         'show': show})
         return spheres
 
