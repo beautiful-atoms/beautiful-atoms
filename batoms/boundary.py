@@ -375,6 +375,19 @@ class Boundary(ObjectGN):
         ObjectInfo.inputs['Object'].default_value = instancer
         logger.debug('update boundary instancer: {}'.format(spname))
 
+    def update_gn_cell(self):
+        from batoms.utils.butils import get_nodes_by_name
+        # update cell
+        cell = self.batoms.cell.array
+        # set positions
+        gn = self.gnodes
+        for i in range(3):
+            tmp = get_nodes_by_name(gn.node_group.nodes,
+                                    '%s_VectorDot%s_%s' % (self.label, i, ''),
+                                    'ShaderNodeVectorMath')
+            tmp.operation = 'DOT_PRODUCT'
+            tmp.inputs[1].default_value = cell[:, i]
+
     @property
     def obj(self):
         return self.get_obj()
