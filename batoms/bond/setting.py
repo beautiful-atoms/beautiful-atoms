@@ -506,13 +506,6 @@ class BondSettings(Setting):
         item = BondSetting(label=self.label, name=name, bonds=self.bonds)
         return item
 
-    def items(self):
-        items = []
-        for b in self.bpy_setting:
-            item = BondSetting(label=self.label, name=b.name, bonds=self.bonds)
-            items.append(item)
-        return items
-
     def extend(self, other):
         for b in other:
             self[(b.species1, b.species2)] = b.as_dict()
