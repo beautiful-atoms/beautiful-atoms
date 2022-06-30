@@ -219,6 +219,8 @@ class Bcell(ObjectGN):
         local_positions = self.local_positions
         local_positions[1:4, :][index] = value
         self.local_positions = local_positions
+        self.batoms.update_gn_cell()
+        self.batoms.boundary.update_gn_cell()
 
     def __array__(self, dtype=float):
         if dtype != float:
