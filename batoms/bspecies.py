@@ -421,6 +421,12 @@ class Bspecies(Setting):
         # for sp, data in species.items():
             # self[sp] = data
 
+    def get_ui_list_index(self):
+        return self.bpy_data.ui_list_index_species
+    
+    def set_ui_list_index(self, value):
+        self.bpy_data.ui_list_index_species = value
+
     def get_bpy_setting(self):
         if self.coll_name:
             coll = bpy.data.collections.get(self.coll_name)
@@ -487,6 +493,7 @@ class Bspecies(Setting):
             sp = self.find(name)
             if sp is None:
                 sp = self.bpy_setting.add()
+                self.ui_list_index = len(self) - 1
             if 'color' not in data:
                 props = get_default_species_data(data['elements'], radius_style=self.batoms.radius_style,
                                     color_style=self.batoms.color_style)

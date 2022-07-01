@@ -17,6 +17,20 @@ import os
 
 skip_test = bool(os.environ.get("NOTEST_CUBE", 0))
 
+
+def test_settings():
+    """key search"""
+    from batoms.batoms import Batoms
+    bpy.ops.batoms.delete()
+    h2o = read("../tests/datas/h2o-homo.cube")
+    h2o.isosurface.settings["1"] = {"level": -0.001}
+    h2o.isosurface.settings["2"] = {"level": 0.001, "color": [0, 0, 0.8, 0.5]}
+    assert len(h2o.isosurface.settings) == 2
+    assert h2o.isosurface.settings.find("1") is not None
+    assert h2o.isosurface.settings.find(1) is not None
+    h2o.isosurface.settings.remove("1")
+    assert h2o.isosurface.settings.find("1") is None
+
 def test_slice():
     if skip_test:
         pytest.skip("Skip tests on cube files since $NOTEST_CUBE provided.")
@@ -78,6 +92,9 @@ def test_isosurface_uilist():
 
 
 if __name__ == "__main__":
+    test_settings()
     test_slice()
     test_diff()
+    test_isosurface_ops()
+    test_isosurface_uilist()
     print("\n Isosurface.setting: All pass! \n")

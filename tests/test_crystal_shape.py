@@ -16,9 +16,10 @@ skip_test = bool(os.environ.get("NOTEST_CUBE", 0))
 
 
 def test_crystal_shape():
+    from batoms import Batoms
     bpy.ops.batoms.delete()
-    au = bulk("Au", cubic=True)
-    au = Batoms("au", from_ase=au)
+    bpy.ops.batoms.bulk_add(label = 'au', formula = "Au", cubic=True)
+    au = Batoms("au")
     au.crystal_shape.settings[(1, 1, 1)] = {
         "distance": 3, "crystal": True, "symmetry": True}
     au.crystal_shape.settings[(0, 0, 1)] = {'distance': 3, 
@@ -46,6 +47,20 @@ def test_crystal_shape_ops():
     print(au.crystal_shape.settings)
     bpy.ops.plane.crystal_shape_draw()
 
+def test_settings():
+    """key search"""
+    from batoms.batoms import Batoms
+    bpy.ops.batoms.delete()
+    bpy.ops.batoms.bulk_add(formula="Au", cubic=True)
+    au = Batoms('Au')
+    au.obj.select_set(True)
+    au.crystal_shape.settings.add((1, 1, 1))
+    assert au.crystal_shape.settings.find((1, 1, 1)) is not None
+    assert au.crystal_shape.settings.find('1-1-1') is not None
+    au.crystal_shape.settings.remove((1, 1, 1))
+    assert au.crystal_shape.settings.find((1, 1, 1)) is None
+
+
 def test_crystalshape_uilist():
     """crystalshape panel"""
     from batoms.batoms import Batoms
@@ -53,7 +68,7 @@ def test_crystalshape_uilist():
     bpy.ops.batoms.bulk_add(formula="Au", cubic=True)
     au = Batoms('Au')
     au.obj.select_set(True)
-    assert au.coll.Bcrystalshape.ui_list_index==0
+    assert au.crystal_shape.settings.ui_list_index==0
     bpy.ops.plane.crystal_shape_add(indices=(1, 1, 1))
     bpy.ops.plane.crystal_shape_add(indices=(1, 0, 0))
     assert au.coll.Bcrystalshape.ui_list_index==1

@@ -76,7 +76,7 @@ class Attributes(Setting):
                 # default delimiter = "@". Compare new name with other attribute's name
                 # add "@" recursively if needed.
                 M = np.product(data["shape"][0:data["dimension"]])
-                name_list = list(self.data.keys())
+                name_list = list(self.keys())
                 delimiter = self.find_delimiter(name_list, data["name"], M, att.delimiter)
                 # update delimiter
                 att.delimiter = delimiter

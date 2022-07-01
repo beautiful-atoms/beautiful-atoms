@@ -58,11 +58,11 @@ class CrystalShape(BaseObject):
         self.settings.get_symmetry_indices()
         planes = {}
         for p in self.settings:
-            normal = np.dot(p.indices, bcell.reciprocal)
+            normal = np.dot(list(p.indices), bcell.reciprocal)
             normal = normal/np.linalg.norm(normal)
             point = p.distance*normal
             planes[p.name] = {
-                'indices': p.indices,
+                'indices': list(p.indices),
                 'normal': normal,
                 'point': point,
                 'vertices': [],
