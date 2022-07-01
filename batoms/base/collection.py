@@ -114,6 +114,8 @@ class Setting():
 
     Setting has "add", "remove", "find" and "extend" operators.
 
+    Note: In blender, the colleciton properties is a list.
+    Here, we build our Setting as a dict.
     
     Parameters:
 
@@ -127,17 +129,6 @@ class Setting():
         self.name = 'base'
         self.coll_name = coll_name
         self.obj_name = obj_name
-
-    def get_data(self):
-        """Return a dict of all data in the collection.
-
-        Returns:
-            dict: dict of properties.
-        """
-        data = {}
-        for b in self.bpy_setting:
-            data[b.name] = b
-        return data
 
     @property
     def coll(self):
@@ -179,7 +170,17 @@ class Setting():
         """
         return self.get_bpy_setting()
 
-    def get_bpy_setting(self):
+    @property
+    def bpy_data(self):
+        """Get internal data
+
+        Internal data are data attached to a Blender object or collection.
+        Raises:
+            KeyError: _description_
+
+        Returns:
+            _type_: _description_
+        """
         if self.coll_name:
             coll = bpy.data.collections.get(self.coll_name)
             data = getattr(coll, self.name)
@@ -188,32 +189,72 @@ class Setting():
             data = getattr(obj, self.name)
         else:
             raise KeyError("The collection property {} not exist!".format(self.name))
-        return data.settings
+        return data
 
     @property
-    def data(self):
-        return self.get_data()
+    def ui_list_index(self):
+        return self.get_ui_list_index()
+    
+    def get_ui_list_index(self):
+        return self.bpy_data.ui_list_index
+    
+    @ui_list_index.setter
+    def ui_list_index(self, value):
+        self.set_ui_list_index(value)
+    
+    def set_ui_list_index(self, value):
+        self.bpy_data.ui_list_index = value
 
-    def __getitem__(self, index):
-        name = tuple2string(index)
-        item = self.find(name)
+    @property
+    def bpy_setting(self):
+        return self.get_bpy_setting()
+
+    def get_bpy_setting(self):
+        return self.bpy_data.settings
+
+    def keys(self):
+        return self.as_dict().keys()
+    
+    def values(self):
+        return self.as_dict().values()
+    
+    def items(self):
+        return self.as_dict().items()
+
+    def as_dict(self):
+        """Return a dict of all data in the collection.
+
+        Returns:
+            dict: dict of properties.
+        """
+        data = {}
+        for b in self.bpy_setting:
+            data[b.name] = b
+        return data
+
+    def __getitem__(self, key):
+        item = self.find(key)
         if item is None:
-            raise Exception('%s not in %s setting' % (name, self.name))
+            raise Exception('%s not in %s setting' % (key, self.name))
         return item
 
-    def __setitem__(self, index, setdict):
+    def __setitem__(self, key, setdict):
         """
         Set properties
         """
-        name = tuple2string(index)
-        subset = self.find(name)
+        subset = self.find(key)
         if subset is None:
             subset = self.bpy_setting.add()
-        subset.name = name
+            name = tuple2string(key)
+            subset.name = name
+            self.ui_list_index = len(self) - 1
         for key, value in setdict.items():
             setattr(subset, key, value)
         subset.label = self.label
         subset.flag = True
+
+    def __delitem__(self, key):
+        self.remove(key)
 
     def from_dict(self, datas):
         if isinstance(datas, dict):
@@ -234,24 +275,31 @@ class Setting():
             setting[key] = b.as_dict()
         return setting
 
-    def remove(self, index):
-        """
-        index: list of tuple
-        """
-        if isinstance(index, (str, int, float)):
-            index = [(index)]
-        if isinstance(index[0], (str, int, float)):
-            index = [index]
-        for key in index:
-            name = tuple2string(key)
-            i = self.bpy_setting.find(name)
-            if i != -1:
-                self.bpy_setting.remove(i)
-            else:
-                raise Exception('%s is not in %s' % (name, self.name))
+    def add(self, key):
+        """Add default item
 
-    def __delitem__(self, index):
-        self.remove(index)
+        Args:
+            key (tuple, list): _description_
+        """
+        self[key] = {}
+
+    def remove(self, key):
+        """Remove item
+
+        Args:
+            key (tuple, list): _description_
+
+        Raises:
+            Exception: _description_
+        """
+        item = self.find(key)
+        if item is not None:
+            i = self.bpy_setting.find(item.name)
+            self.bpy_setting.remove(i)
+            self.ui_list_index = min(max(0, self.ui_list_index - 1),
+                                                len(self) - 1)
+        else:
+            raise Exception('%s is not in %s' % (key, self.name))
 
     def __add__(self, other):
         self += other
@@ -275,6 +323,22 @@ class Setting():
         return len(self.bpy_setting)
 
     def find(self, name):
+        """Wrapper function for self.bpy_setting.find().
+
+        Note: In blender, the colleciton properties is a list.
+        self.bpy_setting.find will return the index of a item.
+        Here, we build our Setting as a dict.
+        this find will return the item itself.
+
+        Args:
+            name (str, tuple, list): _description_
+
+        Returns:
+            Setting: setting object
+        """
+        if isinstance(name, (tuple, list)):
+            name = tuple2string(name)
+        #
         i = self.bpy_setting.find(str(name))
         if i == -1:
             # print('%s is not in %s'%(name, self.name))

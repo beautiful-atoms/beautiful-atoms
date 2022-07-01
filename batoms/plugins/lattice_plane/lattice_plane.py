@@ -90,7 +90,7 @@ class LatticePlane(BaseObject):
                      'faces': faces,
                      'color': p.color,
                      'material_style': p.material_style,
-                     'indices': p.indices,
+                     'indices': list(p.indices),
                      'edges_cylinder': {'lengths': [], 'centers': [],
                                         'normals': [], 'vertices': 6,
                                         'color': (0.0, 0.0, 0.0, 1.0),

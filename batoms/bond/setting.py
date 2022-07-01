@@ -487,6 +487,7 @@ class BondSettings(Setting):
         subset = self.find(name)
         if subset is None:
             subset = self.bpy_setting.add()
+            self.ui_list_index = len(self) - 1
         subset.name = name
         subset.species1 = index[0]
         subset.species2 = index[1]
@@ -505,13 +506,6 @@ class BondSettings(Setting):
             raise Exception('%s not in %s setting' % (name, self.name))
         item = BondSetting(label=self.label, name=name, bonds=self.bonds)
         return item
-
-    def items(self):
-        items = []
-        for b in self.bpy_setting:
-            item = BondSetting(label=self.label, name=b.name, bonds=self.bonds)
-            items.append(item)
-        return items
 
     def extend(self, other):
         for b in other:
@@ -576,23 +570,6 @@ class BondSettings(Setting):
             species_props.update(value)
         bond = self.get_bondtable(key, species_props, dcutoff=0.5)
         self[key] = bond
-
-    def remove(self, index):
-        """
-        index: list of tuple
-        """
-        if isinstance(index, (str, int, float)):
-            index = [(index)]
-        if isinstance(index[0], (str, int, float)):
-            index = [index]
-        for key in index:
-            name = tuple2string(key)
-            i = self.bpy_setting.find(name)
-            if i != -1:
-                self.bpy_setting.remove(i)
-                self.coll.Bbond.ui_list_index -= 1
-            else:
-                raise Exception('%s is not in %s' % (name, self.name))
 
     def copy(self, label):
         from batoms.utils.butils import object_mode

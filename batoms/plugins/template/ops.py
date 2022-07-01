@@ -19,7 +19,6 @@ class TemplateAdd(OperatorBatoms):
         obj = context.object
         batoms = Batoms(label=context.object.batoms.label)
         batoms.template.settings.add(self.name)
-        batoms.coll.Btemplate.ui_list_index = len(batoms.template.settings) - 1
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 
@@ -40,10 +39,7 @@ class TemplateRemove(OperatorBatoms):
     def execute(self, context):
         obj = context.object
         batoms = Batoms(label=obj.batoms.label)
-        index = batoms.coll.Btemplate.ui_list_index
         batoms.template.settings.remove((self.name))
-        batoms.coll.Btemplate.ui_list_index = min(max(0, index - 1),
-                                          len(batoms.template.settings) - 1)
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 

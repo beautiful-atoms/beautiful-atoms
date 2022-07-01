@@ -30,7 +30,6 @@ class BondPairAdd(OperatorBatoms):
         batoms = Batoms(label=context.object.batoms.label)
         pair = (self.species1, self.species2)
         batoms.bond.settings.add(pair)
-        batoms.coll.Bbond.ui_list_index = len(batoms.bond.settings) - 1
         context.view_layer.objects.active = obj
         self.report({"INFO"}, "Add bond pair {} {}".format(
             self.species1, self.species2))
@@ -53,10 +52,7 @@ class BondPairRemove(OperatorBatoms):
     def execute(self, context):
         obj = context.object
         batoms = Batoms(label=obj.batoms.label)
-        index = batoms.coll.Bbond.ui_list_index
         batoms.bond.settings.remove((self.name))
-        batoms.coll.Bbond.ui_list_index = min(max(0, index - 1),
-                                            len(batoms.bond.settings) - 1)
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 

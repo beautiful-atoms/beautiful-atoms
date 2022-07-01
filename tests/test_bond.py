@@ -30,6 +30,29 @@ def test_bond():
     c2h6so.model_style = 1
     c2h6so.bond[0].order = 2
 
+def test_settings():
+    """key search"""
+    from batoms.batoms import Batoms
+    bpy.ops.batoms.delete()
+    bpy.ops.batoms.molecule_add(label = 'c2h6so', formula="C2H6SO")
+    c2h6so = Batoms('c2h6so')
+    # species tuple
+    assert c2h6so.bond.settings.find(('C', 'H')) is not None
+    # species list
+    assert c2h6so.bond.settings.find(['C', 'H']) is not None
+    # name str
+    assert c2h6so.bond.settings.find('C-H') is not None
+    # remove by tuple
+    c2h6so.bond.settings.remove(('C', 'H'))
+    assert c2h6so.bond.settings.find(('C', 'H')) is None
+    # add by tuple
+    c2h6so.bond.settings.add(('C', 'H'))
+    assert c2h6so.bond.settings.find(('C', 'H')) is not None
+    # remove by str
+    c2h6so.bond.settings.remove('C-H')
+    assert c2h6so.bond.settings.find(('C', 'H')) is None
+
+
 def test_color():
     bpy.ops.batoms.delete()
     from batoms.batoms import Batoms

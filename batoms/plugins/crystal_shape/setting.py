@@ -38,20 +38,22 @@ class CrystalShapeSettings(Setting):
             raise KeyError("The collection property {} not exist!".format(self.name))
         return collection.settings
 
-    def __setitem__(self, index, setdict):
+    def __setitem__(self, key, setdict):
         """
         Set properties
         """
-        name = tuple2string(index)
-        p = self.find(name)
-        if p is None:
-            p = self.bpy_setting.add()
-        p.indices = index
-        p.name = name
-        p.flag = True
+        subset = self.find(key)
+        if subset is None:
+            subset = self.bpy_setting.add()
+            name = tuple2string(key)
+            subset.name = name
+            self.ui_list_index = len(self) - 1
+        subset.indices = key
+        subset.name = name
+        subset.flag = True
         for key, value in setdict.items():
-            setattr(p, key, value)
-        p.label = self.label
+            setattr(subset, key, value)
+        subset.label = self.label
 
     def add(self, indices):
         self[indices] = {'indices': indices}

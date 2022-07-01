@@ -12,6 +12,6 @@ def test_bondpair():
     bpy.ops.batoms.molecule_add()
     ch4 = Batoms('CH4')
     ch4.obj.select_set(True)
-    assert ch4.coll.Bbond.ui_list_index==0
+    assert ch4.coll.Bbond.ui_list_index==1
     bpy.ops.bond.bond_pair_add(species1='H', species2='H')
     assert ch4.coll.Bbond.ui_list_index==2

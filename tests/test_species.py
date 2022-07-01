@@ -9,6 +9,28 @@ except ImportError:
     pytest_blender_unactive = False
 
 
+def test_settings():
+    """species panel"""
+    from batoms.batoms import Batoms
+    bpy.ops.batoms.delete()
+    bpy.ops.batoms.molecule_add()
+    ch4 = Batoms('CH4')
+    assert ch4.coll.batoms.ui_list_index_species==1
+    # add
+    ch4.species.add('H_1')
+    assert ch4.coll.batoms.ui_list_index_species==2
+    # remove
+    ch4.species.remove('H_1')
+    assert ch4.coll.batoms.ui_list_index_species==1
+    # ops add
+    bpy.context.view_layer.objects.active = ch4.obj
+    bpy.ops.batoms.species_add(species='H_1')
+    assert ch4.coll.batoms.ui_list_index_species==2
+    # ops remove
+    bpy.ops.batoms.species_remove(species='H_1')
+    assert ch4.coll.batoms.ui_list_index_species==1
+
+
 def test_batoms_species():
     """Setting properties of species"""
     bpy.ops.batoms.delete()

@@ -23,7 +23,6 @@ class CrystalShapeAdd(OperatorBatoms):
         obj = context.object
         batoms = Batoms(label=context.object.batoms.label)
         batoms.crystal_shape.settings.add(self.indices)
-        batoms.coll.Bcrystalshape.ui_list_index = len(batoms.crystal_shape.settings) - 1
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 
@@ -45,10 +44,7 @@ class CrystalShapeRemove(OperatorBatoms):
     def execute(self, context):
         obj = context.object
         batoms = Batoms(label=obj.batoms.label)
-        index = batoms.coll.Bcrystalshape.ui_list_index
         batoms.crystal_shape.settings.remove((self.name))
-        batoms.coll.Bcrystalshape.ui_list_index = min(max(0, index - 1),
-                                                    len(batoms.crystal_shape.settings) - 1)
         context.view_layer.objects.active = obj
         return {'FINISHED'}
 
