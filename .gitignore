@@ -142,6 +142,7 @@ dmypy.json
 *.obj
 *.mtl
 *.fbx
+*.txt
 
 #test/
 .vscode/*
