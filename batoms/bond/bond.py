@@ -1544,3 +1544,16 @@ class Bond(BaseCollection, ObjectGN):
         """setting object."""
         deprecated('"setting" will be deprecated in the furture, please use "settings".')
         return self.settings
+    
+    def as_dict(self):
+        """
+        """
+        data = {
+            'array': None
+        }
+        if len(self) > 1:
+            data['array'] = dict(self.arrays)
+        data['show_search'] = self.show_search
+        data['show_hydrogen_bond'] = self.show_hydrogen_bond
+        data['settings'] = self.settings.as_dict()
+        return data

@@ -435,6 +435,39 @@ class Batoms(BaseCollection, ObjectGN):
         self._species = Bspecies(label, {}, self)
         self._attributes = Attributes(label=label, parent=self, obj_name=self.obj_name)
         self.selects = Selects(label, self)
+    
+    @classmethod
+    def from_dict(cls, data):
+        """Build batoms object from a dictionary.
+
+        Args:
+            data (dict): _description_
+
+
+        Returns:
+            Batoms: _description_
+
+        """
+        pass
+
+    def as_dict(self):
+        """
+        """
+        data = {
+            'batoms': {},
+            'cell': None,
+            'bond': {},
+            'polyhedra': {},
+            'boundary': {},
+        }
+        data['batoms']['array'] = dict(self.arrays)
+        data['batoms']['species'] = self.species.as_dict()
+        data['cell'] = np.asarray(self.cell)
+        data['pbc'] = self.pbc
+        data['bond'] = self.bond.as_dict()
+        data['polyhedra'] = self.polyhedra.as_dict()
+        data['boundary'] = self.boundary.as_dict()
+        return data
 
     @property
     def volume(self):

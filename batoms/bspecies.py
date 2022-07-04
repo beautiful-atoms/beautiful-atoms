@@ -153,6 +153,7 @@ class Species(BaseObject):
                                   material_style=material_style,
                                   backface_culling=True)
             mesh.materials.append(mat)
+            self.parent.batoms.obj.data.materials.append(mat)
             i += 1
 
     def assign_materials(self):
@@ -629,3 +630,10 @@ class Bspecies(Setting):
             self.segments = segments
         for name, sp in self.species.items():
             sp.build_instancer()
+
+    def as_dict(self) -> dict:
+        species = self.species
+        data = {}
+        for name, sp in species.items():
+            data[name] = sp.as_dict()
+        return data
