@@ -454,7 +454,7 @@ class Batoms(BaseCollection, ObjectGN):
         """
         """
         data = {
-            'batoms': {},
+            'batoms': {'label': self.label},
             'cell': None,
             'bond': {},
             'polyhedra': {},
@@ -462,8 +462,8 @@ class Batoms(BaseCollection, ObjectGN):
         }
         data['batoms']['array'] = dict(self.arrays)
         data['batoms']['species'] = self.species.as_dict()
-        data['cell'] = np.asarray(self.cell)
-        data['pbc'] = self.pbc
+        data['batoms'].update(self.coll.batoms.as_dict())
+        data['cell'] = self.cell.as_dict()
         data['bond'] = self.bond.as_dict()
         data['polyhedra'] = self.polyhedra.as_dict()
         data['boundary'] = self.boundary.as_dict()

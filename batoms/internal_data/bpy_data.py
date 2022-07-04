@@ -185,6 +185,14 @@ class Bcell(bpy.types.PropertyGroup):
                                subtype='COLOR',
                                min=0, max=1,
                                default=[0.2, 0.2, 0.2, 1])
+    
+    def as_dict(self) -> dict:
+        setdict = {
+            'pbc': self.pbc,
+            'width': self.width,
+            'color': self.color[:],
+        }
+        return setdict
 
 class Bvolume(bpy.types.PropertyGroup):
     """
@@ -357,7 +365,20 @@ class BatomsCollection(bpy.types.PropertyGroup):
     settings_species: CollectionProperty(name='settings_species',
                                  type=Bspecies)
 
-    
+    def as_dict(self) -> dict:
+        setdict = {
+            'model_style': self.model_style,
+            'color_style': self.color_style,
+            'radius_style': self.radius_style,
+            'polyhedra_style': self.polyhedra_style,
+            'segments': self.segments,
+            'wrap': self.wrap,
+            'show_axes': self.show_axes,
+            'show_label': self.show_label,
+            'crystal_view': self.crystal_view,
+            'scale': self.scale,
+        }
+        return setdict
 
 class BatomsObject(bpy.types.PropertyGroup):
     label: StringProperty(name="label", default='batoms')
