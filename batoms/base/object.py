@@ -104,7 +104,7 @@ class BaseObject():
         return self.get_scene()
 
     def get_scene(self):
-        return bpy.data.scenes['Scene']
+        return bpy.context.scene
 
     @property
     def look_at(self):
