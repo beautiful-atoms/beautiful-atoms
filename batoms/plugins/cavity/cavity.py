@@ -62,7 +62,9 @@ class Cavity(ObjectGN):
         self.resolution = resolution
         self.minRadius = mimRadius
         flag = self.load()
-        if not flag and cavity_datas is not None:
+        if not flag:
+            if cavity_datas is None:
+                cavity_datas = default_cavity_datas
             self.build_object(cavity_datas)
             self.settings = CavitySettings(
                 self.label, batoms=batoms, parent=self)
@@ -70,6 +72,7 @@ class Cavity(ObjectGN):
             self.settings = CavitySettings(
                 self.label, batoms=batoms, parent=self)
             self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
+        self.settings.bpy_data.active = True
 
     def build_materials(self, name, color, node_inputs=None,
                         material_style='default'):
@@ -469,3 +472,11 @@ class Cavity(ObjectGN):
         """setting object."""
         deprecated('"setting" will be deprecated in the furture, please use "settings".')
         return self.settings
+    
+    def as_dict(self):
+        """
+        """
+        data = {}
+        data['settings'] = self.settings.as_dict()
+        data.update(self.settings.bpy_data.as_dict())
+        return data

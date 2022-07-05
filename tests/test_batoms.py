@@ -367,6 +367,19 @@ def test_make_real():
     h2o.realize_instances = True
     h2o.realize_instances = False
 
+def test_as_dict():
+    from batoms import Batoms
+    bpy.ops.batoms.delete()
+    bpy.ops.batoms.bulk_add(label='au', formula = 'Au')
+    au = Batoms("au")
+    data = au.as_dict()
+    assert 'lattice_plane' not in data.keys()
+    # active plugin
+    au.lattice_plane
+    data = au.as_dict()
+    assert 'lattice_plane' in data.keys()
+
+
 
 @pytest.mark.skipif(
     blender31,

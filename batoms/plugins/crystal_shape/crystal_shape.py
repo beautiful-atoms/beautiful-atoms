@@ -32,6 +32,7 @@ class CrystalShape(BaseObject):
         BaseObject.__init__(self, label, name)
         self.settings = CrystalShapeSettings(
             self.label,  parent=self)
+        self.settings.bpy_data.active = True
 
     def build_materials(self, name, color, node_inputs=None,
                         material_style='default'):
@@ -298,3 +299,11 @@ def convexhull(planes, point):
         if abs(x1) > 1e-6 and x1*x2 < -1e-6:
             return None
     return point
+
+    def as_dict(self):
+        """
+        """
+        data = {}
+        data['settings'] = self.settings.as_dict()
+        data.update(self.settings.bpy_data.as_dict())
+        return data

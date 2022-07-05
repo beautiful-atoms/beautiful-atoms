@@ -15,6 +15,8 @@ from batoms.ribbon.ribbon import Ribbon
 from batoms.utils.butils import object_mode, show_index, \
     get_nodes_by_name
 from batoms.utils import string2Number, read_from_others, deprecated
+from batoms.plugins import plugin_info
+
 import numpy as np
 from time import time
 
@@ -134,12 +136,6 @@ class Batoms(BaseCollection, ObjectGN):
         self._bond = None
         self._polyhedra = None
         self._boundary = None
-        self._isosurface = None
-        self._lattice_plane = None
-        self._crystal_shape = None
-        self._molecular_surface = None
-        self._magres = None
-        self._cavity = None
         #
         if from_ase or from_pymatgen or from_pybel:
             species, positions, attributes, cell, pbc, info = read_from_others(from_ase,
@@ -467,6 +463,12 @@ class Batoms(BaseCollection, ObjectGN):
         data['bond'] = self.bond.as_dict()
         data['polyhedra'] = self.polyhedra.as_dict()
         data['boundary'] = self.boundary.as_dict()
+        # plugins
+        for key, info in plugin_info.items():
+            _name = '_{}'.format(key)
+            if getattr(getattr(self.coll, info[2]), 'active'):
+                plugin = getattr(self, key)
+                data[key] = plugin.as_dict()
         return data
 
     @property
@@ -1596,47 +1598,7 @@ class Batoms(BaseCollection, ObjectGN):
         deprecated('"isosurfaces" will be deprecated in the furture, please use "isosurface".')
         return self.isosurface
 
-    @property
-    def isosurface(self):
-        """isosurface object."""
-        from batoms.plugins.isosurface import Isosurface
-        if self._isosurface is not None:
-            return self._isosurface
-        isosurface = Isosurface(self.label, batoms=self)
-        self.isosurface = isosurface
-        return isosurface
-
-    @isosurface.setter
-    def isosurface(self, isosurface):
-        self._isosurface = isosurface
-
-    @property
-    def lattice_plane(self):
-        """lattice_plane object."""
-        from batoms.plugins.lattice_plane import LatticePlane
-        if self._lattice_plane is not None:
-            return self._lattice_plane
-        lattice_plane = LatticePlane(self.label, batoms=self)
-        self.lattice_plane = lattice_plane
-        return lattice_plane
-
-    @lattice_plane.setter
-    def lattice_plane(self, lattice_plane):
-        self._lattice_plane = lattice_plane
-
-    @property
-    def crystal_shape(self):
-        """crystal_shape object."""
-        from batoms.plugins.crystal_shape import CrystalShape
-        if self._crystal_shape is not None:
-            return self._crystal_shape
-        crystal_shape = CrystalShape(self.label, batoms=self)
-        self.crystal_shape = crystal_shape
-        return crystal_shape
-
-    @crystal_shape.setter
-    def crystal_shape(self, crystal_shape):
-        self._crystal_shape = crystal_shape
+    
 
     @property
     def ms(self):
@@ -1644,48 +1606,6 @@ class Batoms(BaseCollection, ObjectGN):
         deprecated('"ms" will be deprecated in the furture, please use "molecular_surface".')
         return self.molecular_surface
 
-    @property
-    def molecular_surface(self):
-        """molecular_surface object."""
-        from batoms.plugins.molecular_surface import MolecularSurface
-        if self._molecular_surface is not None:
-            return self._molecular_surface
-        molecular_surface = MolecularSurface(self.label, batoms=self)
-        self.molecular_surface = molecular_surface
-        return molecular_surface
-
-    @molecular_surface.setter
-    def molecular_surface(self, molecular_surface):
-        self._molecular_surface = molecular_surface
-    
-    @property
-    def magres(self):
-        """magres object."""
-        from batoms.plugins.magres import Magres
-        if self._magres is not None:
-            return self._magres
-        magres = Magres(self.label, batoms=self)
-        self.magres = magres
-        return magres
-
-    @magres.setter
-    def magres(self, magres):
-        self._magres = magres
-
-    @property
-    def cavity(self):
-        """cavity object."""
-        from batoms.plugins.cavity.cavity import Cavity, default_cavity_datas
-        if self._cavity is not None:
-            return self._cavity
-        cavity = Cavity(self.label, cavity_datas=default_cavity_datas.copy(),
-                        batoms=self)
-        self.cavity = cavity
-        return cavity
-
-    @cavity.setter
-    def cavity(self, cavity):
-        self._cavity = cavity
 
     @property
     def render(self):
@@ -2055,3 +1975,49 @@ class Batoms(BaseCollection, ObjectGN):
         for name, sp in species.items():
             sp.data.segments = segments
             sp.update(sp.data.as_dict())
+
+
+
+def hook_plugins(cls, plugin_info):
+    tstart = time()
+    def create_getter(name, data):
+        def plugin_getter(self):
+            """plugin object."""
+            import importlib
+            _name = '_{}'.format(name)
+            if hasattr(self, _name):
+                plugin = getattr(self, _name)
+                logger.debug('has plugin: {}'.format(name))
+                return plugin
+            else:
+                logger.debug('Does not have plugin: {}'.format(name))
+                plugin_module = getattr(importlib.import_module("batoms.plugins.{}".format(data[0])), data[1])
+                plugin = plugin_module(self.label, batoms=self)
+                setattr(self, _name, plugin)
+                return plugin
+        return plugin_getter
+
+    def create_setter(name):
+        def plugin_setter(self, plugin):
+            """Get plugin
+            Args:
+                plugin (_type_): _description_
+            """
+            logger.debug('set plugin: {}'.format(name))
+            _name = '_{}'.format(name)
+            setattr(self, _name, plugin)
+        return plugin_setter
+
+    for name, data in plugin_info.items():
+        logger.debug("Add plugin: {}".format(name))
+        setattr(cls, name, property(
+                    fget = create_getter(name, data),
+                    fset = create_setter(name),
+                    doc = 'test',
+                ))
+    
+    logger.debug("Hook plugins: {:1.2f}".format(time() - tstart))
+ 
+
+
+hook_plugins(Batoms, plugin_info)

@@ -37,8 +37,15 @@ class Template(bpy.types.PropertyGroup):
     Blender’s internal data.
 
     """
+    active: BoolProperty(name="active", default=False)
     show: BoolProperty(name="show", default=True)
     ui_list_index: IntProperty(name="ui_list_index",
                               default=0)
     settings: CollectionProperty(name='TemplateSetting',
                                 type=TemplateSetting)
+
+    def as_dict(self) -> dict:
+        setdict = {
+            
+        }
+        return setdict

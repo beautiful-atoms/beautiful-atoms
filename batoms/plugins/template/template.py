@@ -33,6 +33,7 @@ class Template(BaseObject):
         BaseObject.__init__(self, label, name)
         self.settings = TemplateSettings(
             self.label, parent=self)
+        self.settings.bpy_data.active = True
     
     def build_materials(self, name, color,
                         node_inputs=None,
@@ -93,3 +94,10 @@ class Template(BaseObject):
     def mat(self):
         return bpy.data.materials.get(self.name)
    
+    def as_dict(self):
+        """
+        """
+        data = {}
+        data['settings'] = self.settings.as_dict()
+        data.update(self.settings.bpy_data.as_dict())
+        return data
