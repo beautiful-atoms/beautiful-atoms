@@ -58,6 +58,7 @@ def test_cavity_mof():
 def test_cavity_ops():
     bpy.ops.batoms.delete()
     mof = read("../tests/datas/mof-5.cif")
+    mof.cavity.resolution = 0.5
     bpy.context.view_layer.objects.active = mof.obj
     bpy.ops.surface.cavity_draw()
     assert len(mof.cavity.settings) == 1

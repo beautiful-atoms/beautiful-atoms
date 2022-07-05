@@ -634,7 +634,7 @@ class ObjectGN(BaseObject):
                     self.set_mesh_attribute_bmesh(obj, sub_key, array[i*n:(i+1)*n], index)
                 else:
                     self.set_mesh_attribute(obj, sub_key, array[i*n:(i+1)*n], index)
-        logger.info('Time: {:10s} {:5.2f}'.format(key, time() - tstart))
+        logger.debug('Time: {:10s} {:5.2f}'.format(key, time() - tstart))
     
     def set_mesh_attribute_bmesh(self, obj, key, value, index = None):
         """Set mesh attribute using bmesh method.
