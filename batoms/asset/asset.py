@@ -21,6 +21,7 @@ def save_asset(filepath, assets):
 
 def push_asset(library, file, assets):
     from pathlib import Path
+    import shutil
     # save name of assets
     asset_names = [asset.name for asset in assets]
     # save to local path
@@ -29,6 +30,9 @@ def push_asset(library, file, assets):
     #
     path = bpy.context.preferences.filepaths.asset_libraries[library].path
     filepath = os.path.join(path, file)
+    if not os.path.exists(filepath):
+        emptypath = os.path.join(path, 'empty.blend')
+        shutil.copyfile(emptypath, filepath)
     bpy.ops.wm.open_mainfile(filepath=filepath)
     localpath = Path(localpath)
     for name in asset_names:
@@ -40,7 +44,7 @@ def push_asset(library, file, assets):
     bpy.ops.wm.save_mainfile(filepath=filepath, compress=True)
     bpy.ops.wm.open_mainfile(filepath='./tmp.blend')
 
-def find_baotms_catalog_uuid(catalog_name, directory = None):
+def find_baotms_catalog_uuid(library, catalog_name, directory = None):
     """Find catalog by name.
 
     Args:
@@ -51,7 +55,7 @@ def find_baotms_catalog_uuid(catalog_name, directory = None):
         str: uuid of the catalog.
     """
     if directory is None:
-        directory = batoms_asset_dir
+        directory = bpy.context.preferences.filepaths.asset_libraries[library].path
     logger.debug(directory)
     asset_cats = os.path.join(directory, "blender_assets.cats.txt")
     with open(asset_cats) as f:
