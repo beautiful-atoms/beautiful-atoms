@@ -53,7 +53,11 @@ class Cavity(bpy.types.PropertyGroup):
     Blender’s internal data.
 
     """
+
     active: BoolProperty(name="active", default=False)
+    atomRadius: FloatProperty(name="atomRadius", default=0.5)
+    minCave: FloatProperty(name="minCave", default=3)
+    resolution: FloatProperty(name="resolution", default=1)
     settings: CollectionProperty(name='CavitySetting',
                                 type=CavitySetting)
 

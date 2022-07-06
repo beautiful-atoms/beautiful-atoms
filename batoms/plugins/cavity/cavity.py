@@ -44,8 +44,8 @@ class Cavity(ObjectGN):
                  cavity_datas=None,
                  location=np.array([0, 0, 0]),
                  batoms=None,
-                 resolution = 1,
-                 mimRadius = 4,
+                 resolution = None,
+                 minCave = None,
                  ):
         """Cavity Class
 
@@ -59,8 +59,10 @@ class Cavity(ObjectGN):
         self.label = label
         name = 'cavity'
         ObjectGN.__init__(self, label, name)
-        self.resolution = resolution
-        self.minRadius = mimRadius
+        if resolution is not None:
+            self.resolution = resolution
+        if minCave is not None:
+            self.minCave = minCave
         flag = self.load()
         if not flag:
             if cavity_datas is None:
@@ -110,6 +112,8 @@ class Cavity(ObjectGN):
         tstart = time()
         distance, indices = self.kdtree.query(points, workers=parallel)
         # print('KDTree query: %s' % (time() - tstart))
+        # here we consider the size of atoms using one value for all.
+        distance = distance - self.atomRadius
         return indices, distance
 
     def query_radius(self, meshgrids, points, radii, k=1):
@@ -123,6 +127,13 @@ class Cavity(ObjectGN):
         # print('KDTree query: %s' % (time() - tstart))
         return indices[0]
 
+    def base_meshgrids(self, grids):
+        x, y, z = np.meshgrid(grids[0], grids[1], grids[2],
+                              indexing='ij')  # , sparse=True)
+        meshgrids = np.c_[x.ravel(), y.ravel(), z.ravel()]
+        return meshgrids
+
+
     def build_grid(self, cell, resolution):
         """
         generate gridpoints
@@ -132,9 +143,7 @@ class Cavity(ObjectGN):
         grids = []
         for i in range(3):
             grids.append(np.arange(npoint[i])/npoint[i])
-        x, y, z = np.meshgrid(grids[0], grids[1], grids[2],
-                              indexing='ij')  # , sparse=True)
-        meshgrids = np.c_[x.ravel(), y.ravel(), z.ravel()]
+        meshgrids = self.base_meshgrids(grids)
         meshgrids = np.dot(meshgrids, cell.array)
         self.meshgrids = meshgrids
         self.shape = npoint
@@ -146,7 +155,7 @@ class Cavity(ObjectGN):
             2) calulated first neighbour distance by kdtree
             3) find the max distance (max radius sphere)
             4) remove meshgrid within this sphere, 
-            5) find next max radius, ..., untill radius < minRadius
+            5) find next max radius, ..., untill radius < minCave
             6) remove all spheres contact with boundary
         Args:
             cell (_type_): _description_
@@ -166,7 +175,7 @@ class Cavity(ObjectGN):
         indices, distances = self.query_distance(self.meshgrids)
         spheres = self.find_cage_spheres(distances)
         spheres = self.check_sphere_boundary(spheres, cell)
-        spheres = self.refine_spheres(spheres)
+        # spheres = self.refine_spheres(spheres)
         ns = len(spheres['centers'])
         color_names = list(basic_colors.keys())
         ic = 0
@@ -229,9 +238,11 @@ class Cavity(ObjectGN):
         imax = np.argmax(distances)
         dmax = distances[imax]
         center = meshgrids[imax]
+        # refine center
+        center, dmax = self.refine_spheres(center)
         centers = []
         radii = []
-        while dmax > self.minRadius:
+        while dmax > self.minCave:
             centers.append(center)
             radii.append(dmax)
             n = len(distances)
@@ -244,6 +255,7 @@ class Cavity(ObjectGN):
             imax = np.argmax(distances)
             dmax = distances[imax]
             center = meshgrids[imax]
+            center, dmax = self.refine_spheres(center)
             # print(center, dmax)
         spheres = {'centers': np.array(centers), 'radii': np.array(radii)}
         # print('spheres: ', spheres)
@@ -274,34 +286,27 @@ class Cavity(ObjectGN):
         # print('spheres after check boundary: ', spheres)
         return spheres
 
-    def refine_spheres(self, spheres):
+    def refine_spheres(self, center):
         """Refine centers of spheres
+
+        Find center off meshgrids.
 
         Args:
             spheres (_type_): _description_
         """
-        n = len(spheres['centers'])
-        if n == 0:
-            return spheres
-        # grid
+        # make dense meshgrid ground centers of spheres
         npoint = [5, 5, 5]
         grids = []
         for i in range(3):
             grid = np.arange(-npoint[i], npoint[i] + 1) / \
                 npoint[i]*self.resolution/2
             grids.append(grid)
-        x, y, z = np.meshgrid(grids[0], grids[1], grids[2],
-                              indexing='ij')  # , sparse=True)
-        meshgrids0 = np.c_[x.ravel(), y.ravel(), z.ravel()]
-        for i in range(n):
-            center = spheres['centers'][i]
-            meshgrids = meshgrids0 + center
-            indices, distances = self.query_distance(meshgrids)
-            imax = np.argmax(distances)
-            spheres['centers'][i] = meshgrids[imax]
-            spheres['radii'][i] = max(1, distances[imax] - 2)
-        # print('spheres after refine: ', spheres)
-        return spheres
+        meshgrids0 = self.base_meshgrids(grids)
+        meshgrids = meshgrids0 + center
+        indices, distances = self.query_distance(meshgrids)
+        imax = np.argmax(distances)
+        radius = distances[imax]
+        return center, radius
 
     def build_object(self, cavity_datas, attributes = {}):
         """Build the main Batoms object
@@ -473,6 +478,7 @@ class Cavity(ObjectGN):
         deprecated('"setting" will be deprecated in the furture, please use "settings".')
         return self.settings
     
+
     def as_dict(self):
         """
         """
@@ -480,3 +486,28 @@ class Cavity(ObjectGN):
         data['settings'] = self.settings.as_dict()
         data.update(self.settings.bpy_data.as_dict())
         return data
+
+    @property
+    def minCave(self):
+        return self.batoms.coll.Bcavity.minCave
+
+    @minCave.setter
+    def minCave(self, minCave):
+        self.batoms.coll.Bcavity.minCave = minCave
+    
+    @property
+    def resolution(self):
+        return self.batoms.coll.Bcavity.resolution
+
+    @resolution.setter
+    def resolution(self, resolution):
+        self.batoms.coll.Bcavity.resolution = resolution
+    
+    @property
+    def atomRadius(self):
+        return self.batoms.coll.Bcavity.atomRadius
+
+    @atomRadius.setter
+    def atomRadius(self, atomRadius):
+        self.batoms.coll.Bcavity.atomRadius = atomRadius
+

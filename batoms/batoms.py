@@ -248,6 +248,7 @@ class Batoms(BaseCollection, ObjectGN):
         self.cell.obj.parent = self.obj
         self.set_attributes(arrays)
         self.build_geometry_node()
+        logger.info("Add object {}".format(self.label))
 
     def build_geometry_node(self):
         """Geometry node for instancing sphere on vertices!
