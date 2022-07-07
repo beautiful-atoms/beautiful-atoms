@@ -890,17 +890,18 @@ def install(parameters):
             raise RuntimeError(
                 f"Something wrong. {factory_python_target.as_posix()} still exists."
             )
-        if (not factory_python_source.is_dir()) or (factory_python_source.is_symlink()):
+        if factory_python_source.is_symlink():
             raise RuntimeError(
                 f"Something wrong. {factory_python_source.as_posix()} should be a real directory."
             )
-        shutil.move(factory_python_source, factory_python_target)
-        # os.rename(factory_python_source, factory_python_target)
-        cprint(
-            f"Renamed {factory_python_source.as_posix()} to {factory_python_target.as_posix()}",
-            color="OKGREEN",
-        )
-
+        if not factory_python_source.is_dir():
+            cprint(f"{factory_python_source.as_posix()} does not exist. Will not move.", color="WARNING")
+        else:
+            shutil.move(factory_python_source, factory_python_target)
+            cprint(
+                f"Renamed {factory_python_source.as_posix()} to {factory_python_target.as_posix()}",
+                color="OKGREEN",
+            )
         # Step 2-1: link the conda prefix of current environment
         conda_prefix = Path(conda_vars["CONDA_PREFIX"]).resolve()
         # Should not happen but just in case
