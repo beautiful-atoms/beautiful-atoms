@@ -80,6 +80,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - name: Copy addons to blender
+        run: |
+          mkdir -p $BLENDER_PATH/scripts/addons_contrib
+          cp -r batoms $BLENDER_PATH/scripts/addons_contrib/
+      - name: Enable blender addons
+        # Enable the blender blender addon and save user pref
+        run: |
+          blender -b --python-exit-code 1 --python-expr  "import bpy; import addon_utils; addon_utils.enable('batoms', default_set=True); bpy.ops.wm.save_userpref(); print('success')"
       - name: Install test dependencies
         run: |
           python -m pip install pytest
