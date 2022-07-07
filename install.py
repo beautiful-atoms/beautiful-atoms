@@ -997,13 +997,21 @@ def install(parameters):
     bindir = _find_conda_bin_path(
         env_name=local_parameters["custom_conda_env"], conda_vars=conda_vars
     )
-    print(f"Binary directory at {bindir}")
     script_path = bindir / "batomspy"
     with open(script_path, "w") as fd:
         content = BATOMSPY_SH.format(blender_bin=blender_bin.as_posix())
         fd.write(content)
     os.chmod(script_path, 0o755)
-    print(f"Script written to {script_path}")
+    cprint(f"batomspy script written to {script_path}", color="OKGREEN")
+
+    if local_parameters["os_name"] != "windows":
+        with tempfile.NamedTemporaryFile(suffix=".py") as tmp_py:
+            tmp_py = Path(tmp_py.name)
+            with open(tmp_py, "w") as fd:
+                fd.write(BATOMSPY_TEST)
+            os.chmod(tmp_py, 0o755)
+            _run_process([tmp_py.as_posix()], capture_output=True)
+        cprint(f"Shebang support for batomspy is now activated", color="OKGREEN")
 
     cprint(
         (
@@ -1029,6 +1037,16 @@ def uninstall(parameters):
     factory_python_target = blender_root / PY_BACKUP_PATH
 
     conda_vars = _get_conda_variables()
+
+    # Remove the batomspy script
+    bindir = _find_conda_bin_path(
+        env_name=local_parameters["custom_conda_env"], conda_vars=conda_vars
+    )
+    script_path = bindir / "batomspy"
+    if script_path.is_file():
+        os.remove(script_path)
+        cprint(f"Removed batomspy script from {script_path}", color="OKGREEN")
+
     _blender_disable_plugin(blender_bin)
     # if parameters["use_pip"]:
     #     _pip_uninstall()
@@ -1104,15 +1122,6 @@ def uninstall(parameters):
         ).format(env_pref=conda_vars["CONDA_PREFIX"]),
         color="OKGREEN",
     )
-    # Remove the script
-    bindir = _find_conda_bin_path(
-        env_name=local_parameters["custom_conda_env"], conda_vars=conda_vars
-    )
-    print(f"Binary directory at {bindir}")
-    script_path = bindir / "batomspy"
-    if script_path.is_file():
-        os.remove(script_path)
-    print(f"Removed {script_path}")
     return
 
 
