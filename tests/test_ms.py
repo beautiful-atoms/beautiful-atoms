@@ -7,8 +7,7 @@ from batoms import Batoms
 
 
 def test_SAS():
-    """
-    """
+    """ """
     bpy.ops.batoms.delete()
     h2o = molecule("H2O")
     h2o = Batoms("h2o", from_ase=h2o)
@@ -18,8 +17,7 @@ def test_SAS():
 
 
 def test_SAS_protein():
-    """
-    """
+    """ """
     import numpy as np
 
     bpy.ops.batoms.delete()
@@ -36,8 +34,7 @@ def test_SAS_protein():
 
 
 def test_SES():
-    """
-    """
+    """ """
     bpy.ops.batoms.delete()
     h2o = molecule("H2O")
     h2o = Batoms("h2o", from_ase=h2o)
