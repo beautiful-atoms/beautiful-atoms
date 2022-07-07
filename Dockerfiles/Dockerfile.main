@@ -22,7 +22,10 @@ USER root
 ADD ./ /tmp/beautiful-atoms/
 RUN cd /tmp/beautiful-atoms &&\
     conda init bash &&\
-    source $HOME/.bashrc &&\
+    export CONDA_DEFAULT_ENV=base &&\
+    export CONDA_DIR=/opt/conda &&\
+    export CONDA_PREFIX=/opt/conda &&\
+    export CONDA_EXE=/opt/conda/bin/conda &&\
     yes | python install.py -p ./ ${BLENDER_PATH}
 
 RUN chown ${B_UID}:${B_GID} -R ${BLENDER_PATH} &&\
