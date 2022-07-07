@@ -993,25 +993,26 @@ def install(parameters):
     if local_parameters["use_preferences"]:
         _blender_set_preferences(blender_bin)
 
-    # Add the batomspy script
-    bindir = _find_conda_bin_path(
-        env_name=local_parameters["custom_conda_env"], conda_vars=conda_vars
-    )
-    script_path = bindir / "batomspy"
-    with open(script_path, "w") as fd:
-        content = BATOMSPY_SH.format(blender_bin=blender_bin.as_posix())
-        fd.write(content)
-    os.chmod(script_path, 0o755)
-    cprint(f"batomspy script written to {script_path}", color="OKGREEN")
-
+    # Add the batomspy script (for unix systems only)
     if local_parameters["os_name"] != "windows":
-        with tempfile.NamedTemporaryFile(suffix=".py", delete=False) as tmp_py:
-            tmp_py = Path(tmp_py.name)
-            with open(tmp_py, "w") as fd:
-                fd.write(BATOMSPY_TEST)
-            os.chmod(tmp_py, 0o755)
-        _run_process([tmp_py.as_posix()], capture_output=True)
-        cprint(f"Shebang support for batomspy is now activated", color="OKGREEN")
+        bindir = _find_conda_bin_path(
+            env_name=local_parameters["custom_conda_env"], conda_vars=conda_vars
+        )
+        script_path = bindir / "batomspy"
+        with open(script_path, "w") as fd:
+            content = BATOMSPY_SH.format(blender_bin=blender_bin.as_posix())
+            fd.write(content)
+        os.chmod(script_path, 0o755)
+        cprint(f"batomspy script written to {script_path}", color="OKGREEN")
+
+    # if local_parameters["os_name"] != "windows":
+    #     with tempfile.NamedTemporaryFile(suffix=".py", delete=False) as tmp_py:
+    #         tmp_py = Path(tmp_py.name)
+    #         with open(tmp_py, "w") as fd:
+    #             fd.write(BATOMSPY_TEST)
+    #         os.chmod(tmp_py, 0o755)
+    #     _run_process([tmp_py.as_posix()], capture_output=True)
+    #     cprint(f"Shebang support for batomspy is now activated", color="OKGREEN")
 
     cprint(
         (
