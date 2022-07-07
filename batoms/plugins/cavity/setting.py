@@ -37,11 +37,7 @@ class CavitySettings(Setting):
         if cavitysetting is not None:
             for key, data in cavitysetting.items():
                 self[key] = data
-        volume = self.batoms.volume
-        if volume is not None:
-            if len(self) == 0:
-                self['1'] = {'level': volume.max()/8, 'color': [1, 1, 0, 0.8]}
-
+        
     def add(self, cavity):
         if isinstance(cavity, str):
             self[cavity] = {}

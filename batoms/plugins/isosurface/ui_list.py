@@ -102,8 +102,11 @@ class BATOMS_PT_isosurface(Panel):
             col = layout.column()
             sub = col.column(align=True)
             sub.prop(kb, "level", text="Level")
-            col.prop(kb, "material_style", text="material_style")
-            col.prop(kb, "color",  text="color")
+            col.prop(kb, "material_style", text="Material style")
+            col.prop(kb, "volumetric_data",  text="Volumetric data")
+            col.prop(kb, "color_by",  text="Color by")
+            if kb.color_by == 'None':
+                col.prop(kb, "color",  text="color")
             col.separator()
             op = layout.operator("surface.isosurface_draw",
                                  icon='GREASEPENCIL', text="Draw")

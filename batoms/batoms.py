@@ -6,6 +6,7 @@
 """
 import bpy
 from batoms.bspecies import Bspecies
+from batoms.volumetric_data import VolumetricData
 from batoms.attribute import Attributes
 from batoms.cell import Bcell
 from batoms.bselect import Selects
@@ -134,6 +135,7 @@ class Batoms(BaseCollection, ObjectGN):
         self._bond = None
         self._polyhedra = None
         self._boundary = None
+        self._volumetric_data = None
         self._isosurface = None
         self._lattice_plane = None
         self._crystal_shape = None
@@ -180,8 +182,7 @@ class Batoms(BaseCollection, ObjectGN):
             self._species = Bspecies(
                 label, species_props, self, segments=segments)
             self.selects.add('all', np.arange(len(self)))
-            if volume is not None:
-                self.build_volume(volume)
+            self._volumetric_data = VolumetricData(label, volume, self)
             self.set_pbc(pbc)
             # self.label = label
             if movie:
@@ -370,38 +371,6 @@ class Batoms(BaseCollection, ObjectGN):
         gn.node_group.links.new(InstanceOnPoint.outputs['Instances'],
                                 JoinGeometry.inputs['Geometry'])
 
-    def build_volume(self, volume):
-        """Save volumetric data as a mesh
-
-        Args:
-            volume (array):
-                volumetric data, e.g. electron density
-        """
-        # remove old volume point
-        # tstart = time()
-        if volume is None:
-            return
-        name = "%s_volume" % self.label
-        if name in bpy.data.objects:
-            bpy.data.objects.remove(bpy.data.objects[name], do_unlink=True)
-        shape = volume.shape
-        volume = volume.reshape(-1, 1)
-        npoint = len(volume)
-        dn = 3 - npoint % 3
-        verts = np.append(volume, np.zeros((dn, 1)), axis=0)
-        verts = verts.reshape(-1, 3)
-        mesh = bpy.data.meshes.new("%s_volume" % self.label)
-        mesh.from_pydata(verts, [], [])
-        mesh.update()
-        obj = bpy.data.objects.new(name, mesh)
-        obj.data = mesh
-        obj.batoms.type = 'VOLUME'
-        obj.batoms.volume.shape = shape
-        self.coll.objects.link(obj)
-        obj.hide_set(True)
-        obj.hide_render = True
-        # print('Draw volume: {0:1.2f}'.format(time() - tstart))
-
     def check_batoms(self, label):
         """Check batoms exist or not
 
@@ -434,45 +403,9 @@ class Batoms(BaseCollection, ObjectGN):
         self.obj_name = label
         self._cell = Bcell(label=label, batoms = self)
         self._species = Bspecies(label, {}, self)
+        self._volumetric_data = VolumetricData(label, None, self)
         self._attributes = Attributes(label=label, parent=self, obj_name=self.obj_name)
         self.selects = Selects(label, self)
-
-    @property
-    def volume(self):
-        """Retrieve volume data from a mesh
-
-        Returns:
-            array: Volumetric data
-        """
-        # tstart = time()
-        obj = bpy.data.objects.get('%s_volume' % self.label)
-        if obj is None:
-            return None
-        n = len(obj.data.vertices)
-        volume = np.empty(n*3, dtype=np.float64)
-        obj.data.vertices.foreach_get('co', volume)
-        volume = volume.reshape(-1, 1)
-        shape = self.volumeShape
-        npoint = np.product(shape)
-        volume = volume[:npoint]
-        volume = volume.reshape(shape)
-        # print('Read volume: {0:1.2f}'.format(time() - tstart))
-        return volume
-
-    @volume.setter
-    def volume(self, volume):
-        self.build_volume(volume)
-
-    @property
-    def volumeShape(self):
-        if "%s_volume" % self.label not in bpy.data.objects:
-            return 0
-        return bpy.data.objects["%s_volume" % self.label].batoms.volume.shape
-
-    @volumeShape.setter
-    def volumeShape(self, volumeShape):
-        bpy.data.objects["%s_volume" %
-                         self.label].batoms.volume.shape = volumeShape
 
     def set_arrays(self, arrays):
         """
@@ -547,6 +480,21 @@ class Batoms(BaseCollection, ObjectGN):
     def set_species(self, species):
         for key, data in species.items():
             self._species[key] = data
+    
+    @property
+    def volumetric_data(self):
+        return self.get_volumetric_data()
+
+    def get_volumetric_data(self):
+        return self._volumetric_data
+
+    @volumetric_data.setter
+    def volumetric_data(self, value):
+        self.set_volumetric_data(value)
+
+    def set_volumetric_data(self, value):
+        for key, data in value.items():
+            self._volumetric_data[key] = data
 
     @property
     def elements(self):
@@ -961,8 +909,8 @@ class Batoms(BaseCollection, ObjectGN):
         # self.set_frames(frames_new)
         self.cell.repeat(m)
         self.update_gn_cell()
-        # if self.volume is not None:
-        # self.volume = np.tile(self.volume, m)
+        # if self.volumetric_data is not None:
+        # self.volumetric_data = np.tile(self.volumetric_data, m)
         self.species.update_geometry_node()
         if self._boundary is not None:
             self.boundary.update()
