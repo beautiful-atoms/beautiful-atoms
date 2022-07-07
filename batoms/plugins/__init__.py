@@ -2,6 +2,8 @@ import bpy
 import importlib
 
 plugins = [
+    'isosurface',
+    'molecular_surface',
     'lattice_plane',
     'crystal_shape',
     'cavity',

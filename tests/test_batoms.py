@@ -69,46 +69,32 @@ def test_batoms_parameters():
     )
     assert h2o.model_style == 1
     assert np.isclose(h2o.scale, 0.5)
+    # segments
+    assert h2o.segments[0] == 24
+    h2o.segments = [6, 6]
+    assert h2o.segments[0] == 6
 
-def test_batoms_species():
-    """Setting properties of species"""
-    bpy.ops.batoms.delete()
-    h2o = Batoms(
-        "h2o",
-        species=["O", "H", "H"],
-        positions=[[0, 0, 0.40], [0, -0.76, -0.2], [0, 0.76, -0.2]],
-    )
-    assert len(h2o.species) == 2
-    # default covalent radius
-    assert np.isclose(h2o.radius["H"], 0.31)
-    # vdw radius
-    h2o.radius_style = 1
-    assert np.isclose(h2o.radius["H"], 1.2)
-    # default Jmol color
-    assert np.isclose(h2o["H"].color, np.array([1, 1, 1, 1])).all()
-    # VESTA color
-    h2o.color_style = 2
-    assert np.isclose(h2o["H"].color, np.array([1, 0.8, 0.8, 1])).all()
-    # materials
-    h2o.species["H"].materials = {
-        "Metallic": 0.9, "Specular": 1.0, "Roughness": 0.01}
-    # elements
-    h2o.species["H"].elements = {"H": 0.5, "O": 0.4}
-    assert len(h2o["H"].elements) == 3
-    h2o["H"].material_style = "mirror"
-    # species X
-    h2o.replace([0], "X")
-    h2o["X"].color = [0.8, 0.8, 0.0, 0.3]
 
-def test_auto_build_species():
-    """auto build species use spglib"""
+def test_model_style():
+    from batoms import Batoms
     from batoms.bio.bio import read
-    bpy.ops.batoms.delete()
-    magnetite = read("../tests/datas/magnetite.cif")
-    magnetite.auto_build_species()
-    assert len(magnetite.species) == 5
-    assert len(magnetite.bonds.setting) == 10
-    assert len(magnetite.polyhedras.setting) == 3
+    tio2 = read("../tests/datas/tio2.cif")
+    tio2.boundary = 0.1
+    tio2.bond.show_search = True
+    tio2.model_style = 2
+    assert tio2.bond.search_bond.hide == False
+    assert tio2.boundary.hide == False
+    #
+    tio2.polyhedra_style = 2
+    assert tio2.bond.hide == True
+    assert tio2.bond.search_bond.hide == True
+    assert tio2.boundary.hide == False
+    #
+    tio2.polyhedra_style = 1
+    assert tio2.bond.hide == True
+    assert tio2.bond.search_bond.hide == False
+    assert tio2.boundary.hide == False
+
 
 def test_batoms_write():
     """Export Batoms to structure file
@@ -399,7 +385,7 @@ def test_export_mesh_x3d():
     tio2 = read("../tests/datas/tio2.cif")
     tio2.boundary = 0.01
     tio2.model_style = 2
-    tio2.bonds.show_search = True
+    tio2.bond.show_search = True
     tio2.export_mesh("tio2.x3d", with_cell=True,
                      with_polyhedra=True,
                      with_boundary=True,
@@ -420,7 +406,7 @@ def test_export_mesh_obj():
     tio2 = read("../tests/datas/tio2.cif")
     tio2.boundary = 0.01
     tio2.model_style = 2
-    tio2.bonds.show_search = True
+    tio2.bond.show_search = True
     tio2.export_mesh("tio2.obj", with_cell=True,
                      with_polyhedra=True,
                      with_boundary=True,
@@ -435,7 +421,6 @@ if __name__ == "__main__":
     test_empty()
     test_batoms_molecule()
     test_batoms_crystal()
-    test_batoms_species()
     test_batoms_write()
     test_batoms_transform()
     test_batoms_wrap()

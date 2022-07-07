@@ -66,7 +66,7 @@ def set_plugin(key):
     def setter(self, value):
         import importlib
         self[key] = value
-        plugin = importlib.import_module("batoms.{}".format(key))
+        plugin = importlib.import_module("batoms.plugins.{}".format(key))
         if value:
             plugin.register_class()
             logger.info("Enable {} plugin.".format(key))
@@ -209,9 +209,25 @@ class BatomsAddonPreferences(AddonPreferences):
         default=2,
         )
     
+    isosurface: BoolProperty(
+        name="isosurface",
+        description="Enable isosurface plugin",
+        get=get_plugin("isosurface"),
+        set=set_plugin("isosurface"),
+        default=True,
+    )
+
+    molecular_surface: BoolProperty(
+        name="molecular_surface",
+        description="Enable molecular_surface plugin",
+        get=get_plugin("molecular_surface"),
+        set=set_plugin("molecular_surface"),
+        default=True,
+    )
+
     real_interaction: BoolProperty(
         name="real_interaction",
-        description="Enable real_interaction module",
+        description="Enable real_interaction plugin",
         get=get_plugin("real_interaction"),
         set=set_plugin("real_interaction"),
         default=False,
@@ -219,15 +235,15 @@ class BatomsAddonPreferences(AddonPreferences):
 
     magres: BoolProperty(
         name="magres",
-        description="Enable magres module",
+        description="Enable magres plugin",
         get=get_plugin("magres"),
         set=set_plugin("magres"),
-        default=False,
+        default=True,
     )
 
     cavity: BoolProperty(
         name="cavity",
-        description="Enable cavity module",
+        description="Enable cavity plugin",
         get=get_plugin("cavity"),
         set=set_plugin("cavity"),
         default=True,
@@ -235,7 +251,7 @@ class BatomsAddonPreferences(AddonPreferences):
 
     crystal_shape: BoolProperty(
         name="crystal_shape",
-        description="Enable crystal_shape module",
+        description="Enable crystal_shape plugin",
         get=get_plugin("crystal_shape"),
         set=set_plugin("crystal_shape"),
         default=True,
@@ -243,7 +259,7 @@ class BatomsAddonPreferences(AddonPreferences):
 
     lattice_plane: BoolProperty(
         name="lattice_plane",
-        description="Enable lattice_plane module",
+        description="Enable lattice_plane plugin",
         get=get_plugin("lattice_plane"),
         set=set_plugin("lattice_plane"),
         default=True,
@@ -283,13 +299,17 @@ class BatomsAddonPreferences(AddonPreferences):
                 box.prop(self, modname, text=package)
         #
         layout.separator()
-        box = layout.box().column()
-        box.label(text="Custom Plugins")
-        box.prop(self, "crystal_shape")
-        box.prop(self, "lattice_plane")
-        box.prop(self, "cavity")
-        box.prop(self, "magres")
-        box.prop(self, "real_interaction")
+        split = layout.split()
+        col = split.column()
+        col.label(text="Custom Plugins")
+        col.prop(self, "isosurface")
+        col.prop(self, "molecular_surface")
+        col.prop(self, "crystal_shape")
+        col.prop(self, "lattice_plane")
+        col.prop(self, "cavity")
+        col.prop(self, "magres")
+        col.prop(self, "real_interaction")
+        col = split.column()
         # custom folder
         layout.separator()
         box = layout.box().column()

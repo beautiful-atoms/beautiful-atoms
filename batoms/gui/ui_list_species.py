@@ -58,8 +58,8 @@ class BATOMS_PT_species(Panel):
 
         ob = context.object
         ba = bpy.data.collections[ob.batoms.label].batoms
-        if len(ba.bspecies) > 0:
-            kb = ba.bspecies[ba.species_index]
+        if len(ba.settings_species) > 0:
+            kb = ba.settings_species[ba.ui_list_index_species]
         else:
             kb = None
 
@@ -70,7 +70,7 @@ class BATOMS_PT_species(Panel):
             rows = 5
 
         row.template_list("BATOMS_UL_species", "", ba,
-                          "bspecies", ba, "species_index", rows=rows)
+                          "settings_species", ba, "ui_list_index_species", rows=rows)
 
         col = row.column(align=True)
         op = col.operator("batoms.species_add", icon='ADD', text="")

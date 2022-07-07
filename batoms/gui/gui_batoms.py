@@ -50,8 +50,12 @@ class Batoms_PT_prepare(Panel):
         layout.label(text="Polyhedra style")
         layout.prop(batoms, "polyhedra_style", expand=True)
 
-        layout.prop(batoms, "show", expand=True)
-        layout.prop(batoms, "wrap", expand=True)
+        split = layout.split()
+        col = split.column()
+        col.prop(batoms, "show", expand=True)
+        col = split.column()
+        col.prop(batoms, "wrap", expand=True)
+        layout.prop(batoms, "crystal_view", expand=True)
         layout.prop(batoms, "show_label", expand=True, text="label")
         layout.prop(batoms, "scale")
 
@@ -81,6 +85,7 @@ def get_active_batoms():
     if context.object and context.object.batoms.type != 'OTHER':
         mode = context.object.mode
         batoms = Batoms(label=context.object.batoms.label)
+        bpy.context.view_layer.objects.active = batoms.obj
         bpy.ops.object.mode_set(mode=mode)
         return batoms
     return None
@@ -242,6 +247,13 @@ class BatomsProperties(bpy.types.PropertyGroup):
                        description="wrap all atoms into cell",
                        get=get_wrap,
                        set=set_attr("wrap", set_batoms_attr)
+                       )
+
+    crystal_view: BoolProperty(name="crystal_view",
+                       default=False,
+                       description="crystal_view all object for view and rendering",
+                       get=get_attr("crystal_view", get_active_collection),
+                       set=set_attr("crystal_view", set_batoms_attr)
                        )
 
     scale: FloatProperty(

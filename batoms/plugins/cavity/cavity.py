@@ -9,7 +9,7 @@ from time import time
 import numpy as np
 from batoms.attribute import Attributes
 from batoms.base.object import ObjectGN
-from .cavitysetting import CavitySettings
+from .setting import CavitySettings
 from scipy import spatial
 from batoms.utils.butils import object_mode, get_nodes_by_name
 from batoms.utils import string2Number
@@ -44,8 +44,8 @@ class Cavity(ObjectGN):
                  cavity_datas=None,
                  location=np.array([0, 0, 0]),
                  batoms=None,
-                 resolution = 1,
-                 mimRadius = 4,
+                 resolution = None,
+                 minCave = None,
                  ):
         """Cavity Class
 
@@ -59,15 +59,17 @@ class Cavity(ObjectGN):
         self.label = label
         name = 'cavity'
         ObjectGN.__init__(self, label, name)
-        self.resolution = resolution
-        self.minRadius = mimRadius
+        if resolution is not None:
+            self.resolution = resolution
+        if minCave is not None:
+            self.minCave = minCave
         flag = self.load()
         if not flag and cavity_datas is not None:
             self.build_object(cavity_datas)
-            self.setting = CavitySettings(
+            self.settings = CavitySettings(
                 self.label, batoms=batoms, parent=self)
         else:
-            self.setting = CavitySettings(
+            self.settings = CavitySettings(
                 self.label, batoms=batoms, parent=self)
             self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
 
@@ -107,6 +109,8 @@ class Cavity(ObjectGN):
         tstart = time()
         distance, indices = self.kdtree.query(points, workers=parallel)
         # print('KDTree query: %s' % (time() - tstart))
+        # here we consider the size of atoms using one value for all.
+        distance = distance - self.atomRadius
         return indices, distance
 
     def query_radius(self, meshgrids, points, radii, k=1):
@@ -120,6 +124,13 @@ class Cavity(ObjectGN):
         # print('KDTree query: %s' % (time() - tstart))
         return indices[0]
 
+    def base_meshgrids(self, grids):
+        x, y, z = np.meshgrid(grids[0], grids[1], grids[2],
+                              indexing='ij')  # , sparse=True)
+        meshgrids = np.c_[x.ravel(), y.ravel(), z.ravel()]
+        return meshgrids
+
+
     def build_grid(self, cell, resolution):
         """
         generate gridpoints
@@ -129,9 +140,7 @@ class Cavity(ObjectGN):
         grids = []
         for i in range(3):
             grids.append(np.arange(npoint[i])/npoint[i])
-        x, y, z = np.meshgrid(grids[0], grids[1], grids[2],
-                              indexing='ij')  # , sparse=True)
-        meshgrids = np.c_[x.ravel(), y.ravel(), z.ravel()]
+        meshgrids = self.base_meshgrids(grids)
         meshgrids = np.dot(meshgrids, cell.array)
         self.meshgrids = meshgrids
         self.shape = npoint
@@ -143,7 +152,7 @@ class Cavity(ObjectGN):
             2) calulated first neighbour distance by kdtree
             3) find the max distance (max radius sphere)
             4) remove meshgrid within this sphere, 
-            5) find next max radius, ..., untill radius < minRadius
+            5) find next max radius, ..., untill radius < minCave
             6) remove all spheres contact with boundary
         Args:
             cell (_type_): _description_
@@ -163,38 +172,54 @@ class Cavity(ObjectGN):
         indices, distances = self.query_distance(self.meshgrids)
         spheres = self.find_cage_spheres(distances)
         spheres = self.check_sphere_boundary(spheres, cell)
-        spheres = self.refine_spheres(spheres)
-        cavities = {}
-        # init setting if not exist
+        # spheres = self.refine_spheres(spheres)
         ns = len(spheres['centers'])
         color_names = list(basic_colors.keys())
         ic = 0
-        for r in spheres['radii']:
+        # the default setting
+        ncav = len(self.settings.bpy_setting)
+        #
+        indices = []
+        for i in range(ns):
             has_r = False
-            for cav in self.setting.collection:
-                if r > cav.min and r < cav.max:
+            for cav in self.settings.bpy_setting:
+                if spheres['radii'][i] > cav.min and spheres['radii'][i] < cav.max:
                     has_r = True
-            if not has_r:
-                name = len(self.setting.collection)
-                cav = {'min': np.floor(r), 'max': np.ceil(
-                    r), 'color': basic_colors[color_names[ic]]}
-                self.setting[name] = cav
+                    indices.append(i)
+            # init setting if not exist (ncav == 0)
+            if not has_r and ncav == 0:
+                name = len(self.settings.bpy_setting)
+                cav = {'min': np.floor(spheres['radii'][i]), 'max': np.ceil(
+                    spheres['radii'][i]), 'color': basic_colors[color_names[ic]]}
+                self.settings[name] = cav
+                indices.append(i)
                 ic += 1
                 if ic == len(color_names):
                     ic = 0
-        species_index = np.zeros(ns, dtype = int)
-        show = np.ones(ns, dtype=int)
-        ncollection = len(self.setting.collection)
+        #
+        cavities = {}
+        for key, value in spheres.items():
+            if len(spheres[key].shape)==2:
+                cavities[key] = spheres[key][indices, :]
+            else:
+                cavities[key] = spheres[key][indices]
+        nc = len(cavities['centers'])
+        species_index = np.zeros(nc, dtype = int)
+        show = np.ones(nc, dtype=int)
+        scale = np.ones(nc, dtype=int)
+        ncollection = len(self.settings.bpy_setting)
         for i in range(ncollection):
-            cav = self.setting.collection[i]
-            indices = np.where((spheres['radii'] > cav.min) & (
-                spheres['radii'] < cav.max))[0]
+            cav = self.settings.bpy_setting[i]
+            indices = np.where((cavities['radii'] > cav.min) & (
+                cavities['radii'] < cav.max))[0]
             species_index[indices] = string2Number(cav.name)
-        spheres.update({'centers': np.array([spheres['centers']]),
+            scale[indices] = cavities['radii'][indices]*cav.scale
+        # logger.debug(scale)
+        cavities.update({'centers': np.array([cavities['centers']]),
                         'species_index': species_index,
-                        'scale': spheres['radii'],
+                        'scale': scale,
                         'show': show})
-        return spheres
+        return cavities
 
     def find_cage_spheres(self, distances):
         """
@@ -210,9 +235,11 @@ class Cavity(ObjectGN):
         imax = np.argmax(distances)
         dmax = distances[imax]
         center = meshgrids[imax]
+        # refine center
+        center, dmax = self.refine_spheres(center)
         centers = []
         radii = []
-        while dmax > self.minRadius:
+        while dmax > self.minCave:
             centers.append(center)
             radii.append(dmax)
             n = len(distances)
@@ -225,6 +252,7 @@ class Cavity(ObjectGN):
             imax = np.argmax(distances)
             dmax = distances[imax]
             center = meshgrids[imax]
+            center, dmax = self.refine_spheres(center)
             # print(center, dmax)
         spheres = {'centers': np.array(centers), 'radii': np.array(radii)}
         # print('spheres: ', spheres)
@@ -255,34 +283,27 @@ class Cavity(ObjectGN):
         # print('spheres after check boundary: ', spheres)
         return spheres
 
-    def refine_spheres(self, spheres):
+    def refine_spheres(self, center):
         """Refine centers of spheres
+
+        Find center off meshgrids.
 
         Args:
             spheres (_type_): _description_
         """
-        n = len(spheres['centers'])
-        if n == 0:
-            return spheres
-        # grid
+        # make dense meshgrid ground centers of spheres
         npoint = [5, 5, 5]
         grids = []
         for i in range(3):
             grid = np.arange(-npoint[i], npoint[i] + 1) / \
                 npoint[i]*self.resolution/2
             grids.append(grid)
-        x, y, z = np.meshgrid(grids[0], grids[1], grids[2],
-                              indexing='ij')  # , sparse=True)
-        meshgrids0 = np.c_[x.ravel(), y.ravel(), z.ravel()]
-        for i in range(n):
-            center = spheres['centers'][i]
-            meshgrids = meshgrids0 + center
-            indices, distances = self.query_distance(meshgrids)
-            imax = np.argmax(distances)
-            spheres['centers'][i] = meshgrids[imax]
-            spheres['radii'][i] = max(1, distances[imax] - 2)
-        # print('spheres after refine: ', spheres)
-        return spheres
+        meshgrids0 = self.base_meshgrids(grids)
+        meshgrids = meshgrids0 + center
+        indices, distances = self.query_distance(meshgrids)
+        imax = np.argmax(distances)
+        radius = distances[imax]
+        return center, radius
 
     def build_object(self, cavity_datas, attributes = {}):
         """Build the main Batoms object
@@ -414,8 +435,8 @@ class Cavity(ObjectGN):
     def update_geometry_node_instancer(self):
         """
         """
-        for sp in self.setting.collection:
-            self.setting.build_instancer(sp.as_dict())
+        for sp in self.settings.bpy_setting:
+            self.settings.build_instancer(sp.as_dict())
 
     def set_arrays(self, arrays):
         """
@@ -429,7 +450,7 @@ class Cavity(ObjectGN):
         if dnvert > 0:
             self.add_vertices_bmesh(dnvert)
         elif dnvert < 0:
-            self.delete_vertices_bmesh(-dnvert)
+            self.delete_vertices_bmesh(range(-dnvert))
         self.set_frames(arrays)
         self.set_attributes({'species_index': arrays['species_index']})
         self.set_attributes({'scale': arrays['scale']})
@@ -446,3 +467,34 @@ class Cavity(ObjectGN):
         name = '%s_cavity' % (self.label)
         obj = self.obj
         self.set_obj_frames(name, obj, frames['centers'])
+
+    @property
+    def setting(self):
+        from batoms.utils import deprecated
+        """setting object."""
+        deprecated('"setting" will be deprecated in the furture, please use "settings".')
+        return self.settings
+    
+    @property
+    def minCave(self):
+        return self.batoms.coll.Bcavity.minCave
+
+    @minCave.setter
+    def minCave(self, minCave):
+        self.batoms.coll.Bcavity.minCave = minCave
+    
+    @property
+    def resolution(self):
+        return self.batoms.coll.Bcavity.resolution
+
+    @resolution.setter
+    def resolution(self, resolution):
+        self.batoms.coll.Bcavity.resolution = resolution
+    
+    @property
+    def atomRadius(self):
+        return self.batoms.coll.Bcavity.atomRadius
+
+    @atomRadius.setter
+    def atomRadius(self, atomRadius):
+        self.batoms.coll.Bcavity.atomRadius = atomRadius

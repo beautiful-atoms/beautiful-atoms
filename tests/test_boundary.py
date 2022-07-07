@@ -19,7 +19,9 @@ def test_boundary_scale():
     au.scale = 0.5
     au.boundary = [1, 1, 1]
     assert np.allclose(au.boundary.get_attribute('scale')[0], 0.5)
-    # repeat
+    # if bpy.app.version_string >= '3.2.0':
+        # au.scale = 1.0
+        # assert np.allclose(au.boundary.get_attribute('scale')[0], 1)
 
 def test_boundary_off_origin():
     bpy.ops.batoms.delete()
@@ -53,7 +55,22 @@ def test_boundary_animation():
     tio2.boundary = 0.01
     assert len(tio2.boundary.obj.data.vertices) == 9
 
-
+def test_boundary_reload():
+    """save to blend file and reload
+    """
+    import os
+    from batoms import Batoms
+    bpy.ops.batoms.delete()
+    au = Batoms("au", from_ase=bulk("Au", cubic=True))
+    au.boundary = 0.1
+    cwd = os.getcwd()
+    filepath = os.path.join(cwd, "test.blend")
+    bpy.ops.wm.save_as_mainfile(filepath=filepath)
+    bpy.ops.batoms.delete()
+    bpy.ops.wm.open_mainfile(filepath=filepath)
+    au = Batoms("au")
+    np.isclose(au.boundary[0,0], -1)
+    assert len(au.boundary) == 10
 
 
 

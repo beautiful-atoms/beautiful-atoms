@@ -55,7 +55,19 @@ def test_cavity_mof():
         set_cycles_res(mof)
     mof.get_image([0, 1, 0], output="mof-5.png", **extras)
 
+def test_cavity_ops():
+    bpy.ops.batoms.delete()
+    mof = read("../tests/datas/mof-5.cif")
+    mof.cavity.resolution = 0.5
+    bpy.context.view_layer.objects.active = mof.obj
+    bpy.ops.surface.cavity_draw()
+    assert len(mof.cavity.settings) == 1
+    bpy.ops.surface.cavity_remove(name="0")
+    print(mof.cavity.settings)
+    assert len(mof.cavity.settings) == 0
+
+
 if __name__ == "__main__":
     test_cavity()
     test_cavity_zsm()
-    test_cavity_mof
+    test_cavity_mof()

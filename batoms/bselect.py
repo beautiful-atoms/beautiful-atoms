@@ -1,3 +1,9 @@
+"""  
+#TODO add panel for select 
+#TODO active radius_style
+#TODO merge select and SliceBatoms
+"""
+import bpy
 from batoms.base.collection import Setting
 import numpy as np
 from batoms.utils import string2Number
@@ -7,7 +13,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 class Select():
-    def __init__(self, label, name='all',
+    def __init__(self, label, parent, name='all',
                  batoms=None, indices=None,
                  ) -> None:
         """_summary_
@@ -24,12 +30,21 @@ class Select():
         >>>sel.model_style = 1
 
         """
-        self.batoms = batoms
         self.label = label
+        self.parent = parent
         self.name = name
+        self.batoms = batoms
         self.coll_name = '%s_%s' % (label, name)
         if indices is not None:
             self.indices = indices
+
+    def get_bpy_setting(self):
+        if self.coll_name:
+            coll = bpy.data.collections.get(self.coll_name)
+            data = getattr(coll.batoms, self.name)
+        else:
+            raise KeyError("The collection property {} not exist!".format(self.name))
+        return data.setting
 
     @property
     def positions(self):
@@ -52,6 +67,14 @@ class Select():
         return model_style[self.indices]
 
     def set_model_style(self, model_style):
+        if int(model_style) == 0:
+            self.scale = 1
+        elif int(model_style) == 1:
+            self.scale = 0.4
+        elif int(model_style) == 2:
+            self.scale = 0.4
+        elif int(model_style) == 3:
+            self.scale = 0.0001
         model_style0 = self.batoms.attributes['model_style']
         model_style0[self.indices] = model_style
         model_style = {'model_style': model_style0}
@@ -67,11 +90,10 @@ class Select():
         self.set_radius_style(radius_style)
 
     def get_radius_style(self):
-        return self.batoms.selects.collection[self.name].radius_style
+        return self.parent.bpy_setting[self.name].radius_style
 
     def set_radius_style(self, radius_style):
-        self.batoms.selects.collection[self.name].radius_style = radius_style
-        self.draw(draw_isosurface=False)
+        self.parent.bpy_setting[self.name].radius_style = radius_style
 
     @property
     def show(self):
@@ -194,7 +216,7 @@ class Select():
         radius depends on radius style, thus could be with select
         """
         radius = {}
-        for sp in self.collection:
+        for sp in self.bpy_setting:
             radius[sp.name] = sp.radius
         return radius
 
@@ -230,8 +252,22 @@ class Selects(Setting):
     def __init__(self, label, batoms=None) -> None:
         Setting.__init__(self, label, coll_name=label)
         self.label = label
-        self.name = 'bselect'
+        self.name = 'batoms'
         self.batoms = batoms
+
+    def get_ui_list_index(self):
+        return self.bpy_data.ui_list_index_select
+    
+    def set_ui_list_index(self, value):
+        self.bpy_data.ui_list_index_select = value
+
+    def get_bpy_setting(self):
+        if self.coll_name:
+            coll = bpy.data.collections.get(self.coll_name)
+            data = getattr(coll, self.name)
+        else:
+            raise KeyError("The collection property {} not exist!".format(self.name))
+        return data.settings_select
 
     @property
     def selects(self):
@@ -239,13 +275,13 @@ class Selects(Setting):
 
     def get_selects(self):
         selects = {}
-        for b in self.collection:
-            selects[b.name] = Select(self.label, name=b.name,
+        for b in self.bpy_setting:
+            selects[b.name] = Select(self.label, parent=self, name=b.name,
                                      batoms=self.batoms)
         for vg in self.batoms.obj.vertex_groups:
             if vg.name not in selects:
                 self.add(vg.name)
-            selects[vg.name] = Select(self.label, name=vg.name,
+            selects[vg.name] = Select(self.label, parent=self, name=vg.name,
                                       batoms=self.batoms)
         return selects
 
@@ -288,12 +324,13 @@ class Selects(Setting):
         sel = None
         subset = self.find(name)
         if subset is None:
-            subset = self.collection.add()
-        subset.name = name
+            subset = self.bpy_setting.add()
+            self.ui_list_index = len(self.bpy_setting) - 1
+            subset.name = name
         subset.label = self.label
         subset.flag = True
         # species_props = self.batoms.
-        sel = Select(self.label, name=name,
+        sel = Select(self.label, parent=self, name=name,
                      batoms=self.batoms, indices=indices)
         return sel
 

@@ -139,6 +139,9 @@ def get_selected_vertices_all():
 
 def remove_collection(name, keep_batom=True):
     """
+
+    Note: to avoid crash in macOS, read the name first, 
+    and then use get method
     """
     collection = bpy.data.collections.get(name)
     objs = collection.all_objects.keys()
@@ -177,11 +180,15 @@ def clean_coll_objects(coll, names=None):
 
 def clean_coll_object_by_type(coll, type):
     """
-    remove all bond object in the bond collection
+    remove all objects which have certain type in the given collection.
     """
+    objs_name = []
     for obj in coll.all_objects:
         if obj.batoms.type == type:
-            bpy.data.objects.remove(obj, do_unlink=True)
+            objs_name.append(obj.name)
+    for obj in objs_name:
+        obj = bpy.data.objects.get(obj)
+        bpy.data.objects.remove(obj, do_unlink=True)
 
 
 def removeAll():

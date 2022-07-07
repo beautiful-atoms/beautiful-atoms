@@ -38,7 +38,7 @@ class BaseObject():
         return self.get_bobj()
 
     def get_bobj(self):
-        bobj = getattr(self.obj.batoms, self.bobj_name)
+        bobj = getattr(self.obj, self.bobj_name)
         return bobj
 
     @property
@@ -244,9 +244,10 @@ class ObjectGN(BaseObject):
     def __init__(self, label, name=None):
         if name:
             self.name = name
-            self.obj_name = '%s_%s' % (label, name)
+            obj_name = '%s_%s' % (label, name)
         else:
-            self.obj_name = label
+            obj_name = label
+        BaseObject.__init__(self, obj_name=obj_name)
 
     def build_object(self, arrays, attributes={}):
         self.set_attributes(attributes)
@@ -633,7 +634,7 @@ class ObjectGN(BaseObject):
                     self.set_mesh_attribute_bmesh(obj, sub_key, array[i*n:(i+1)*n], index)
                 else:
                     self.set_mesh_attribute(obj, sub_key, array[i*n:(i+1)*n], index)
-        logger.info('Time: {:10s} {:5.2f}'.format(key, time() - tstart))
+        logger.debug('Time: {:10s} {:5.2f}'.format(key, time() - tstart))
     
     def set_mesh_attribute_bmesh(self, obj, key, value, index = None):
         """Set mesh attribute using bmesh method.

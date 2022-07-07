@@ -10,6 +10,16 @@ addon = bpy.context.preferences.addons[package]
 preferences = addon.preferences
 
 
+def test_enable_disable_plugin():
+    from bpy.types import Collection, Object
+    assert preferences.magres==True
+    assert hasattr(Collection, 'Bmagres')
+    preferences.magres=False
+    assert not hasattr(Collection, 'Bmagres')
+    preferences.magres=True
+    assert hasattr(Collection, 'Bmagres')
+
+
 def create_molecule():
     bpy.ops.batoms.delete()
     from batoms import Batoms
@@ -94,12 +104,12 @@ def test_logging_level_emit():
     preferences.logging_level = "INFO"
     create_molecule()
     lines1 = read_log_lines(root_logger)
-    assert any(["set_attribute" in line for line in lines1])
+    assert any(["Add object" in line for line in lines1])
     # WARNING level suppresses timing info
     preferences.logging_level = "WARNING"
     create_molecule()
     lines2 = read_log_lines(root_logger)[len(lines1) :]
-    assert all(["set_attributes" not in line for line in lines2])
+    assert all(["Add object" not in line for line in lines2])
 
 
 if __name__ == "__main__":

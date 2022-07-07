@@ -1,7 +1,7 @@
 """Definition of the Batoms class in the batoms package.
 
 # TODO: get evaluated positiosn
-# TODO: add location for boundary, bonds and all child objects
+# TODO: add location for boundary, bond and all child objects
 # TODO: add feature: cavity
 """
 import bpy
@@ -14,7 +14,7 @@ from batoms.base.object import ObjectGN
 from batoms.ribbon.ribbon import Ribbon
 from batoms.utils.butils import object_mode, show_index, \
     get_nodes_by_name
-from batoms.utils import string2Number, read_from_others
+from batoms.utils import string2Number, read_from_others, deprecated
 import numpy as np
 from time import time
 
@@ -130,6 +130,17 @@ class Batoms(BaseCollection, ObjectGN):
         self.obj_name = label
         ObjectGN.__init__(self, label)
         BaseCollection.__init__(self, coll_name=label)
+        self._render = None
+        self._bond = None
+        self._polyhedra = None
+        self._boundary = None
+        self._isosurface = None
+        self._lattice_plane = None
+        self._crystal_shape = None
+        self._molecular_surface = None
+        self._magres = None
+        self._cavity = None
+        #
         if from_ase or from_pymatgen or from_pybel:
             species, positions, attributes, cell, pbc, info = read_from_others(from_ase,
                                                                                from_pymatgen,
@@ -140,7 +151,7 @@ class Batoms(BaseCollection, ObjectGN):
             if species is None:
                 species = []
                 positions = []
-            self.set_collection(label)
+            self.set_collection(label, color_style=color_style, radius_style=radius_style)
             self._cell = Bcell(label, cell, batoms=self)
             positions = np.array(positions)
             if len(positions.shape) == 3:
@@ -167,33 +178,22 @@ class Batoms(BaseCollection, ObjectGN):
             if species_props is None:
                 species_props = species
             self._species = Bspecies(
-                label, label, species_props, self, segments=segments)
+                label, species_props, self, segments=segments)
             self.selects.add('all', np.arange(len(self)))
             if volume is not None:
                 self.build_volume(volume)
             self.set_pbc(pbc)
             # self.label = label
-            self.radius_style = radius_style
-            self.color_style = color_style
             if movie:
                 self.set_frames()
             self.show_unit_cell = show_unit_cell
             
         self.ribbon = Ribbon(self.label, batoms=self, datas=info, update=True)
-        self._render = None
-        self._bonds = None
-        self._polyhedras = None
-        self._boundary = None
-        self._isosurfaces = None
-        self._lattice_plane = None
-        self._crystal_shape = None
-        self._ms = None
-        self._magres = None
-        self._cavity = None
         show_index()
         self.hideOneLevel()
 
-    def set_collection(self, label):
+    def set_collection(self, label, color_style='0',
+                        radius_style='0'):
         """Build main collection and its child collections.
 
         Args:
@@ -211,6 +211,9 @@ class Batoms(BaseCollection, ObjectGN):
             coll.children.link(subcoll)
         coll.batoms.type = 'BATOMS'
         coll.batoms.label = label
+        # set internal data
+        self.coll.batoms.color_style = str(color_style)
+        self.coll.batoms.radius_style = str(radius_style)
 
     def hideOneLevel(self):
         """Hide one level of collecitons in the outline in Blender
@@ -242,13 +245,14 @@ class Batoms(BaseCollection, ObjectGN):
         if self.obj.data.shape_keys is None:
             self.obj.shape_key_add(name="Basis_{}".format(self.label))
         #
-        self._attributes = Attributes(label=label, parent=self, obj_name=label)
+        self._attributes = Attributes(label=label, parent=self, obj_name=self.obj_name)
         # Add attributes
         self._attributes.add(default_attributes)
         # add cell object as its child
         self.cell.obj.parent = self.obj
         self.set_attributes(arrays)
         self.build_geometry_node()
+        logger.info("Add object {}".format(self.label))
 
     def build_geometry_node(self):
         """Geometry node for instancing sphere on vertices!
@@ -429,8 +433,8 @@ class Batoms(BaseCollection, ObjectGN):
         self.coll_name = label
         self.obj_name = label
         self._cell = Bcell(label=label, batoms = self)
-        self._species = Bspecies(label, label, {}, self)
-        self._attributes = Attributes(label=label, parent=self, obj_name=label)
+        self._species = Bspecies(label, {}, self)
+        self._attributes = Attributes(label=label, parent=self, obj_name=self.obj_name)
         self.selects = Selects(label, self)
 
     @property
@@ -484,7 +488,7 @@ class Batoms(BaseCollection, ObjectGN):
             self.add_vertices_bmesh(dnvert)
             # self.udpate_mesh(self.obj)
         elif dnvert < 0:
-            self.delete_vertices_bmesh(-dnvert)
+            self.delete_vertices_bmesh(range(-dnvert))
         self.set_frames(arrays)
         for key, value in arrays.items():
             if key == "positions": continue
@@ -567,6 +571,16 @@ class Batoms(BaseCollection, ObjectGN):
         return int(self.coll.batoms.model_style)
 
     def set_model_style(self, model_style):
+        if int(model_style) == 0:
+            self.scale = 1
+        elif int(model_style) == 1:
+            self.scale = 0.4
+        elif int(model_style) == 2:
+            self.scale = 0.4
+        elif int(model_style) == 3:
+            self.scale = 0.0001
+        scale = np.ones(len(self))*self.scale
+        self.set_attribute('scale', scale)
         self.coll.batoms.model_style = str(model_style)
         model_style_array = np.ones(len(self), dtype=int)*int(model_style)
         self.set_model_style_array(model_style_array)
@@ -603,10 +617,9 @@ class Batoms(BaseCollection, ObjectGN):
     def show_unit_cell(self, show_unit_cell):
         if show_unit_cell:
             self.coll.batoms.show_unit_cell = show_unit_cell
-            self.cell.draw()
+            self.cell.hide = False
         else:
-            name = '%s_%s_%s' % (self.label, 'cell', 'cylinder')
-            self.cell.delete_obj(name)
+            self.cell.hide = True
 
     @property
     def radius(self):
@@ -649,7 +662,7 @@ class Batoms(BaseCollection, ObjectGN):
                                              radius_style=self.radius_style,
                                              color_style=color_style)
             data.update(props)
-            self.species.collection[name].color = props["elements"][sp.main_element]["color"]
+            self.species.bpy_setting[name].color = props["elements"][sp.main_element]["color"]
             sp.update(data)
 
     @property
@@ -995,12 +1008,12 @@ class Batoms(BaseCollection, ObjectGN):
         Extend batom object by appending batoms from *other*.
 
         >>> slab = au111 + co
-        todo: merge bonds setting
+        todo: merge bond setting
         """
         # could also use self.add_arrays(other.positions)
         # object_mode()
-        # merge bondsetting
-        self.bonds.setting.extend(other.bonds.setting)
+        # merge bondetting
+        self.bond.settings.extend(other.bond.settings)
         # creat new selections
         n1 = len(self)
         n2 = len(other)
@@ -1139,8 +1152,8 @@ class Batoms(BaseCollection, ObjectGN):
         bpy.ops.object.mode_set(mode=mode)
         # print(self.species)
         # for sp in self.species:
-        self.bonds.setting.add_species(species[0])
-        self.polyhedras.setting.add_species(species[0])
+        self.bond.settings.add_species(species[0])
+        self.polyhedra.settings.add_species(species[0])
 
     def auto_build_species(self, tol = 1e-5):
         """Auto build species based on equivalent_atoms.
@@ -1208,8 +1221,8 @@ class Batoms(BaseCollection, ObjectGN):
         if 'scale' not in arrays:
             scale = np.ones(n1 - n0)
             self.set_attribute_with_indices('scale', range(n0, n1), scale)
-        # add bonds setting
-        bond_dicts = self.bonds.setting.as_dict()
+        # add bond setting
+        bond_dicts = self.bond.settings.as_dict()
         species0 = self.species.keys()
         species1 = np.unique(arrays['species'])
         for sp1 in species1:
@@ -1217,14 +1230,14 @@ class Batoms(BaseCollection, ObjectGN):
                 pair1 = (sp1, sp0)
                 pair2 = (sp0, sp1)
                 if pair1 not in bond_dicts and pair2 not in bond_dicts:
-                    self.bonds.setting.add(pair1)
-                    sp3 = self.bonds.setting.find(pair1)
-                    sp4 = self.bonds.setting.find(pair2)
+                    self.bond.settings.add(pair1)
+                    sp3 = self.bond.settings.find(pair1)
+                    sp4 = self.bond.settings.find(pair2)
                     if sp3:
-                        self.bonds.update_geometry_node_instancer(
+                        self.bond.update_geometry_node_instancer(
                             sp3.as_dict())
                     if sp4:
-                        self.bonds.update_geometry_node_instancer(
+                        self.bond.update_geometry_node_instancer(
                             sp4.as_dict())
 
     def get_cell(self):
@@ -1332,12 +1345,10 @@ class Batoms(BaseCollection, ObjectGN):
     def get_show(self):
         return self.attributes['show']
 
-    def set_show(self, show, only_atoms=True):
+    def set_show(self, show, only_atoms=False):
         #
         if not only_atoms:
-            names = self.coll.all_objects.keys()
-            for name in names:
-                obj = bpy.data.objects.get(name)
+            for obj in self.obj.children:
                 obj.hide_render = not show
                 obj.hide_set(not show)
         #
@@ -1483,33 +1494,44 @@ class Batoms(BaseCollection, ObjectGN):
     @property
     def bonds(self):
         """bonds object."""
-        from batoms.bond import Bonds, default_bond_datas
-        if self._bonds is not None:
-            return self._bonds
-        bonds = Bonds(self.label, bond_datas=default_bond_datas.copy(),
-                      batoms=self)
-        self.bonds = bonds
-        return bonds
+        deprecated('"bonds" will be deprecated in the furture, please use "bond".')
+        return self.bond
 
-    @bonds.setter
-    def bonds(self, bonds):
-        self._bonds = bonds
+    @property
+    def bond(self):
+        """bond object."""
+        from batoms.bond.bond import Bond, default_bond_datas
+        if self._bond is not None:
+            return self._bond
+        bond = Bond(self.label, batoms=self)
+        self.bond = bond
+        return bond
+
+    @bond.setter
+    def bond(self, bond):
+        self._bond = bond
 
     @property
     def polyhedras(self):
         """polyhedras object."""
-        from batoms.polyhedra import Polyhedras, default_polyhedra_datas
-        if self._polyhedras is not None:
-            return self._polyhedras
-        polyhedras = Polyhedras(self.label,
+        deprecated('"polyhedras" will be deprecated in the furture, please use "polyhedra".')
+        return self.polyhedra
+
+    @property
+    def polyhedra(self):
+        """polyhedra object."""
+        from batoms.polyhedra.polyhedra import Polyhedra, default_polyhedra_datas
+        if self._polyhedra is not None:
+            return self._polyhedra
+        polyhedra = Polyhedra(self.label,
                                 polyhedra_datas=default_polyhedra_datas,
                                 batoms=self)
-        self.polyhedras = polyhedras
-        return polyhedras
+        self.polyhedra = polyhedra
+        return polyhedra
 
-    @polyhedras.setter
-    def polyhedras(self, polyhedras):
-        self._polyhedras = polyhedras
+    @polyhedra.setter
+    def polyhedra(self, polyhedra):
+        self._polyhedra = polyhedra
 
     @property
     def boundary(self):
@@ -1517,8 +1539,7 @@ class Batoms(BaseCollection, ObjectGN):
         from batoms.boundary import Boundary, default_boundary_datas
         if self._boundary is not None:
             return self._boundary
-        boundary = Boundary(self.label, boundary_datas=default_boundary_datas.copy(),
-                            batoms=self,
+        boundary = Boundary(self.label, batoms=self,
                             location=self.location)
         self._boundary = boundary
         return boundary
@@ -1540,16 +1561,22 @@ class Batoms(BaseCollection, ObjectGN):
     @property
     def isosurfaces(self):
         """isosurfaces object."""
-        from batoms.isosurface import Isosurface
-        if self._isosurfaces is not None:
-            return self._isosurfaces
-        isosurfaces = Isosurface(self.label, batoms=self)
-        self.isosurfaces = isosurfaces
-        return isosurfaces
+        deprecated('"isosurfaces" will be deprecated in the furture, please use "isosurface".')
+        return self.isosurface
 
-    @isosurfaces.setter
-    def isosurfaces(self, isosurfaces):
-        self._isosurfaces = isosurfaces
+    @property
+    def isosurface(self):
+        """isosurface object."""
+        from batoms.plugins.isosurface import Isosurface
+        if self._isosurface is not None:
+            return self._isosurface
+        isosurface = Isosurface(self.label, batoms=self)
+        self.isosurface = isosurface
+        return isosurface
+
+    @isosurface.setter
+    def isosurface(self, isosurface):
+        self._isosurface = isosurface
 
     @property
     def lattice_plane(self):
@@ -1582,16 +1609,22 @@ class Batoms(BaseCollection, ObjectGN):
     @property
     def ms(self):
         """ms object."""
-        from batoms.ms import MS
-        if self._ms is not None:
-            return self._ms
-        ms = MS(self.label, batoms=self)
-        self.ms = ms
-        return ms
+        deprecated('"ms" will be deprecated in the furture, please use "molecular_surface".')
+        return self.molecular_surface
 
-    @ms.setter
-    def ms(self, ms):
-        self._ms = ms
+    @property
+    def molecular_surface(self):
+        """molecular_surface object."""
+        from batoms.plugins.molecular_surface import MolecularSurface
+        if self._molecular_surface is not None:
+            return self._molecular_surface
+        molecular_surface = MolecularSurface(self.label, batoms=self)
+        self.molecular_surface = molecular_surface
+        return molecular_surface
+
+    @molecular_surface.setter
+    def molecular_surface(self, molecular_surface):
+        self._molecular_surface = molecular_surface
     
     @property
     def magres(self):
@@ -1621,32 +1654,6 @@ class Batoms(BaseCollection, ObjectGN):
     @cavity.setter
     def cavity(self, cavity):
         self._cavity = cavity
-
-    def get_arrays_with_boundary(self):
-        """
-        get arrays with boundary atoms
-        """
-        # arrays = self.arrays
-        arrays_b = None
-        if self._boundary is not None:
-            # arrays_b = {
-            #         'indices': np.arange(natom),
-            #         'species': arrays['species'],
-            #         'positions': arrays['positions'],
-            #         'offsets': np.zeros((natom, 3)),
-            #         }
-            arrays_b = self.boundary.boundary_data
-            # arrays_b['positions'] = np.append(arrays_b['positions'],
-            #             boundary_data['positions'], axis = 0)
-            # arrays_b['indices'] = np.append(arrays_b['indices'],
-            #             boundary_data['indices'])
-            # arrays_b['species'] = np.append(arrays_b['species'],
-            #             boundary_data['species'])
-            # arrays_b['offsets'] = np.append(arrays_b['offsets'],
-            #             boundary_data['offsets'], axis = 0)
-        else:
-            arrays_b = None
-        return arrays_b
 
     @property
     def render(self):
@@ -1705,7 +1712,7 @@ class Batoms(BaseCollection, ObjectGN):
 
     def draw(self, model_style=None):
         """
-        Draw atoms, bonds, polyhedra, .
+        Draw atoms, bond, polyhedra, .
 
         Parameters:
 
@@ -1718,68 +1725,73 @@ class Batoms(BaseCollection, ObjectGN):
         self.draw_ball_and_stick()
         self.draw_polyhedra()
         self.draw_wireframe()
-        if self.show_unit_cell:
-            self.cell.draw()
 
-    def draw_space_filling(self, scale=1.0):
-        mask = np.where(self.model_style_array == 0, True, False)
-        self.set_attribute_with_indices('scale', mask, scale)
+    def draw_space_filling(self):
+        # mask = np.where(self.model_style_array == 0, True, False)
+        # self.set_attribute_with_indices('scale', mask, self.scale)
+        self.boundary.update()
 
-    def draw_ball_and_stick(self, scale=0.4):
+
+    def draw_ball_and_stick(self):
         mask = np.where(self.model_style_array >= 1, True, False)
         if not mask.any():
-            from batoms.bond import default_bond_datas
-            self.bonds.set_arrays(default_bond_datas.copy())
+            from batoms.bond.bond import default_bond_datas
+            self.bond.set_arrays(default_bond_datas.copy())
             return
-        self.set_attribute_with_indices('scale', mask, scale)
-        self.bonds.hide = False
-        self.bonds.update()
+        # self.set_attribute_with_indices('scale', mask, self.scale)
+        self.bond.hide = False
+        self.boundary.hide = False
+        self.bond.update()
 
-    def draw_polyhedra(self, scale=0.4):
+    def draw_polyhedra(self):
         mask = np.where(self.model_style_array == 2, True, False)
         if not mask.any():
-            from batoms.polyhedra import default_polyhedra_datas
-            self.polyhedras.set_arrays(default_polyhedra_datas)
+            from batoms.polyhedra.polyhedra import default_polyhedra_datas
+            self.polyhedra.set_arrays(default_polyhedra_datas)
             return
-        self.polyhedras.update()
+        self.polyhedra.update()
         self.set_attribute_with_indices('show', mask, True)
         if self.polyhedra_style == 0:
-            self.set_attribute_with_indices('scale', mask, scale)
+            # self.set_attribute_with_indices('scale', mask, self.scale)
             self.boundary.hide = False
-            self.bonds.hide = False
-            self.bonds.search_bond.hide = False
-            # self.bonds.update()
+            self.bond.hide = False
+            self.bond.search_bond.hide = False
+            # self.bond.update()
         if self.polyhedra_style == 1:
-            # hide bonds
-            self.set_attribute_with_indices('scale', mask, scale)
-            self.bonds.hide = True
+            # only hide bond
+            # self.set_attribute_with_indices('scale', mask, self.scale)
+            self.bond.hide = True
+            # show atoms
+            if self.bond._search_bond is not None:
+                self.bond.search_bond.hide = False
+            self.boundary.hide = False
         elif self.polyhedra_style == 2:
-            # hide bonds and atoms, except center atoms
-            for b in self.bonds.setting:
+            # hide bond and atoms, except center atoms
+            for b in self.bond.settings:
                 if b.polyhedra:
                     mask1 = np.where(
                         self.attributes['species'] == b.species1, True, False)
-                    self.set_attribute_with_indices('scale', mask1, scale)
+                    self.set_attribute_with_indices('scale', mask1, self.scale)
                     mask[mask1] = False
             scale = 0
-            self.set_attribute_with_indices('scale', mask, scale)
-            self.boundary.hide = True
-            self.bonds.hide = True
-            self.bonds.search_bond.hide = True
+            # self.set_attribute_with_indices('scale', mask, self.scale)
+            # self.boundary.hide = True
+            self.bond.hide = True
+            self.bond.search_bond.hide = True
             # self.set_attribute_with_indices('show', mask, False)
         elif self.polyhedra_style == 3:
-            # hide all bonds and atoms
-            scale = 0
+            # hide all bond and atoms
+            scale = 0.0001
             self.set_attribute_with_indices('scale', mask, scale)
             self.boundary.hide = True
-            self.bonds.hide = True
-            self.bonds.search_bond.hide = True
+            self.bond.hide = True
+            self.bond.search_bond.hide = True
             # self.set_attribute_with_indices('show', mask, False)
 
     def draw_wireframe(self):
         mask = np.where(self.model_style_array == 3, True, False)
         # self.set_attribute_with_indices('show', mask, 0)
-        self.set_attribute_with_indices('scale', mask, 0.0001)
+        self.set_attribute_with_indices('scale', mask, self.scale)
         # self.update(mask)
 
     def as_ase(self, local=True, with_attribute=True):
@@ -1810,7 +1822,7 @@ class Batoms(BaseCollection, ObjectGN):
         else:
             return images
 
-    def as_pybel(self, export_bonds=False):
+    def as_pybel(self, export_bond=False):
         """Convert an Batoms object to an OBMol object.
 
         Returns:
@@ -1827,8 +1839,8 @@ class Batoms(BaseCollection, ObjectGN):
             a.SetVector(arrays['positions'][i][0],
                         arrays['positions'][i][1],
                         arrays['positions'][i][2])
-        if export_bonds:
-            bond_arrays = self.bonds.arrays
+        if export_bond:
+            bond_arrays = self.bond.arrays
             nbond = len(bond_arrays)
             for i in range(nbond):
                 mol.AddBond(int(bond_arrays['atoms_index1'][i]) + 1,
@@ -1939,20 +1951,19 @@ class Batoms(BaseCollection, ObjectGN):
         self.realize_instances = True
         objs = [self.obj]
         if with_cell:
-            self.cell.draw()
-            self.cell.obj_cylinder.select_set(True)
+            self.cell.obj.select_set(True)
         if with_bond:
-            self.bonds.realize_instances = True
-            objs.insert(0, self.bonds.obj)
+            self.bond.realize_instances = True
+            objs.insert(0, self.bond.obj)
         if with_boundary:
             self.boundary.realize_instances = True
             objs.insert(0, self.boundary.obj)
         if with_search_bond:
-            self.bonds.search_bond.realize_instances = True
-            objs.insert(0, self.bonds.search_bond.obj)
+            self.bond.search_bond.realize_instances = True
+            objs.insert(0, self.bond.search_bond.obj)
         if with_polyhedra:
-            self.polyhedras.realize_instances = True
-            objs.insert(0, self.polyhedras.obj)
+            self.polyhedra.realize_instances = True
+            objs.insert(0, self.polyhedra.obj)
         for obj in objs:
             bpy.context.view_layer.objects.active = obj
             bpy.ops.object.shape_key_remove(all=True)
@@ -1966,3 +1977,49 @@ class Batoms(BaseCollection, ObjectGN):
             bpy.ops.export_scene.fbx(filepath=filename, use_selection=True)
         else:
             raise('File format %s is not supported.' % filename)
+
+    @property
+    def crystal_view(self):
+        return self.get_crystal_view()
+
+    @crystal_view.setter
+    def crystal_view(self, state):
+        self.set_crystal_view(state)
+
+    def get_crystal_view(self):
+        return self.coll.batoms.crystal_view
+
+    def set_crystal_view(self, crystal_view):
+        #
+        self.coll.batoms.crystal_view = crystal_view
+        if crystal_view:
+            self.boundary = 0.01
+            self.bond.show_search = True
+            self.bond.update()
+            self.polyhedra.update()
+        else:
+            self.boundary = 0
+            self.bond.show_search = False
+            self.bond.update()
+            self.polyhedra.update()
+    
+    @property
+    def segments(self):
+        return self.get_segments()
+
+    @segments.setter
+    def segments(self, segments):
+        self.set_segments(segments)
+
+    def get_segments(self):
+        return self.coll.batoms.segments[:]
+
+    def set_segments(self, segments):
+        if isinstance(segments, int):
+            segments = [segments, segments]
+            # raise Exception('Segments should be int!')
+        species = self._species
+        self.coll.batoms.segments = segments
+        for name, sp in species.items():
+            sp.data.segments = segments
+            sp.update(sp.data.as_dict())

@@ -62,10 +62,25 @@ class SearchBond(ObjectGN):
         ObjectGN.__init__(self, label, name)
         if search_bond_datas is not None:
             self.build_object(search_bond_datas)
-        else:
-            self.load(label)
+        elif self.loadable():
             self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
-
+        else:
+            self.build_object(default_search_bond_datas)
+    
+    def loadable(self):
+        """Check loadable or not
+        """
+        # object exist
+        obj = bpy.data.objects.get(self.obj_name)
+        if obj is None:
+            return False
+        # batoms exist, and flag is True
+        # coll = bpy.data.collections.get(self.label)
+        # if coll is None:
+            # return False
+        # return coll.Bbond.flag
+        return True
+        
     def build_object(self, datas, attributes={}):
         """
         build child object and add it to main objects.
@@ -106,7 +121,7 @@ class SearchBond(ObjectGN):
         self.batoms.coll.objects.link(obj)
         obj.batoms.type = 'BOND'
         obj.batoms.label = self.batoms.label
-        obj.batoms.bond.label = self.batoms.label
+        obj.Bbond.label = self.batoms.label
         obj.parent = self.batoms.obj
         #
         name = '%s_search_bond_offset' % self.label
@@ -117,7 +132,7 @@ class SearchBond(ObjectGN):
         obj = bpy.data.objects.new(name, mesh)
         self.batoms.coll.objects.link(obj)
         obj.hide_set(True)
-        obj.parent = self.batoms.obj
+        obj.parent = self.obj
         bpy.context.view_layer.update()
         self.set_attributes(attributes)
         self.build_geometry_node()
@@ -125,6 +140,7 @@ class SearchBond(ObjectGN):
         # print('boundary: build_object: {0:10.2f} s'.format(time() - tstart))
 
     def update(self, bondlist, mollists, moldatas, arrays, cell):
+        self.hide = False
         search_bond_data = self.calc_search_bond_data(
             bondlist, mollists, moldatas, arrays, cell)
         self.set_arrays(search_bond_data)
@@ -157,9 +173,7 @@ class SearchBond(ObjectGN):
         gn.node_group.links.new(
             JoinGeometry.outputs['Geometry'], GroupOutput.inputs['Geometry'])
         # ------------------------------------------------------------------
-        # calculate bond vector, length, rotation based on the index
-        # Get four positions from batoms, bond and the second bond
-        # for high order bond plane
+        # transform postions of batoms to boundary
         ObjectBatoms = get_nodes_by_name(gn.node_group.nodes,
                                          '%s_ObjectBatoms' % self.label,
                                          'GeometryNodeObjectInfo')
@@ -215,6 +229,27 @@ class SearchBond(ObjectGN):
             GroupInput.outputs['Geometry'], SetPosition.inputs['Geometry'])
         gn.node_group.links.new(
             VectorAdd.outputs[0], SetPosition.inputs['Position'])
+        #
+        # ------------------------------------------------------------------
+        # transform scale of batoms to boundary
+        if bpy.app.version_string >= '3.2.0':
+            ScaleBatoms = get_nodes_by_name(gn.node_group.nodes,
+                                            '%s_ScaleBatoms' % (self.label),
+                                            'GeometryNodeInputNamedAttribute')
+            # need to be "FLOAT_VECTOR", because scale is "FLOAT_VECTOR"
+            ScaleBatoms.data_type = "FLOAT_VECTOR"
+            ScaleBatoms.inputs[0].default_value = "scale"
+            TransferScale = get_nodes_by_name(gn.node_group.nodes,
+                                            '%s_TransferScale' % (self.label),
+                                            'GeometryNodeAttributeTransfer')
+            TransferScale.mapping = 'INDEX'
+            TransferScale.data_type = 'FLOAT_VECTOR'
+            gn.node_group.links.new(ObjectBatoms.outputs['Geometry'],
+                                    TransferScale.inputs[0])
+            gn.node_group.links.new(ScaleBatoms.outputs['Attribute'],
+                                    TransferScale.inputs['Attribute'])
+            gn.node_group.links.new(GroupInput.outputs[1],
+                                    TransferScale.inputs['Index'])
 
     def add_geometry_node(self, spname):
         """
@@ -255,7 +290,15 @@ class SearchBond(ObjectGN):
                                 CompareSpecies.inputs[0])
         gn.node_group.links.new(GroupInput.outputs[3],
                                 BoolShow.inputs[0])
-        gn.node_group.links.new(GroupInput.outputs[6],
+        # transfer scale
+        if bpy.app.version_string >= '3.2.0':
+            TransferScale = get_nodes_by_name(gn.node_group.nodes,
+                                            '%s_TransferScale' % (self.label),
+                                            'GeometryNodeAttributeTransfer')
+            gn.node_group.links.new(
+                TransferScale.outputs[0], InstanceOnPoint.inputs['Scale'])
+        else:
+            gn.node_group.links.new(GroupInput.outputs[6],
                                 InstanceOnPoint.inputs['Scale'])
         gn.node_group.links.new(CompareSpecies.outputs[0],
                                 BoolShow.inputs[1])
@@ -266,6 +309,22 @@ class SearchBond(ObjectGN):
         gn.node_group.links.new(InstanceOnPoint.outputs['Instances'],
                                 JoinGeometry.inputs['Geometry'])
 
+    def update_geometry_node_instancer(self, spname, instancer):
+        """When instances are re-build, we need also update 
+        the geometry node.
+
+        Args:
+            spname (str): name of the species
+        """
+        from batoms.utils.butils import get_nodes_by_name
+        # update  instancers
+        ObjectInfo = get_nodes_by_name(self.gnodes.node_group.nodes,
+                                       'ObjectInfo_%s_%s' % (
+                                           self.label, spname),
+                                       'GeometryNodeObjectInfo')
+        ObjectInfo.inputs['Object'].default_value = instancer
+        logger.debug('update boundary instancer: {}'.format(spname))
+        
     @property
     def obj_o(self):
         return self.get_obj_o()
@@ -394,7 +453,7 @@ class SearchBond(ObjectGN):
         return self.get_bondlists()
 
     def get_bondlists(self):
-        bondlists = self.batoms.bonds.arrays
+        bondlists = self.batoms.bond.arrays
         return bondlists
 
     def get_frames(self):

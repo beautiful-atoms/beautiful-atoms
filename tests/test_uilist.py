@@ -6,6 +6,5 @@ import pytest
 
 
 
-
-if __name__ == "__main__":
+if __name__=="__main__":
     print("\n UIList: All pass! \n")

@@ -42,7 +42,7 @@ class SliceBonds(childObjectGN):
         order = self.get_attribute('order')
         style = self.get_attribute('style')
         # name = '%s-%s' % (sp1, sp2)
-        sp = self.parent.setting[name[0]].as_dict()
+        sp = self.parent.settings[name[0]].as_dict()
         sp.update({'order': order[0],
                    'style': style[0]})
         return sp
@@ -70,7 +70,7 @@ class SliceBonds(childObjectGN):
         # if order not exist, add one
         sp = self.species
         sp['order'] = value
-        self.parent.setting.build_instancer(sp)
+        self.parent.settings.build_instancer(sp)
         self.parent.add_geometry_node(sp)
 
     @property
@@ -84,7 +84,7 @@ class SliceBonds(childObjectGN):
         # if stule not exist, add one
         sp = self.species
         sp['style'] = value
-        self.parent.setting.build_instancer(sp)
+        self.parent.settings.build_instancer(sp)
         self.parent.add_geometry_node(sp)
 
     def secondBond(self):

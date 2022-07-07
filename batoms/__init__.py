@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Batoms toolbar",
     "author": "Xing Wang",
-    "version": (2, 1, 0),
+    "version": (2, 2, 0),
     "blender": (3, 0, 0),
     "location": "File -> Import -> Batoms (xyz, cif, pdb, ...)",
     "description": """Python module for drawing and
@@ -27,7 +27,7 @@ from . import (
     logger,
     preferences,
     plugins,
-    custom_property,
+    internal_data,
     pip_dependencies,
     ops,
     gui,
@@ -44,7 +44,7 @@ def register():
     pip_dependencies.register_class()
     preferences.register_class()
     # class
-    custom_property.register_class()
+    internal_data.register_class()
     # class
     ops.register_class()
     gui.register_class()
@@ -68,7 +68,7 @@ def unregister():
     # dependencies
     pip_dependencies.unregister_class()
     # class
-    custom_property.unregister_class()
+    internal_data.unregister_class()
     ops.unregister_class()
     gui.unregister_class()
     # manual

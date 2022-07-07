@@ -1,3 +1,4 @@
+import bpy
 from batoms.ribbon.profile import ellipse, rectangle
 from batoms.base.collection import Setting
 from time import time
@@ -83,7 +84,7 @@ class Protein():
             residues[i].plane = plane
         # init sheets
         sheets = {}
-        for sheet in self.sheetsetting.collection:
+        for sheet in self.sheetsetting.bpy_setting:
             sheet1 = Sheet(sheet.name, 1, sheet.startChain,
                            sheet.endChain,
                            sheet.startResi,
@@ -92,7 +93,7 @@ class Protein():
             sheets[sheet.name] = sheet1
         # init helixs
         helixs = {}
-        for helix in self.helixsetting.collection:
+        for helix in self.helixsetting.bpy_setting:
             helix1 = Helix(helix.name, 2, helix.startChain,
                            helix.endChain,
                            helix.startResi,
@@ -413,9 +414,17 @@ class SheetSetting(Setting):
                  ) -> None:
         Setting.__init__(self, label, coll_name=label)
         self.label = label
-        self.name = 'bsheet'
+        self.name = 'Bprotein'
         self.batoms = batoms
         self.sheet_datas = {}
+
+    def get_bpy_setting(self):
+        if self.coll_name:
+            coll = bpy.data.collections.get(self.coll_name)
+            data = getattr(coll, self.name)
+        else:
+            raise KeyError("The collection property {} not exist!".format(self.name))
+        return data.settings_sheet
 
     @property
     def show(self):
@@ -443,10 +452,17 @@ class HelixSetting(Setting):
                  ) -> None:
         Setting.__init__(self, label, coll_name=label)
         self.label = label
-        self.name = 'bhelix'
+        self.name = 'Bprotein'
         self.batoms = batoms
         self.helix_datas = {}
 
+    def get_bpy_setting(self):
+        if self.coll_name:
+            coll = bpy.data.collections.get(self.coll_name)
+            data = getattr(coll, self.name)
+        else:
+            raise KeyError("The collection property {} not exist!".format(self.name))
+        return data.settings_helix
 
 def GetPeptidePlane(resi1, resi2, positions):
     """

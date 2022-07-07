@@ -3,30 +3,6 @@ from batoms import Batoms
 import numpy as np
 import pytest
 
-def test_batoms():
-    """Batoms panel"""
-    from batoms.batoms import Batoms
-    bpy.ops.batoms.delete()
-    bpy.ops.batoms.molecule_add()
-    ch4 = Batoms('CH4')
-    ch4.obj.select_set(True)
-    # model_style
-    assert bpy.context.scene.batoms.batoms.model_style.upper() == "BALL-AND-STICK"
-    bpy.context.scene.batoms.batoms.model_style = "Space-filling"
-    assert ch4.model_style == 0
-    # radius_style
-    assert bpy.context.scene.batoms.batoms.radius_style.upper() == "COVALENT"
-    bpy.context.scene.batoms.batoms.radius_style = "VDW"
-    assert ch4.radius_style == '1'
-    # color_style
-    assert bpy.context.scene.batoms.batoms.color_style.upper() == "JMOL"
-    bpy.context.scene.batoms.batoms.color_style = "CPK"
-    assert ch4.color_style == '2'
-    # show
-    assert bpy.context.scene.batoms.batoms.show == True
-    bpy.context.scene.batoms.batoms.show = False
-    assert ch4.show[0] == False
-
 def test_cell():
     """Cell panel"""
     from batoms.batoms import Batoms
@@ -93,19 +69,18 @@ def test_bond():
     bpy.ops.batoms.delete()
     bpy.ops.batoms.molecule_add()
     ch4 = Batoms('CH4')
-    ch4.bonds.obj.data.vertices.foreach_set('select', [1, 0, 0, 0, 0])
-    ch4.bonds[0].order = 2
+    ch4.bond.obj.data.vertices.foreach_set('select', [1, 0, 0, 0, 0])
+    ch4.bond[0].order = 2
     # order
     ch4.obj.select_set(False)
-    bpy.context.view_layer.objects.active = ch4.bonds.obj
-    assert np.isclose(bpy.context.scene.batoms.bond.order, ch4.bonds[0].order)
-    ch4.bonds.obj.data.vertices.foreach_set('select', [1, 0, 0, 0])
+    bpy.context.view_layer.objects.active = ch4.bond.obj
+    assert np.isclose(bpy.context.scene.batoms.bond.order, ch4.bond[0].order)
+    ch4.bond.obj.data.vertices.foreach_set('select', [1, 0, 0, 0])
     bpy.context.scene.batoms.bond.order = 1
-    assert np.isclose(ch4.bonds[0].order, bpy.context.scene.batoms.bond.order)
+    assert np.isclose(ch4.bond[0].order, bpy.context.scene.batoms.bond.order)
 
 
 if __name__ == "__main__":
-    test_batoms()
     test_cell()
     test_render()
     test_batom()

@@ -114,6 +114,8 @@ class Setting():
 
     Setting has "add", "remove", "find" and "extend" operators.
 
+    Note: In blender, the colleciton properties is a list.
+    Here, we build our Setting as a dict.
     
     Parameters:
 
@@ -127,17 +129,6 @@ class Setting():
         self.name = 'base'
         self.coll_name = coll_name
         self.obj_name = obj_name
-
-    def get_data(self):
-        """Return a dict of all data in the collection.
-
-        Returns:
-            dict: dict of properties.
-        """
-        data = {}
-        for b in self.collection:
-            data[b.name] = b
-        return data
 
     @property
     def coll(self):
@@ -171,49 +162,99 @@ class Setting():
         return obj
 
     @property
-    def collection(self):
-        """Collection properties
+    def bpy_setting(self):
+        """bpy_setting properties
 
         Returns:
-            bpy.props.CollectionProperty: colleciton of the properties
+            bpy.props.bpy_settingProperty: colleciton of the properties
         """
-        return self.get_collection()
-
-    def get_collection(self):
-        if self.coll_name:
-            coll = bpy.data.collections.get(self.coll_name)
-            collection = getattr(coll.batoms, self.name)
-        elif self.obj_name:
-            obj = bpy.data.objects.get(self.obj_name)
-            collection = getattr(obj.batoms, self.name)
-        else:
-            raise KeyError("The collection property {} not exist!".format(self.name))
-        return collection
+        return self.get_bpy_setting()
 
     @property
-    def data(self):
-        return self.get_data()
+    def bpy_data(self):
+        """Get internal data
 
-    def __getitem__(self, index):
-        name = tuple2string(index)
-        item = self.find(name)
+        Internal data are data attached to a Blender object or collection.
+        Raises:
+            KeyError: _description_
+
+        Returns:
+            _type_: _description_
+        """
+        if self.coll_name:
+            coll = bpy.data.collections.get(self.coll_name)
+            data = getattr(coll, self.name)
+        elif self.obj_name:
+            obj = bpy.data.objects.get(self.obj_name)
+            data = getattr(obj, self.name)
+        else:
+            raise KeyError("The collection property {} not exist!".format(self.name))
+        return data
+
+    @property
+    def ui_list_index(self):
+        return self.get_ui_list_index()
+    
+    def get_ui_list_index(self):
+        return self.bpy_data.ui_list_index
+    
+    @ui_list_index.setter
+    def ui_list_index(self, value):
+        self.set_ui_list_index(value)
+    
+    def set_ui_list_index(self, value):
+        self.bpy_data.ui_list_index = value
+
+    @property
+    def bpy_setting(self):
+        return self.get_bpy_setting()
+
+    def get_bpy_setting(self):
+        return self.bpy_data.settings
+
+    def keys(self):
+        return self.as_dict().keys()
+    
+    def values(self):
+        return self.as_dict().values()
+    
+    def items(self):
+        return self.as_dict().items()
+
+    def as_dict(self):
+        """Return a dict of all data in the collection.
+
+        Returns:
+            dict: dict of properties.
+        """
+        data = {}
+        for b in self.bpy_setting:
+            data[b.name] = b
+        return data
+
+    def __getitem__(self, key):
+        item = self.find(key)
         if item is None:
-            raise Exception('%s not in %s setting' % (name, self.name))
+            raise Exception('%s not in %s setting' % (key, self.name))
         return item
 
-    def __setitem__(self, index, setdict):
+    def __setitem__(self, key, setdict):
         """
         Set properties
         """
-        name = tuple2string(index)
-        subset = self.find(name)
+        subset = self.find(key)
         if subset is None:
-            subset = self.collection.add()
-        subset.name = name
+            subset = self.bpy_setting.add()
+            name = tuple2string(key)
+            subset.name = name
+            self.ui_list_index = len(self) - 1
         for key, value in setdict.items():
             setattr(subset, key, value)
         subset.label = self.label
         subset.flag = True
+
+    def __delitem__(self, key):
+        self.remove(key)
 
     def from_dict(self, datas):
         if isinstance(datas, dict):
@@ -221,7 +262,7 @@ class Setting():
         for data in datas:
             subset = self.find(data['name'])
             if subset is None:
-                subset = self.collection.add()
+                subset = self.bpy_setting.add()
             for key, value in data.items():
                 setattr(subset, key, value)
             subset.label = self.label
@@ -234,24 +275,31 @@ class Setting():
             setting[key] = b.as_dict()
         return setting
 
-    def remove(self, index):
-        """
-        index: list of tuple
-        """
-        if isinstance(index, (str, int, float)):
-            index = [(index)]
-        if isinstance(index[0], (str, int, float)):
-            index = [index]
-        for key in index:
-            name = tuple2string(key)
-            i = self.collection.find(name)
-            if i != -1:
-                self.collection.remove(i)
-            else:
-                raise Exception('%s is not in %s' % (name, self.name))
+    def add(self, key):
+        """Add default item
 
-    def __delitem__(self, index):
-        self.remove(index)
+        Args:
+            key (tuple, list): _description_
+        """
+        self[key] = {}
+
+    def remove(self, key):
+        """Remove item
+
+        Args:
+            key (tuple, list): _description_
+
+        Raises:
+            Exception: _description_
+        """
+        item = self.find(key)
+        if item is not None:
+            i = self.bpy_setting.find(item.name)
+            self.bpy_setting.remove(i)
+            self.ui_list_index = min(max(0, self.ui_list_index - 1),
+                                                len(self) - 1)
+        else:
+            raise Exception('%s is not in %s' % (key, self.name))
 
     def __add__(self, other):
         self += other
@@ -267,25 +315,41 @@ class Setting():
         return self
 
     def __iter__(self):
-        item = self.collection
+        item = self.bpy_setting
         for i in range(len(item)):
             yield item[i]
 
     def __len__(self):
-        return len(self.collection)
+        return len(self.bpy_setting)
 
     def find(self, name):
-        i = self.collection.find(str(name))
+        """Wrapper function for self.bpy_setting.find().
+
+        Note: In blender, the colleciton properties is a list.
+        self.bpy_setting.find will return the index of a item.
+        Here, we build our Setting as a dict.
+        this find will return the item itself.
+
+        Args:
+            name (str, tuple, list): _description_
+
+        Returns:
+            Setting: setting object
+        """
+        if isinstance(name, (tuple, list)):
+            name = tuple2string(name)
+        #
+        i = self.bpy_setting.find(str(name))
         if i == -1:
             # print('%s is not in %s'%(name, self.name))
             return None
         else:
-            return self.collection[i]
+            return self.bpy_setting[i]
 
     def __repr__(self) -> str:
         s = '-'*60 + '\n'
         s = 'Name\n'
-        for b in self.collection:
+        for b in self.bpy_setting:
             s += '{0:10s}  \n'.format(
                 b.name)
         s += '-'*60 + '\n'

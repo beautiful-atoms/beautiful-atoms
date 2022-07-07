@@ -6,7 +6,7 @@ import bpy
 from time import time
 import numpy as np
 from batoms.base.object import BaseObject
-from .crystal_shape_setting import CrystalShapeSettings
+from .setting import CrystalShapeSettings
 from batoms.draw import draw_cylinder, draw_surface_from_vertices
 import logging
 # logger = logging.getLogger('batoms')
@@ -30,7 +30,7 @@ class CrystalShape(BaseObject):
         self.label = label
         name = 'plane'
         BaseObject.__init__(self, label, name)
-        self.setting = CrystalShapeSettings(
+        self.settings = CrystalShapeSettings(
             self.label,  parent=self)
 
     def build_materials(self, name, color, node_inputs=None,
@@ -55,14 +55,14 @@ class CrystalShape(BaseObject):
         no: Int
             spacegroup number
         """
-        self.setting.get_symmetry_indices()
+        self.settings.get_symmetry_indices()
         planes = {}
-        for p in self.setting:
-            normal = np.dot(p.indices, bcell.reciprocal)
+        for p in self.settings:
+            normal = np.dot(list(p.indices), bcell.reciprocal)
             normal = normal/np.linalg.norm(normal)
             point = p.distance*normal
             planes[p.name] = {
-                'indices': p.indices,
+                'indices': list(p.indices),
                 'normal': normal,
                 'point': point,
                 'vertices': [],
@@ -85,7 +85,7 @@ class CrystalShape(BaseObject):
                         planes[keys[k]]['vertices'].append(point)
         new_planes = {}
         for name, plane in planes.items():
-            p = self.setting[plane['indices']]
+            p = self.settings[plane['indices']]
             vertices, edges, faces = faces_from_vertices(
                 plane['vertices'], plane['normal'])
             if len(vertices) >= 3:
@@ -113,7 +113,7 @@ class CrystalShape(BaseObject):
                                         'width': p.width,
                                         'battr_inputs': {},
                                         },
-                     'battr_inputs': {'plane': p.as_dict()},
+                     'battr_inputs': {'Bcrystalshape': p.as_dict()},
                      'show_edge': p.show_edge,
                      'slicing': p.slicing,
                      'boundary': p.boundary,
@@ -169,6 +169,12 @@ class CrystalShape(BaseObject):
                 obj.batoms.type = 'CRYSTALSHAPE'
                 obj.batoms.label = self.batoms.label
 
+    @property
+    def setting(self):
+        from batoms.utils import deprecated
+        """setting object."""
+        deprecated('"setting" will be deprecated in the furture, please use "settings".')
+        return self.settings
 
 def save_image(data, filename, interpolation='bicubic'):
     """

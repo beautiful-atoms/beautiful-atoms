@@ -58,6 +58,7 @@ def draw_cylinder(
     mesh.update()
     mesh.polygons.foreach_set('use_smooth', [True]*len(mesh.polygons))
     obj.data = mesh
+    obj.data.materials.append(material)
     #
     for name, inputs in datas['battr_inputs'].items():
         battr = getattr(obj, name)
@@ -87,7 +88,7 @@ def draw_surface_from_vertices(name,
     obj.data = mesh
     #
     for name, inputs in datas['battr_inputs'].items():
-        battr = getattr(obj.batoms, name)
+        battr = getattr(obj, name)
         for key, value in inputs.items():
             setattr(battr, key, value)
     bpy.ops.object.shade_smooth()

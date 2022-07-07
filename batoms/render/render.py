@@ -66,12 +66,12 @@ class Render(BaseCollection):
         coll = bpy.data.collections.get(self.coll_name)
         # load from collection
         self.output = output
-        if coll and coll.batoms.brender.flag:
+        if coll and coll.Brender.flag:
             self.lights = Lights(label)
             self.camera = Camera(label)
-            # coll.batoms.brender.viewport = viewport
-            # coll.batoms.brender.animation = animation
-            # coll.batoms.brender.run_render = run_render
+            # coll.Brender.viewport = viewport
+            # coll.Brender.animation = animation
+            # coll.Brender.run_render = run_render
         else:
             self.set_collection(viewport, animation=animation,
                                 run_render=run_render)
@@ -99,10 +99,10 @@ class Render(BaseCollection):
             subcoll = bpy.data.collections.new(
                 '%s_%s' % (self.label, sub_name))
             coll.children.link(subcoll)
-        coll.batoms.brender.flag = True
-        coll.batoms.brender.viewport = viewport
-        coll.batoms.brender.animation = animation
-        coll.batoms.brender.run_render = run_render
+        coll.Brender.flag = True
+        coll.Brender.viewport = viewport
+        coll.Brender.animation = animation
+        coll.Brender.run_render = run_render
 
     def set(self, **kwargs):
         """
@@ -147,35 +147,35 @@ class Render(BaseCollection):
 
     @property
     def viewport(self):
-        return np.array(self.coll.batoms.brender.viewport)
+        return np.array(self.coll.Brender.viewport)
 
     @viewport.setter
     def viewport(self, viewport):
         if viewport is not None:
             # viewport = viewport/np.linalg.norm(viewport)
-            self.coll.batoms.brender.viewport = viewport
+            self.coll.Brender.viewport = viewport
             self.update_camera()
             self.update_light()
 
     @property
     def distance(self):
-        return self.coll.batoms.brender.distance
+        return self.coll.Brender.distance
 
     @distance.setter
     def distance(self, distance):
         if distance is not None:
-            self.coll.batoms.brender.distance = distance
+            self.coll.Brender.distance = distance
             self.update_camera()
             self.update_light()
 
     @property
     def center(self):
-        return np.array(self.coll.batoms.brender.center)
+        return np.array(self.coll.Brender.center)
 
     @center.setter
     def center(self, center):
         if center is not None:
-            self.coll.batoms.brender.center = center
+            self.coll.Brender.center = center
             self.update_camera()
             self.update_light()
 
@@ -188,10 +188,10 @@ class Render(BaseCollection):
         self.set_gpu(gpu)
 
     def get_gpu(self):
-        return self.coll.batoms.brender.gpu
+        return self.coll.Brender.gpu
 
     def set_gpu(self, gpu):
-        self.coll.batoms.brender.gpu = gpu
+        self.coll.Brender.gpu = gpu
         if gpu:
             self.scene.cycles.device = 'GPU'
             # bpy.context.preferences.addons["cycles"].preferences.get_devices()
@@ -208,19 +208,19 @@ class Render(BaseCollection):
 
     @property
     def run_render(self):
-        return self.coll.batoms.brender.run_render
+        return self.coll.Brender.run_render
 
     @run_render.setter
     def run_render(self, run_render):
-        self.coll.batoms.brender.run_render = run_render
+        self.coll.Brender.run_render = run_render
     
     @property
     def animation(self):
-        return self.coll.batoms.brender.animation
+        return self.coll.Brender.animation
 
     @animation.setter
     def animation(self, animation):
-        self.coll.batoms.brender.animation = animation
+        self.coll.Brender.animation = animation
 
     @property
     def studiolight(self):
@@ -369,7 +369,7 @@ class Render(BaseCollection):
             self.scene.frame_end = self.batoms.nframe
             self.scene.render.filepath = '{0}'.format(self.output)
             bpy.ops.render.render(
-                write_still=1, animation=self.coll.batoms.brender.animation)
+                write_still=1, animation=self.coll.Brender.animation)
         else:
             print('saving to {0}.blend'.format(self.output))
             bpy.ops.wm.save_as_mainfile('EXEC_SCREEN',

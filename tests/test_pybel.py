@@ -31,8 +31,8 @@ def test_pybel_bond_order():
     bpy.ops.batoms.molecule_add(label = 'c6h6', formula = 'C6H6')
     c6h6 = Batoms('c6h6')
     c6h6.model_style = 1
-    c6h6.bonds.bond_order_auto_set()
-    assert c6h6.bonds.arrays['order'][0] == 2
+    c6h6.bond.bond_order_auto_set()
+    assert c6h6.bond.arrays['order'][0] == 2
 
 if __name__ == "__main__":
     test_pybel_smiles()
