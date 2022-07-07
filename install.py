@@ -522,13 +522,8 @@ def _replace_conda_env(python_version=None, numpy_version=None):
 
 def _ensure_mamba(conda_vars):
     """Ensure mamba is installed at the base conda environment
-    Search sequence:
-    1. mamba in $PATH
-    2. mamba in given env
-    if not found, install mamba in the env and return its binary path
+    Note: if mamba is not avaivable or install to base is not possible, let user use conda instead
     """
-    # 1. Check mamba in current $PATH
-    # 2. Check mamba in given env
     proc = _run_process(
         [conda_vars["CONDA_EXE"], "list", "-n", "base", "mamba"], capture_output=True
     )
@@ -544,13 +539,25 @@ def _ensure_mamba(conda_vars):
             "conda-forge",
             "mamba",
         ]
-        _run_process(commands)
+        try:
+            _run_process(commands)
+        except RuntimeError as e:
+            msg = ("Failed to install mamba install conda base environment. "
+            "You probably don't have write permission. \n"
+            "Please consider add --no-mamba to install.py"
+            )
+            cprint(msg,
+            color="ERROR")
+            raise RuntimeError(msg) from e
     # Get the mamba binary in given env
     output = _run_process(
-        [conda_vars["CONDA_EXE"], "run", "-n", "base", "which", "mamba"],
+        [conda_vars["CONDA_EXE"], "run", "-n", "base", "command", "-v", "mamba"],
         capture_output=True,
     ).stdout.decode("utf8")
     if "ERROR" in output:
+        msg = ("Cannot find mamba in your conda base environment"
+            "Please consider add --no-mamba to install.py"
+            )
         raise RuntimeError(output)
     return output.strip()
 
@@ -768,7 +775,7 @@ def _find_conda_bin_path(env_name, conda_vars):
 
     output = (
         _run_process(
-            [conda_vars["CONDA_EXE"], "run", "-n", env_name, "which", "python"],
+            [conda_vars["CONDA_EXE"], "run", "-n", env_name, "command", "-v", "python"],
             capture_output=True,
         )
         .stdout.decode("utf8")
