@@ -44,7 +44,9 @@ jobs:
           echo Currently install in $(pwd)
           echo Use blender root ${BLENDER_ROOT}
           $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT}
+          command -v batomspy >/dev/null 2>&1 || { echo >&2 "No batomspy installed"; exit 1; }
           $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
+          ! ( command -v batomspy >/dev/null 2>&1 ) || { echo >&2 "batomspy not removed"; exit 1; }
       - name: Run installation script with startup and preferences
         run: |
           $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT}  --use-startup --use-preferences
@@ -104,7 +106,9 @@ jobs:
           echo Currently install in $(pwd)
           echo Use blender root ${BLENDER_ROOT}
           $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT}
+          command -v batomspy >/dev/null 2>&1 || { echo >&2 "No batomspy installed"; exit 1; }
           $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
+          ! ( command -v batomspy >/dev/null 2>&1 ) || { echo >&2 "batomspy not removed"; exit 1; }
       - name: Run installation and uninstallation script with auto path infer
         run: |
           $CONDA_PYTHON_EXE install.py
