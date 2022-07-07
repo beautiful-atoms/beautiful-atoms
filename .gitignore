@@ -142,6 +142,7 @@ dmypy.json
 *.obj
 *.mtl
 *.fbx
+*.txt
 
 #test/
 .vscode/*
@@ -155,4 +156,6 @@ tests/test.blend*
 archive//example.py
 example.py
 Untitled.ipynb
-Miniconda3-latest-Linux-x86_64.sh
+Miniconda3-*.sh
+*blend
+archive/

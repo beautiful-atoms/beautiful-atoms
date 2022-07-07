@@ -100,6 +100,9 @@ class Species(BaseObject):
         if shape.upper() == 'METABALL':
             bpy.ops.object.metaball_add(type='BALL', location=[0, 0, 0])
         obj = bpy.context.view_layer.objects.active
+        # In the geometry node, a new scale will be add to the instance
+        # Here we use a small value to hide the instance from preview
+        obj.scale = [0.001, 0.001, 0.001]
         obj.name = name
         obj.data.name = name
         obj.batoms.atom.radius = radius
