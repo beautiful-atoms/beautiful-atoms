@@ -25,6 +25,7 @@ import tempfile
 from pathlib import Path
 from distutils.version import LooseVersion
 from threading import local
+import stat
 
 # TODO: allow version control
 # TODO: windows privilege issue
@@ -127,6 +128,26 @@ print('start setting startup')
 import bpy
 bpy.ops.batoms.use_batoms_startup()
 print('Successfully setting preference.')
+"""
+
+# wrapper for blender script.
+# Replace the value {blender_bin} at installation runtime
+BATOMSPY_SH = """#!/bin/sh
+# Usage:
+# blenderpy script.py [options]
+if [ "$#" -eq  "0" ]
+then
+    {blender_bin} -b --python-console
+else
+    {blender_bin} -b --python-exit-code 1 -P $1 ${{@:2}}
+fi
+"""
+
+BATOMSPY_TEST = """#!/usr/bin/env batomspy
+import bpy
+from batoms import Batoms
+bpy.ops.batoms.molecule_add()
+ch4 = Batoms(label='CH4')
 """
 
 # The directory to move factory python from conda
@@ -740,6 +761,23 @@ def _pip_uninstall(blender_py, conda_vars):
     return
 
 
+def _find_conda_bin_path(env_name, conda_vars):
+    """Return the path of binary search directory ($PATH) of the given conda env"""
+    if env_name is None:
+        env_name = conda_vars["CONDA_DEFAULT_ENV"]
+
+    output = (
+        _run_process(
+            [conda_vars["CONDA_EXE"], "run", "-n", env_name, "which", "python"],
+            capture_output=True,
+        )
+        .stdout.decode("utf8")
+        .strip()
+    )
+    bindir = Path(output).parent.resolve()
+    return bindir
+
+
 def install(parameters):
     """Link current conda environment to blender's python root
     Copy batoms plugin under repo_path to plugin directory
@@ -949,11 +987,23 @@ def install(parameters):
         cprint(f"Plugin copied to {plugin_path_target.as_posix()}.", color="OKGREEN")
     _blender_enable_plugin(blender_bin)
     _blender_test_plugin(local_parameters)
-    #
+
     if local_parameters["use_startup"]:
         _blender_set_startup(blender_bin)
     if local_parameters["use_preferences"]:
         _blender_set_preferences(blender_bin)
+
+    # Add the batomspy script
+    bindir = _find_conda_bin_path(
+        env_name=local_parameters["custom_conda_env"], conda_vars=conda_vars
+    )
+    print(f"Binary directory at {bindir}")
+    script_path = bindir / "batomspy"
+    with open(script_path, "w") as fd:
+        content = BATOMSPY_SH.format(blender_bin=blender_bin.as_posix())
+        fd.write(content)
+    os.chmod(script_path, 0o755)
+    print(f"Script written to {script_path}")
 
     cprint(
         (
@@ -1054,6 +1104,15 @@ def uninstall(parameters):
         ).format(env_pref=conda_vars["CONDA_PREFIX"]),
         color="OKGREEN",
     )
+    # Remove the script
+    bindir = _find_conda_bin_path(
+        env_name=local_parameters["custom_conda_env"], conda_vars=conda_vars
+    )
+    print(f"Binary directory at {bindir}")
+    script_path = bindir / "batomspy"
+    if script_path.is_file():
+        os.remove(script_path)
+    print(f"Removed {script_path}")
     return
 
 
