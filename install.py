@@ -551,7 +551,7 @@ def _ensure_mamba(conda_vars):
             raise RuntimeError(msg) from e
     # Get the mamba binary in given env
     output = _run_process(
-        [conda_vars["CONDA_EXE"], "run", "-n", "base", "command", "-v", "mamba"],
+        [conda_vars["CONDA_EXE"], "run", "-n", "base", "which", "mamba"],
         capture_output=True,
     ).stdout.decode("utf8")
     if "ERROR" in output:
@@ -775,7 +775,7 @@ def _find_conda_bin_path(env_name, conda_vars):
 
     output = (
         _run_process(
-            [conda_vars["CONDA_EXE"], "run", "-n", env_name, "command", "-v", "python"],
+            [conda_vars["CONDA_EXE"], "run", "-n", env_name, "which", "python"],
             capture_output=True,
         )
         .stdout.decode("utf8")
