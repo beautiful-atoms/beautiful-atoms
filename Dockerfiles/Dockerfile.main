@@ -26,7 +26,8 @@ RUN cd /tmp/beautiful-atoms &&\
     export CONDA_DIR=/opt/conda &&\
     export CONDA_PREFIX=/opt/conda &&\
     export CONDA_EXE=/opt/conda/bin/conda &&\
-    yes | python install.py -p ./ ${BLENDER_PATH}
+    yes | python install.py -p ./ ${BLENDER_PATH} &&\
+    rm -rf /tmp/*
 
 RUN chown ${B_UID}:${B_GID} -R ${BLENDER_PATH} &&\
         chmod 755 -R ${BLENDER_PATH} &&\
