@@ -891,10 +891,9 @@ def install(parameters):
                 f"Something wrong. {factory_python_target.as_posix()} still exists."
             )
         if factory_python_source.is_symlink():
-            raise RuntimeError(
-                f"Something wrong. {factory_python_source.as_posix()} should be a real directory."
-            )
-        if not factory_python_source.is_dir():
+            os.unlink(factory_python_source)
+            cprint(f"{factory_python_source.as_posix()} is already a symlink and will be unlinked. No backup will be made.", color="WARNING")
+        elif not factory_python_source.is_dir():
             cprint(f"{factory_python_source.as_posix()} does not exist. Will not move.", color="WARNING")
         else:
             shutil.move(factory_python_source, factory_python_target)
