@@ -1005,12 +1005,12 @@ def install(parameters):
     cprint(f"batomspy script written to {script_path}", color="OKGREEN")
 
     if local_parameters["os_name"] != "windows":
-        with tempfile.NamedTemporaryFile(suffix=".py") as tmp_py:
+        with tempfile.NamedTemporaryFile(suffix=".py", delete=False) as tmp_py:
             tmp_py = Path(tmp_py.name)
             with open(tmp_py, "w") as fd:
                 fd.write(BATOMSPY_TEST)
             os.chmod(tmp_py, 0o755)
-            _run_process([tmp_py.as_posix()], capture_output=True)
+        _run_process([tmp_py.as_posix()], capture_output=True)
         cprint(f"Shebang support for batomspy is now activated", color="OKGREEN")
 
     cprint(
