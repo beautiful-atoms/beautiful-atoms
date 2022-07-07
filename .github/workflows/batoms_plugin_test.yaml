@@ -85,5 +85,4 @@ jobs:
           python -m pip install pytest
       - name: Run explicit test on shebang
         run: |
-          cd tests
-          pytest -svv tests/test_batoms.py
+          pytest -svv tests/test_batomspy_shebang.py
