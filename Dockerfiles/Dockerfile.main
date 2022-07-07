@@ -17,7 +17,10 @@ USER root
 
 
 # Copy batoms to the addons_contrib directory
-COPY batoms ${BLENDER_PATH}/scripts/addons_contrib/batoms
+#COPY batoms ${BLENDER_PATH}/scripts/addons_contrib/batoms
+ADD ./ /tmp/beautiful-atoms/
+RUN cd /tmp/beautiful-atoms &&\
+    yes | python install.py -p ./ ${BLENDER_PATH}
 
 RUN chown ${B_UID}:${B_GID} -R ${BLENDER_PATH} &&\
         chmod 755 -R ${BLENDER_PATH} &&\
