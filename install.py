@@ -132,7 +132,7 @@ print('Successfully setting preference.')
 
 # wrapper for blender script.
 # Replace the value {blender_bin} at installation runtime
-BATOMSPY_SH = """#!/bin/sh
+BATOMSPY_SH = """#!/bin/bash
 # Usage:
 # blenderpy script.py [options]
 if [ "$#" -eq  "0" ]
