@@ -224,16 +224,16 @@ class Render(BaseCollection):
 
     @property
     def studiolight(self):
-        return bpy.data.scenes['Scene'].display.shading.studio_light
+        return bpy.context.scene.display.shading.studio_light
 
     @studiolight.setter
     def studiolight(self, studiolight):
-        bpy.data.scenes['Scene'].display.shading.studio_light = \
+        bpy.context.scene.display.shading.studio_light = \
             '%s' % studiolight
 
     @property
     def frame(self):
-        return bpy.data.scenes['Scene'].display.shading.studio_light
+        return bpy.context.scene.display.shading.studio_light
 
     @frame.setter
     def frame(self, frame):

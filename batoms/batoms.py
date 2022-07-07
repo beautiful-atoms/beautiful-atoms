@@ -205,7 +205,7 @@ class Batoms(BaseCollection, ObjectGN):
         if bpy.data.collections.get(label):
             raise Exception("Failed, the name %s already in use!" % label)
         coll = bpy.data.collections.new(label)
-        bpy.data.scenes['Scene'].collection.children.link(coll)
+        bpy.context.scene.collection.children.link(coll)
         for sub_name in subcollections:
             subcoll = bpy.data.collections.new('%s_%s' % (label, sub_name))
             coll.children.link(subcoll)

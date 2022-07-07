@@ -82,6 +82,11 @@ class BatomsDefaultPreference(bpy.types.Operator):
     bl_description = "Use startup file of Batoms"
 
     def execute(self, context):
+        import pathlib
+        import os
+        batoms_asset_dir = os.path.join(pathlib.Path(__file__).parent.resolve(), 'asset')
+        batoms_asset_dir = os.path.join(batoms_asset_dir, 'libraries')
+
         bpy.context.preferences.view.use_translate_new_dataname = False
         bpy.context.preferences.inputs.use_rotate_around_active = True
         bpy.context.preferences.inputs.use_zoom_to_mouse = True
@@ -97,6 +102,10 @@ class BatomsDefaultPreference(bpy.types.Operator):
         bpy.ops.wm.save_userpref()
         # logger
         bpy.context.preferences.addons['batoms'].preferences.logging_level = "WARNING"
+        # asset_libraries
+        if "Batoms" not in bpy.context.preferences.filepaths.asset_libraries.keys():
+            bpy.ops.preferences.asset_library_add(directory=batoms_asset_dir)
+            bpy.context.preferences.filepaths.asset_libraries[-1].name = "Batoms"
         self.report({"INFO"}, "Set default preferences successfully!")
         return {'FINISHED'}
 
