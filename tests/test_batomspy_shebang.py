@@ -8,8 +8,11 @@ import tempfile
 BATOMSPY_TEST = """#!/usr/bin/env batomspy
 import bpy
 from batoms import Batoms
-bpy.ops.batoms.molecule_add()
-ch4 = Batoms(label='CH4')
+from ase.build import molecule
+ch4 = Batoms(from_ase=molecule('CH4'))
+ch4.render.samples = 1
+ch4.render.resolution = [10, 10]
+ch4.get_image(engine="cycles")
 """
 
 
