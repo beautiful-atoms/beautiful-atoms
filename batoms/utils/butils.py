@@ -442,7 +442,7 @@ def set_vertex_color(obj, name, color):
     """
     npoint = len(color)
     mesh = obj.data
-    if bpy.app.version > (3, 0, 0):
+    if bpy.app.version_string >= '3.1.0':
         color = color.reshape((npoint*4, 1))
         mesh.color_attributes.new(name, 'FLOAT_COLOR', 'POINT')
         mesh.color_attributes[name].data.foreach_set('color', color)

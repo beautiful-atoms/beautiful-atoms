@@ -6,7 +6,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def calc_color_attribute(volumetric_data, coordinates):
+def calc_color_attribute(volumetric_data, coordinates, transparency):
     """Interpolate value at given coordinates for 
     the volumetric data
 
@@ -29,8 +29,8 @@ def calc_color_attribute(volumetric_data, coordinates):
     # generate color based on value nvc
     # min Red [1, 0, 0, 1]
     # max Blue [0, 0, 1, 1]
-    red = np.array([1, 0, 0, 1])
-    blue = np.array([0, 0, 1, 1])
+    red = np.array([1, 0, 0, transparency])
+    blue = np.array([0, 0, 1, transparency])
     dcolor = (blue - red)
     color_array = data[:, None]*dcolor
     color = red + color_array

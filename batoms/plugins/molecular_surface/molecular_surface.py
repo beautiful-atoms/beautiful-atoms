@@ -185,7 +185,7 @@ class MolecularSurface(BaseObject):
             scaled_verts = Cell(self.batoms.cell).scaled_positions(isosurface['vertices'])
             color_attribute = calc_color_attribute(
                 self.batoms.volumetric_data[ms.color_by], 
-                            scaled_verts)
+                            scaled_verts, isosurface['color'][3])
             from batoms.utils.butils import set_vertex_color
             set_vertex_color(obj, 
                 ms.color_by, 
