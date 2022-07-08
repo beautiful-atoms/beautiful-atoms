@@ -6,6 +6,36 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def calc_color_attribute(volumetric_data, coordinates):
+    """Interpolate value at given coordinates for 
+    the volumetric data
+
+    Note: both volumetric data and coordinate are using scaled positions
+    inside the cell
+    Args:
+        volumetric_data (array): volumetric data
+        coordinates (array): coordinates
+
+    Returns:
+        array: value at given coordinate
+    """
+    from scipy import ndimage
+    # get scaled coordinates
+    index = coordinates*volumetric_data.shape
+    # map new value
+    data = ndimage.map_coordinates(volumetric_data, index.T, order=1)
+    # normalize
+    data = (data - np.min(data))/(np.max(data) - np.min(data))
+    # generate color based on value nvc
+    # min Red [1, 0, 0, 1]
+    # max Blue [0, 0, 1, 1]
+    red = np.array([1, 0, 0, 1])
+    blue = np.array([0, 0, 1, 1])
+    dcolor = (blue - red)
+    color_array = data[:, None]*dcolor
+    color = red + color_array
+    return color
+    
 def read_from_others(from_ase=None, from_pymatgen=None,
                      from_pybel=None):
     if from_ase is not None:

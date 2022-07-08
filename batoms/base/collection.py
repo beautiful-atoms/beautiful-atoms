@@ -248,10 +248,11 @@ class Setting():
             name = tuple2string(key)
             subset.name = name
             self.ui_list_index = len(self) - 1
-        for key, value in setdict.items():
-            setattr(subset, key, value)
         subset.label = self.label
         subset.flag = True
+        for key, value in setdict.items():
+            setattr(subset, key, value)
+        
 
     def __delitem__(self, key):
         self.remove(key)

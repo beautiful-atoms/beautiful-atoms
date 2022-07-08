@@ -105,7 +105,9 @@ class BATOMS_PT_molecular_surface(Panel):
             sub.prop(kb, "resolution", text="Resolution")
             sub.prop(kb, "select", text="Select")
             col.prop(kb, "material_style", text="material_style")
-            col.prop(kb, "color",  text="color")
+            col.prop(kb, "color_by",  text="Color by")
+            if kb.color_by == 'None':
+                col.prop(kb, "color",  text="color")
             col.separator()
             op = layout.operator(
                 "surface.molecular_surface_draw", icon='GREASEPENCIL', text="Draw")

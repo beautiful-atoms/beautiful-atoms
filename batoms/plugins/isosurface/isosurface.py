@@ -43,18 +43,31 @@ class Isosurface(BaseObject):
                 volume = self.batoms.volumetric_data[self.batoms.volumetric_data.bpy_setting[0].name]
             else:
                 volume = self.batoms.volumetric_data[iso.volumetric_data]
-            verts, faces = calc_isosurface(volume, cell, iso.level)
+            scaled_verts, faces = calc_isosurface(volume, cell, iso.level)
+            # color by another volumetric data
+            if iso.color_by != "None":
+                from batoms.utils import calc_color_attribute
+                color_attribute = calc_color_attribute(
+                    self.batoms.volumetric_data[iso.color_by], scaled_verts)
+            else:
+                color_attribute = None
+            # back to cell
+            verts = scaled_verts.dot(cell)
+            verts -= self.batoms.cell.origin
             isosurface[iso.name] = {'vertices': verts,
                                     'edges': [],
                                     'faces': faces,
                                     'material_style': iso.material_style,
                                     'color': iso.color,
+                                    'color_by': iso.color_by,
+                                    'color_attribute': color_attribute,
                                     'battr_inputs': {'Bisosurface': iso.as_dict()}
                                     }
         return isosurface
 
     def build_materials(self, name, color, node_inputs=None,
-                        material_style='default'):
+                        material_style='default',
+                        vertex_color=None):
         """
         """
         from batoms.material import create_material
@@ -88,29 +101,43 @@ class Isosurface(BaseObject):
             obj.batoms.type = 'ISOSURFACE'
             obj.batoms.label = self.label
             obj.parent = self.batoms.obj
+            #
+            if isosurface_data['color_by'] != 'None':
+                from batoms.utils.butils import set_vertex_color
+                set_vertex_color(obj, 
+                    isosurface_data['color_by'], 
+                    isosurface_data['color_attribute'])
             # material
             mat = self.build_materials(name, isosurface_data['color'],
                                        material_style=isosurface_data['material_style'],
-                                       )
+                                       vertex_color=isosurface_data['color_by'])
             obj.data.materials.append(mat)
-
+            
     @property
     def setting(self):
         from batoms.utils import deprecated
         """setting object."""
         deprecated('"setting" will be deprecated in the furture, please use "settings".')
         return self.settings
+    
+    def as_dict(self):
+        """
+        """
+        data = {}
+        data['settings'] = self.settings.as_dict()
+        data.update(self.settings.bpy_data.as_dict())
+        return data
 
-def calc_isosurface(volume, cell, level,
+def calc_isosurface(volumetric_data, cell, level,
                     gradient_direction='descent',
                     step_size=1):
     """
 
-    Computes an isosurface from a volume grid.
+    Computes an isosurface from a volumetric_data grid.
 
     Parameters:
 
-    volume: np.array
+    volumetric_data: np.array
 
     cell: np.array
 
@@ -119,28 +146,19 @@ def calc_isosurface(volume, cell, level,
     """
     from skimage import measure
 
-    cell_origin = cell.origin
-    #
-    spacing = tuple(1.0/np.array(volume.shape))
-    mlevel = np.mean(volume)
+    spacing = tuple(1.0/np.array(volumetric_data.shape))
+    mlevel = np.mean(volumetric_data)
     if not level:
         level = mlevel*10
     # print('iso level: {0:1.9f}, iso mean: {1:1.9f}'.format(level, mlevel))
     scaled_verts, faces, normals, values = \
-        measure.marching_cubes(volume, level=level,
+        measure.marching_cubes(volumetric_data, level=level,
                                spacing=spacing,
                                gradient_direction=gradient_direction,
                                allow_degenerate=False,
                                step_size=step_size)
-    scaled_verts = scaled_verts.dot(cell)
-    scaled_verts -= cell_origin
     faces = list(faces)
     return scaled_verts, faces
 
-    def as_dict(self):
-        """
-        """
-        data = {}
-        data['settings'] = self.settings.as_dict()
-        data.update(self.settings.bpy_data.as_dict())
-        return data
+
+
