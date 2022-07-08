@@ -34,6 +34,7 @@ class Isosurface(BaseObject):
         BaseObject.__init__(self, label, name)
         self.settings = IsosurfaceSettings(
             self.label, batoms=batoms, parent=self)
+        self.settings.bpy_data.active = True
 
     def build_isosurface(self, cell):
         isosurface = {}
@@ -135,3 +136,11 @@ def calc_isosurface(volume, cell, level,
     scaled_verts -= cell_origin
     faces = list(faces)
     return scaled_verts, faces
+
+    def as_dict(self):
+        """
+        """
+        data = {}
+        data['settings'] = self.settings.as_dict()
+        data.update(self.settings.bpy_data.as_dict())
+        return data

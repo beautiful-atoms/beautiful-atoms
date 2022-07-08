@@ -61,3 +61,8 @@ class Polyhedra(Base):
     settings: CollectionProperty(name='polyhedrasetting',
                               type=PolyhedraSetting)
     
+    def as_dict(self) -> dict:
+        setdict = {
+            
+        }
+        return setdict

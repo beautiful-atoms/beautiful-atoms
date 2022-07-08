@@ -638,3 +638,14 @@ class Polyhedra(ObjectGN):
         """setting object."""
         deprecated('"setting" will be deprecated in the furture, please use "settings".')
         return self.settings
+    
+    def as_dict(self):
+        """
+        """
+        data = {
+            'array': None
+        }
+        if len(self) > 1:
+            data['array'] = dict(self.arrays)
+        data['settings'] = self.settings.as_dict()
+        return data

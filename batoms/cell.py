@@ -421,3 +421,12 @@ class Bcell(ObjectGN):
         from batoms.utils import deprecated
         deprecated('"draw" will be deprecated in the furture. The cell is drawn automaticely now.')
         pass
+
+    def as_dict(self):
+        """
+        """
+        data = {
+            'array': self.array,
+        }
+        data.update(self.batoms.coll.batoms.cell.as_dict())
+        return data

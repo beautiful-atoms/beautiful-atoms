@@ -73,8 +73,15 @@ class LatticePlane(bpy.types.PropertyGroup):
     Blender’s internal data.
 
     """
+    active: BoolProperty(name="active", default=False)
     settings: CollectionProperty(name='LatticePlaneSetting',
                                 type=LatticePlaneSetting)
 
     ui_list_index: IntProperty(name="ui_list_index",
                               default=0)
+
+    def as_dict(self) -> dict:
+        setdict = {
+            
+        }
+        return setdict

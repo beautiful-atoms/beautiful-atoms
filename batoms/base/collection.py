@@ -229,7 +229,7 @@ class Setting():
         """
         data = {}
         for b in self.bpy_setting:
-            data[b.name] = b
+            data[b.name] = b.as_dict()
         return data
 
     def __getitem__(self, key):

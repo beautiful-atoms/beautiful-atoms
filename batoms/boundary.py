@@ -646,8 +646,16 @@ class Boundary(ObjectGN):
         s = self.boundary.__repr__()
         return s
 
-
-
+    def as_dict(self):
+        """
+        """
+        data = {
+            'array': None
+        }
+        if len(self) > 1:
+            data['array'] = dict(self.arrays)
+        data['boundary'] = self.boundary
+        return data
 
 def search_boundary(atoms,
                     boundary=[[0, 1], [0, 1], [0, 1]],
@@ -710,4 +718,3 @@ def search_boundary(atoms,
     offsets_b = offsets[ind1]
     # print('search boundary: {0:10.2f} s'.format(time() - tstart))
     return offsets_b
-

@@ -274,6 +274,14 @@ class BatomsAddonPreferences(AddonPreferences):
         default=True,
     )
 
+    template: BoolProperty(
+        name="template",
+        description="Enable template plugin",
+        get=get_plugin("template"),
+        set=set_plugin("template"),
+        default=True,
+    )
+
     def draw(self, context):
 
         layout = self.layout
@@ -318,6 +326,7 @@ class BatomsAddonPreferences(AddonPreferences):
         col.prop(self, "cavity")
         col.prop(self, "magres")
         col.prop(self, "real_interaction")
+        col.prop(self, "template")
         col = split.column()
         # custom folder
         layout.separator()

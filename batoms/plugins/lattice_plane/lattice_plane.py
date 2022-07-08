@@ -36,6 +36,7 @@ class LatticePlane(BaseObject):
         BaseObject.__init__(self, label, name)
         self.settings = LatticePlaneSettings(
             self.label, parent=self)
+        self.settings.bpy_data.active = True
 
     def build_materials(self, name, color, node_inputs=None,
                         material_style='default'):
@@ -338,7 +339,15 @@ class LatticePlane(BaseObject):
         """setting object."""
         deprecated('"setting" will be deprecated in the furture, please use "settings".')
         return self.settings
-        
+    
+    def as_dict(self):
+        """
+        """
+        data = {}
+        data['settings'] = self.settings.as_dict()
+        data.update(self.settings.bpy_data.as_dict())
+        return data
+
 def save_image(data, filename, interpolation='bicubic'):
     """
     """
