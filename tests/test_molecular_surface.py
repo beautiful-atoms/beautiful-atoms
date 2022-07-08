@@ -38,7 +38,7 @@ def test_EPM():
     # color by potential
     h2o.molecular_surface.settings['1'].color_by = 'hartree'
     h2o.molecular_surface.draw()
-    if bpy.app.version_string >= '3.1.0':
+    if bpy.app.version_string >= '3.2.0':
         assert "Color Attribute" in bpy.data.objects['h2o_1_sas'].data.materials[0].node_tree.nodes
     else:
         assert "Vertex Color" in bpy.data.objects['h2o_1_sas'].data.materials[0].node_tree.nodes
