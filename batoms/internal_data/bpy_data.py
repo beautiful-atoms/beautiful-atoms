@@ -358,12 +358,16 @@ class BatomsCollection(bpy.types.PropertyGroup):
                                default=0)
     ui_list_index_select: IntProperty(name="ui_list_index_select",
                                default=0)
+    ui_list_index_volume: IntProperty(name="ui_list_index_volume",
+                               default=0)
     # collection                               
     settings_select: CollectionProperty(name='settings_select',
                                 type=Bselect)
 
     settings_species: CollectionProperty(name='settings_species',
                                  type=Bspecies)
+    settings_volume: CollectionProperty(name='settings_volume',
+                                 type=Bvolume)
 
     def as_dict(self) -> dict:
         setdict = {

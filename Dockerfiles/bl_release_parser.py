@@ -13,6 +13,7 @@ from pathlib import Path
 DEFAULT_BLENDER_MIRROR = "https://mirrors.ocf.berkeley.edu/blender/release"
 BLENDER_MIRROR_ROOT = os.environ.get("BLENDER_MIRROR_URL", DEFAULT_BLENDER_MIRROR)
 
+
 def get_latest_url(version="3.1", regex=r"blender-(\d+\.\d+\.\d+)-linux-x64.tar.xz"):
     url = f"{BLENDER_MIRROR_ROOT}/Blender{version}"
     req = requests.get(url)
@@ -31,23 +32,23 @@ def get_latest_url(version="3.1", regex=r"blender-(\d+\.\d+\.\d+)-linux-x64.tar.
     latest_url = f"{url}/{latest_href}"
     return latest_url, latest_href
 
+
 def extract_blender(url, filename, root="/bin"):
-    """Extract the tar.xz
-    """
+    """Extract the tar.xz"""
     commands = f"wget {url} && tar -xvf {filename} --strip-components=1 -C {root} && rm -rf ./blender-*"
     proc = run(commands, shell=True)
     if proc.returncode != 0:
         raise RuntimeError("Error extracting blender")
-    
+
 
 def get_default_bl_py_version(blender_root):
-    """Get default python path
-    """
+    """Get default python path"""
     py_binary = next(Path(f"{blender_root}/python/bin/").glob("python*"))
     # Init image only has minimal python3 version, use pipe redirect
     proc = run([py_binary.as_posix(), "-V"], stdout=PIPE)
     version = proc.stdout.decode("ascii").strip().split()[-1]
     return version
+
 
 def extract_python_source(blender_root, python_version):
     short_version = ".".join(python_version.split(".")[:2])
@@ -56,7 +57,6 @@ def extract_python_source(blender_root, python_version):
     proc = run(commands, shell=True)
     if proc.returncode != 0:
         raise RuntimeError("Error extracting python source")
-
 
 
 def main():
@@ -75,7 +75,5 @@ def main():
     return
 
 
-
 if __name__ == "__main__":
     main()
-

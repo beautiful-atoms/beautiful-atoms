@@ -32,7 +32,7 @@ class BaseCollection():
         return self.get_scene()
 
     def get_scene(self):
-        return bpy.data.scenes['Scene']
+        return bpy.context.scene
 
     def translate(self, displacement):
         """Translate atomic positions.
@@ -143,7 +143,7 @@ class Setting():
         coll = bpy.data.collections.get(self.coll_name)
         if coll is None:
             coll = bpy.data.collections.new(self.coll_name)
-            bpy.data.scenes['Scene'].collection.children.link(coll)
+            bpy.context.scene.collection.children.link(coll)
         return coll
 
     @property

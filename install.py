@@ -25,6 +25,7 @@ import tempfile
 from pathlib import Path
 from distutils.version import LooseVersion
 from threading import local
+import stat
 
 # TODO: allow version control
 # TODO: windows privilege issue
@@ -127,6 +128,26 @@ print('start setting startup')
 import bpy
 bpy.ops.batoms.use_batoms_startup()
 print('Successfully setting preference.')
+"""
+
+# wrapper for blender script.
+# Replace the value {blender_bin} at installation runtime
+BATOMSPY_SH = """#!/bin/bash
+# Usage:
+# blenderpy script.py [options]
+if [ "$#" -eq  "0" ]
+then
+    {blender_bin} -b --python-console
+else
+    {blender_bin} -b --python-exit-code 1 -P $1 ${{@:2}}
+fi
+"""
+
+BATOMSPY_TEST = """#!/usr/bin/env batomspy
+import bpy
+from batoms import Batoms
+bpy.ops.batoms.molecule_add()
+ch4 = Batoms(label='CH4')
 """
 
 # The directory to move factory python from conda
@@ -501,13 +522,8 @@ def _replace_conda_env(python_version=None, numpy_version=None):
 
 def _ensure_mamba(conda_vars):
     """Ensure mamba is installed at the base conda environment
-    Search sequence:
-    1. mamba in $PATH
-    2. mamba in given env
-    if not found, install mamba in the env and return its binary path
+    Note: if mamba is not avaivable or install to base is not possible, let user use conda instead
     """
-    # 1. Check mamba in current $PATH
-    # 2. Check mamba in given env
     proc = _run_process(
         [conda_vars["CONDA_EXE"], "list", "-n", "base", "mamba"], capture_output=True
     )
@@ -523,13 +539,25 @@ def _ensure_mamba(conda_vars):
             "conda-forge",
             "mamba",
         ]
-        _run_process(commands)
+        try:
+            _run_process(commands)
+        except RuntimeError as e:
+            msg = ("Failed to install mamba install conda base environment. "
+            "You probably don't have write permission. \n"
+            "Please consider add --no-mamba to install.py"
+            )
+            cprint(msg,
+            color="ERROR")
+            raise RuntimeError(msg) from e
     # Get the mamba binary in given env
     output = _run_process(
         [conda_vars["CONDA_EXE"], "run", "-n", "base", "which", "mamba"],
         capture_output=True,
     ).stdout.decode("utf8")
     if "ERROR" in output:
+        msg = ("Cannot find mamba in your conda base environment"
+            "Please consider add --no-mamba to install.py"
+            )
         raise RuntimeError(output)
     return output.strip()
 
@@ -740,6 +768,23 @@ def _pip_uninstall(blender_py, conda_vars):
     return
 
 
+def _find_conda_bin_path(env_name, conda_vars):
+    """Return the path of binary search directory ($PATH) of the given conda env"""
+    if env_name is None:
+        env_name = conda_vars["CONDA_DEFAULT_ENV"]
+
+    output = (
+        _run_process(
+            [conda_vars["CONDA_EXE"], "run", "-n", env_name, "which", "python"],
+            capture_output=True,
+        )
+        .stdout.decode("utf8")
+        .strip()
+    )
+    bindir = Path(output).parent.resolve()
+    return bindir
+
+
 def install(parameters):
     """Link current conda environment to blender's python root
     Copy batoms plugin under repo_path to plugin directory
@@ -852,17 +897,17 @@ def install(parameters):
             raise RuntimeError(
                 f"Something wrong. {factory_python_target.as_posix()} still exists."
             )
-        if (not factory_python_source.is_dir()) or (factory_python_source.is_symlink()):
-            raise RuntimeError(
-                f"Something wrong. {factory_python_source.as_posix()} should be a real directory."
+        if factory_python_source.is_symlink():
+            os.unlink(factory_python_source)
+            cprint(f"{factory_python_source.as_posix()} is already a symlink and will be unlinked. No backup will be made.", color="WARNING")
+        elif not factory_python_source.is_dir():
+            cprint(f"{factory_python_source.as_posix()} does not exist. Will not move.", color="WARNING")
+        else:
+            shutil.move(factory_python_source, factory_python_target)
+            cprint(
+                f"Renamed {factory_python_source.as_posix()} to {factory_python_target.as_posix()}",
+                color="OKGREEN",
             )
-        shutil.move(factory_python_source, factory_python_target)
-        # os.rename(factory_python_source, factory_python_target)
-        cprint(
-            f"Renamed {factory_python_source.as_posix()} to {factory_python_target.as_posix()}",
-            color="OKGREEN",
-        )
-
         # Step 2-1: link the conda prefix of current environment
         conda_prefix = Path(conda_vars["CONDA_PREFIX"]).resolve()
         # Should not happen but just in case
@@ -949,11 +994,34 @@ def install(parameters):
         cprint(f"Plugin copied to {plugin_path_target.as_posix()}.", color="OKGREEN")
     _blender_enable_plugin(blender_bin)
     _blender_test_plugin(local_parameters)
-    #
+
     if local_parameters["use_startup"]:
         _blender_set_startup(blender_bin)
     if local_parameters["use_preferences"]:
         _blender_set_preferences(blender_bin)
+
+    # Add the batomspy script (for unix systems only)
+    if local_parameters["os_name"] != "windows":
+        bindir = _find_conda_bin_path(
+            env_name=local_parameters["custom_conda_env"], conda_vars=conda_vars
+        )
+        script_path = bindir / "batomspy"
+        with open(script_path, "w") as fd:
+            content = BATOMSPY_SH.format(blender_bin=blender_bin.as_posix())
+            fd.write(content)
+        os.chmod(script_path, 0o755)
+        cprint(f"batomspy script written to {script_path}", color="OKGREEN")
+    else:
+        cprint("batoms script currently ignored in windows", color="WARNING")
+
+    if local_parameters["os_name"] != "windows":
+        with tempfile.NamedTemporaryFile(suffix=".py", delete=False) as tmp_py:
+            tmp_py = Path(tmp_py.name)
+            with open(tmp_py, "w") as fd:
+                fd.write(BATOMSPY_TEST)
+            os.chmod(tmp_py, 0o755)
+        _run_process([tmp_py.as_posix()], capture_output=True)
+        cprint(f"Shebang support for batomspy is now activated", color="OKGREEN")
 
     cprint(
         (
@@ -979,6 +1047,16 @@ def uninstall(parameters):
     factory_python_target = blender_root / PY_BACKUP_PATH
 
     conda_vars = _get_conda_variables()
+
+    # Remove the batomspy script
+    bindir = _find_conda_bin_path(
+        env_name=local_parameters["custom_conda_env"], conda_vars=conda_vars
+    )
+    script_path = bindir / "batomspy"
+    if script_path.is_file():
+        os.remove(script_path)
+        cprint(f"Removed batomspy script from {script_path}", color="OKGREEN")
+
     _blender_disable_plugin(blender_bin)
     # if parameters["use_pip"]:
     #     _pip_uninstall()

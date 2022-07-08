@@ -15,12 +15,23 @@ ENV B_USER blender
 
 USER root
 
-
+# Conda environment may not work properly during docker building process
+# Manual set ?
 # Copy batoms to the addons_contrib directory
-COPY batoms ${BLENDER_PATH}/scripts/addons_contrib/batoms
+#COPY batoms ${BLENDER_PATH}/scripts/addons_contrib/batoms
+ADD ./ /tmp/beautiful-atoms/
+RUN cd /tmp/beautiful-atoms &&\
+    conda init bash &&\
+    export CONDA_DEFAULT_ENV=base &&\
+    export CONDA_DIR=/opt/conda &&\
+    export CONDA_PREFIX=/opt/conda &&\
+    export CONDA_EXE=/opt/conda/bin/conda &&\
+    yes | python install.py -p ./ ${BLENDER_PATH} &&\
+    rm -rf /tmp/*
 
 RUN chown ${B_UID}:${B_GID} -R ${BLENDER_PATH} &&\
         chmod 755 -R ${BLENDER_PATH} &&\
+        chown ${B_UID}:${B_GID} -R ${HOME} &&\
         chown ${B_UID}:${B_GID} -R ${CONDA_DIR}
 
 USER ${B_USER}

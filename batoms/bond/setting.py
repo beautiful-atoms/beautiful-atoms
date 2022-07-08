@@ -27,7 +27,7 @@ class BondSetting():
         coll = bpy.data.collections.get(self.coll_name)
         if coll is None:
             coll = bpy.data.collections.new(self.coll_name)
-            bpy.data.scenes['Scene'].collection.children.link(coll)
+            bpy.context.scene.collection.children.link(coll)
         return coll
 
     @property
@@ -254,11 +254,13 @@ class BondSettings(Setting):
             coll.objects.unlink(obj)
         self.batoms.coll.children['%s_instancer' %
                                   self.label].objects.link(obj)
-        # bpy.data.scenes['Scene'].objects.unlink(bb.obj)
+        # bpy.context.scene.objects.unlink(bb.obj)
         if shade_smooth:
             bpy.ops.object.shade_smooth()
         obj.hide_set(True)
         obj.hide_render = True
+        obj.scale = [0.001, 0.001, 0.001]
+
         #
         self.build_materials(sp, order, style, material_style=sp['material_style'])
         self.assign_materials(sp, order, style)

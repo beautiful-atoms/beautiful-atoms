@@ -301,7 +301,7 @@ def lock_to(obj, target=None, location=True, rotation=True):
 def set_world(color=[0.2, 0.2, 0.2, 1.0]):
     """
     """
-    world = bpy.data.scenes['Scene'].world
+    world = bpy.context.scene.world
     world.use_nodes = True
     node_tree = world.node_tree
     node_tree.nodes["Background"].inputs["Strength"].default_value = 1.0
