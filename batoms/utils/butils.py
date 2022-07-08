@@ -454,7 +454,7 @@ def set_vertex_color(obj, name, color):
             for v in bm.verts:
                 for loop in v.link_loops:
                     loop[volume_layer] = color[v.index]
-            bmesh.update_edit_mesh(me)
+            bmesh.update_edit_mesh(obj.data)
         else:
             bm = bmesh.new()
             bm.from_mesh(obj.data)
