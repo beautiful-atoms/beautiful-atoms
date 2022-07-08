@@ -31,7 +31,8 @@ def create_material(name,
                     node_type='Principled BSDF',
                     node_inputs=None,
                     material_style='default',
-                    backface_culling=True,):
+                    backface_culling=True,
+                    vertex_color=None):
     """
     Creat material
     """
@@ -58,6 +59,17 @@ def create_material(name,
     if backface_culling:
         material.use_backface_culling = True
     material.show_transparent_back = False
+
+    #
+    if vertex_color not in [None, 'None']:
+        nodes = material.node_tree.nodes
+        mat_links = material.node_tree.links
+        if bpy.data.version > (3, 0, 0):
+            vcol = nodes.new(type="ShaderNodeVertexColor")
+        else:
+            vcol = nodes.new(type="ShaderNodeVertexColor")
+        vcol.layer_name = vertex_color
+        mat_links.new(vcol.outputs['Color'], node.inputs['Base Color'])
 
     return material
 
