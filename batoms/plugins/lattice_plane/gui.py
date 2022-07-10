@@ -46,12 +46,12 @@ class LatticePlaneProperties(bpy.types.PropertyGroup):
 
 
 class VIEW3D_PT_Batoms_lattice_plane(Panel):
-    bl_label = "lattice_plane"
+    bl_label = "Lattice Plane"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Surface"
     bl_idname = "VIEW3D_PT_Batoms_lattice_plane"
-    # bl_options = {'DEFAULT_CLOSED'}
+    bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
     def poll(cls, context):

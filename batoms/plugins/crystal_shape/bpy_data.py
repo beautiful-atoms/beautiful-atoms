@@ -5,6 +5,7 @@ from bpy.props import (
                        BoolProperty,
                        IntProperty,
                        FloatProperty,
+                       EnumProperty,
                        FloatVectorProperty,
                        CollectionProperty,
                        )
@@ -74,6 +75,14 @@ class CrystalShape(bpy.types.PropertyGroup):
 
     """
     active: BoolProperty(name="active", default=False)
+    model_style: EnumProperty(
+        name="model_style",
+        description="Structural models",
+        items=(('0', "Surface", "Surface"),
+               ('1', "Dot", "Dot surface"),
+               ('2', "Wireframe", "Use wireframe")),
+        default='0')
+    show: BoolProperty(name="show", default=True)
     settings: CollectionProperty(name='CrystalShapeSetting',
                                 type=CrystalShapeSetting)
 

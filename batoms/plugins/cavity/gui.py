@@ -69,7 +69,7 @@ class VIEW3D_PT_Batoms_cavity(Panel):
     bl_region_type = "UI"
     bl_category = "Surface"
     bl_idname = "VIEW3D_PT_Batoms_cavity"
-    # bl_options = {'DEFAULT_CLOSED'}
+    bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
     def poll(cls, context):

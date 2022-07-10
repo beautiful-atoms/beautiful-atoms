@@ -104,9 +104,9 @@ class PluginObject(BaseObject):
     def objs(self):
         objs = {}
         for setting in self.settings.bpy_setting:
-            ms_name = '{}_{}_{}'.format(self.label, self.name, setting.name)
-            obj = bpy.data.objects.get(ms_name)
-            objs[setting.name] = obj
+            name = '{}_{}_{}'.format(self.label, self.name, setting.name)
+            obj = bpy.data.objects.get(name)
+            objs[name] = obj
         return objs
 
     @property
