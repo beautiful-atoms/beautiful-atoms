@@ -23,9 +23,6 @@ class TemplateSettings(Setting):
         self.label = label
         self.name = 'Btemplate'
         self.parent = parent
-        # initialize a default setting
-        if len(self) == 0:
-            self['1'] = {'select': 'all'}
 
     def add(self, name, datas={}):
         self[name] = datas
@@ -43,8 +40,8 @@ class TemplateSettings(Setting):
         s = "-"*60 + "\n"
         s = "name  type select\n"
         for setting in self.bpy_setting:
-            s += "{:4s}   {:6s}   {:6s}".format(
-                setting.name, setting.type, setting.select)
+            s += "{:4s}   {:1.2f}".format(
+                setting.name,  setting.prop1)
         s += "-"*60 + "\n"
         return s
     

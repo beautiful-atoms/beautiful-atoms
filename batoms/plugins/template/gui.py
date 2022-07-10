@@ -81,10 +81,10 @@ class BATOMS_MT_template_context_menu(Menu):
 
     def draw(self, _context):
         layout = self.layout
-        op = layout.operator("surface.template_add", icon='ADD',
+        op = layout.operator("template.template_add", icon='ADD',
                              text="Add Molecular Surface")
         layout.separator()
-        op = layout.operator("surface.template_remove", icon='X',
+        op = layout.operator("template.template_remove", icon='X',
                              text="Delete All Molecular Surface")
         op.all = True
 
@@ -143,8 +143,8 @@ class BATOMS_PT_template(Panel):
                           ba, "ui_list_index", rows=rows)
 
         col = row.column(align=True)
-        op = col.operator("surface.template_add", icon='ADD', text="")
-        op = col.operator("surface.template_remove", icon='REMOVE', text="")
+        op = col.operator("template.template_add", icon='ADD', text="")
+        op = col.operator("template.template_remove", icon='REMOVE', text="")
         if kb is not None:
             op.name = kb.name
         col.separator()
@@ -175,4 +175,4 @@ class BATOMS_PT_template(Panel):
             col.prop(kb, "color",  text="color")
             col.separator()
             op = layout.operator(
-                "surface.template_draw", icon='GREASEPENCIL', text="Draw")
+                "template.template_draw", icon='GREASEPENCIL', text="Draw")

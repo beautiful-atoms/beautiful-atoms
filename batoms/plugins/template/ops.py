@@ -7,7 +7,7 @@ from batoms.ops.base import OperatorBatoms
 
 
 class TemplateAdd(OperatorBatoms):
-    bl_idname = "surface.template_add"
+    bl_idname = "template.template_add"
     bl_label = "Add template"
     bl_description = ("Add template to a Batoms")
 
@@ -24,7 +24,7 @@ class TemplateAdd(OperatorBatoms):
 
 
 class TemplateRemove(OperatorBatoms):
-    bl_idname = "surface.template_remove"
+    bl_idname = "template.template_remove"
     bl_label = "Remove template"
     bl_description = ("Remove template to a Batoms")
 
@@ -45,7 +45,7 @@ class TemplateRemove(OperatorBatoms):
 
 
 class TemplateDraw(OperatorBatoms):
-    bl_idname = "surface.template_draw"
+    bl_idname = "template.template_draw"
     bl_label = "Draw template"
     bl_description = ("Draw template to a Batoms")
 
@@ -56,7 +56,7 @@ class TemplateDraw(OperatorBatoms):
     def execute(self, context):
         obj = context.object
         batoms = Batoms(label=obj.batoms.label)
-        batoms.template.draw(self.name)
+        batoms.template.draw()
         context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
 

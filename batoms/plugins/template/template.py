@@ -7,13 +7,13 @@ This module defines the plugin object in the Batoms package.
 import bpy
 from time import time
 import numpy as np
-from batoms.base.object import BaseObject
+from batoms.plugins.base import PluginObject
 from .setting import TemplateSettings
 import logging
 logger = logging.getLogger(__name__)
 
 
-class Template(BaseObject):
+class Template(PluginObject):
     def __init__(self,
                  label,
                  batoms=None,
@@ -27,8 +27,7 @@ class Template(BaseObject):
         #
         self.batoms = batoms
         self.label = label
-        name = 'plugin'
-        BaseObject.__init__(self, label, name)
+        PluginObject.__init__(self, label, 'template', batoms)
         self.settings = TemplateSettings(
             self.label, parent=self)
         self.settings.bpy_data.active = True
@@ -64,7 +63,7 @@ class Template(BaseObject):
         from batoms.utils.butils import clean_coll_object_by_type
         # delete old object
         clean_coll_object_by_type(self.batoms.coll, 'TEMPLATE')
-        for setting in self.settings.collection:
+        for setting in self.settings.bpy_setting:
             self.draw_plugin(setting)
 
     
@@ -72,17 +71,12 @@ class Template(BaseObject):
         """
         """
         tstart = time()
-        indices = self.batoms.selects[setting.select].indices
-        if len(indices) == 0:
-            return
-        # select atoms
-        positions = self.batoms.positions[indices]
         logger.debug('Draw Template: %s' % (time() - tstart))
 
     @property
     def objs(self):
         objs = {}
-        for setting in self.settings.collection:
+        for setting in self.settings.bpy_setting:
             ms_name = '%s_%s' % (self.label, setting.name)
             obj = bpy.data.objects.get(ms_name)
             objs[setting.name] = obj
