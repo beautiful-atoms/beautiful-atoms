@@ -3,6 +3,77 @@
 
 import bpy
 from bpy.types import Menu, Panel, UIList
+from bpy.props import (
+    BoolProperty,
+    FloatProperty,
+    EnumProperty,
+    StringProperty,
+)
+
+
+
+from batoms import Batoms
+from batoms.gui.utils import (get_active_bpy_data, 
+        get_attr, get_enum_attr, set_attr, set_enum_attr,
+        get_active_module, set_module_attr
+        )
+
+
+model_style_items = [("Surface", "Surface", "", 0),
+                     ("Dot", "Dot", "", 1),
+                     ("Wireframe", "Wireframe", "", 2),
+                     ]
+
+
+
+class LatticePlaneProperties(bpy.types.PropertyGroup):
+    model_style: EnumProperty(
+        name="model_style",
+        description="Structural models",
+        items=model_style_items,
+        get=get_enum_attr("model_style", get_active_bpy_data('Blatticeplane')),
+        set=set_enum_attr("model_style", set_module_attr('lattice_plane')),
+        default=0,
+    )
+
+    show: BoolProperty(name="show",
+                       default=False,
+                       description="show all object for view and rendering",
+                       get=get_attr("show", get_active_bpy_data('Blatticeplane')),
+                       set=set_attr("show", set_module_attr('lattice_plane'))
+                       )
+
+
+
+class VIEW3D_PT_Batoms_lattice_plane(Panel):
+    bl_label = "lattice_plane"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "Surface"
+    bl_idname = "VIEW3D_PT_Batoms_lattice_plane"
+    # bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        if obj:
+            return obj.batoms.type != 'OTHER'
+        else:
+            return False
+
+    def draw(self, context):
+        name = 'None'
+        if context.object:
+            if context.object.batoms.type != 'OTHER':
+                name = context.object.batoms.label
+        layout = self.layout
+        # layout.label(text="Active: " + name)
+        iso = context.scene.Blatticeplane
+
+        layout.label(text="Model style")
+        layout.prop(iso, "model_style", expand=True)
+        layout.prop(iso, "show", expand=True)
+        layout.separator()
 
 
 class BATOMS_MT_lattice_plane_context_menu(Menu):
@@ -36,11 +107,12 @@ class BATOMS_UL_lattice_plane(UIList):
 
 
 class BATOMS_PT_lattice_plane(Panel):
-    bl_label = "Lattice Plane"
+    bl_label = "Item settings"
     bl_category = "Surface"
     bl_idname = "BATOMS_PT_Lattice_Plane"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
+    bl_parent_id = 'VIEW3D_PT_Batoms_lattice_plane'
     # bl_options = {'DEFAULT_CLOSED'}
 
     COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_EEVEE', 'BLENDER_WORKBENCH'}
@@ -68,7 +140,6 @@ class BATOMS_PT_lattice_plane(Panel):
         rows = 3
         if kb:
             rows = 5
-
         row.template_list("BATOMS_UL_lattice_plane", "", ba,
                           "settings", ba, "ui_list_index", rows=rows)
 
@@ -99,6 +170,7 @@ class BATOMS_PT_lattice_plane(Panel):
             sub = row.row()
             layout.use_property_split = True
             row = layout.row()
+            row.prop(kb, "indices", text="Miller index")
             col = layout.column()
             sub = col.column(align=True)
             sub.prop(kb, "distance", text="Distance")

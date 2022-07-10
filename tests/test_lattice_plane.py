@@ -60,8 +60,18 @@ def test_lattice_plane_ops():
     print(au.lattice_plane.settings)
     bpy.ops.plane.lattice_plane_draw()
 
+def test_gui():
+    """latticeplane panel"""
+    from batoms.batoms import Batoms
+    bpy.ops.batoms.delete()
+    bpy.ops.batoms.bulk_add(formula="Au", cubic=True)
+    au = Batoms('Au')
+    au.obj.select_set(True)
+    assert bpy.context.scene.Blatticeplane.show == True
+    bpy.context.scene.Blatticeplane.show = False
+    assert au.lattice_plane.show == False
 
-def test_latticeplane_uilist():
+def test_gui_uilist():
     """latticeplane panel"""
     from batoms.batoms import Batoms
     bpy.ops.batoms.delete()

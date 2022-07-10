@@ -5,6 +5,7 @@ from bpy.props import (
                        BoolProperty,
                        IntProperty,
                        FloatProperty,
+                       EnumProperty,
                        FloatVectorProperty,
                        CollectionProperty,
                        )
@@ -33,7 +34,7 @@ class LatticePlaneSetting(Base):
     slicing: BoolProperty(name="slicing", default=False)
     boundary: BoolProperty(name="boundary", default=False)
     scale: FloatProperty(name="scale", default=1)
-    show_edge: BoolProperty(name="show_edge", default=True)
+    show_edge: BoolProperty(name="show_edge", default=False)
     width: FloatProperty(name="width", default=0.01)
 
     @property
@@ -74,6 +75,14 @@ class LatticePlane(bpy.types.PropertyGroup):
 
     """
     active: BoolProperty(name="active", default=False)
+    model_style: EnumProperty(
+        name="model_style",
+        description="Structural models",
+        items=(('0', "Surface", "Surface"),
+               ('1', "Dot", "Dot surface"),
+               ('2', "Wireframe", "Use wireframe")),
+        default='0')
+    show: BoolProperty(name="show", default=True)
     settings: CollectionProperty(name='LatticePlaneSetting',
                                 type=LatticePlaneSetting)
 

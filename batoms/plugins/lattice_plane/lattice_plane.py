@@ -8,7 +8,7 @@ import bpy
 import bmesh
 from time import time
 import numpy as np
-from batoms.base.object import BaseObject
+from batoms.plugins.base import PluginObject
 from .setting import LatticePlaneSettings
 from batoms.draw import draw_cylinder, draw_surface_from_vertices
 import logging
@@ -16,7 +16,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class LatticePlane(BaseObject):
+class LatticePlane(PluginObject):
     def __init__(self,
                  label=None,
                  location=np.array([0, 0, 0]),
@@ -32,8 +32,7 @@ class LatticePlane(BaseObject):
         #
         self.batoms = batoms
         self.label = label
-        name = 'plane'
-        BaseObject.__init__(self, label, name)
+        PluginObject.__init__(self, label, 'latticeplane', batoms)
         self.settings = LatticePlaneSettings(
             self.label, parent=self)
         self.settings.bpy_data.active = True
@@ -300,12 +299,12 @@ class LatticePlane(BaseObject):
             if plane_name.upper() != "ALL" and species != plane_name:
                 continue
             if plane['boundary']:
-                name = '%s_%s_%s' % (self.label, 'plane', species)
+                name = '%s_%s_%s' % (self.label, self.name, species)
                 self.delete_obj(name)
                 self.build_boundary(plane['indices'])
                 bpy.context.view_layer.update()
             else:
-                name = '%s_%s_%s' % (self.label, 'plane', species)
+                name = '%s_%s_%s' % (self.label, self.name, species)
                 self.delete_obj(name)
                 obj = draw_surface_from_vertices(name, plane,
                                                  coll=self.batoms.coll,
