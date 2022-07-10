@@ -3,6 +3,7 @@ from bpy.props import (StringProperty,
                        BoolProperty,
                        IntProperty,
                        FloatProperty,
+                       EnumProperty,
                        FloatVectorProperty,
                        CollectionProperty,
                        )
@@ -55,6 +56,14 @@ class Cavity(bpy.types.PropertyGroup):
     """
 
     active: BoolProperty(name="active", default=False)
+    model_style: EnumProperty(
+        name="model_style",
+        description="Structural models",
+        items=(('0', "Surface", "Surface"),
+               ('1', "Dot", "Dot surface"),
+               ('2', "Wireframe", "Use wireframe")),
+        default='0')
+    show: BoolProperty(name="show", default=True)
     atomRadius: FloatProperty(name="atomRadius", default=0.5)
     minCave: FloatProperty(name="minCave", default=3)
     resolution: FloatProperty(name="resolution", default=1)

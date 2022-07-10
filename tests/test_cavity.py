@@ -1,9 +1,11 @@
-import bpy
-import pytest
-from batoms.batoms import Batoms
-from ase.build import molecule, bulk
-from batoms.bio.bio import read
 from time import time
+
+import bpy
+import numpy as np
+import pytest
+from ase.build import bulk, molecule
+from batoms.batoms import Batoms
+from batoms.bio.bio import read
 
 try:
     from _common_helpers import has_display, set_cycles_res
@@ -66,6 +68,17 @@ def test_cavity_ops():
     print(mof.cavity.settings)
     assert len(mof.cavity.settings) == 0
 
+def test_gui():
+    """latticeplane panel"""
+    from batoms.batoms import Batoms
+    from batoms.bio.bio import read
+    bpy.ops.batoms.delete()
+    mof = read("../tests/datas/mof-5.cif")
+    assert bpy.context.scene.Bcavity.show == True
+    bpy.context.scene.Bcavity.show = False
+    assert mof.cavity.show == False
+    bpy.context.scene.Bcavity.minCave = 3.0
+    assert np.isclose(mof.cavity.minCave, 3.0)
 
 if __name__ == "__main__":
     test_cavity()

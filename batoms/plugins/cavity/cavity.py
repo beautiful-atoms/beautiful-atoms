@@ -9,6 +9,7 @@ from time import time
 import numpy as np
 from batoms.attribute import Attributes
 from batoms.base.object import ObjectGN
+from batoms.plugins.base import PluginObject
 from .setting import CavitySettings
 from scipy import spatial
 from batoms.utils.butils import object_mode, get_nodes_by_name
@@ -38,7 +39,7 @@ default_cavity_datas = {
 }
 
 
-class Cavity(ObjectGN):
+class Cavity(ObjectGN, PluginObject):
     def __init__(self,
                  label=None,
                  cavity_datas=None,
@@ -59,6 +60,7 @@ class Cavity(ObjectGN):
         self.label = label
         name = 'cavity'
         ObjectGN.__init__(self, label, name)
+        PluginObject.__init__(self, label, 'cavity', batoms)
         if resolution is not None:
             self.resolution = resolution
         if minCave is not None:
@@ -470,6 +472,14 @@ class Cavity(ObjectGN):
         name = '%s_cavity' % (self.label)
         obj = self.obj
         self.set_obj_frames(name, obj, frames['centers'])
+
+    @property
+    def objs(self):
+        objs = {}
+        name = '{}_{}'.format(self.label, self.name)
+        obj = bpy.data.objects.get(name)
+        objs[name] = obj
+        return objs
 
     @property
     def setting(self):
