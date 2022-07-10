@@ -47,7 +47,8 @@ class PluginObject(BaseObject):
         self.batoms = batoms
         self.label = label
         self.name = name
-        BaseObject.__init__(self, label, name)
+        obj_name = '%s_%s' % (label, name)
+        BaseObject.__init__(self, obj_name)
         self.settings = PluginSettings(
             self.label, parent=self)
     
