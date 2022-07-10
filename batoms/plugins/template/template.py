@@ -17,7 +17,6 @@ class Template(BaseObject):
     def __init__(self,
                  label,
                  batoms=None,
-                 tensors = None,
                  ):
         """Template Class
 
@@ -28,7 +27,6 @@ class Template(BaseObject):
         #
         self.batoms = batoms
         self.label = label
-        self.tensors = tensors
         name = 'plugin'
         BaseObject.__init__(self, label, name)
         self.settings = TemplateSettings(
