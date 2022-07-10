@@ -8,7 +8,7 @@ from bpy.props import (
 )
 from batoms.render.render import Render
 from batoms import Batoms
-from batoms.gui.gui_batoms import get_attr, set_attr
+from batoms.gui.utils import get_attr, set_attr
 
 
 class Render_PT_prepare(Panel):

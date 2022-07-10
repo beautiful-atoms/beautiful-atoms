@@ -10,7 +10,8 @@ from bpy.props import (
     StringProperty,
 )
 from batoms import Batoms
-
+from batoms.gui.utils import (get_active_bpy_data, 
+        get_attr, get_enum_attr, set_attr, set_enum_attr)
 
 model_style_items = [("Space-filling", "Space-filling", "", 0),
                      ("Ball-and-stick", "Ball-and-Stick", "", 1),
@@ -62,21 +63,7 @@ class Batoms_PT_prepare(Panel):
         # layout.operator("batoms.replace")
 
 
-def get_active_collection():
-    """Get the collection of the active Batoms
 
-    When get the attribute of Batoms object, 
-    if the attribute if saved in the Batoms.coll.batoms,
-    we only need to read data form the colleciton, 
-    it is faster than get data from the Batoms itself.
-
-    Returns:
-        bpy.type.collection: _description_
-    """
-    context = bpy.context
-    if context.object and context.object.batoms.type != 'OTHER':
-        return bpy.data.collections[context.object.batoms.label].batoms
-    return None
 
 
 # ---------------------------------------------------
@@ -110,73 +97,8 @@ def modify_batoms_attr(context, key, value):
         bpy.context.view_layer.objects.active = batoms.obj
 
 
-def get_enum_attr(name, func):
-    """Helper function to easily get enum property.
-
-    Args:
-        name (str): name of the attribute
-    """
-
-    def getter(self):
-        batoms = func()
-        if batoms is not None:
-            return int(getattr(batoms, name))
-        else:
-            return 0
-
-    return getter
-
-
-def set_enum_attr(name, func):
-    """Helper function to easily set enum property.
-
-    Args:
-        name (str): name of the attribute
-    """
-
-    def setter(self, value):
-        items = self.bl_rna.properties[name].enum_items
-        item = items[value]
-        identifier = item.identifier
-        self[name] = identifier
-        func(name, value)
-
-    return setter
-
-
-def get_attr(name, func):
-    """Helper function to easily get property.
-
-    Args:
-        name (str): name of the attribute
-    """
-
-    def getter(self):
-        batoms = func()
-        if batoms is not None:
-            return getattr(batoms, name)
-        else:
-            prop = self.bl_rna.properties[name]
-            return prop.default
-    return getter
-
-
-def set_attr(name, func):
-    """Helper function to easily set property.
-
-    Args:
-        name (str): name of the attribute
-    """
-
-    def setter(self, value):
-        self[name] = value
-        func(name, value)
-
-    return setter
-
-
 def get_wrap(self):
-    batoms = get_active_collection()
+    batoms = get_active_bpy_data('batoms')()
     if batoms is not None:
         return batoms.wrap[0]
     else:
@@ -188,7 +110,7 @@ class BatomsProperties(bpy.types.PropertyGroup):
         name="model_style",
         description="Structural models",
         items=model_style_items,
-        get=get_enum_attr("model_style", get_active_collection),
+        get=get_enum_attr("model_style", get_active_bpy_data('batoms')),
         set=set_enum_attr("model_style", set_batoms_attr),
         default=0,
     )
@@ -196,7 +118,7 @@ class BatomsProperties(bpy.types.PropertyGroup):
     show_label: StringProperty(
         name="label",
         description="Show label: None, Index, Species or Charge and so on",
-        get=get_attr("show_label", get_active_collection),
+        get=get_attr("show_label", get_active_bpy_data('batoms')),
         set=set_attr("show_label", set_batoms_attr),
         default="",
     )
@@ -207,7 +129,7 @@ class BatomsProperties(bpy.types.PropertyGroup):
         items=(("Covalent", "covalent", "", 0),
                ("VDW", "van der Waals", "", 1),
                ("Ionic", "ionic", "", 2)),
-        get=get_enum_attr("radius_style", get_active_collection),
+        get=get_enum_attr("radius_style", get_active_bpy_data('batoms')),
         set=set_enum_attr("radius_style", set_batoms_attr),
         default=0,
     )
@@ -218,7 +140,7 @@ class BatomsProperties(bpy.types.PropertyGroup):
         items=(("JMOL", "JMOL", "", 0),
                ("VESTA", "VESTA", "", 1),
                ("CPK", "CPK", "", 2)),
-        get=get_enum_attr("color_style", get_active_collection),
+        get=get_enum_attr("color_style", get_active_bpy_data('batoms')),
         set=set_enum_attr("color_style", set_batoms_attr),
         default=0,
     )
@@ -230,7 +152,7 @@ class BatomsProperties(bpy.types.PropertyGroup):
                ("1", "atoms, polyhedra", "", 1),
                ("2", "central atoms, polyhedra", "", 2),
                ("3", "polyhedra", "", 3)),
-        get=get_enum_attr("polyhedra_style", get_active_collection),
+        get=get_enum_attr("polyhedra_style", get_active_bpy_data('batoms')),
         set=set_enum_attr("polyhedra_style", set_batoms_attr),
         default=0,
     )
@@ -238,7 +160,7 @@ class BatomsProperties(bpy.types.PropertyGroup):
     show: BoolProperty(name="show",
                        default=False,
                        description="show all object for view and rendering",
-                       get=get_attr("show", get_active_collection),
+                       get=get_attr("show", get_active_bpy_data('batoms')),
                        set=set_attr("show", set_batoms_attr)
                        )
 
@@ -252,7 +174,7 @@ class BatomsProperties(bpy.types.PropertyGroup):
     crystal_view: BoolProperty(name="crystal_view",
                        default=False,
                        description="crystal_view all object for view and rendering",
-                       get=get_attr("crystal_view", get_active_collection),
+                       get=get_attr("crystal_view", get_active_bpy_data('batoms')),
                        set=set_attr("crystal_view", set_batoms_attr)
                        )
 
@@ -260,6 +182,6 @@ class BatomsProperties(bpy.types.PropertyGroup):
         name="scale", default=1.0,
         min=0.0, soft_max=2.0,
         description="scale",
-        get=get_attr("scale", get_active_collection),
+        get=get_attr("scale", get_active_bpy_data('batoms')),
         set=set_attr("scale", set_batoms_attr)
     )

@@ -8,7 +8,7 @@ from bpy.props import (BoolProperty,
 
 from batoms import Batoms
 from batoms.cell import Bcell
-from batoms.gui.gui_batoms import get_active_batoms
+from batoms.gui.utils import get_active_module
 
 class Cell_PT_prepare(Panel):
     bl_label = "Cell"
@@ -57,7 +57,7 @@ def get_cell(i1, i2):
     """Helper function to easily get cell-property."""
 
     def getter(self):
-        cell = get_active_cell()
+        cell = get_active_module('cell')()
         if cell is not None:
             return cell.array[i1, i2]
         else:
@@ -68,7 +68,7 @@ def set_cell(i1, i2):
     """Helper function to easily set cell-property."""
 
     def setter(self, value):
-        cell = get_active_cell()
+        cell = get_active_module('cell')()
         if cell is not None:
             cell[i1, i2] = value
             
@@ -179,9 +179,3 @@ def modify_transform(name, transform):
     batoms.transform(transform)
     batoms.hide = True
 
-def get_active_cell():
-    context = bpy.context
-    if context.object and context.object.batoms.type != 'OTHER':
-        cell = Bcell(label=context.object.batoms.label)
-        return cell
-    return None

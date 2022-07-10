@@ -10,7 +10,7 @@ from batoms.utils.butils import get_selected_vertices
 from batoms.batoms import Batoms
 from batoms.bond import Bond
 from batoms.bond.slicebonds import SliceBonds
-from batoms.gui.gui_batoms import get_attr, set_attr, get_enum_attr
+from batoms.gui.utils import get_attr, set_attr, get_enum_attr
 
 # The panel.
 class Bond_PT_prepare(Panel):
