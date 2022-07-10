@@ -3,7 +3,77 @@
 
 import bpy
 from bpy.types import Menu, Panel, UIList
+from bpy.props import (
+    BoolProperty,
+    FloatProperty,
+    EnumProperty,
+    StringProperty,
+)
 
+
+
+from batoms import Batoms
+from batoms.gui.utils import (get_active_bpy_data, 
+        get_attr, get_enum_attr, set_attr, set_enum_attr,
+        get_active_module, set_module_attr
+        )
+
+
+model_style_items = [("Surface", "Surface", "", 0),
+                     ("Dot", "Dot", "", 1),
+                     ("Wireframe", "Wireframe", "", 2),
+                     ]
+
+
+
+class TemplateProperties(bpy.types.PropertyGroup):
+    model_style: EnumProperty(
+        name="model_style",
+        description="Structural models",
+        items=model_style_items,
+        get=get_enum_attr("model_style", get_active_bpy_data('Btemplate')),
+        set=set_enum_attr("model_style", set_module_attr('template')),
+        default=0,
+    )
+
+    show: BoolProperty(name="show",
+                       default=False,
+                       description="show all object for view and rendering",
+                       get=get_attr("show", get_active_bpy_data('Btemplate')),
+                       set=set_attr("show", set_module_attr('template'))
+                       )
+
+
+
+class VIEW3D_PT_Batoms_template(Panel):
+    bl_label = "template"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "Surface"
+    bl_idname = "VIEW3D_PT_Batoms_template"
+    # bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        if obj:
+            return obj.batoms.type != 'OTHER'
+        else:
+            return False
+
+    def draw(self, context):
+        name = 'None'
+        if context.object:
+            if context.object.batoms.type != 'OTHER':
+                name = context.object.batoms.label
+        layout = self.layout
+        # layout.label(text="Active: " + name)
+        iso = context.scene.Btemplate
+
+        layout.label(text="Model style")
+        layout.prop(iso, "model_style", expand=True)
+        layout.prop(iso, "show", expand=True)
+        layout.separator()
 
 class BATOMS_MT_template_context_menu(Menu):
     bl_label = "Molecular Surface Specials"
@@ -28,19 +98,19 @@ class BATOMS_UL_template(UIList):
             split.prop(template, "name", text="", emboss=False, icon=custom_icon)
             row = split.row(align=True)
             row.emboss = 'NONE_OR_STATUS'
-            row.prop(template, "type", text="")
-            row.prop(template, "select", text="")
+            row.prop(template, "prop1", text="")
         elif self.layout_type == 'GRID':
             layout.alignment = 'CENTER'
             layout.label(text="", icon=custom_icon)
 
 
 class BATOMS_PT_template(Panel):
-    bl_label = "template"
+    bl_label = "Item settings"
     bl_category = "Surface"
     bl_idname = "BATOMS_PT_template"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
+    bl_parent_id = 'VIEW3D_PT_Batoms_template'
     # bl_options = {'DEFAULT_CLOSED'}
 
     COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_EEVEE', 'BLENDER_WORKBENCH'}
@@ -58,8 +128,8 @@ class BATOMS_PT_template(Panel):
 
         ob = context.object
         ba = bpy.data.collections[ob.batoms.label].Btemplate
-        if len(ba.setting) > 0:
-            kb = ba.setting[ba.ui_list_index]
+        if len(ba.settings) > 0:
+            kb = ba.settings[ba.ui_list_index]
         else:
             kb = None
 
@@ -69,7 +139,7 @@ class BATOMS_PT_template(Panel):
         if kb:
             rows = 5
 
-        row.template_list("BATOMS_UL_template", "", ba, "setting",
+        row.template_list("BATOMS_UL_template", "", ba, "settings",
                           ba, "ui_list_index", rows=rows)
 
         col = row.column(align=True)
@@ -100,10 +170,7 @@ class BATOMS_PT_template(Panel):
             row = layout.row()
             col = layout.column()
             sub = col.column(align=True)
-            sub.prop(kb, "type", text="Type")
-            sub.prop(kb, "scale", text="Scale")
-            # sub.prop(kb, "resolution", text="Resolution")
-            sub.prop(kb, "select", text="Select")
+            sub.prop(kb, "prop1", text="Prop1")
             col.prop(kb, "material_style", text="material_style")
             col.prop(kb, "color",  text="color")
             col.separator()
