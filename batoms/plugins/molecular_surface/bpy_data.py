@@ -36,7 +36,8 @@ class MolecularSurfaceSetting(Base):
 
     def get_color_by(self, context):
         keys = bpy.data.collections[self.label].batoms.settings_volume.keys()
-        items = [("None", "None", "None")]
+        items = [("None", "None", "None"),
+                ("Charges", "Charges", "Charges")]
         i = 1
         for key in keys:
             items.append((key, key, key))
@@ -50,6 +51,7 @@ class MolecularSurfaceSetting(Base):
         default=None,
         update=None,
         )
+    transparency: FloatProperty(name="transparency", min=0.0, max=1, default=0.8)
 
     def as_dict(self) -> dict:
         setdict = {
@@ -58,6 +60,7 @@ class MolecularSurfaceSetting(Base):
             'name': self.name,
             'color_by': self.color_by,
             'color': self.color[:],
+            'transparency': self.transparency,
             'probe': self.probe,
             'resolution': self.resolution,
             'select': self.select,
