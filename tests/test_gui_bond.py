@@ -15,3 +15,6 @@ def test_bondpair():
     assert ch4.coll.Bbond.ui_list_index==1
     bpy.ops.bond.bond_pair_add(species1='H', species2='H')
     assert ch4.coll.Bbond.ui_list_index==2
+
+def test_edit_bonds():
+    pass

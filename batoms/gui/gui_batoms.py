@@ -35,9 +35,6 @@ class Batoms_PT_prepare(Panel):
                 name = context.object.batoms.label
         layout = self.layout
         layout.label(text="Active: " + name)
-        layout.operator("batoms.import")
-        layout.operator("batoms.export")
-
         batoms = context.scene.batoms.batoms
 
         layout.label(text="Model style")
