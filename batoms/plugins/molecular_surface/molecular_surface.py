@@ -185,7 +185,7 @@ class MolecularSurface(BaseObject):
             from batoms.utils.butils import set_vertex_color
             if ms.color_by.upper() == "CHARGES":
                 if 'charges' not in self.batoms._attributes:
-                    self.batoms.auto_assgin_charge()
+                    self.batoms.auto_assign_charge()
                 data = self.batoms.calc_electrostatic_potential(isosurface['vertices'])
             else:
                 # using volumetric_data

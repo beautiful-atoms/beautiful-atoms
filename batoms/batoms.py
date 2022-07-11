@@ -1925,7 +1925,7 @@ class Batoms(BaseCollection, ObjectGN):
             sp.data.segments = segments
             sp.update(sp.data.as_dict())
 
-    def auto_assgin_charge(self, force_field="mmff94"):
+    def auto_assign_charge(self, force_field="mmff94"):
         """Estimates atomic partial charges using openbabel.
 
         MMFF94 Partial Charges are assigned using a four stage algorithm.
@@ -1937,7 +1937,7 @@ class Batoms(BaseCollection, ObjectGN):
         ob = self.as_pybel()
         charges = np.array(ob.calccharges(model = force_field))
         self.set_attributes({'charges':charges})
-        logger.debug("time: {:1.2f}".format(time() - tstart))
+        logger.debug("time: {:1.3f}".format(time() - tstart))
         return charges
     
     def calc_electrostatic_potential(self, points):
@@ -1961,9 +1961,9 @@ class Batoms(BaseCollection, ObjectGN):
         D, D_len = get_distances(positions, points)
         # matrix
         pot_mat = k/D_len*charges[:, None]
-        # sum
+        # sum over all charge (atoms)
         potentials = np.sum(pot_mat, axis = 0)
-        logger.debug("time: {:1.2f}".format(time() - tstart))
+        logger.debug("time: {:1.3f}".format(time() - tstart))
         return potentials
 
 
