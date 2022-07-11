@@ -3,19 +3,6 @@ from batoms import Batoms
 import numpy as np
 import pytest
 
-def test_cell():
-    """Cell panel"""
-    from batoms.batoms import Batoms
-    bpy.ops.batoms.delete()
-    bpy.ops.batoms.molecule_add()
-    ch4 = Batoms('CH4')
-    ch4.cell = [1, 2, 3]
-    ch4.obj.select_set(True)
-    # model_style
-    assert np.isclose(bpy.context.scene.batoms.cell.cell_a0, 1)
-    bpy.context.scene.batoms.cell.cell_a0 = 3
-    assert np.isclose(ch4.cell[0, 0], 3)
-
 def test_render():
     """Render panel"""
     from batoms.batoms import Batoms
@@ -61,23 +48,6 @@ def test_batom():
     assert np.isclose(bpy.context.scene.batoms.batom.scale, ch4[0].scale)
     bpy.context.scene.batoms.batom.scale = 1
     assert np.isclose(ch4[0].scale, bpy.context.scene.batoms.batom.scale)
-
-def test_bond():
-    """Bond panel"""
-    from batoms.batoms import Batoms
-    import numpy as np
-    bpy.ops.batoms.delete()
-    bpy.ops.batoms.molecule_add()
-    ch4 = Batoms('CH4')
-    ch4.bond.obj.data.vertices.foreach_set('select', [1, 0, 0, 0, 0])
-    ch4.bond[0].order = 2
-    # order
-    ch4.obj.select_set(False)
-    bpy.context.view_layer.objects.active = ch4.bond.obj
-    assert np.isclose(bpy.context.scene.batoms.bond.order, ch4.bond[0].order)
-    ch4.bond.obj.data.vertices.foreach_set('select', [1, 0, 0, 0])
-    bpy.context.scene.batoms.bond.order = 1
-    assert np.isclose(ch4.bond[0].order, bpy.context.scene.batoms.bond.order)
 
 
 if __name__ == "__main__":
