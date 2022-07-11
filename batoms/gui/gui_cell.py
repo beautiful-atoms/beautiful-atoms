@@ -8,7 +8,9 @@ from bpy.props import (BoolProperty,
 
 from batoms import Batoms
 from batoms.cell import Bcell
-from batoms.gui.utils import get_active_module
+from batoms.gui.utils import (get_attr, set_attr, 
+            get_active_module, get_active_bpy_data_batoms,
+            set_module_attr)
 
 class Cell_PT_prepare(Panel):
     bl_label = "Cell"
@@ -23,6 +25,7 @@ class Cell_PT_prepare(Panel):
         cell = context.scene.batoms.cell
 
         box = layout.box()
+        box.label(text="Basis")
         row = box.row(align = True)
         row.prop(cell, "cell_a0")
         row.prop(cell, "cell_a1")
@@ -35,6 +38,8 @@ class Cell_PT_prepare(Panel):
         row.prop(cell, "cell_c0")
         row.prop(cell, "cell_c1")
         row.prop(cell, "cell_c2")
+        layout.prop(cell, "width")
+        layout.prop(cell, "color",  text="color")
         layout.prop(cell, "pbc")
 
         op = layout.operator("batoms.apply_transform")
@@ -86,6 +91,25 @@ class CellProperties(bpy.types.PropertyGroup):
         cell = bpy.context.scene.batoms.cell
         pbc = cell.pbc
         modify_batoms_attr(self.selected_batoms(context), 'pbc', pbc)
+
+    width: FloatProperty(
+        name="width",
+        default=0.05,
+        min = 0.0,
+        soft_max = 0.1,
+        description="width",
+        get=get_attr("width", get_active_bpy_data_batoms('cell')),
+        set=set_attr("width", set_module_attr('cell'))
+        )
+    
+    color: FloatVectorProperty(
+            name="color", size=4,
+            subtype='COLOR',
+            min=0, max=1,
+            default=[0.2, 0.2, 0.2, 1],
+            get=get_attr("color", get_active_bpy_data_batoms('cell')),
+            set=set_attr("color", set_module_attr('cell'))
+        )
 
     pbc: BoolProperty(
         name="pbc", default=True,
