@@ -51,8 +51,6 @@ def test_batom():
 
 
 if __name__ == "__main__":
-    test_cell()
     test_render()
     test_batom()
-    test_bond()
     print("\n GUI: All pass! \n")
