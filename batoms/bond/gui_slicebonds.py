@@ -14,12 +14,13 @@ from batoms.gui.utils import get_attr, set_attr, get_enum_attr
 
 # The panel.
 class Bond_PT_prepare(Panel):
-    bl_label = "Bond"
+    bl_label = "Edit bonds"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
     bl_category = "Bond"
     bl_idname = "BATOMS_PT_Bond"
+    bl_parent_id = 'VIEW3D_PT_Batoms_bond'
 
     # @classmethod
     # def poll(cls, context):
@@ -31,9 +32,8 @@ class Bond_PT_prepare(Panel):
     
     def draw(self, context):
         layout = self.layout
-        bond = context.scene.batoms.bond
-        layout.operator("bond.bond_order_auto_set", icon='MODIFIER_ON', text="Auto Set Bond Order")
-        layout.separator()
+        bond = context.scene.Bbond
+        
         layout.label(text="Bond style")
         col = layout.column()
         col.prop(bond, "style", expand=True)

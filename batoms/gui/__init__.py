@@ -3,15 +3,12 @@ from bpy.props import PointerProperty
 
 from . import (
     gui_batoms,
+    gui_io,
     gui_slicebatoms,
     gui_toolbar,
     gui_cell,
-    gui_slicebonds,
     gui_plane,
     gui_render,
-    gui_pymatgen,
-    gui_pubchem,
-    gui_rscb,
     ui_list_species,
     view3d_mt_batoms_add,
     view3d_mt_object_context_menu,
@@ -25,12 +22,9 @@ class BatomsCollection(bpy.types.PropertyGroup):
     batoms: PointerProperty(type=gui_batoms.BatomsProperties)
     batom: PointerProperty(type=gui_slicebatoms.BatomProperties)
     cell: PointerProperty(type=gui_cell.CellProperties)
-    bond: PointerProperty(type=gui_slicebonds.BondProperties)
     plane: PointerProperty(type=gui_plane.PlaneProperties)
     render: PointerProperty(type=gui_render.RenderProperties)
-    pymatgen: PointerProperty(type=gui_pymatgen.PymatgenProperties)
-    pubchem: PointerProperty(type=gui_pubchem.PubchemProperties)
-    rscb: PointerProperty(type=gui_rscb.RSCBProperties)
+    io: PointerProperty(type=gui_io.BatomsPropertiesIO)
 
 
 classes = [
@@ -38,8 +32,6 @@ classes = [
     gui_batoms.BatomsProperties,
     gui_slicebatoms.Batom_PT_prepare,
     gui_slicebatoms.BatomProperties,
-    gui_slicebonds.Bond_PT_prepare,
-    gui_slicebonds.BondProperties,
     gui_cell.Cell_PT_prepare,
     gui_cell.CellProperties,
     gui_plane.Plane_PT_prepare,
@@ -47,15 +39,6 @@ classes = [
     gui_plane.AddButton,
     gui_render.Render_PT_prepare,
     gui_render.RenderProperties,
-    gui_pymatgen.Pymatgen_PT_prepare,
-    gui_pymatgen.PymatgenProperties,
-    gui_pymatgen.Search,
-    gui_pubchem.Pubchem_PT_prepare,
-    gui_pubchem.PubchemProperties,
-    gui_pubchem.Search,
-    gui_rscb.RSCB_PT_prepare,
-    gui_rscb.RSCBProperties,
-    gui_rscb.RSCB_Import,
     view3d_mt_batoms_add.VIEW3D_MT_batoms_add,
     view3d_mt_batoms_add.VIEW3D_MT_surface_add,
     view3d_mt_batoms_add.VIEW3D_MT_nanotube_add,
@@ -71,6 +54,14 @@ classes = [
     ui_list_species.BATOMS_MT_species_context_menu,
     ui_list_species.BATOMS_UL_species,
     ui_list_species.BATOMS_PT_species,
+    gui_io.BatomsPropertiesIO,
+    gui_io.VIEW3D_PT_Batoms_io,
+    gui_io.VIEW3D_PT_Batoms_io_materials_project,
+    gui_io.Batoms_IO_search_material_project,
+    gui_io.VIEW3D_PT_Batoms_io_pubchem,
+    gui_io.Batoms_IO_search_pubchem,
+    gui_io.VIEW3D_PT_Batoms_io_RSCB,
+    gui_io.Batoms_IO_search_RSCB,
     BatomsCollection,
 ]
 

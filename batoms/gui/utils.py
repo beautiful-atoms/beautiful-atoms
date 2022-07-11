@@ -26,6 +26,25 @@ def get_active_bpy_data(btype = 'cell'):
     return getter
 
 
+def get_active_bpy_data_batoms(btype = 'cell'):
+    """Helper function.
+
+    Args:
+        btype (str, optional): _description_. Defaults to 'cell'.
+    """
+    def getter():
+        """
+
+        Returns:
+            bpy.type.collection: _description_
+        """
+        context = bpy.context
+        if context.object and context.object.batoms.type != 'OTHER':
+            return getattr(bpy.data.collections[context.object.batoms.label].batoms, btype)
+        return None
+    return getter
+
+
 def get_active_module(module_name = 'cell'):
     """Helper function.
 
