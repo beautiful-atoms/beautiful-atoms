@@ -431,6 +431,40 @@ def get_bmesh_layer(domain, key, dtype):
     
     return layer
 
+
+def set_vertex_color(obj, name, color):
+    """Set vertex color
+
+    Args:
+        obj (bpy.types.Object): Object to be set
+        name (str): name of the color attribute
+        color (array): value of color for each vertex
+    """
+    npoint = len(color)
+    mesh = obj.data
+    if bpy.app.version_string >= '3.2.0':
+        color = color.reshape((npoint*4, 1))
+        mesh.color_attributes.new(name, 'FLOAT_COLOR', 'POINT')
+        mesh.color_attributes[name].data.foreach_set('color', color)
+    else:
+        import bmesh
+        if obj.mode == 'EDIT':
+            bm =bmesh.from_edit_mesh(obj.data)  
+            volume_layer = bm.loops.layers.color.new(name)
+            for v in bm.verts:
+                for loop in v.link_loops:
+                    loop[volume_layer] = color[v.index]
+            bmesh.update_edit_mesh(obj.data)
+        else:
+            bm = bmesh.new()
+            bm.from_mesh(obj.data)
+            volume_layer = bm.loops.layers.color.new(name)
+            for v in bm.verts:
+                for loop in v.link_loops:
+                    loop[volume_layer] = color[v.index]
+            bm.to_mesh(obj.data)
+            bm.free()
+
 # ========================================================
 if bpy.app.version_string >= '3.1.0':
     compareNodeType = 'FunctionNodeCompare'

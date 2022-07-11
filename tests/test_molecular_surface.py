@@ -4,16 +4,50 @@ from time import time
 from ase.build import molecule
 from batoms.pdbparser import read_pdb
 from batoms import Batoms
+try:
+    from _common_helpers import has_display, set_cycles_res
+
+    use_cycles = not has_display()
+except ImportError:
+    use_cycles = False
+
+extras = dict(engine="cycles") if use_cycles else {}
 
 def test_SAS():
     """
     """
+    from batoms import Batoms
     bpy.ops.batoms.delete()
-    h2o = molecule("H2O")
-    h2o = Batoms("h2o", from_ase=h2o)
+    bpy.ops.batoms.molecule_add(label = 'h2o', formula = 'H2O')
+    h2o = Batoms("h2o")
     h2o.molecular_surface.draw()
     print(h2o.molecular_surface.settings)
     # area = h2o.molecular_surface.get_psasa()
+
+def test_EPM():
+    """Electrostatic Potential Maps
+    """
+    from batoms import Batoms
+    from ase.io.cube import read_cube_data
+    hartree, atoms = read_cube_data('../tests/datas/h2o-hartree.cube')
+    bpy.ops.batoms.delete()
+    h2o = Batoms("h2o", from_ase=atoms)
+    h2o.volumetric_data['hartree'] = -hartree
+    h2o.molecular_surface.draw()
+    assert "Vertex Color" not in bpy.data.objects['h2o_1_sas'].data.materials[0].node_tree.nodes
+    # color by potential
+    h2o.molecular_surface.settings['1'].color_by = 'hartree'
+    h2o.molecular_surface.draw()
+    if bpy.app.version_string >= '3.2.0':
+        assert "Color Attribute" in bpy.data.objects['h2o_1_sas'].data.materials[0].node_tree.nodes
+    else:
+        assert "Vertex Color" in bpy.data.objects['h2o_1_sas'].data.materials[0].node_tree.nodes
+    if use_cycles:
+        set_cycles_res(h2o)
+    else:
+        h2o.render.resolution = [200, 200]
+    h2o.get_image([1, 0, 0], output="h2o-EMP.png", **extras)
+
 
 def test_SES():
     """

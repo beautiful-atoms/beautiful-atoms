@@ -34,11 +34,29 @@ class MolecularSurfaceSetting(Base):
                                min=0, max=1,
                                default=[0, 1, 1, 1.0])
 
+    def get_color_by(self, context):
+        keys = bpy.data.collections[self.label].batoms.settings_volume.keys()
+        items = [("None", "None", "None")]
+        i = 1
+        for key in keys:
+            items.append((key, key, key))
+            i += 1
+        return items
+        
+    color_by : EnumProperty(
+        items=get_color_by,
+        name="color_by",
+        description="color by",
+        default=None,
+        update=None,
+        )
+
     def as_dict(self) -> dict:
         setdict = {
             'flag': self.flag,
             'label': self.label,
             'name': self.name,
+            'color_by': self.color_by,
             'color': self.color[:],
             'probe': self.probe,
             'resolution': self.resolution,

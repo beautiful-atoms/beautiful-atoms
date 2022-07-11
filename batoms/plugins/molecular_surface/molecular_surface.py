@@ -38,7 +38,8 @@ class MolecularSurface(BaseObject):
         self.settings.bpy_data.active = True
 
     def build_materials(self, name, color, node_inputs=None,
-                        material_style='default'):
+                        material_style='default',
+                        vertex_color = None):
         """
         """
         from batoms.material import create_material
@@ -49,7 +50,8 @@ class MolecularSurface(BaseObject):
                               color=color,
                               node_inputs=node_inputs,
                               material_style=material_style,
-                              backface_culling=False)
+                              backface_culling=False,
+                              vertex_color=vertex_color)
         return mat
 
     def draw(self, ms_name="ALL"):
@@ -175,10 +177,25 @@ class MolecularSurface(BaseObject):
                                          datas=isosurface,
                                          coll=coll,
                                          )
+        #
+        if ms.color_by != "None":
+            from ase.cell import Cell
+            from batoms.utils import calc_color_attribute
+            # scaled positions
+            scaled_verts = Cell(self.batoms.cell).scaled_positions(isosurface['vertices'])
+            color_attribute = calc_color_attribute(
+                self.batoms.volumetric_data[ms.color_by], 
+                            scaled_verts, isosurface['color'][3])
+            from batoms.utils.butils import set_vertex_color
+            set_vertex_color(obj, 
+                ms.color_by, 
+                color_attribute)
         mat = self.build_materials(sas_name, color=isosurface['color'],
                                    material_style=isosurface['material_style'],
+                                   vertex_color = ms.color_by,
                                    )
         obj.data.materials.append(mat)
+        
         obj.parent = self.batoms.obj
         obj.batoms.type = 'MS'
         obj.batoms.label = self.batoms.label
