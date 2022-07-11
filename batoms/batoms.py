@@ -1933,9 +1933,11 @@ class Batoms(BaseCollection, ObjectGN):
         Args:
             force_field (str, optional): force field. Defaults to "mmff94".
         """
+        tstart = time()
         ob = self.as_pybel()
         charges = np.array(ob.calccharges(model = force_field))
         self.set_attributes({'charges':charges})
+        logger.debug("time: {:1.2f}".format(time() - tstart))
         return charges
     
     def calc_electrostatic_potential(self, points):
@@ -1949,6 +1951,7 @@ class Batoms(BaseCollection, ObjectGN):
             array: potentials at given points
         """
         from ase.geometry import get_distances
+        tstart = time()
         positions = self.positions
         charges = self.get_attribute('charges')
         # parameter
@@ -1960,6 +1963,7 @@ class Batoms(BaseCollection, ObjectGN):
         pot_mat = k/D_len*charges[:, None]
         # sum
         potentials = np.sum(pot_mat, axis = 0)
+        logger.debug("time: {:1.2f}".format(time() - tstart))
         return potentials
 
 

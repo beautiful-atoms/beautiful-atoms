@@ -29,6 +29,29 @@ def test_EPM():
     """
     from batoms import Batoms
     from ase.io.cube import read_cube_data
+    bpy.ops.batoms.delete()
+    bpy.ops.batoms.molecule_add(label='c2h6so', formula='C2H6SO')
+    c2h6so = Batoms("c2h6so")
+    c2h6so.molecular_surface.draw()
+    assert "Vertex Color" not in bpy.data.objects['c2h6so_1_sas'].data.materials[0].node_tree.nodes
+    # color by potential
+    c2h6so.molecular_surface.settings['1'].color_by = 'Charges'
+    c2h6so.molecular_surface.draw()
+    if bpy.app.version_string >= '3.2.0':
+        assert "Color Attribute" in bpy.data.objects['c2h6so_1_sas'].data.materials[0].node_tree.nodes
+    else:
+        assert "Vertex Color" in bpy.data.objects['c2h6so_1_sas'].data.materials[0].node_tree.nodes
+    if use_cycles:
+        set_cycles_res(c2h6so)
+    else:
+        c2h6so.render.resolution = [200, 200]
+    c2h6so.get_image([1, 0, 0], output="c2h6so-EMP.png", **extras)
+
+def test_colored_by_volumetric_datas():
+    """Electrostatic Potential Maps
+    """
+    from batoms import Batoms
+    from ase.io.cube import read_cube_data
     hartree, atoms = read_cube_data('../tests/datas/h2o-hartree.cube')
     bpy.ops.batoms.delete()
     h2o = Batoms("h2o", from_ase=atoms)
@@ -46,7 +69,7 @@ def test_EPM():
         set_cycles_res(h2o)
     else:
         h2o.render.resolution = [200, 200]
-    h2o.get_image([1, 0, 0], output="h2o-EMP.png", **extras)
+    h2o.get_image([1, 0, 0], output="molecular_surface_colored_by_volumetric_datas.png", **extras)
 
 
 def test_SES():
