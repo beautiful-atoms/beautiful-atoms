@@ -29,6 +29,7 @@ plugin_info = {
     'isosurface': ['isosurface', 'Isosurface', 'Bisosurface'],
     'molecular_surface': ['molecular_surface', 'MolecularSurface', 'Bmolecularsurface'],
     'magres': ['magres', 'Magres', 'Bmagres'],
+    'template': ['template', 'Template', 'Btemplate'],
     }
 
 def enable_plugin():

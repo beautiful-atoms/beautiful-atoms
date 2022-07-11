@@ -19,9 +19,9 @@ default_object_datas = {
 
 class BaseObject():
 
-    def __init__(self, obj_name, bobj_name="batoms"):
+    def __init__(self, obj_name, btype="batoms"):
         self.obj_name = obj_name
-        self.bobj_name = bobj_name
+        self.btype = btype
 
     @property
     def obj(self):
@@ -34,12 +34,12 @@ class BaseObject():
         return obj
 
     @property
-    def bobj(self):
-        return self.get_bobj()
+    def bpy_data(self):
+        return self.get_bpy_data()
 
-    def get_bobj(self):
-        bobj = getattr(self.obj, self.bobj_name)
-        return bobj
+    def get_bpy_data(self):
+        bpy_data = getattr(self.obj, self.btype)
+        return bpy_data
 
     @property
     def location(self):
@@ -115,10 +115,10 @@ class BaseObject():
         self.set_look_at(look_at)
 
     def get_look_at(self):
-        return np.array(self.bobj.look_at)
+        return np.array(self.bpy_data.look_at)
 
     def set_look_at(self, look_at):
-        self.bobj.look_at = look_at
+        self.bpy_data.look_at = look_at
         set_look_at(self.obj, look_at, roll=0.0)
 
     def translate(self, displacement):

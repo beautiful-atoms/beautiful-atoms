@@ -19,7 +19,7 @@ class Species(BaseObject):
         self.label = parent.label
         self.coll_name = "%s_instancer" % (self.label)
         BaseObject.__init__(self, obj_name="%s_%s" % (self.label, name),
-                            bobj_name="binstancer")
+                            btype="binstancer")
         if data is not None:
             self.update(data)
 

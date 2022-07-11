@@ -60,6 +60,16 @@ def test_settings():
     au.crystal_shape.settings.remove((1, 1, 1))
     assert au.crystal_shape.settings.find((1, 1, 1)) is None
 
+def test_gui():
+    """crystal shape panel"""
+    from batoms.batoms import Batoms
+    bpy.ops.batoms.delete()
+    bpy.ops.batoms.bulk_add(formula="Au", cubic=True)
+    au = Batoms('Au')
+    au.obj.select_set(True)
+    assert bpy.context.scene.Bcrystalshape.show == True
+    bpy.context.scene.Bcrystalshape.show = False
+    assert au.crystal_shape.show == False
 
 def test_crystalshape_uilist():
     """crystalshape panel"""

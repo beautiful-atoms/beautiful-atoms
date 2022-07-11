@@ -43,9 +43,9 @@ class Light(BaseObject):
         self.label = label
         self.name = name
         obj_name = "%s_light_%s" % (label, name)
-        bobj_name = "Blight"
+        btype = "Blight"
         self.coll_name = "%s_render" % (label)
-        BaseObject.__init__(self, obj_name=obj_name, bobj_name=bobj_name)
+        BaseObject.__init__(self, obj_name=obj_name, btype=btype)
         self.create_light(type, location, energy)
         self.direction = direction
         self.lock_to_camera = lock_to_camera
@@ -58,7 +58,7 @@ class Light(BaseObject):
         return bpy.data.collections.get(self.coll_name)
 
     def get_bobj(self):
-        bobj = getattr(self.obj, self.bobj_name)
+        bobj = getattr(self.obj, self.btype)
         return bobj
 
     @property

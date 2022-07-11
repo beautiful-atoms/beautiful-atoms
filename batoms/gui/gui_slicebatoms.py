@@ -6,7 +6,6 @@ from bpy.props import (FloatProperty,
                        BoolProperty,
                        EnumProperty,
                        )
-from batoms.gui.gui_batoms import get_active_batoms
 from batoms.utils.butils import get_selected_vertices
 from batoms.slicebatoms import SliceBatoms
 from batoms.batoms import Batoms

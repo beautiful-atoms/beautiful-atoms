@@ -3,6 +3,77 @@
 
 import bpy
 from bpy.types import Menu, Panel, UIList
+from bpy.props import (
+    BoolProperty,
+    FloatProperty,
+    EnumProperty,
+    StringProperty,
+)
+
+
+
+from batoms import Batoms
+from batoms.gui.utils import (get_active_bpy_data, 
+        get_attr, get_enum_attr, set_attr, set_enum_attr,
+        get_active_module, set_module_attr
+        )
+
+
+model_style_items = [("Surface", "Surface", "", 0),
+                     ("Dot", "Dot", "", 1),
+                     ("Wireframe", "Wireframe", "", 2),
+                     ]
+
+
+
+class CrystalShapeProperties(bpy.types.PropertyGroup):
+    model_style: EnumProperty(
+        name="model_style",
+        description="Structural models",
+        items=model_style_items,
+        get=get_enum_attr("model_style", get_active_bpy_data('Bcrystalshape')),
+        set=set_enum_attr("model_style", set_module_attr('crystal_shape')),
+        default=0,
+    )
+
+    show: BoolProperty(name="show",
+                       default=False,
+                       description="show all object for view and rendering",
+                       get=get_attr("show", get_active_bpy_data('Bcrystalshape')),
+                       set=set_attr("show", set_module_attr('crystal_shape'))
+                       )
+
+
+
+class VIEW3D_PT_Batoms_crystal_shape(Panel):
+    bl_label = "Crystal Shape"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "Surface"
+    bl_idname = "VIEW3D_PT_Batoms_crystal_shape"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        if obj:
+            return obj.batoms.type != 'OTHER'
+        else:
+            return False
+
+    def draw(self, context):
+        name = 'None'
+        if context.object:
+            if context.object.batoms.type != 'OTHER':
+                name = context.object.batoms.label
+        layout = self.layout
+        # layout.label(text="Active: " + name)
+        iso = context.scene.Bcrystalshape
+
+        layout.label(text="Model style")
+        layout.prop(iso, "model_style", expand=True)
+        layout.prop(iso, "show", expand=True)
+        layout.separator()
 
 
 class BATOMS_MT_crystal_shape_context_menu(Menu):
@@ -41,6 +112,7 @@ class BATOMS_PT_crystal_shape(Panel):
     bl_idname = "BATOMS_PT_crystal_shape"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
+    bl_parent_id = 'VIEW3D_PT_Batoms_crystal_shape'
     # bl_options = {'DEFAULT_CLOSED'}
 
     COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_EEVEE', 'BLENDER_WORKBENCH'}

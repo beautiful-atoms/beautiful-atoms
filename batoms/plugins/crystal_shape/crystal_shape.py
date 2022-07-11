@@ -5,14 +5,14 @@
 import bpy
 from time import time
 import numpy as np
-from batoms.base.object import BaseObject
+from batoms.plugins.base import PluginObject
 from .setting import CrystalShapeSettings
 from batoms.draw import draw_cylinder, draw_surface_from_vertices
 import logging
 # logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 
-class CrystalShape(BaseObject):
+class CrystalShape(PluginObject):
     def __init__(self,
                  label=None,
                  location=np.array([0, 0, 0]),
@@ -28,8 +28,7 @@ class CrystalShape(BaseObject):
         #
         self.batoms = batoms
         self.label = label
-        name = 'plane'
-        BaseObject.__init__(self, label, name)
+        PluginObject.__init__(self, label, 'crystalshape', batoms)
         self.settings = CrystalShapeSettings(
             self.label,  parent=self)
         self.settings.bpy_data.active = True
@@ -148,7 +147,7 @@ class CrystalShape(BaseObject):
         for species, plane in planes.items():
             if plane_name.upper() != "ALL" and species != plane_name:
                 continue
-            name = '%s_%s_%s' % (self.label, 'crystal', species)
+            name = '%s_%s_%s' % (self.label, self.name, species)
             self.delete_obj(name)
             obj = draw_surface_from_vertices(name, plane,
                                              coll=self.batoms.coll,

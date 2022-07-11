@@ -42,16 +42,16 @@ class Camera(BaseObject):
         self.label = label
         self.name = name
         obj_name = "%s_camera_%s" % (label, name)
-        bobj_name = "Bcamera"
-        BaseObject.__init__(self, obj_name=obj_name, bobj_name=bobj_name)
+        btype = "Bcamera"
+        BaseObject.__init__(self, obj_name=obj_name, btype=btype)
         self.create_camera(type, location,
                            lens=lens, coll=coll, look_at=look_at,
                            lock_camera_to_view=lock_camera_to_view)
         self.obj.data.lens_unit = 'FOV'
 
-    def get_bobj(self):
-        bobj = getattr(self.obj, self.bobj_name)
-        return bobj
+    def get_bpy_data(self):
+        bpy_data = getattr(self.obj, self.btype)
+        return bpy_data
 
     @property
     def lens(self):

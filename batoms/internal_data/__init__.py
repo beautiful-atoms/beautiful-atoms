@@ -45,11 +45,11 @@ def register_class():
     for cls in classes:
         register_class(cls)
     
-    enable_module()
     Collection.batoms = PointerProperty(name='Batoms',
                                         type=bpy_data.BatomsCollection)
     Object.batoms = PointerProperty(name='Batoms',
                                     type=bpy_data.BatomsObject)
+    enable_module()
     
 
 def unregister_class():
@@ -57,6 +57,7 @@ def unregister_class():
     for cls in reversed(classes):
         unregister_class(cls)
     disable_module()
+    
     del Collection.batoms
     del Object.batoms
     
