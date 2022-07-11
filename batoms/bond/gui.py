@@ -1,10 +1,85 @@
 """
-startup/bl_ui/properties_data_mesh.py
-
 """
 
 import bpy
 from bpy.types import Menu, Panel, UIList
+from bpy.props import (
+    BoolProperty,
+    FloatProperty,
+    EnumProperty,
+    StringProperty,
+)
+
+
+
+from batoms import Batoms
+from batoms.gui.utils import (get_active_bpy_data, 
+        get_attr, get_enum_attr, set_attr, set_enum_attr,
+        get_active_module, set_module_attr
+        )
+
+
+model_style_items = [("Surface", "Surface", "", 0),
+                     ("Dot", "Dot", "", 1),
+                     ("Wireframe", "Wireframe", "", 2),
+                     ]
+
+
+
+class BondProperties(bpy.types.PropertyGroup):
+
+    show: BoolProperty(name="show",
+                       default=False,
+                       description="show all object for view and rendering",
+                       get=get_attr("show", get_active_bpy_data('Bbond')),
+                       set=set_attr("show", set_module_attr('bond'))
+                       )
+    atomRadius: FloatProperty(name="atomRadius", 
+                default=0.5,
+                description="average radius of the atoms",
+                get=get_attr("atomRadius", get_active_bpy_data('Bbond')),
+                set=set_attr("atomRadius", set_module_attr('bond'))
+                )
+    minCave: FloatProperty(name="minCave", 
+                default=3,
+                description="minmum radius of the cave",
+                get=get_attr("minCave", get_active_bpy_data('Bbond')),
+                set=set_attr("minCave", set_module_attr('bond'))
+                )
+    resolution: FloatProperty(name="resolution", 
+                default=1,
+                description="resolution",
+                get=get_attr("resolution", get_active_bpy_data('Bbond')),
+                set=set_attr("resolution", set_module_attr('bond'))
+                )
+
+
+
+class VIEW3D_PT_Batoms_bond(Panel):
+    bl_label = "Bond"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "Bond"
+    bl_idname = "VIEW3D_PT_Batoms_bond"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        if obj:
+            return obj.batoms.type != 'OTHER'
+        else:
+            return False
+
+    def draw(self, context):
+        name = 'None'
+        if context.object:
+            if context.object.batoms.type != 'OTHER':
+                name = context.object.batoms.label
+        layout = self.layout
+        # layout.label(text="Active: " + name)
+        layout.operator("bond.bond_order_auto_set", icon='MODIFIER_ON', text="Auto Set Bond Order")
+        layout.separator()
 
 
 class BATOMS_MT_bond_pair_context_menu(Menu):
@@ -43,6 +118,7 @@ class BATOMS_PT_bond_pair(Panel):
     bl_idname = "BATOMS_PT_Pair"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
+    bl_parent_id = 'VIEW3D_PT_Batoms_bond'
     # bl_options = {'DEFAULT_CLOSED'}
 
     COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_EEVEE', 'BLENDER_WORKBENCH'}
