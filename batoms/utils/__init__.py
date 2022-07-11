@@ -6,7 +6,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def calc_color_attribute(volumetric_data, coordinates, transparency):
+def map_volumetric_data(volumetric_data, coordinates):
     """Interpolate value at given coordinates for 
     the volumetric data
 
@@ -24,16 +24,27 @@ def calc_color_attribute(volumetric_data, coordinates, transparency):
     index = coordinates*volumetric_data.shape
     # map new value
     data = ndimage.map_coordinates(volumetric_data, index.T, order=1)
+    return data
+
+def map_color(data, color1 = [1, 0, 0, 1], color2=[0, 0, 1, 1]):
+    """_summary_
+
+    Args:
+        data (_type_): _description_
+        color1 (list, optional): _description_. Defaults to [1, 0, 0, 1].
+        color2 (list, optional): _description_. Defaults to [0, 0, 1, 1].
+
+    Returns:
+        _type_: _description_
+    """
     # normalize
     data = (data - np.min(data))/(np.max(data) - np.min(data))
     # generate color based on value nvc
-    # min Red [1, 0, 0, 1]
-    # max Blue [0, 0, 1, 1]
-    red = np.array([1, 0, 0, transparency])
-    blue = np.array([0, 0, 1, transparency])
-    dcolor = (blue - red)
+    color1 = np.array(color1)
+    color2 = np.array(color2)
+    dcolor = (color2 - color1)
     color_array = data[:, None]*dcolor
-    color = red + color_array
+    color = color1 + color_array
     return color
     
 def read_from_others(from_ase=None, from_pymatgen=None,
@@ -277,6 +288,30 @@ def build_grid(box, resolution):
     meshgrids = np.c_[x.ravel(), y.ravel(), z.ravel()]
     return meshgrids, shape
 
+def getDistances(points1, points2):
+    """Calculate the distance between every point pair in points.
+    Parameters
+    ----------
+    points1: array_like, shape (n1, m)
+        m is the dimension of point.
+    points2: array_like, shape (n2, m)
+        m is the dimension of point.
+    Returns
+    -------
+    indices : array of integers, shape (n1*n2, 2)
+        The index of each point in the pairs.
+    dist : array of floats, shape (n1*n2)
+        The distances of the point pairs.
+    """
+    # tstart = time()
+    npoint1 = len(points1)
+    npoint2 = len(points2)
+    i, j = np.triu_indices(npoint1, 0, npoint2)
+    vectors = points2[j] - points1[i]
+    dist = np.linalg.norm(vectors, axis = 1)
+    indices = np.column_stack([i, j])
+    # print("getDistance: {}".format(time() - tstart))
+    return indices, dist
 
 def get_canvas(vertices, direction=[0, 0, 1], padding=1):
     """
