@@ -32,7 +32,9 @@ def create_material(name,
                     node_inputs=None,
                     material_style='default',
                     backface_culling=True,
-                    vertex_color=None):
+                    vertex_color=None,
+                    color_by_attribute=None, 
+                    alpha = None,):
     """
     Creat material
     """
@@ -46,24 +48,30 @@ def create_material(name,
             setattr(material, key, value)
     material.blend_method = 'BLEND'
     material.use_nodes = True
+    #
+    nodes = material.node_tree.nodes
+    mat_links = material.node_tree.links
     if node_type == 'Glass BSDF':
-        material.node_tree.nodes.new('ShaderNodeBsdfGlass')
+        nodes.new('ShaderNodeBsdfGlass')
     elif node_type == 'Emission':
-        material.node_tree.nodes.new('ShaderNodeEmission')
-    node = material.node_tree.nodes[node_type]
+        nodes.new('ShaderNodeEmission')
+    node = nodes[node_type]
     node.inputs[0].default_value = color
+    # Alpha transpancy
     if 'Alpha' in node.inputs:
-        node.inputs['Alpha'].default_value = color[3]
+        if alpha is not None:
+            node.inputs['Alpha'].default_value = alpha
+        else:
+            node.inputs['Alpha'].default_value = color[3]
+
     for key, value in node_inputs.items():
         node.inputs[key].default_value = value
     if backface_culling:
         material.use_backface_culling = True
     material.show_transparent_back = False
 
-    #
+    # vertex color
     if vertex_color not in [None, 'None']:
-        nodes = material.node_tree.nodes
-        mat_links = material.node_tree.links
         if bpy.data.version > (3, 0, 0):
             vcol = nodes.new(type="ShaderNodeVertexColor")
         else:
@@ -71,6 +79,20 @@ def create_material(name,
         vcol.layer_name = vertex_color
         mat_links.new(vcol.outputs['Color'], node.inputs['Base Color'])
         mat_links.new(vcol.outputs['Alpha'], node.inputs['Alpha'])
+    # color by attribute
+    if color_by_attribute is not None:
+        attr_node = nodes.new(type="ShaderNodeAttribute")
+        attr_node.attribute_name = color_by_attribute['attribute_name']
+        if 'ValToRGB' in color_by_attribute:
+            color_ramp = nodes.new(type="ShaderNodeValToRGB")
+            color_ramp.color_ramp.elements[0].color = color_by_attribute['ValToRGB'][0]
+            color_ramp.color_ramp.elements[1].color = color_by_attribute['ValToRGB'][1]
+            mat_links.new(attr_node.outputs['Fac'], color_ramp.inputs['Fac'])
+            mat_links.new(color_ramp.outputs['Color'], node.inputs['Base Color'])
+            mat_links.new(color_ramp.outputs['Alpha'], node.inputs['Alpha'])
+        else:
+            mat_links.new(attr_node.outputs['Color'], node.inputs['Base Color'])
+        # mat_links.new(vcol.outputs['Alpha'], node.inputs['Alpha'])
 
     return material
 
