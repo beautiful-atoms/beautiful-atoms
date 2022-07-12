@@ -109,7 +109,9 @@ class BATOMS_PT_molecular_surface(Panel):
             if kb.color_by == 'None':
                 col.prop(kb, "color",  text="color")
             else:
-                col.prop(kb, "transparency",  text="transparency")
+                col.prop(kb, "color1",  text="color1")
+                col.prop(kb, "color2",  text="color2")
+                # col.prop(kb, "transparency",  text="transparency")
             col.separator()
             op = layout.operator(
                 "surface.molecular_surface_draw", icon='GREASEPENCIL', text="Draw")

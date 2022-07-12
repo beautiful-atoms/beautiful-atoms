@@ -39,7 +39,8 @@ class MolecularSurface(BaseObject):
 
     def build_materials(self, name, color, node_inputs=None,
                         material_style='default',
-                        vertex_color = None):
+                        vertex_color = None,
+                        color_by_attribute = None):
         """
         """
         from batoms.material import create_material
@@ -51,7 +52,8 @@ class MolecularSurface(BaseObject):
                               node_inputs=node_inputs,
                               material_style=material_style,
                               backface_culling=False,
-                              vertex_color=vertex_color)
+                              vertex_color=vertex_color,
+                              color_by_attribute=color_by_attribute)
         return mat
 
     def draw(self, ms_name="ALL"):
@@ -183,6 +185,7 @@ class MolecularSurface(BaseObject):
             from ase.cell import Cell
             from batoms.utils import map_color, map_volumetric_data
             from batoms.utils.butils import set_vertex_color
+            from batoms.utils.attribute import set_mesh_attribute
             if ms.color_by.upper() == "ELECTROSTATIC_POTENTIAL":
                 if 'charges' not in self.batoms._attributes:
                     self.batoms.auto_assign_charge()
@@ -195,12 +198,22 @@ class MolecularSurface(BaseObject):
                                 self.batoms.volumetric_data[ms.color_by], 
                                 scaled_verts
                                 )
+            # normalize
+            data = (data - np.min(data))/(np.max(data) - np.min(data))
             color_attribute = map_color(data, [1, 0, 0, ms.transparency], 
                                     [0, 0, 1, ms.transparency])
+            obj.data.attributes.new(name='{}_data'.format(ms.color_by),
+                                type='FLOAT', domain='POINT')
+            set_mesh_attribute(obj, '{}_data'.format(ms.color_by), data)
             set_vertex_color(obj, ms.color_by, color_attribute)
+        color_by_attribute = {'attribute_name': '{}_data'.format(ms.color_by),
+                              'ValToRGB':[ms.color1[:], 
+                                        ms.color2[:]]
+                                        }
         mat = self.build_materials(sas_name, color=isosurface['color'],
                                    material_style=isosurface['material_style'],
-                                   vertex_color = ms.color_by,
+                                #    vertex_color = ms.color_by,
+                                color_by_attribute = color_by_attribute,
                                    )
         obj.data.materials.append(mat)
         
