@@ -37,7 +37,7 @@ class MolecularSurfaceSetting(Base):
     def get_color_by(self, context):
         keys = bpy.data.collections[self.label].batoms.settings_volume.keys()
         items = [("None", "None", "None"),
-                ("Charges", "Charges", "Charges")]
+                ("Electrostatic_Potential", "Electrostatic_Potential", "Electrostatic_Potential")]
         i = 1
         for key in keys:
             items.append((key, key, key))
