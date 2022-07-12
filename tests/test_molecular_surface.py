@@ -35,7 +35,7 @@ def test_EPM():
     c2h6so.molecular_surface.draw()
     assert "Vertex Color" not in bpy.data.objects['c2h6so_1_sas'].data.materials[0].node_tree.nodes
     # color by potential
-    c2h6so.molecular_surface.settings['1'].color_by = 'Charges'
+    c2h6so.molecular_surface.settings['1'].color_by = 'Electrostatic_Potential'
     c2h6so.molecular_surface.draw()
     if bpy.app.version_string >= '3.2.0':
         assert "Color Attribute" in bpy.data.objects['c2h6so_1_sas'].data.materials[0].node_tree.nodes
