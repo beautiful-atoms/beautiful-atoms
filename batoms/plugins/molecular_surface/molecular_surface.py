@@ -167,6 +167,7 @@ class MolecularSurface(BaseObject):
             volume, 5, spacing=self.get_space(resolution),
             origin=self.box_origin)
         isosurface['color'] = ms.color
+        isosurface['transparency'] = ms.transparency
         isosurface['material_style'] = ms.material_style
         logger.debug('Vertices: %s' % len(isosurface['vertices']))
         sas_name = '%s_%s_sas' % (self.label, ms.name)
@@ -180,16 +181,23 @@ class MolecularSurface(BaseObject):
         #
         if ms.color_by != "None":
             from ase.cell import Cell
-            from batoms.utils import calc_color_attribute
-            # scaled positions
-            scaled_verts = Cell(self.batoms.cell).scaled_positions(isosurface['vertices'])
-            color_attribute = calc_color_attribute(
-                self.batoms.volumetric_data[ms.color_by], 
-                            scaled_verts, isosurface['color'][3])
+            from batoms.utils import map_color, map_volumetric_data
             from batoms.utils.butils import set_vertex_color
-            set_vertex_color(obj, 
-                ms.color_by, 
-                color_attribute)
+            if ms.color_by.upper() == "ELECTROSTATIC_POTENTIAL":
+                if 'charges' not in self.batoms._attributes:
+                    self.batoms.auto_assign_charge()
+                data = self.batoms.calc_electrostatic_potential(isosurface['vertices'])
+            else:
+                # using volumetric_data
+                # scaled positions
+                scaled_verts = Cell(self.batoms.cell).scaled_positions(isosurface['vertices'])
+                data = map_volumetric_data(
+                                self.batoms.volumetric_data[ms.color_by], 
+                                scaled_verts
+                                )
+            color_attribute = map_color(data, [1, 0, 0, ms.transparency], 
+                                    [0, 0, 1, ms.transparency])
+            set_vertex_color(obj, ms.color_by, color_attribute)
         mat = self.build_materials(sas_name, color=isosurface['color'],
                                    material_style=isosurface['material_style'],
                                    vertex_color = ms.color_by,

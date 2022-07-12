@@ -70,6 +70,7 @@ def create_material(name,
             vcol = nodes.new(type="ShaderNodeVertexColor")
         vcol.layer_name = vertex_color
         mat_links.new(vcol.outputs['Color'], node.inputs['Base Color'])
+        mat_links.new(vcol.outputs['Alpha'], node.inputs['Alpha'])
 
     return material
 

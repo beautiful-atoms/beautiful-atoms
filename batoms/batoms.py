@@ -1925,6 +1925,47 @@ class Batoms(BaseCollection, ObjectGN):
             sp.data.segments = segments
             sp.update(sp.data.as_dict())
 
+    def auto_assign_charge(self, force_field="mmff94"):
+        """Estimates atomic partial charges using openbabel.
+
+        MMFF94 Partial Charges are assigned using a four stage algorithm.
+
+        Args:
+            force_field (str, optional): force field. Defaults to "mmff94".
+        """
+        tstart = time()
+        ob = self.as_pybel()
+        charges = np.array(ob.calccharges(model = force_field))
+        self.set_attributes({'charges':charges})
+        logger.debug("time: {:1.3f}".format(time() - tstart))
+        return charges
+    
+    def calc_electrostatic_potential(self, points):
+        """Calc electrostatic potential on given points
+            based on partial charges.
+
+        Args:
+            points (array): points
+
+        Returns:
+            array: potentials at given points
+        """
+        from ase.geometry import get_distances
+        tstart = time()
+        positions = self.positions
+        charges = self.get_attribute('charges')
+        # parameter
+        eps = 8.854e-12 # Permittivity of free space (F.m-1)
+        k = 1/4/np.pi/eps
+        # calculate distance
+        D, D_len = get_distances(positions, points)
+        # matrix
+        pot_mat = k/D_len*charges[:, None]
+        # sum over all charge (atoms)
+        potentials = np.sum(pot_mat, axis = 0)
+        logger.debug("time: {:1.3f}".format(time() - tstart))
+        return potentials
+
 
 
 def hook_plugins(cls, plugin_info):

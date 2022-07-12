@@ -427,7 +427,22 @@ def test_export_mesh_obj():
                      with_bond=True)
 
 
-
+def test_calc_electrostatic_potential():
+    from batoms import Batoms
+    from ase.io.cube import read_cube_data
+    from time import time
+    bpy.ops.batoms.delete()
+    bpy.ops.batoms.molecule_add(label='c2h6so', formula='C2H6SO')
+    c2h6so = Batoms("c2h6so")
+    tstart = time()
+    c2h6so.auto_assign_charge()
+    t = time() - tstart
+    print("auto_assign_charge: {:1.2f}".format(t))
+    tstart = time()
+    c2h6so.calc_electrostatic_potential(c2h6so.positions - 1)
+    t = time() - tstart
+    print("calc_electrostatic_potential: {:1.2f}".format(t))
+    assert t < 5
 
 
 if __name__ == "__main__":
