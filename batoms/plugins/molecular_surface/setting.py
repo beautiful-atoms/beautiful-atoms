@@ -37,6 +37,8 @@ class MolecularSurfaceSettings(Setting):
         self.sas_name = '%s_sas' % self.label
         self.ses_name = '%s_ses' % self.label
         self.resolution = resolution
+        if len(self) == 0:
+            self['1'] = {'select': 'all'}
 
     def add(self, name, datas={}):
         self[name] = datas

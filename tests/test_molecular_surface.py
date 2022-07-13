@@ -21,9 +21,9 @@ def test_SAS():
     bpy.ops.batoms.molecule_add(label = 'h2o', formula = 'H2O')
     h2o = Batoms("h2o")
     h2o.molecular_surface.draw()
-    assert len(h2o.molecular_surface.settings) == 0
-    h2o.molecular_surface.settings['1'] = {'type': 'SAS'}
     assert len(h2o.molecular_surface.settings) == 1
+    h2o.molecular_surface.settings['2'] = {'type': 'SAS'}
+    assert len(h2o.molecular_surface.settings) == 2
     # area = h2o.molecular_surface.get_psasa()
 
 def test_SAS_location():
