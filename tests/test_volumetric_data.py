@@ -19,9 +19,9 @@ def test_settings():
     """key search"""
     from batoms.batoms import Batoms
     from ase.io.cube import read_cube_data
-    volume, atoms = read_cube_data("../tests/datas/h2o-homo.cube")
     bpy.ops.batoms.delete()
-    h2o = Batoms('h2o', from_ase = atoms, volume = {'homo': volume})
+    volume, atoms = read_cube_data("../tests/datas/h2o-homo.cube")
+    h2o = Batoms('h2o', from_ase=atoms, volume={'homo': volume})
     assert h2o.volumetric_data.bpy_setting['homo'].shape[:] == volume.shape
     assert h2o.volumetric_data['homo'].shape == volume.shape
     assert len(h2o.volumetric_data) == 1
@@ -31,3 +31,24 @@ def test_settings():
     assert h2o.volumetric_data.find("electrostatic") is not None
     h2o.volumetric_data.remove("homo")
     assert h2o.volumetric_data.find("homo") is None
+
+
+def test_gui():
+    """gui panel"""
+    from batoms.batoms import Batoms
+    from batoms.batoms import Batoms
+    from ase.io.cube import read_cube_data
+    bpy.ops.batoms.delete()
+    data, atoms = read_cube_data("../tests/datas/h2o-homo.cube")
+    h2o = Batoms('h2o', from_ase=atoms)
+    assert h2o.coll.batoms.ui_list_index_volumetric_data == 0
+    h2o.volumetric_data['homo'] = data
+    assert h2o.coll.batoms.ui_list_index_volumetric_data == 0
+    #
+    hartree, atoms = read_cube_data('../tests/datas/h2o-hartree.cube')
+    h2o.volumetric_data['hartree'] = -hartree
+    assert h2o.coll.batoms.ui_list_index_volumetric_data == 1
+    #
+    h2o.volumetric_data['diff'] = h2o.volumetric_data['hartree'] - \
+        h2o.volumetric_data['homo']
+    assert h2o.coll.batoms.ui_list_index_volumetric_data == 2

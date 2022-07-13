@@ -169,7 +169,6 @@ class MolecularSurface(BaseObject):
             volume, 5, spacing=self.get_space(resolution),
             origin=self.box_origin)
         isosurface['color'] = ms.color
-        isosurface['transparency'] = ms.transparency
         isosurface['material_style'] = ms.material_style
         logger.debug('Vertices: %s' % len(isosurface['vertices']))
         sas_name = '%s_%s_sas' % (self.label, ms.name)
@@ -200,12 +199,12 @@ class MolecularSurface(BaseObject):
                                 )
             # normalize
             data = (data - np.min(data))/(np.max(data) - np.min(data))
-            color_attribute = map_color(data, [1, 0, 0, ms.transparency], 
-                                    [0, 0, 1, ms.transparency])
+            # color_attribute = map_color(data, [1, 0, 0, ms.transparency], 
+                                    # [0, 0, 1, ms.transparency])
+            # set_vertex_color(obj, ms.color_by, color_attribute)
             obj.data.attributes.new(name='{}_data'.format(ms.color_by),
                                 type='FLOAT', domain='POINT')
             set_mesh_attribute(obj, '{}_data'.format(ms.color_by), data)
-            set_vertex_color(obj, ms.color_by, color_attribute)
         color_by_attribute = {'attribute_name': '{}_data'.format(ms.color_by),
                               'ValToRGB':[ms.color1[:], 
                                         ms.color2[:]]

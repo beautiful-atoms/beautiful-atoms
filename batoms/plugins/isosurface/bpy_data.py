@@ -28,7 +28,7 @@ class IsosurfaceSetting(Base):
 
     
     def get_volumetric_data(self, context):
-        keys = bpy.data.collections[self.label].batoms.settings_volume.keys()
+        keys = bpy.data.collections[self.label].batoms.settings_volumetric_data.keys()
         # items = [("0", "None", "None")]
         items = []
         i = 1
@@ -46,7 +46,7 @@ class IsosurfaceSetting(Base):
         )
     
     def get_color_by(self, context):
-        keys = bpy.data.collections[self.label].batoms.settings_volume.keys()
+        keys = bpy.data.collections[self.label].batoms.settings_volumetric_data.keys()
         items = [("None", "None", "None")]
         i = 1
         for key in keys:
