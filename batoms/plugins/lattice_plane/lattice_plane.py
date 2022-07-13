@@ -311,6 +311,8 @@ class LatticePlane(PluginObject):
                               'ValToRGB':[plane['color1'], 
                                             plane['color2']]
                                         }
+                else:
+                    color_by_attribute = None
                 mat = self.build_materials(name, color=plane['color'],
                                            material_style=plane['material_style'],
                                            color_by_attribute=color_by_attribute,

@@ -205,10 +205,12 @@ class MolecularSurface(BaseObject):
             obj.data.attributes.new(name='{}_data'.format(ms.color_by),
                                 type='FLOAT', domain='POINT')
             set_mesh_attribute(obj, '{}_data'.format(ms.color_by), data)
-        color_by_attribute = {'attribute_name': '{}_data'.format(ms.color_by),
+            color_by_attribute = {'attribute_name': '{}_data'.format(ms.color_by),
                               'ValToRGB':[ms.color1[:], 
                                         ms.color2[:]]
                                         }
+        else:
+            color_by_attribute = None
         mat = self.build_materials(sas_name, color=isosurface['color'],
                                    material_style=isosurface['material_style'],
                                 #    vertex_color = ms.color_by,
