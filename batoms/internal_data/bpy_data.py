@@ -194,7 +194,7 @@ class Bcell(bpy.types.PropertyGroup):
         }
         return setdict
 
-class Bvolume(bpy.types.PropertyGroup):
+class Bvolumetric_data(bpy.types.PropertyGroup):
     """
     """
     flag: BoolProperty(name="flag", default=False)
@@ -358,7 +358,7 @@ class BatomsCollection(bpy.types.PropertyGroup):
                                default=0)
     ui_list_index_select: IntProperty(name="ui_list_index_select",
                                default=0)
-    ui_list_index_volume: IntProperty(name="ui_list_index_volume",
+    ui_list_index_volumetric_data: IntProperty(name="ui_list_index_volumetric_data",
                                default=0)
     # collection                               
     settings_select: CollectionProperty(name='settings_select',
@@ -366,8 +366,8 @@ class BatomsCollection(bpy.types.PropertyGroup):
 
     settings_species: CollectionProperty(name='settings_species',
                                  type=Bspecies)
-    settings_volume: CollectionProperty(name='settings_volume',
-                                 type=Bvolume)
+    settings_volumetric_data: CollectionProperty(name='settings_volumetric_data',
+                                 type=Bvolumetric_data)
 
     def as_dict(self) -> dict:
         setdict = {
@@ -396,8 +396,8 @@ class BatomsObject(bpy.types.PropertyGroup):
                           type=Batom)
     cell: PointerProperty(name='Bcell',
                           type=Bcell)
-    volume: PointerProperty(name='Bvolume',
-                            type=Bvolume)
+    volume: PointerProperty(name='Bvolumetric_data',
+                            type=Bvolumetric_data)
 
     # collection
     settings_attribute: CollectionProperty(name='settings_attribute',

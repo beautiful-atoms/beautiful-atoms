@@ -49,7 +49,7 @@ class VIEW3D_PT_Batoms_crystal_shape(Panel):
     bl_label = "Crystal Shape"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Surface"
+    bl_category = "Plugins"
     bl_idname = "VIEW3D_PT_Batoms_crystal_shape"
     bl_options = {'DEFAULT_CLOSED'}
 
@@ -108,7 +108,7 @@ class BATOMS_UL_crystal_shape(UIList):
 
 class BATOMS_PT_crystal_shape(Panel):
     bl_label = "Crystal Shape"
-    bl_category = "Surface"
+    bl_category = "Plugins"
     bl_idname = "BATOMS_PT_crystal_shape"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"

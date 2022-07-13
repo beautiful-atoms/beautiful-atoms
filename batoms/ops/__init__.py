@@ -9,7 +9,7 @@ from . import (
     molecule_edit_bond,
     ops_batoms,
     ops_species,
-    ops_surface,
+    ops_volumetric_data,
     measure,
     manual_mapping,
     ops_render,
@@ -66,6 +66,8 @@ classes = [
     ops_species.SpeciesRemove,
     ops_species.SpeciesUpdate,
     ops_species.SpeciesModify,
+    ops_volumetric_data.VolumetricDataAdd,
+    ops_volumetric_data.VolumetricDataRemove,
     ops_render.RenderAdd,
     measure.MeasureButton,
 ]

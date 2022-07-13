@@ -38,6 +38,23 @@ logger.set_logger(bl_info["version"])
 
 
 
+import importlib
+
+modules = ['bond',
+            'polyhedra',
+            'render',
+            'ribbon']
+
+def enable_module():
+    for key in modules:
+        module = importlib.import_module("batoms.{}".format(key))
+        module.register_class()   
+
+def disable_module():
+    for key in modules:
+        module = importlib.import_module("batoms.{}".format(key))
+        module.unregister_class()   
+
 
 def register():
     # dependencies
@@ -57,7 +74,9 @@ def register():
     gui.register_keymap()
     # hook
     console.register_hook()
-    #
+    # modules
+    enable_module()
+    # plugins
     plugins.enable_plugin()
     logger.root_logger.info("Batoms init time: {:.2f}".format(time() - tstart0))
     logger.update_logging_level()
@@ -80,6 +99,7 @@ def unregister():
     gui.unregister_keymap()
     # hook
     console.unregister_hook()
+    disable_module()
     plugins.disable_plugin()
     preferences.unregister_class()
 

@@ -37,11 +37,11 @@ class BATOMS_UL_molecular_surface(UIList):
 
 class BATOMS_PT_molecular_surface(Panel):
     bl_label = "Molecular Surface"
-    bl_category = "Surface"
+    bl_category = "Plugins"
     bl_idname = "BATOMS_PT_molecular_surface"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    # bl_options = {'DEFAULT_CLOSED'}
+    bl_options = {'DEFAULT_CLOSED'}
 
     COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_EEVEE', 'BLENDER_WORKBENCH'}
 
@@ -109,7 +109,8 @@ class BATOMS_PT_molecular_surface(Panel):
             if kb.color_by == 'None':
                 col.prop(kb, "color",  text="color")
             else:
-                col.prop(kb, "transparency",  text="transparency")
+                col.prop(kb, "color1",  text="color1")
+                col.prop(kb, "color2",  text="color2")
             col.separator()
             op = layout.operator(
                 "surface.molecular_surface_draw", icon='GREASEPENCIL', text="Draw")

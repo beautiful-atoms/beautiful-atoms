@@ -49,7 +49,7 @@ class VIEW3D_PT_Batoms_lattice_plane(Panel):
     bl_label = "Lattice Plane"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Surface"
+    bl_category = "Plugins"
     bl_idname = "VIEW3D_PT_Batoms_lattice_plane"
     bl_options = {'DEFAULT_CLOSED'}
 
@@ -108,7 +108,7 @@ class BATOMS_UL_lattice_plane(UIList):
 
 class BATOMS_PT_lattice_plane(Panel):
     bl_label = "Item settings"
-    bl_category = "Surface"
+    bl_category = "Plugins"
     bl_idname = "BATOMS_PT_Lattice_Plane"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -177,6 +177,11 @@ class BATOMS_PT_lattice_plane(Panel):
             sub.prop(kb, "scale", text="Scale")
             col.prop(kb, "show_edge",  text="Show edge")
             col.prop(kb, "material_style", text="material_style")
-            col.prop(kb, "color",  text="color")
+            col.prop(kb, "color_by",  text="Color by")
+            if kb.color_by == 'None':
+                col.prop(kb, "color",  text="color")
+            else:
+                col.prop(kb, "color1",  text="color1")
+                col.prop(kb, "color2",  text="color2")
             op = layout.operator("plane.lattice_plane_draw",
                                  icon='GREASEPENCIL', text="Draw")

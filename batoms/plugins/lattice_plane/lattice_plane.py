@@ -38,7 +38,8 @@ class LatticePlane(PluginObject):
         self.settings.bpy_data.active = True
 
     def build_materials(self, name, color, node_inputs=None,
-                        material_style='default'):
+                        material_style='default',
+                        color_by_attribute=None):
         """
         """
         from batoms.material import create_material
@@ -49,7 +50,8 @@ class LatticePlane(PluginObject):
                               color=color,
                               node_inputs=node_inputs,
                               material_style=material_style,
-                              backface_culling=False)
+                              backface_culling=False,
+                              color_by_attribute=color_by_attribute)
         return mat
 
     def build_plane(self, bcell, include_center=False):
@@ -83,14 +85,12 @@ class LatticePlane(PluginObject):
         """
         build edge
         """
-        plane = {}
+        plane = p.as_dict()
         if len(faces) > 0:
-            plane = {'vertices': vertices,
+            plane.update(
+                    {'vertices': vertices,
                      'edges': edges,
                      'faces': faces,
-                     'color': p.color,
-                     'material_style': p.material_style,
-                     'indices': list(p.indices),
                      'edges_cylinder': {'lengths': [], 'centers': [],
                                         'normals': [], 'vertices': 6,
                                         'color': (0.0, 0.0, 0.0, 1.0),
@@ -98,10 +98,8 @@ class LatticePlane(PluginObject):
                                         'battr_inputs': {},
                                         },
                      'battr_inputs': {'Blatticeplane': p.as_dict()},
-                     'show_edge': p.show_edge,
-                     'slicing': p.slicing,
-                     'boundary': p.boundary,
                      }
+                     )
             for edge in edges:
                 center = (vertices[edge[0]] + vertices[edge[1]])/2.0
                 vec = vertices[edge[0]] - vertices[edge[1]]
@@ -112,7 +110,7 @@ class LatticePlane(PluginObject):
                 plane['edges_cylinder']['normals'].append(nvec)
         return plane
 
-    def build_slicing(self, name, volume, bcell, cuts=None, cmap='Spectral'):
+    def build_slicing(self, name, plane, bcell, cuts=None, cmap='Spectral'):
         """
         Change plane to a 2D slicing plane.
         Use vertex color
@@ -120,11 +118,11 @@ class LatticePlane(PluginObject):
         from scipy import ndimage
         from ase.cell import Cell
         from batoms.utils.butils import object_mode
-        import matplotlib.cm
+        from batoms.utils.attribute import set_mesh_attribute
+        volume = self.batoms.volumetric_data[plane['color_by']]
         cell = Cell(bcell.array)
-        plane = bpy.data.objects.get(name)
-        object_mode()
-        me = plane.data
+        obj = bpy.data.objects.get(name)
+        me = obj.data
         bm = bmesh.new()
         bm.from_mesh(me)
         # get maximum cuts based on the density
@@ -157,7 +155,7 @@ class LatticePlane(PluginObject):
         n = len(local_positions)
         # positions (natom, 3) to (natom, 4)
         local_positions = np.append(local_positions, np.ones((n, 1)), axis=1)
-        mat = np.array(plane.matrix_world)
+        mat = np.array(obj.matrix_world)
         positions = mat.dot(local_positions.T).T
         # (natom, 4) back to (natom, 3)
         positions = positions[:, :3] - bcell.origin
@@ -165,34 +163,15 @@ class LatticePlane(PluginObject):
         scaled_positions = cell.scaled_positions(positions)
         index = scaled_positions*volume.shape
         # map new value
-        new_volume = ndimage.map_coordinates(volume, index.T, order=1)
-        dv = np.max(new_volume) - np.min(new_volume)
-        new_volume = (new_volume - np.min(new_volume))/dv
-        # map value to color by colormap
-        cmap = matplotlib.cm.get_cmap(cmap)
-        object_mode()
-        bm = bmesh.new()
-        bm.from_mesh(plane.data)
-        volume_layer = bm.loops.layers.color.new('volume')
-
-        for v in bm.verts:
-            for loop in v.link_loops:
-                color = cmap(new_volume[v.index])
-                loop[volume_layer] = color
-        bm.to_mesh(plane.data)
-        plane.data.update()
-        plane.data.materials[0].use_backface_culling = True
-        plane.data.materials[0].show_transparent_back = False
-        # add node
-        node_tree = plane.data.materials[0].node_tree
-        nodes = node_tree.nodes
-        mat_links = node_tree.links
-        bsdf = nodes.get("Principled BSDF")
-        assert(bsdf)
-        vcol = nodes.new(type="ShaderNodeVertexColor")
-        vcol.layer_name = "volume"
-        mat_links.new(vcol.outputs['Color'], bsdf.inputs['Base Color'])
-        # bpy.context.view_layer.objects.active = plane
+        data = ndimage.map_coordinates(volume, index.T, order=1)
+        # normalize
+        dv = np.max(data) - np.min(data)
+        data = (data - np.min(data))/dv
+        # add attribute to mesh
+        me.attributes.new(name=plane['color_by'],
+                                type='FLOAT', domain='POINT')
+        set_mesh_attribute(obj, plane['color_by'], data)
+        # bpy.context.view_layer.objects.active = obj
         # bpy.ops.object.mode_set(mode='VERTEX_PAINT')
 
     def build_slicing_image(self, volume, bcell):
@@ -309,9 +288,6 @@ class LatticePlane(PluginObject):
                 obj = draw_surface_from_vertices(name, plane,
                                                  coll=self.batoms.coll,
                                                  )
-                mat = self.build_materials(name, color=plane['color'],
-                                           material_style=plane['material_style'])
-                obj.data.materials.append(mat)
                 obj.parent = self.batoms.obj
                 obj.batoms.type = 'LATTICEPLANE'
                 obj.batoms.label = self.batoms.label
@@ -325,12 +301,23 @@ class LatticePlane(PluginObject):
                     obj.parent = self.batoms.obj
                     obj.batoms.type = 'LATTICEPLANE'
                     obj.batoms.label = self.batoms.label
-                if plane['slicing']:
-                    name = '%s_%s_%s' % (self.label, 'plane', species)
-                    self.build_slicing(name, self.batoms.volume,
+                if plane['color_by'] != "None":
+                    name = '%s_%s_%s' % (self.label, self.name, species)
+                    self.build_slicing(name, plane,
                                        self.batoms.cell,
                                        cuts=cuts,
                                        cmap=cmap)
+                    color_by_attribute = {'attribute_name': plane['color_by'],
+                              'ValToRGB':[plane['color1'], 
+                                            plane['color2']]
+                                        }
+                else:
+                    color_by_attribute = None
+                mat = self.build_materials(name, color=plane['color'],
+                                           material_style=plane['material_style'],
+                                           color_by_attribute=color_by_attribute,
+                                           )
+                obj.data.materials.append(mat)
 
     @property
     def setting(self):

@@ -37,11 +37,11 @@ class BATOMS_UL_species(UIList):
 
 class BATOMS_PT_species(Panel):
     bl_label = "Species"
-    bl_category = "Species"
+    bl_category = "Batoms"
     bl_idname = "BATOMS_PT_species"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    # bl_options = {'DEFAULT_CLOSED'}
+    bl_options = {'DEFAULT_CLOSED'}
 
     COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_EEVEE', 'BLENDER_WORKBENCH'}
 

@@ -33,14 +33,11 @@ def test_EPM():
     bpy.ops.batoms.molecule_add(label='c2h6so', formula='C2H6SO')
     c2h6so = Batoms("c2h6so")
     c2h6so.molecular_surface.draw()
-    assert "Vertex Color" not in bpy.data.objects['c2h6so_1_sas'].data.materials[0].node_tree.nodes
+    assert "Attribute" not in bpy.data.objects['c2h6so_1_sas'].data.materials[0].node_tree.nodes
     # color by potential
     c2h6so.molecular_surface.settings['1'].color_by = 'Electrostatic_Potential'
     c2h6so.molecular_surface.draw()
-    if bpy.app.version_string >= '3.2.0':
-        assert "Color Attribute" in bpy.data.objects['c2h6so_1_sas'].data.materials[0].node_tree.nodes
-    else:
-        assert "Vertex Color" in bpy.data.objects['c2h6so_1_sas'].data.materials[0].node_tree.nodes
+    assert "Attribute" in bpy.data.objects['c2h6so_1_sas'].data.materials[0].node_tree.nodes
     if use_cycles:
         set_cycles_res(c2h6so)
     else:
@@ -57,14 +54,11 @@ def test_colored_by_volumetric_datas():
     h2o = Batoms("h2o", from_ase=atoms)
     h2o.volumetric_data['hartree'] = -hartree
     h2o.molecular_surface.draw()
-    assert "Vertex Color" not in bpy.data.objects['h2o_1_sas'].data.materials[0].node_tree.nodes
+    assert "Attribute" not in bpy.data.objects['h2o_1_sas'].data.materials[0].node_tree.nodes
     # color by potential
     h2o.molecular_surface.settings['1'].color_by = 'hartree'
     h2o.molecular_surface.draw()
-    if bpy.app.version_string >= '3.2.0':
-        assert "Color Attribute" in bpy.data.objects['h2o_1_sas'].data.materials[0].node_tree.nodes
-    else:
-        assert "Vertex Color" in bpy.data.objects['h2o_1_sas'].data.materials[0].node_tree.nodes
+    assert "Attribute" in bpy.data.objects['h2o_1_sas'].data.materials[0].node_tree.nodes
     if use_cycles:
         set_cycles_res(h2o)
     else:

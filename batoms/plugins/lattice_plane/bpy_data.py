@@ -37,6 +37,37 @@ class LatticePlaneSetting(Base):
     show_edge: BoolProperty(name="show_edge", default=False)
     width: FloatProperty(name="width", default=0.01)
 
+    color: FloatVectorProperty(name="color", size=4,
+                               subtype='COLOR',
+                               min=0, max=1,
+                               default=[0, 1, 1, 1.0])
+    color1: FloatVectorProperty(name="color1", size=4,
+                               subtype='COLOR',
+                               min=0, max=1,
+                               default=[1, 0, 0, 1.0])
+    color2: FloatVectorProperty(name="color2", size=4,
+                               subtype='COLOR',
+                               min=0, max=1,
+                               default=[0, 0, 1, 1.0])
+    
+    def get_color_by(self, context):
+        keys = bpy.data.collections[self.label].batoms.settings_volumetric_data.keys()
+        items = [("None", "None", "None"),
+                ]
+        i = 1
+        for key in keys:
+            items.append((key, key, key))
+            i += 1
+        return items
+        
+    color_by : EnumProperty(
+        items=get_color_by,
+        name="color_by",
+        description="color by",
+        default=None,
+        update=None,
+        )
+        
     @property
     def name(self) -> str:
         return '%s-%s-%s' % (self.indices[0], self.indices[1], self.indices[2])
@@ -47,8 +78,11 @@ class LatticePlaneSetting(Base):
             'label': self.label,
             'name': self.name,
             'material_style': self.material_style,
+            'color_by': self.color_by,
             'color': self.color[:],
-            'indices': self.indices,
+            'color1': self.color1[:],
+            'color2': self.color2[:],
+            'indices': list(self.indices),
             'distance': self.distance,
             'crystal': self.crystal,
             'symmetry': self.symmetry,

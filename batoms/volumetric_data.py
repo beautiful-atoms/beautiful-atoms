@@ -31,10 +31,10 @@ class VolumetricData(Setting):
                 self[key] = data
 
     def get_ui_list_index(self):
-        return self.bpy_data.ui_list_index_volume
+        return self.bpy_data.ui_list_index_volumetric_data
     
     def set_ui_list_index(self, value):
-        self.bpy_data.ui_list_index_volume = value
+        self.bpy_data.ui_list_index_volumetric_data = value
 
     def get_bpy_setting(self):
         if self.coll_name:
@@ -42,7 +42,7 @@ class VolumetricData(Setting):
             data = getattr(coll, self.name)
         else:
             raise KeyError("The collection property {} not exist!".format(self.name))
-        return data.settings_volume
+        return data.settings_volumetric_data
 
 
     def __getitem__(self, key):
