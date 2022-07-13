@@ -28,9 +28,16 @@ class VolumetricDataAdd(OperatorBatoms, ImportHelper):
             return {'FINISHED'}
         obj = context.object
         batoms = Batoms(label=context.object.batoms.label)
-        data, atoms = read_cube_data(bpy.path.abspath(self.filepath))
+        if '.cube' in self.filepath:
+            data, atoms = read_cube_data(bpy.path.abspath(self.filepath))
+            cell = atoms.cell
+        elif 'CHGCAR' in self.filepath:
+            from pymatgen.io.vasp.outputs import VolumetricData
+            poscar, data, data_aug = VolumetricData.parse_file(self.filepath)
+            data = data['total']
+            cell = poscar.structure.lattice.matrix
         # check demsion
-        assert np.isclose(atoms.cell, batoms.cell).all()
+        assert np.isclose(cell, batoms.cell).all()
         batoms.volumetric_data[self.name] = data
         context.view_layer.objects.active = obj
         self.report({"INFO"}, "Volumetric data {} is added.".format(self.name))
