@@ -53,7 +53,7 @@ class Isosurface(BaseObject):
                 color_attribute = None
             # back to cell
             verts = scaled_verts.dot(cell)
-            verts -= self.batoms.cell.origin
+            # verts -= self.batoms.cell.origin
             isosurface[iso.name] = {'vertices': verts,
                                     'edges': [],
                                     'faces': faces,
@@ -104,22 +104,23 @@ class Isosurface(BaseObject):
             #
             if isosurface_data['color_by'] != 'None':
                 from batoms.utils.butils import set_vertex_color
-                set_vertex_color(obj, 
-                    isosurface_data['color_by'], 
-                    isosurface_data['color_attribute'])
+                set_vertex_color(obj,
+                                 isosurface_data['color_by'],
+                                 isosurface_data['color_attribute'])
             # material
             mat = self.build_materials(name, isosurface_data['color'],
                                        material_style=isosurface_data['material_style'],
                                        vertex_color=isosurface_data['color_by'])
             obj.data.materials.append(mat)
-            
+
     @property
     def setting(self):
         from batoms.utils import deprecated
         """setting object."""
-        deprecated('"setting" will be deprecated in the furture, please use "settings".')
+        deprecated(
+            '"setting" will be deprecated in the furture, please use "settings".')
         return self.settings
-    
+
     def as_dict(self):
         """
         """
@@ -127,6 +128,7 @@ class Isosurface(BaseObject):
         data['settings'] = self.settings.as_dict()
         data.update(self.settings.bpy_data.as_dict())
         return data
+
 
 def calc_isosurface(volumetric_data, cell, level,
                     gradient_direction='descent',
@@ -159,6 +161,3 @@ def calc_isosurface(volumetric_data, cell, level,
                                step_size=step_size)
     faces = list(faces)
     return scaled_verts, faces
-
-
-
