@@ -155,7 +155,7 @@ class MolecularSurface(BaseObject):
         if len(indices) == 0:
             return
         radii = np.array(self.batoms.radii_vdw[indices]) + probe
-        positions = self.batoms.positions[indices]
+        positions = self.batoms.local_positions[indices]
         self.get_box(positions, padding=max(radii) + resolution)
         self.build_grid(resolution=resolution)
         logger.debug('Grid Points: %s %s %s' % self.shape)
@@ -242,7 +242,7 @@ class MolecularSurface(BaseObject):
             return
         radii_vdw = np.array(self.batoms.radii_vdw[indices])
         radii = radii_vdw + probe
-        positions = self.batoms.positions[indices]
+        positions = self.batoms.local_positions[indices]
         self.get_box(positions, padding=max(radii) + resolution + probe)
         self.build_grid(resolution=resolution)
         # draw_vertices('meshgrid', self.meshgrids)

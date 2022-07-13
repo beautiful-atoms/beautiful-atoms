@@ -15,7 +15,7 @@ class MolecularSurfaceAdd(OperatorBatoms):
     bl_description = ("Add Molecular Surface to a Batoms")
 
     name: StringProperty(
-        name="name", default='2',
+        name="name", default='1',
         description="Name of Molecular Surface to be added")
 
     def execute(self, context):
