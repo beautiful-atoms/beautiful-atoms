@@ -49,7 +49,7 @@ class Bcell(ObjectGN):
 
         self.delete_obj(self.obj_name)
         mesh = bpy.data.meshes.new(self.obj_name)
-        mesh.from_pydata(positions, [], [])
+        mesh.from_pydata(positions, [[0, 1], [0, 2], [0, 3]], [])
         mesh.update()
         for f in mesh.polygons:
             f.use_smooth = True
@@ -84,6 +84,8 @@ class Bcell(ObjectGN):
         JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
                                          '%s_JoinGeometry' % self.label,
                                          'GeometryNodeJoinGeometry')
+        gn.node_group.links.new(
+            GroupInput.outputs['Geometry'], JoinGeometry.inputs['Geometry'])
         # ------------------------------------------------------------------
         # transfer first 4 positions of cell
         PositionCell = get_nodes_by_name(gn.node_group.nodes,
