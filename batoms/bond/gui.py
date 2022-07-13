@@ -59,7 +59,7 @@ class VIEW3D_PT_Batoms_bond(Panel):
     bl_label = "Bond"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Bond"
+    bl_category = "Batoms"
     bl_idname = "VIEW3D_PT_Batoms_bond"
     bl_options = {'DEFAULT_CLOSED'}
 

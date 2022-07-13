@@ -13,7 +13,7 @@ classes = [
     bpy_data.Batom,
     bpy_data.Battribute,
     bpy_data.Bcell,
-    bpy_data.Bvolume,
+    bpy_data.Bvolumetric_data,
     bpy_data.Bselect,
     bpy_data.Bboundary,
     bpy_data.BatomsCollection,
@@ -21,22 +21,6 @@ classes = [
 ]
 
 
-import importlib
-
-modules = ['bond',
-            'polyhedra',
-            'render',
-            'ribbon']
-
-def enable_module():
-    for key in modules:
-        module = importlib.import_module("batoms.{}".format(key))
-        module.register_class()   
-
-def disable_module():
-    for key in modules:
-        module = importlib.import_module("batoms.{}".format(key))
-        module.unregister_class()   
         
 from bpy.types import Collection, Object
 
@@ -49,14 +33,12 @@ def register_class():
                                         type=bpy_data.BatomsCollection)
     Object.batoms = PointerProperty(name='Batoms',
                                     type=bpy_data.BatomsObject)
-    enable_module()
     
 
 def unregister_class():
     from bpy.utils import unregister_class
     for cls in reversed(classes):
         unregister_class(cls)
-    disable_module()
     
     del Collection.batoms
     del Object.batoms

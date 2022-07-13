@@ -3,6 +3,7 @@ from bpy.types import Operator
 from bpy_extras.io_utils import ImportHelper, ExportHelper
 from bpy.props import (
     BoolProperty,
+    StringProperty,
     EnumProperty,
 )
 from batoms.batoms import Batoms
@@ -16,9 +17,15 @@ class IMPORT_OT_batoms(Operator, ImportHelper):
 
     filename_ext = ".xyz"
 
+    label: StringProperty(
+        name="label", default='',
+        description="Name of batoms.")
+
+
     render: BoolProperty(
         name="Add a default render", default=True,
         description="Do you need a render?")
+    
     model_style: EnumProperty(
         name="Type",
         description="Choose model",
@@ -34,6 +41,7 @@ class IMPORT_OT_batoms(Operator, ImportHelper):
         layout.label(text="Import a Structure")
         box = layout.box()
         col = box.column()
+        col.prop(self, "label")
         col.prop(self, "render")
         #
         box = layout.box()
@@ -45,7 +53,10 @@ class IMPORT_OT_batoms(Operator, ImportHelper):
 
     def execute(self, context):
         inputfile = bpy.path.abspath(self.filepath)
-        batoms = read(inputfile)
+        if self.label == '':
+            batoms = read(inputfile)
+        else:
+            batoms = read(inputfile, label = self.label)
         batoms.model_style = self.model_style
         return {'FINISHED'}
 

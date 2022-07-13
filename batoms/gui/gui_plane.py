@@ -16,7 +16,7 @@ class Plane_PT_prepare(Panel):
     bl_space_type  = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
-    bl_category = "Surface"
+    bl_category = "Plugins"
     bl_idname = "PLANE_PT_Tools"
 
     def draw(self, context):

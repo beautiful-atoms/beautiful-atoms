@@ -37,11 +37,11 @@ class BATOMS_UL_isosurface(UIList):
 
 class BATOMS_PT_isosurface(Panel):
     bl_label = "Isosurface"
-    bl_category = "Surface"
+    bl_category = "Plugins"
     bl_idname = "BATOMS_PT_isosurface"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    # bl_options = {'DEFAULT_CLOSED'}
+    bl_options = {'DEFAULT_CLOSED'}
 
     COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_EEVEE', 'BLENDER_WORKBENCH'}
 

@@ -67,7 +67,7 @@ class VIEW3D_PT_Batoms_cavity(Panel):
     bl_label = "Cavity"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Surface"
+    bl_category = "Plugins"
     bl_idname = "VIEW3D_PT_Batoms_cavity"
     bl_options = {'DEFAULT_CLOSED'}
 

@@ -36,12 +36,12 @@ class BATOMS_UL_polyhedra(UIList):
 
 
 class BATOMS_PT_polyhedra(Panel):
-    bl_label = "polyhedra"
-    bl_category = "Bond"
+    bl_label = "Polyhedra"
+    bl_category = "Batoms"
     bl_idname = "BATOMS_PT_polyhedra"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    # bl_options = {'DEFAULT_CLOSED'}
+    bl_options = {'DEFAULT_CLOSED'}
 
     COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_EEVEE', 'BLENDER_WORKBENCH'}
 
