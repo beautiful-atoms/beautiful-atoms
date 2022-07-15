@@ -107,6 +107,9 @@ class BATOMS_PT_isosurface(Panel):
             col.prop(kb, "color_by",  text="Color by")
             if kb.color_by == 'None':
                 col.prop(kb, "color",  text="color")
+            else:
+                col.prop(kb, "color1",  text="color1")
+                col.prop(kb, "color2",  text="color2")
             col.separator()
             op = layout.operator("surface.isosurface_draw",
                                  icon='GREASEPENCIL', text="Draw")

@@ -9,8 +9,8 @@ from . import (
     gui_cell,
     gui_plane,
     gui_render,
+    gui_volumetric_data,
     ui_list_species,
-    ui_list_volumetric_data,
     view3d_mt_batoms_add,
     view3d_mt_object_context_menu,
     view3d_mt_edit_mesh_context_menu,
@@ -26,6 +26,7 @@ class BatomsCollection(bpy.types.PropertyGroup):
     plane: PointerProperty(type=gui_plane.PlaneProperties)
     render: PointerProperty(type=gui_render.RenderProperties)
     io: PointerProperty(type=gui_io.BatomsPropertiesIO)
+    volumetric_data: PointerProperty(type=gui_volumetric_data.VolumetricDataProperties)
 
 
 classes = [
@@ -55,9 +56,11 @@ classes = [
     ui_list_species.BATOMS_MT_species_context_menu,
     ui_list_species.BATOMS_UL_species,
     ui_list_species.BATOMS_PT_species,
-    ui_list_volumetric_data.BATOMS_MT_volumetric_data_context_menu,
-    ui_list_volumetric_data.BATOMS_UL_volumetric_data,
-    ui_list_volumetric_data.BATOMS_PT_volumetric_data,
+    gui_volumetric_data.VolumetricDataProperties,
+    gui_volumetric_data.VIEW3D_PT_Batoms_volumetric_data,
+    gui_volumetric_data.BATOMS_MT_volumetric_data_context_menu,
+    gui_volumetric_data.BATOMS_UL_volumetric_data,
+    gui_volumetric_data.BATOMS_PT_volumetric_data,
     gui_io.BatomsPropertiesIO,
     gui_io.VIEW3D_PT_Batoms_io,
     gui_io.VIEW3D_PT_Batoms_io_materials_project,
