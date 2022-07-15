@@ -53,8 +53,7 @@ def test_gui():
         h2o.volumetric_data["homo"]
     assert h2o.coll.batoms.ui_list_index_volumetric_data == 2
 
-
-def test_ops():
+def test_ops_add():
     """gui panel"""
     from batoms.batoms import Batoms
     from batoms.batoms import Batoms
@@ -66,3 +65,20 @@ def test_ops():
     bpy.ops.batoms.volumetric_data_add(
         name="hartree", filepath="../tests/datas/h2o-hartree.cube")
     assert h2o.volumetric_data.find("hartree") is not None
+    bpy.ops.batoms.volumetric_data_remove(
+        name="hartree")
+    assert h2o.volumetric_data.find("hartree") is None
+
+def test_ops_create():
+    from ase.io.cube import read_cube_data
+    from batoms.bio.bio import read
+    bpy.ops.batoms.delete()
+    h2o = read("../tests/datas/h2o-homo.cube")
+    hartree, atoms = read_cube_data('../tests/datas/h2o-hartree.cube')
+    h2o.volumetric_data['hartree'] = -hartree
+    bpy.ops.batoms.volumetric_data_create(
+        name="diff", select_data1 = 'h2o_homo',
+        select_data2='h2o_homo',
+        operator='Minus')
+    assert h2o.coll.batoms.ui_list_index_volumetric_data == 2
+    assert np.isclose(h2o.volumetric_data['diff'], 0).all()

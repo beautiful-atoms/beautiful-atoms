@@ -3,7 +3,75 @@
 
 import bpy
 from bpy.types import Menu, Panel, UIList
+from bpy.props import (StringProperty,
+                       BoolProperty,
+                       BoolVectorProperty,
+                       IntProperty,
+                       FloatProperty,
+                       EnumProperty,
+                       )
 
+from batoms.internal_data.bpy_data import get_volumetric_data
+
+
+class VolumetricDataProperties(bpy.types.PropertyGroup):
+    # volumetric data
+    name: StringProperty(
+        name="name",
+        description="Name of volumetric data",
+        default="create",
+        )
+    select_data1: EnumProperty(
+        name="select_data1",
+        description="Select volumetric data",
+        items=get_volumetric_data,
+        default=0
+        )
+    select_data2: EnumProperty(
+        name="select_data2",
+        description="Select volumetric data",
+        items=get_volumetric_data,
+        default=0
+        )
+    operator: EnumProperty(
+        name="operator", 
+        items=[('Add', 'Add', '', 0),
+                ('Minus', 'Minus', '', 1)
+              ],
+        description="Volumetric data to be used.",
+        default=0,
+        )
+class VIEW3D_PT_Batoms_volumetric_data(Panel):
+    bl_label = "Volumetric Data"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "Batoms"
+    bl_idname = "VIEW3D_PT_Batoms_volumetric_data"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        if obj:
+            return obj.batoms.type != 'OTHER'
+        else:
+            return False
+
+    def draw(self, context):
+        name = 'None'
+        if context.object:
+            if context.object.batoms.type != 'OTHER':
+                name = context.object.batoms.label
+        layout = self.layout
+        # layout.label(text="Active: " + name)
+        batoms = context.scene.batoms
+        op = layout.operator("batoms.volumetric_data_create",
+                             icon='GREASEPENCIL', text="Create from others")
+        op.name = batoms.volumetric_data.name
+        op.select_data1 = batoms.volumetric_data.select_data1
+        op.select_data2 = batoms.volumetric_data.select_data2
+        op.operator = batoms.volumetric_data.operator
+        layout.separator()
 
 class BATOMS_MT_volumetric_data_context_menu(Menu):
     bl_label = "Volumetric Data Specials"
@@ -41,7 +109,8 @@ class BATOMS_PT_volumetric_data(Panel):
     bl_idname = "BATOMS_PT_volumetric_data"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_options = {'DEFAULT_CLOSED'}
+    bl_parent_id = 'VIEW3D_PT_Batoms_volumetric_data'
+    # bl_options = {'DEFAULT_CLOSED'}
 
     COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_EEVEE', 'BLENDER_WORKBENCH'}
 

@@ -11,6 +11,15 @@ from bpy.props import (StringProperty,
                        CollectionProperty,
                        )
 
+def get_volumetric_data(self, context):
+    keys = bpy.data.collections[context.object.batoms.label].batoms.settings_volumetric_data.keys()
+    items = []
+    i = 0
+    for key in keys:
+        items.append((key, key, key))
+        i += 1
+    return items
+
 class Base(bpy.types.PropertyGroup):
 
     material_style: EnumProperty(
@@ -201,7 +210,13 @@ class Bvolumetric_data(bpy.types.PropertyGroup):
     label: StringProperty(name="label", default='')
     npoint: IntProperty(name="npoint")
     shape: IntVectorProperty(name="shape", size=3)
-
+    
+    def as_dict(self) -> dict:
+        setdict = {
+            'label': self.label,
+            'shape': self.shape[:],
+        }
+        return setdict
 
 class Bboundary(Base):
     """

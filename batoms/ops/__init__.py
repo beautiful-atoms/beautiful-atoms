@@ -68,6 +68,7 @@ classes = [
     ops_species.SpeciesModify,
     ops_volumetric_data.VolumetricDataAdd,
     ops_volumetric_data.VolumetricDataRemove,
+    ops_volumetric_data.VolumetricDataCreate,
     ops_render.RenderAdd,
     measure.MeasureButton,
 ]
