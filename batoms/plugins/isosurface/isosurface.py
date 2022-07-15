@@ -46,11 +46,20 @@ class Isosurface(BaseObject):
             scaled_verts, faces = calc_isosurface(volume, cell, iso.level)
             # color by another volumetric data
             if iso.color_by != "None":
-                from batoms.utils import calc_color_attribute
-                color_attribute = calc_color_attribute(
-                    self.batoms.volumetric_data[iso.color_by], scaled_verts)
+                from batoms.utils import map_volumetric_data
+                data = map_volumetric_data(
+                                self.batoms.volumetric_data[iso.color_by], 
+                                scaled_verts
+                                )
+                attribute_data = (data - np.min(data))/(np.max(data) - np.min(data))
+                color_by_attribute = {'attribute_name': '{}_data'.format(iso.color_by),
+                                'ValToRGB':[iso.color1[:], 
+                                            iso.color2[:]]
+                                            }
             else:
-                color_attribute = None
+                color_by_attribute = None
+                attribute_data = None
+
             # back to cell
             verts = scaled_verts.dot(cell)
             # verts -= self.batoms.cell.origin
@@ -60,14 +69,15 @@ class Isosurface(BaseObject):
                                     'material_style': iso.material_style,
                                     'color': iso.color,
                                     'color_by': iso.color_by,
-                                    'color_attribute': color_attribute,
-                                    'battr_inputs': {'Bisosurface': iso.as_dict()}
+                                    'color_by_attribute': color_by_attribute,
+                                    'battr_inputs': {'Bisosurface': iso.as_dict()},
+                                    'attribute_data': attribute_data,
                                     }
         return isosurface
 
     def build_materials(self, name, color, node_inputs=None,
                         material_style='default',
-                        vertex_color=None):
+                        color_by_attribute=None):
         """
         """
         from batoms.material import create_material
@@ -78,7 +88,8 @@ class Isosurface(BaseObject):
                               color=color,
                               node_inputs=node_inputs,
                               material_style=material_style,
-                              backface_culling=False)
+                              backface_culling=False,
+                              color_by_attribute=color_by_attribute)
         return mat
 
     def draw(self, isosurface_name='ALL'):
@@ -101,16 +112,16 @@ class Isosurface(BaseObject):
             obj.batoms.type = 'ISOSURFACE'
             obj.batoms.label = self.label
             obj.parent = self.batoms.obj
-            #
-            if isosurface_data['color_by'] != 'None':
-                from batoms.utils.butils import set_vertex_color
-                set_vertex_color(obj,
-                                 isosurface_data['color_by'],
-                                 isosurface_data['color_attribute'])
+            if isosurface_data['attribute_data'] is not None:
+                from batoms.utils.attribute import set_mesh_attribute
+                obj.data.attributes.new(name=isosurface_data['color_by_attribute']['attribute_name'],
+                                type='FLOAT', domain='POINT')
+                set_mesh_attribute(obj, isosurface_data['color_by_attribute']['attribute_name'], isosurface_data['attribute_data'])
             # material
             mat = self.build_materials(name, isosurface_data['color'],
                                        material_style=isosurface_data['material_style'],
-                                       vertex_color=isosurface_data['color_by'])
+                                        color_by_attribute = isosurface_data['color_by_attribute'],
+                                       )
             obj.data.materials.append(mat)
 
     @property

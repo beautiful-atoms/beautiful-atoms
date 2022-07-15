@@ -41,6 +41,17 @@ def test_settings():
 #         set_cycles_res(h2o)
 #     h2o.get_image([0, 0, 1], **extras)
 
+def test_color_by():
+    from ase.io.cube import read_cube_data
+    from batoms.bio.bio import read
+    bpy.ops.batoms.delete()
+    h2o = read("../tests/datas/h2o-homo.cube")
+    hartree, atoms = read_cube_data('../tests/datas/h2o-hartree.cube')
+    h2o.volumetric_data['hartree'] = -hartree
+    bpy.ops.surface.isosurface_add(name="positive")
+    h2o.isosurface.settings['positive'].level = 0.001
+    h2o.isosurface.settings['positive'].color_by = 'hartree'
+    bpy.ops.surface.isosurface_draw()
 
 def test_diff():
     from batoms.bio.bio import read
