@@ -30,6 +30,7 @@ plugin_info = {
     'molecular_surface': ['molecular_surface', 'MolecularSurface', 'Bmolecularsurface'],
     'magres': ['magres', 'Magres', 'Bmagres'],
     'template': ['template', 'Template', 'Btemplate'],
+    'real_interaction': [],
     }
 
 def enable_plugin():
@@ -42,4 +43,4 @@ def disable_plugin():
     for key in plugin_info.keys():
         if getattr(bpy.context.preferences.addons['batoms'].preferences, key):    
             plugin = importlib.import_module("batoms.plugins.{}".format(key))
-            plugin.unregister_class()   
+            plugin.unregister_class()

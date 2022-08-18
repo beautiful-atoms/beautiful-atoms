@@ -239,7 +239,7 @@ class BatomsAddonPreferences(AddonPreferences):
         description="Enable real_interaction plugin",
         get=get_plugin("real_interaction"),
         set=set_plugin("real_interaction"),
-        default=False,
+        default=True,
     )
 
     magres: BoolProperty(

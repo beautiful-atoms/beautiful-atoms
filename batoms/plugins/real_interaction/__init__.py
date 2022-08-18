@@ -2,8 +2,9 @@ import bpy
 from bpy.props import PointerProperty
 
 from . import (
+            modal_force_field_ase,
+            modal_force_field_openbabel,
             modal_rigid_body,
-            modal_force_field,
             )
 
 
@@ -11,9 +12,12 @@ classes = [
     modal_rigid_body.Rigid_Body_Operator,
     modal_rigid_body.Rigid_Body_Modal_Panel,
     modal_rigid_body.RigidBodyProperties,
-    modal_force_field.Force_Field_Operator,
-    modal_force_field.Force_Field_Modal_Panel,
-    modal_force_field.ForceFieldProperties,
+    modal_force_field_ase.ASE_Force_Field_Operator,
+    modal_force_field_ase.ASE_Force_Field_Modal_Panel,
+    modal_force_field_ase.ASEForceFieldProperties,
+    modal_force_field_openbabel.OB_Force_Field_Operator,
+    modal_force_field_openbabel.OB_Force_Field_Modal_Panel,
+    modal_force_field_openbabel.OBForceFieldProperties,
     
 ]
 
@@ -24,7 +28,8 @@ def register_class():
         register_class(cls)
     scene = bpy.types.Scene
     scene.rbpanel = PointerProperty(type=modal_rigid_body.RigidBodyProperties)
-    scene.ffpanel = PointerProperty(type=modal_force_field.ForceFieldProperties)
+    scene.aseffpanel = PointerProperty(type=modal_force_field_ase.ASEForceFieldProperties)
+    scene.obffpanel = PointerProperty(type=modal_force_field_openbabel.OBForceFieldProperties)
     
     
 def unregister_class():
@@ -33,5 +38,6 @@ def unregister_class():
         unregister_class(cls)
     scene = bpy.types.Scene
     del scene.rbpanel
-    del scene.ffpanel
+    del scene.aseffpanel
+    del scene.obffpanel
     

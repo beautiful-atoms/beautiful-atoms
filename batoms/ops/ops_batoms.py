@@ -425,7 +425,7 @@ class BatomsReplace(OperatorBatomsEdit):
         v = get_selected_vertices(obj)
         batoms = Batoms(label=obj.batoms.label)
         batoms.replace(v, self.species)
-        bpy.ops.object.mode_set(mode='EDIT')
+        # bpy.ops.object.mode_set(mode='EDIT')
         return {'FINISHED'}
 
 

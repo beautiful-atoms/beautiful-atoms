@@ -32,7 +32,7 @@ def translate(selected_batoms, displacement):
     displacement = displacement[:3]*0.1
     # for ba
     batoms = Batoms(selected_batoms)
-    atoms = batoms.atoms
+    atoms = batoms.as_ase(local = False)
     radii = covalent_radii[atoms.get_atomic_numbers()]
     n = len(atoms)
     batoms_list = read_batoms_list()
@@ -42,7 +42,7 @@ def translate(selected_batoms, displacement):
             continue
         batoms1 = Batoms(name)
         batoms1.select = False
-        atoms1 = batoms1.atoms
+        atoms1 = batoms1.as_ase(local = False)
         radii1 = covalent_radii[atoms1.get_atomic_numbers()]
         n1 = len(atoms1)
         radii_mat = np.tile(radii, (n1, 1)).T
@@ -54,6 +54,8 @@ def translate(selected_batoms, displacement):
         flag_mat = np.less(dmat, radii_sum)
         if flag_mat.any():
             flag = False
+        print("min d: ", np.amin(dmat))
+        print("flag: ", flag)
     if flag:
         batoms.translate(displacement)
 

@@ -25,8 +25,13 @@ def get_selected_vertices_bmesh(obj):
         v = [s.index for s in bm.select_history if isinstance(
             s, bmesh.types.BMVert)]
         return v
-    else:
-        return []
+    elif obj.batoms.type == 'BATOMS' and obj.mode == 'OBJECT':
+        data = obj.data
+        bm = bmesh.new()
+        bm.from_mesh(data)
+        v = [s.index for s in bm.select_history if isinstance(
+            s, bmesh.types.BMVert)]
+        return v
 
 def get_all_consoles():
     """Get all consoles
