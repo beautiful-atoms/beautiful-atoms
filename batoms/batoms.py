@@ -437,6 +437,8 @@ class Batoms(BaseCollection, ObjectGN):
         # plugins
         for key, info in plugin_info.items():
             _name = '_{}'.format(key)
+            if len(info) == 0:
+                continue
             if getattr(getattr(self.coll, info[2]), 'active'):
                 plugin = getattr(self, key)
                 data[key] = plugin.as_dict()

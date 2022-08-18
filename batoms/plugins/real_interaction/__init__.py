@@ -13,10 +13,10 @@ classes = [
     modal_rigid_body.Rigid_Body_Modal_Panel,
     modal_rigid_body.RigidBodyProperties,
     modal_force_field_ase.ASE_Force_Field_Operator,
-    modal_force_field_ase.ASE_Force_Field_Modal_Panel,
+    modal_force_field_ase.BATOMS_PT_ASE_Force_Field_Modal,
     modal_force_field_ase.ASEForceFieldProperties,
     modal_force_field_openbabel.OB_Force_Field_Operator,
-    modal_force_field_openbabel.OB_Force_Field_Modal_Panel,
+    modal_force_field_openbabel.BATOMS_PT_OB_Force_Field_Modal,
     modal_force_field_openbabel.OBForceFieldProperties,
     
 ]

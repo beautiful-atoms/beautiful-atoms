@@ -173,8 +173,8 @@ class ASE_Force_Field_Operator(bpy.types.Operator):
             return {'CANCELLED'}
 
 
-class ASE_Force_Field_Modal_Panel(bpy.types.Panel):
-    bl_idname = "ase_force_field_modal_panel"
+class BATOMS_PT_ASE_Force_Field_Modal(bpy.types.Panel):
+    bl_idname = "BATOMS_PT_ASE_Force_Field_Modal"
     bl_label = "ASE Force field"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"

@@ -1,21 +1,11 @@
 """
 Manipulate atoms and molecules with mouse interactively
 based on force field methods.
-
-
-Molecule: Rigid molecules, to constrain all internal
-degrees of freedom using the RATTLE-type constraints of the The FixBondLengths class to constrain all internal atomic distances.
-
-Intermolecular: atomic radii.
-
-
 """
 
 import bpy
 import numpy as np
-from batoms.utils.butils import (get_selected_batoms,
-                                 get_selected_objects, get_selected_vertices_bmesh,
-                                 object_mode)
+from batoms.utils.butils import (get_selected_batoms, get_selected_vertices_bmesh)
 from batoms import Batoms
 from .modal_rigid_body import mouse2positions
 from bpy.props import (StringProperty,
@@ -29,13 +19,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def translate(batoms, selected_vertices, displacement,
-              fmax=0.05, steps=5, frame_start=0):
+def translate(batoms, selected_vertices, displacement, 
+        speed=1, steps=5):
     """
     """
     if len(selected_vertices) == 0:
         return
-    displacement = displacement[:3]*0.01
+    displacement = displacement[:3]*speed/100
     # print("Label: ", batoms.label)
     # print("selected_vertices: ", selected_vertices)
     # Move selected atom with mouse
@@ -90,10 +80,10 @@ class OB_Force_Field_Operator(bpy.types.Operator):
                 delta, self.viewports_3D.spaces.active.region_3d.    view_matrix)
             self.mouse_position = mouse_position
             obffpanel = context.scene.obffpanel
-            fmax = obffpanel.fmax
+            speed = obffpanel.speed
             steps = obffpanel.steps
             translate(batoms, selected_vertices, displacement,
-                      fmax, steps, frame_start=self.nframe)
+                      speed, steps)
             self.nframe += 1
             self.previous = 'MOUSEMOVE'
             return {'RUNNING_MODAL'}
@@ -117,8 +107,8 @@ class OB_Force_Field_Operator(bpy.types.Operator):
             return {'CANCELLED'}
 
 
-class OB_Force_Field_Modal_Panel(bpy.types.Panel):
-    bl_idname = "ob_force_field_modal_panel"
+class BATOMS_PT_OB_Force_Field_Modal(bpy.types.Panel):
+    bl_idname = "BATOMS_PT_OB_Force_Field_Modal"
     bl_label = "Open Babel Force field"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -128,32 +118,19 @@ class OB_Force_Field_Modal_Panel(bpy.types.Panel):
         obffpanel = context.scene.obffpanel
         layout = self.layout
         box = layout.box()
-        row = box.row()
-        row.prop(obffpanel, "fmax", expand=True)
-        row = box.row()
-        row.prop(obffpanel, "steps", expand=True)
+        col = box.column()
+        col.prop(obffpanel, "speed", expand=True)
+        col.prop(obffpanel, "steps", expand=True)
         layout = self.layout
         layout.operator("batoms.ob_force_field_operator",
                         text='Force field', icon='FACESEL')
 
 
 class OBForceFieldProperties(bpy.types.PropertyGroup):
-    @property
-    def selected_batoms(self):
-        return get_selected_batoms()
 
-    def Callback_modify_fmax(self, context):
-        clpanel = bpy.context.scene.clpanel
-        transform = clpanel.transform
-        # modify_transform(self.selected_batoms, transform)
-
-    def Callback_modify_steps(self, context):
-        clpanel = bpy.context.scene.clpanel
-        transform = clpanel.transform
-        # modify_transform(self.selected_batoms, transform)
-    fmax: FloatProperty(
-        name="Max force", default=0.05,
-        description="max force", update=Callback_modify_fmax)
+    speed: FloatProperty(
+        name="Speed", default=1,
+        description="Speed to move atoms")
     steps: IntProperty(
-        name="Max steps", default=5,
-        description="Max steps", update=Callback_modify_steps)
+        name="Steps", default=5,
+        description="Optimization steps")
