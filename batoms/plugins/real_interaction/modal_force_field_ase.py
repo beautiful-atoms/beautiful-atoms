@@ -13,7 +13,9 @@ Intermolecular: atomic radii.
 
 import bpy
 import numpy as np
-from batoms.utils.butils import get_selected_batoms, get_selected_objects, get_selected_vertices, object_mode
+from batoms.utils.butils import (get_selected_batoms,
+                                 get_selected_objects, get_selected_vertices_all,
+                                 object_mode)
 from batoms import Batoms
 from .modal_rigid_body import mouse2positions
 from bpy.props import (StringProperty,
@@ -45,7 +47,7 @@ def translate(selected_vertices, displacement,
     # bpy.context.scene.frame_set(frame_start)
     batoms = Batoms(label)
     # Move selected atom with mouse
-    atoms = batoms.atoms
+    atoms = batoms.as_ase(local=False)
     fixed = []
     for label, species, name, index in selected_vertices:
         # batom = Batom(name)
@@ -66,12 +68,15 @@ def translate(selected_vertices, displacement,
     # batoms.draw()
 
 
-def optimize(atoms, fmax=0.05, steps=5):
+def optimize(atoms, fmax=0.05, steps=5, force_field="EMT"):
     """
     """
-    atoms.calc = EMT()
-    qn = QuasiNewton(atoms)
-    qn.run(fmax=fmax, steps=steps)
+    if force_field.upper() == "EMT":
+        atoms.calc = EMT()
+        qn = QuasiNewton(atoms)
+        qn.run(fmax=fmax, steps=steps)
+    else:
+        pass
 
 
 def add_constraint(atoms, mol_index):
@@ -89,10 +94,10 @@ def add_constraint(atoms, mol_index):
     return atoms
 
 
-class Force_Field_Operator(bpy.types.Operator):
+class ASE_Force_Field_Operator(bpy.types.Operator):
     """Force field"""
-    bl_idname = "object.force_field_operator"
-    bl_label = "Force field translate Operator"
+    bl_idname = "batoms.ase_force_field_operator"
+    bl_label = "ASE Force field translate Operator"
 
     mouse_position: FloatVectorProperty(size=4, default=(0, 0, 0, 0))
     nframe: IntProperty(default=0)
@@ -108,8 +113,16 @@ class Force_Field_Operator(bpy.types.Operator):
 
     @property
     def selected_vertices(self):
-        return get_selected_vertices()
+        return get_selected_vertices_all()
 
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        if obj:
+            return obj.batoms.type == 'BATOMS'
+        else:
+            return False
+            
     def modal(self, context, event):
         """
         """
@@ -132,9 +145,9 @@ class Force_Field_Operator(bpy.types.Operator):
             displacement = mouse2positions(
                 delta, self.viewports_3D.spaces.active.region_3d.    view_matrix)
             self.mouse_position = mouse_position
-            ffpanel = context.scene.ffpanel
-            fmax = ffpanel.fmax
-            steps = ffpanel.steps
+            aseffpanel = context.scene.aseffpanel
+            fmax = aseffpanel.fmax
+            steps = aseffpanel.steps
             translate(selected_vertices, displacement,
                       fmax, steps, frame_start=self.nframe)
             self.nframe += 1
@@ -160,28 +173,27 @@ class Force_Field_Operator(bpy.types.Operator):
             return {'CANCELLED'}
 
 
-class Force_Field_Modal_Panel(bpy.types.Panel):
-    bl_idname = "force_field_modal_panel"
-    bl_label = "Force field"
+class BATOMS_PT_ASE_Force_Field_Modal(bpy.types.Panel):
+    bl_idname = "BATOMS_PT_ASE_Force_Field_Modal"
+    bl_label = "ASE Force field"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Real"
-    bl_idname = "FORCEFIELD_PT_Modal"
 
     def draw(self, context):
-        ffpanel = context.scene.ffpanel
+        aseffpanel = context.scene.aseffpanel
         layout = self.layout
         box = layout.box()
         row = box.row()
-        row.prop(ffpanel, "fmax", expand=True)
+        row.prop(aseffpanel, "fmax", expand=True)
         row = box.row()
-        row.prop(ffpanel, "steps", expand=True)
+        row.prop(aseffpanel, "steps", expand=True)
         layout = self.layout
-        layout.operator("object.force_field_operator",
+        layout.operator("batoms.ase_force_field_operator",
                         text='Force field', icon='FACESEL')
 
 
-class ForceFieldProperties(bpy.types.PropertyGroup):
+class ASEForceFieldProperties(bpy.types.PropertyGroup):
     @property
     def selected_batoms(self):
         return get_selected_batoms()
@@ -201,20 +213,3 @@ class ForceFieldProperties(bpy.types.PropertyGroup):
     steps: IntProperty(
         name="Max steps", default=5,
         description="Max steps", update=Callback_modify_steps)
-
-
-def register():
-    bpy.utils.register_class(Force_Field_Operator)
-    bpy.utils.register_class(Force_Field_Modal_Panel)
-
-
-def unregister():
-    bpy.utils.unregister_class(Force_Field_Operator)
-    bpy.utils.unregister_class(Force_Field_Modal_Panel)
-
-
-if __name__ == "__main__":
-    register()
-
-    # test call
-    bpy.ops.object.modal_operator('INVOKE_DEFAULT')

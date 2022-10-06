@@ -437,6 +437,8 @@ class Batoms(BaseCollection, ObjectGN):
         # plugins
         for key, info in plugin_info.items():
             _name = '_{}'.format(key)
+            if len(info) == 0:
+                continue
             if getattr(getattr(self.coll, info[2]), 'active'):
                 plugin = getattr(self, key)
                 data[key] = plugin.as_dict()
@@ -962,7 +964,7 @@ class Batoms(BaseCollection, ObjectGN):
         self.repeat(m)
         return self
 
-    def copy(self, label):
+    def copy(self, label, displacement=[2, 2, 2]):
         """
         Return a copy.
 
@@ -978,12 +980,12 @@ class Batoms(BaseCollection, ObjectGN):
         # copy object first
         arrays = self.arrays
         batoms = self.__class__(label=label,
+                                location=self.location + np.array(displacement),
                                 species=arrays['species'],
-                                positions=arrays['positions'],
+                                positions=self.local_positions,
                                 pbc=self.pbc,
                                 cell=self.cell.array,
                                 )
-        batoms.translate([2, 2, 2])
         return batoms
 
     def extend(self, other):
@@ -1105,7 +1107,6 @@ class Batoms(BaseCollection, ObjectGN):
         # if kind exists, merger, otherwise build a new kind and add.
         mode = self.obj.mode
         bpy.context.view_layer.objects.active = self.obj
-        bpy.ops.object.mode_set(mode='OBJECT')
         if isinstance(species, str):
             ele = species.split('_')[0]
             species = [species, {'elements': {ele: {"occupancy": 1.0}}}]
@@ -1132,7 +1133,6 @@ class Batoms(BaseCollection, ObjectGN):
         self.set_attributes({'species': species_array})
         bpy.context.view_layer.objects.active = self.obj
         # print(mode)
-        bpy.ops.object.mode_set(mode=mode)
         # print(self.species)
         # for sp in self.species:
         self.bond.settings.add_species(species[0])
