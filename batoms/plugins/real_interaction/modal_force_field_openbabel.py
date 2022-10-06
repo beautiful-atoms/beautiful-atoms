@@ -61,7 +61,7 @@ class OB_Force_Field_Operator(bpy.types.Operator):
         elif event.type == 'MIDDLEMOUSE':
             self.previous = 'MIDDLEMOUSE'
             return {'PASS_THROUGH'}
-        elif event.type == 'MOUSEMOVE':
+        elif event.ctrl and event.type == 'MOUSEMOVE':
             mouse_position = np.array([event.mouse_x, event.mouse_y, 0, 0])
             if self.previous == 'MIDDLEMOUSE':
                 self.mouse_position = mouse_position
@@ -88,6 +88,8 @@ class OB_Force_Field_Operator(bpy.types.Operator):
             self.previous = 'MOUSEMOVE'
             return {'RUNNING_MODAL'}
         else:
+            mouse_position = np.array([event.mouse_x, event.mouse_y, 0, 0])
+            self.mouse_position = mouse_position
             return {'PASS_THROUGH'}
 
     def invoke(self, context, event):
