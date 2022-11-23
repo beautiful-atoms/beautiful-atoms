@@ -32,7 +32,7 @@ class VolumetricData(Setting):
 
     def get_ui_list_index(self):
         return self.bpy_data.ui_list_index_volumetric_data
-    
+
     def set_ui_list_index(self, value):
         self.bpy_data.ui_list_index_volumetric_data = value
 
@@ -109,7 +109,7 @@ class VolumetricData(Setting):
         obj.hide_set(True)
         obj.hide_render = True
         # print('Draw volume: {0:1.2f}'.format(time() - tstart))
-    
+
     def get_volume(self, name):
         """Retrieve volume data from a mesh
 
@@ -145,5 +145,3 @@ class VolumetricData(Setting):
                 volume.shape[0], volume.shape[1], volume.shape[2])
         s += "-"*60 + "\n"
         return s
-    
-    

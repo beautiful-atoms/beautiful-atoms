@@ -48,12 +48,12 @@ class Isosurface(BaseObject):
             if iso.color_by != "None":
                 from batoms.utils import map_volumetric_data
                 data = map_volumetric_data(
-                                self.batoms.volumetric_data[iso.color_by], 
+                                self.batoms.volumetric_data[iso.color_by],
                                 scaled_verts
                                 )
                 attribute_data = (data - np.min(data))/(np.max(data) - np.min(data))
                 color_by_attribute = {'attribute_name': '{}_data'.format(iso.color_by),
-                                'ValToRGB':[iso.color1[:], 
+                                'ValToRGB':[iso.color1[:],
                                             iso.color2[:]]
                                             }
             else:

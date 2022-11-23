@@ -67,7 +67,7 @@ def test_color():
     assert np.isclose(c2h6so.bond.settings.\
         instancers['C-H']['1_1'].data.materials[1].\
             diffuse_color[:], np.array([0, 1, 1, 1])).all()
-    
+
 
 def test_bond_high_order():
     from ase.build import molecule, bulk

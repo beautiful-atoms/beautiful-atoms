@@ -8,7 +8,7 @@ from bpy.props import (BoolProperty,
 
 from batoms import Batoms
 from batoms.cell import Bcell
-from batoms.gui.utils import (get_attr, set_attr, 
+from batoms.gui.utils import (get_attr, set_attr,
             get_active_module, get_active_bpy_data_batoms,
             set_module_attr)
 
@@ -76,7 +76,7 @@ def set_cell(i1, i2):
         cell = get_active_module('cell')()
         if cell is not None:
             cell[i1, i2] = value
-            
+
     return setter
 
 
@@ -101,7 +101,7 @@ class CellProperties(bpy.types.PropertyGroup):
         get=get_attr("width", get_active_bpy_data_batoms('cell')),
         set=set_attr("width", set_module_attr('cell'))
         )
-    
+
     color: FloatVectorProperty(
             name="color", size=4,
             subtype='COLOR',
@@ -160,7 +160,7 @@ class CellProperties(bpy.types.PropertyGroup):
         description="Cell in a axis",
         get=get_cell(2, 2),
         set=set_cell(2, 2))
-    
+
     transform_a: IntVectorProperty(
         name="a", default=(1, 0, 0, 0), size=4,
         min=-20, max=20,
@@ -202,4 +202,3 @@ def modify_transform(name, transform):
     batoms = Batoms(label=name)
     batoms.transform(transform)
     batoms.hide = True
-

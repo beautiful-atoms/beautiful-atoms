@@ -1,5 +1,5 @@
-"""  
-#TODO add panel for select 
+"""
+#TODO add panel for select
 #TODO active radius_style
 #TODO merge select and SliceBatoms
 """
@@ -257,7 +257,7 @@ class Selects(Setting):
 
     def get_ui_list_index(self):
         return self.bpy_data.ui_list_index_select
-    
+
     def set_ui_list_index(self, value):
         self.bpy_data.ui_list_index_select = value
 

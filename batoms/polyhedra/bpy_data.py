@@ -60,9 +60,9 @@ class Polyhedra(Base):
     # collection
     settings: CollectionProperty(name='polyhedrasetting',
                               type=PolyhedraSetting)
-    
+
     def as_dict(self) -> dict:
         setdict = {
-            
+
         }
         return setdict

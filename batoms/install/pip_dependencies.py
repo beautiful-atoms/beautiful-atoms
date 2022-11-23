@@ -68,7 +68,7 @@ class BatomsInstallPackage(Operator):
     package: StringProperty(
         name="package", default='ase',
         description="package name")
-    
+
     modname: StringProperty(
         name="modname", default='ase',
         description="module name")
@@ -92,10 +92,9 @@ def register_class():
     from bpy.utils import register_class
     for cls in classes:
         register_class(cls)
-    
+
 
 def unregister_class():
     from bpy.utils import unregister_class
     for cls in reversed(classes):
         unregister_class(cls)
-    

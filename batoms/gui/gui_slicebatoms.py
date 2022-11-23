@@ -66,7 +66,7 @@ def get_scale(self):
 def set_scale(self, value):
     self["scale"] = value
     set_batom_attr("scale", value)
-    
+
 
 
 

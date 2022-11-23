@@ -82,4 +82,3 @@ class BatomsUpdateButton(bpy.types.Operator):
         gitclone()
         self.report({"INFO"}, "Update to the latest version successfully!")
         return {"FINISHED"}
-

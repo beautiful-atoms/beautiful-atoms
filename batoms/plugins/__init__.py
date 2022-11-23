@@ -23,6 +23,7 @@ print("Read plugin info: {:1.2f}".format(time() - tstart))
 
 
 plugin_info = {
+    'highlight': ['highlight', 'Highlight', 'Bhighlight'],
     'cavity': ['cavity', 'Cavity', 'Bcavity'],
     'crystal_shape': ['crystal_shape', 'CrystalShape', 'Bcrystalshape'],
     'lattice_plane': ['lattice_plane', 'LatticePlane', 'Blatticeplane'],
@@ -34,12 +35,12 @@ plugin_info = {
 
 def enable_plugin():
     for key in plugin_info.keys():
-        if getattr(bpy.context.preferences.addons['batoms'].preferences, key):    
+        if getattr(bpy.context.preferences.addons['batoms'].preferences, key):
             plugin = importlib.import_module("batoms.plugins.{}".format(key))
-            plugin.register_class()   
+            plugin.register_class()
 
 def disable_plugin():
     for key in plugin_info.keys():
-        if getattr(bpy.context.preferences.addons['batoms'].preferences, key):    
+        if getattr(bpy.context.preferences.addons['batoms'].preferences, key):
             plugin = importlib.import_module("batoms.plugins.{}".format(key))
-            plugin.unregister_class()   
+            plugin.unregister_class()

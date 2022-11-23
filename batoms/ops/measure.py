@@ -66,7 +66,7 @@ class MeasureButton(bpy.types.Operator):
 
 
     results = ""
-    
+
     dash = 0.1
 
     @classmethod

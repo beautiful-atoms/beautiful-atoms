@@ -59,4 +59,3 @@ class MagresDraw(OperatorBatoms):
         batoms.magres.draw(self.name)
         context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
-

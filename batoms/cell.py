@@ -160,7 +160,7 @@ class Bcell(ObjectGN):
                                             '%s_Quadrilateral_%s' % (
                                                 self.label, i),
                                             'GeometryNodeCurvePrimitiveQuadrilateral')
-            Quadrilateral.mode = "POINTS"    
+            Quadrilateral.mode = "POINTS"
             CurveToMesh = get_nodes_by_name(gn.node_group.nodes,
                                             '%s_CurveToMesh_%s' % (
                                                 self.label, i),
@@ -243,7 +243,7 @@ class Bcell(ObjectGN):
                                                 self.label),
                                             'GeometryNodeCurvePrimitiveCircle')
         Circle.inputs[4].default_value = width
-    
+
     @property
     def color(self):
         # Viewpoint_color = self.materials[self.main_element].diffuse_color
@@ -280,7 +280,7 @@ class Bcell(ObjectGN):
     def get_local_array(self):
         """
         In this case, the origin is translated to vertices[0].
-        While the orientation is reserved. 
+        While the orientation is reserved.
 
         Returns:
             (3x3 local_array): The array of cell.
@@ -298,7 +298,7 @@ class Bcell(ObjectGN):
     def get_array(self):
         """
         In this case, the origin is translated to vertices[0].
-        While the orientation is reserved. 
+        While the orientation is reserved.
 
         Returns:
             (3x3 array): The array of cell.
@@ -335,7 +335,7 @@ class Bcell(ObjectGN):
         for indices in edge_indices:
             edges.append(positions[indices])
         return edges
-        
+
     def copy(self, label):
         object_mode()
         cell = Bcell(label, batoms = self.batoms, array=self.array, location=self.obj.location)
@@ -388,7 +388,7 @@ class Bcell(ObjectGN):
                         backface_culling=True)
         return mat
 
-    
+
 
     @property
     def draw_crystal_axes(self):

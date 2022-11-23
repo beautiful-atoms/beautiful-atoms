@@ -77,7 +77,7 @@ class BondSetting():
     @polyhedra.setter
     def polyhedra(self, polyhedra):
         self.bpy_setting[self.name].polyhedra = polyhedra
-    
+
     @property
     def width(self):
         return self.bpy_setting[self.name].width
@@ -352,7 +352,7 @@ class BondSettings(Setting):
         Returns:
             bpy.data.object: the instancer.
         """
-                        
+
         # Prepare arrays x, y, z
         theta = np.linspace(-n * np.pi, n * np.pi, resolution*n)
         z = np.linspace(-0.5, 0.5, resolution*n)

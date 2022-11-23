@@ -1,6 +1,6 @@
 """
 Adds an object mode tool to the toolbar.
-# TODO Not working in  background mode, 
+# TODO Not working in  background mode,
 fialed to register the keymaps.
 """
 

@@ -59,4 +59,3 @@ class TemplateDraw(OperatorBatoms):
         batoms.template.draw()
         context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
-

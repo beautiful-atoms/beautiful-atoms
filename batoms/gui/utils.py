@@ -11,9 +11,9 @@ def get_active_bpy_data(btype = 'cell'):
     def getter():
         """Get the collection of the active Batoms
 
-        When get the attribute of Batoms object, 
+        When get the attribute of Batoms object,
         if the attribute if saved in the Batoms.coll.batoms,
-        we only need to read data form the colleciton, 
+        we only need to read data form the colleciton,
         it is faster than get data from the Batoms itself.
 
         Returns:
@@ -50,7 +50,7 @@ def get_active_module(module_name = 'cell'):
 
     Args:
         module_name (str, optional): _description_. Defaults to 'cell'.
-    
+
     Returns:
         function: function to get the module
     """

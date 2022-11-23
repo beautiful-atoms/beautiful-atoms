@@ -83,7 +83,7 @@ class VIEW3D_MT_object_context_batoms_label(Menu):
         op1.label = 'elements'
         op2 = layout.operator("batoms.apply_label", text="Species")
         op2.label = 'species'
-    
+
 class VIEW3D_MT_object_context_batoms(Menu):
     bl_idname = "VIEW3D_MT_object_context_batoms"
     bl_label = "Batoms"
@@ -125,5 +125,3 @@ class VIEW3D_MT_object_context_bonds(Menu):
                         icon='LAYER_ACTIVE')
 
         layout.separator()
-
-

@@ -169,7 +169,7 @@ class AddRootSurface(OperatorBatoms):
         name="Size", size=3, default=(1, 1, 1),
         min=1, soft_max=10,
         description="System size in units of the minimal unit cell.")
-    
+
     eps: FloatProperty(name="eps", min=1e-8, soft_max=1e-3, default=1e-6)
 
     def execute(self, context):
@@ -291,7 +291,7 @@ class ApplyModelStyle(OperatorBatoms):
         self.report({"INFO"}, "Model style of {} is changed to {}"
             .format(context.object.batoms.label, self.model_style))
         return {'FINISHED'}
-    
+
 class ApplyRadiusStyle(OperatorBatoms):
     bl_idname = "batoms.apply_radius_style"
     bl_label = "Apply Radius Style"
@@ -506,7 +506,7 @@ class BatomsCopySelected(OperatorBatoms):
     select: StringProperty(
         name="select", default='',
         description="New select for the copied atoms.")
-    
+
     label: StringProperty(
         name="label", default='',
         description="Label for the new batoms.")
@@ -519,8 +519,8 @@ class BatomsCopySelected(OperatorBatoms):
         self.report({"INFO"}, "Copy {} atoms".format(len(indices)))
         bpy.context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
-  
-  
+
+
 class BatomsDeleteSelectedAtoms(OperatorBatoms):
     """Delete selected vertices
 
@@ -544,4 +544,3 @@ class BatomsDeleteSelectedAtoms(OperatorBatoms):
         bpy.context.view_layer.objects.active = batoms.obj
         bpy.ops.object.mode_set(mode="EDIT")
         return {'FINISHED'}
-

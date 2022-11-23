@@ -42,7 +42,7 @@ class TemplateSetting(Base):
         return s
 
 class Template(bpy.types.PropertyGroup):
-    """This module defines the Template properties to extend 
+    """This module defines the Template properties to extend
     Blender’s internal data.
 
     """
@@ -62,6 +62,6 @@ class Template(bpy.types.PropertyGroup):
 
     def as_dict(self) -> dict:
         setdict = {
-            
+
         }
         return setdict

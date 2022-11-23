@@ -62,5 +62,3 @@ class MolecularSurfaceSettings(Setting):
                 ms.color[0], ms.color[1], ms.color[2], ms.color[3])
         s += "-"*60 + "\n"
         return s
-    
-    

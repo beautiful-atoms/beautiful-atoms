@@ -360,7 +360,7 @@ class Boundary(ObjectGN):
         logger.debug('update boundary: {0:10.2f} s'.format(time() - tstart))
 
     def update_geometry_node_instancer(self, spname, instancer):
-        """When instances are re-build, we need also update 
+        """When instances are re-build, we need also update
         the geometry node.
 
         Args:
@@ -413,7 +413,7 @@ class Boundary(ObjectGN):
     @property
     def active(self):
         return self.batoms.coll.batoms.boundary.active
-    
+
     @active.setter
     def active(self, value):
         self.batoms.coll.batoms.boundary.active = value
@@ -463,7 +463,7 @@ class Boundary(ObjectGN):
         elif dnvert < 0:
             self.delete_vertices_bmesh(range(-dnvert))
             self.delete_vertices_bmesh(range(-dnvert), self.obj_o)
-        if len(arrays["positions"]) == 0: 
+        if len(arrays["positions"]) == 0:
             return
         self.positions = arrays["positions"][0]
         self.offsets = arrays["offsets"][0]

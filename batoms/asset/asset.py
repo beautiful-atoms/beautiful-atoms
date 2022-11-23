@@ -84,5 +84,5 @@ def create_asset(batoms, model_style = 0, metadata = {}):
     batoms.coll.asset_data.catalog_id = metadata["catalog_id"]
     for tag in metadata["tags"]:
         batoms.coll.asset_data.tags.new(name=tag)
-    
+
     return batoms.coll

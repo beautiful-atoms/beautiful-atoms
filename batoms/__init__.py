@@ -48,12 +48,12 @@ modules = ['bond',
 def enable_module():
     for key in modules:
         module = importlib.import_module("batoms.{}".format(key))
-        module.register_class()   
+        module.register_class()
 
 def disable_module():
     for key in modules:
         module = importlib.import_module("batoms.{}".format(key))
-        module.unregister_class()   
+        module.unregister_class()
 
 
 def register():

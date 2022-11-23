@@ -146,7 +146,7 @@ class TurnSetting(Base):
         return s
 
 class Protein(bpy.types.PropertyGroup):
-    """This module defines the Protein properties to extend 
+    """This module defines the Protein properties to extend
     Blender’s internal data.
 
     """
@@ -164,5 +164,3 @@ class Protein(bpy.types.PropertyGroup):
                                 type=SheetSetting)
     settings_helix: CollectionProperty(name='settings_helix',
                                 type=HelixSetting)
-
-    

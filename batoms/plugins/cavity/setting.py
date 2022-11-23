@@ -37,7 +37,7 @@ class CavitySettings(Setting):
         if cavitysetting is not None:
             for key, data in cavitysetting.items():
                 self[key] = data
-        
+
     def add(self, cavity):
         if isinstance(cavity, str):
             self[cavity] = {}
@@ -61,7 +61,7 @@ class CavitySettings(Setting):
                 cav.color[0], cav.color[1], cav.color[2], cav.color[3])
         s += "-"*60 + "\n"
         return s
-    
+
     def __setitem__(self, name, setdict):
         """
         Set properties

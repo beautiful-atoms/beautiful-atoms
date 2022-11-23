@@ -101,4 +101,3 @@ class MSModify(OperatorBatoms):
             setattr(batoms.bonds[i], self.key, getattr(self, self.key))
         # batoms.draw()
         return {'FINISHED'}
-

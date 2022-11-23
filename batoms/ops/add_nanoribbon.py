@@ -1,5 +1,5 @@
 """
-Use ASE's build function 
+Use ASE's build function
 """
 
 import bpy

@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class Attributes(Setting):
     """Attribute information for bpy.data.object.
 
-    It should be bounded to an object, because each object 
+    It should be bounded to an object, because each object
     has different attributes. One collection, however, could have
     many objects.
 
@@ -36,7 +36,7 @@ class Attributes(Setting):
         self.label = label
         self.name = 'batoms'
         self.parent = parent
-    
+
     def get_bpy_setting(self):
         if self.obj_name:
             coll = bpy.data.objects.get(self.obj_name)
@@ -84,7 +84,7 @@ class Attributes(Setting):
                     name = "{}{}{}".format(att.name, att.delimiter, i)
                     mesh.attributes.new(name=name,
                                 type=att.data_type, domain=att.domain)
-    
+
     def find_delimiter(self, name_list, name, M, delimiter):
         """find delimiter recursively
 
@@ -130,7 +130,7 @@ class Attributes(Setting):
             return False
         shape = array[0].shape
         dimension = len(shape)
-        data = {"name": name, "data_type": dtype_bl, "domain": "POINT", 
+        data = {"name": name, "data_type": dtype_bl, "domain": "POINT",
                 "dimension": dimension, "shape": shape}
         self.add(data)
         return True

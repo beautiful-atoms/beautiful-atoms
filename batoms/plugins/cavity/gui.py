@@ -13,7 +13,7 @@ from bpy.props import (
 
 
 from batoms import Batoms
-from batoms.gui.utils import (get_active_bpy_data, 
+from batoms.gui.utils import (get_active_bpy_data,
         get_attr, get_enum_attr, set_attr, set_enum_attr,
         get_active_module, set_module_attr
         )
@@ -42,19 +42,19 @@ class CavityProperties(bpy.types.PropertyGroup):
                        get=get_attr("show", get_active_bpy_data('Bcavity')),
                        set=set_attr("show", set_module_attr('cavity'))
                        )
-    atomRadius: FloatProperty(name="atomRadius", 
+    atomRadius: FloatProperty(name="atomRadius",
                 default=0.5,
                 description="average radius of the atoms",
                 get=get_attr("atomRadius", get_active_bpy_data('Bcavity')),
                 set=set_attr("atomRadius", set_module_attr('cavity'))
                 )
-    minCave: FloatProperty(name="minCave", 
+    minCave: FloatProperty(name="minCave",
                 default=3,
                 description="minmum radius of the cave",
                 get=get_attr("minCave", get_active_bpy_data('Bcavity')),
                 set=set_attr("minCave", set_module_attr('cavity'))
                 )
-    resolution: FloatProperty(name="resolution", 
+    resolution: FloatProperty(name="resolution",
                 default=1,
                 description="resolution",
                 get=get_attr("resolution", get_active_bpy_data('Bcavity')),

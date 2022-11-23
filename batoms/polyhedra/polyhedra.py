@@ -127,7 +127,7 @@ class Polyhedra(ObjectGN):
             offsets = datas['offsets'][0]
         else:
             raise Exception('Shape of vertices is wrong!')
-        
+
         attributes.update({
             'atoms_index1': datas['atoms_index1'],
             'atoms_index2': datas['atoms_index2'],
@@ -335,7 +335,7 @@ class Polyhedra(ObjectGN):
                 RealizeInstances.outputs[0],
                 nodes[1].inputs[0])
         self.gnodes.node_group.update_tag()
-        
+
     def update(self, ):
         """Draw polyhedras.
         calculate bond in all farmes, and save
@@ -382,7 +382,7 @@ class Polyhedra(ObjectGN):
 
     def update_geometry_node_material(self):
         """
-        Make sure all species has a geometry node flow 
+        Make sure all species has a geometry node flow
         and the material are updated.
         """
         tstart = time()
@@ -448,7 +448,7 @@ class Polyhedra(ObjectGN):
         else:
             # add or remove vertices, rebuild the object
             self.build_object(arrays)
-            
+
 
     @property
     def obj(self):
@@ -631,14 +631,14 @@ class Polyhedra(ObjectGN):
         # print('datas: ', datas)
         logger.debug('calc_polyhedra_data: {0:10.2f} s'.format(time() - tstart))
         return datas
-    
+
     @property
     def setting(self):
         from batoms.utils import deprecated
         """setting object."""
         deprecated('"setting" will be deprecated in the furture, please use "settings".')
         return self.settings
-    
+
     def as_dict(self):
         """
         """

@@ -185,7 +185,7 @@ class Bond(BaseCollection, ObjectGN):
         obj.batoms.label = self.batoms.label
         obj.Bbond.label = self.batoms.label
         self.batoms.coll.Bbond.flag = True
-        # The reason we use object to store offset instead of using vector attribute 
+        # The reason we use object to store offset instead of using vector attribute
         # of the mesh, is that we need shape key for offsets too.
         offsets = [offsets1, offsets2, offsets3, offsets4]
         for i in range(4):
@@ -596,7 +596,7 @@ class Bond(BaseCollection, ObjectGN):
 
     def update_geometry_node_instancer(self):
         """
-        Make sure all pair has a geometry node flow 
+        Make sure all pair has a geometry node flow
         and the instancer and material are updated.
         """
         tstart = time()
@@ -627,7 +627,7 @@ class Bond(BaseCollection, ObjectGN):
             self.settings.build_materials(sp, material_style=sp['material_style'])
             self.settings.assign_materials(sp, sp["order"], sp["style"])
             # compare radius
-            if not np.isclose(sp["width"], 
+            if not np.isclose(sp["width"],
                     self.settings.instancers[sp["name"]][order_style].Bbond.width):
                 self.settings.build_instancer(sp)
                 self.settings.assign_materials(sp, sp["order"], sp["style"])
@@ -761,7 +761,7 @@ class Bond(BaseCollection, ObjectGN):
         self.offsets = [arrays['offsets1'], arrays['offsets2'],
                         arrays['offsets3'], arrays['offsets4']]
         arrays = {key:value for key, value in arrays.items()
-                if key not in ["centers", "offsets1", "offsets2", 
+                if key not in ["centers", "offsets1", "offsets2",
                     "offsets3", "offsets4"]}
         self.set_attributes(arrays)
         self.update_geometry_node_species()
@@ -870,7 +870,7 @@ class Bond(BaseCollection, ObjectGN):
             self._search_bond = None
         else:
             self.update()
-    
+
     @property
     def show_hydrogen_bond(self):
         return self.settings.coll.Bbond.show_hydrogen_bond
@@ -1142,7 +1142,7 @@ class Bond(BaseCollection, ObjectGN):
                 continue
             molDatas[i] = {'sub': []}
             molDatas[i]['indices'] = indices
-            # TODO: check here 
+            # TODO: check here
             molDatas[i]['offsets'] = indices
         # without crossed bond, small pecies of molDatas
         mask = np.where((bondlists1[:, 2:5] != bondlists1[:, 5:8]).any(axis=1),
@@ -1297,7 +1297,7 @@ class Bond(BaseCollection, ObjectGN):
         # search bond type 2
 
         return bondlists
-    
+
     def check_boundary(self, bondlists, eps = 1e-6):
         """check boundary for bond search 0
 
@@ -1537,14 +1537,14 @@ class Bond(BaseCollection, ObjectGN):
         orders = [b.GetBondOrder()
             for b in pybel.ob.OBMolBondIter(mol.OBMol)]
         self.update(bondlists, orders = orders)
-    
+
     @property
     def setting(self):
         from batoms.utils import deprecated
         """setting object."""
         deprecated('"setting" will be deprecated in the furture, please use "settings".')
         return self.settings
-    
+
     def as_dict(self):
         """
         """

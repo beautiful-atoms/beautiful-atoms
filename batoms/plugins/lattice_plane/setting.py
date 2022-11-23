@@ -82,5 +82,3 @@ class LatticePlaneSettings(Setting):
                 str(p.slicing),  str(p.boundary))
         s += "-"*60 + "\n"
         return s
-
-    

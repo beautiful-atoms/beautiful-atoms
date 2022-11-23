@@ -20,7 +20,7 @@ def test_slicebatoms():
     assert ch4[1].show == 0
 #     ch4[1].species = "Cl"
 #     assert ch4[1].species == "Cl"
-    assert np.isclose(ch4[1].position, 
+    assert np.isclose(ch4[1].position,
             np.array([0.62911803,  0.62911803,  0.62911803])).all()
     # > one atoms
     assert ch4[0:2].species[0] == 'C'

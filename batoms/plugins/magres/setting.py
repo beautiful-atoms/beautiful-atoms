@@ -63,5 +63,3 @@ class MagresSettings(Setting):
                 magres.color[0], magres.color[1], magres.color[2], magres.color[3])
         s += "-"*60 + "\n"
         return s
-    
-    

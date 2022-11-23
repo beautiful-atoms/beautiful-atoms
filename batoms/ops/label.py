@@ -33,11 +33,11 @@ class BatomsLabel(OperatorBatoms):
     bl_idname = "batoms.label"
     bl_label = "Label"
 
-    
+
     label: StringProperty(
         name="Label", default='Index',
         description="Label")
-    
+
     select: StringProperty(
         name="Label", default='Index',
         description="Label")

@@ -1,4 +1,4 @@
-""" 
+"""
 """
 import bpy
 from bpy.types import Panel, Operator
@@ -12,11 +12,11 @@ class BatomsPropertiesIO(bpy.types.PropertyGroup):
     mp_key: StringProperty(
         name="mp_Key", default='',
         description="mp_key")
-        
+
     mp_id: StringProperty(
         name="mp_ID", default='mp-2815',
         description="mp_id")
-    
+
     rscb_name: StringProperty(
         name="rscb_name", default='1ema',
         description="rscb_name")
@@ -126,5 +126,3 @@ class VIEW3D_PT_Batoms_io(Panel):
         layout.operator("batoms.import")
         layout.label(text="Export")
         layout.operator("batoms.export")
-
-

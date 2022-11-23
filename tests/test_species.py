@@ -85,7 +85,7 @@ def test_auto_build_species():
 
 def test_geometry_node_object():
     """species instances are used in geometry node,
-    in batoms, boundary, search_bond. When instances are 
+    in batoms, boundary, search_bond. When instances are
     re-build, we need also update the geometry node."""
     from batoms.bio.bio import read
     bpy.ops.batoms.delete()

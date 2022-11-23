@@ -101,4 +101,3 @@ class Bond(Base):
     # collection
     settings: CollectionProperty(name='bondsetting',
                               type=BondSetting)
-    

@@ -13,7 +13,7 @@ classes_bpy_data = [
     bpy_data.Cavity,
     gui.CavityProperties,
 ]
-    
+
 classes = [
     ops.CavityAdd,
     ops.CavityRemove,

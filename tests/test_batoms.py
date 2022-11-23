@@ -257,7 +257,7 @@ def test_array_attribute():
     au.get_attribute('tensor')
 
 def test_att_conflict_case1():
-    # Case 1: name ending in 0 
+    # Case 1: name ending in 0
     from ase.build import bulk
     import numpy as np
     from batoms import Batoms
@@ -313,7 +313,7 @@ def test_set_arrays_precision():
     from batoms.bio.bio import read
     import ase.io
     atoms_ase = ase.io.read("../tests/datas/ch4_int_flag.extxyz")
-    # ASE treats additional I-field as np.int32, 
+    # ASE treats additional I-field as np.int32,
     # but on most recent platforms default int is np.int64
     # this may cause error in loading Batoms
     assert atoms_ase.arrays["some_int_flag"].dtype in (np.int32, np.int64)

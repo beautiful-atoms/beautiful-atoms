@@ -22,7 +22,7 @@ def test_crystal_shape():
     au = Batoms("au")
     au.crystal_shape.settings[(1, 1, 1)] = {
         "distance": 3, "crystal": True, "symmetry": True}
-    au.crystal_shape.settings[(0, 0, 1)] = {'distance': 3, 
+    au.crystal_shape.settings[(0, 0, 1)] = {'distance': 3,
     'crystal': True, 'symmetry': True}
     print(au.crystal_shape.settings)
     au.crystal_shape.draw(origin=au.cell.center)

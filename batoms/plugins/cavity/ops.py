@@ -61,4 +61,3 @@ class CavityDraw(OperatorBatoms):
         batoms.cavity.draw()
         context.view_layer.objects.active = batoms.obj
         return {'FINISHED'}
-

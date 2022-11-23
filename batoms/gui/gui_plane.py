@@ -21,7 +21,7 @@ class Plane_PT_prepare(Panel):
 
     def draw(self, context):
         plane = context.scene.batoms.plane
-        
+
         layout = self.layout
         row = layout.row()
         row.prop(plane, "indices")
@@ -48,48 +48,48 @@ class PlaneProperties(bpy.types.PropertyGroup):
         return get_selected_objects('bplane')
     def Callback_modify_indices(self, context):
         plane = bpy.context.scene.batoms.plane
-        modify_plane_attr(self.selected_batoms, 
+        modify_plane_attr(self.selected_batoms,
                     self.selected_plane, 'indices', plane.indices)
     def Callback_modify_distance(self, context):
         plane = bpy.context.scene.batoms.plane
-        modify_plane_attr(self.selected_batoms, 
+        modify_plane_attr(self.selected_batoms,
                     self.selected_plane, 'distance', plane.distance)
     def Callback_modify_scale(self, context):
         plane = bpy.context.scene.batoms.plane
-        modify_plane_attr(self.selected_batoms, 
+        modify_plane_attr(self.selected_batoms,
                     self.selected_plane, 'scale', plane.scale)
     def Callback_modify_crystal(self, context):
         plane = bpy.context.scene.batoms.plane
-        modify_plane_attr(self.selected_batoms, 
+        modify_plane_attr(self.selected_batoms,
                     self.selected_plane, 'crystal', plane.crystal, center = plane.center)
     def Callback_modify_center(self, context):
         plane = bpy.context.scene.batoms.plane
-        modify_plane_attr(self.selected_batoms, 
+        modify_plane_attr(self.selected_batoms,
                     self.selected_plane, 'center', plane.center)
     def Callback_modify_symmetry(self, context):
         plane = bpy.context.scene.batoms.plane
-        modify_plane_attr(self.selected_batoms, 
+        modify_plane_attr(self.selected_batoms,
                     self.selected_plane, 'symmetry', plane.symmetry)
     def Callback_modify_slicing(self, context):
         plane = bpy.context.scene.batoms.plane
-        modify_plane_attr(self.selected_batoms, 
+        modify_plane_attr(self.selected_batoms,
                     self.selected_plane, 'slicing', plane.slicing)
     def Callback_modify_boundary(self, context):
         plane = bpy.context.scene.batoms.plane
-        modify_plane_attr(self.selected_batoms, 
+        modify_plane_attr(self.selected_batoms,
                     self.selected_plane, 'boundary', plane.boundary)
     def Callback_modify_show_edge(self, context):
         plane = bpy.context.scene.batoms.plane
         show_edge = plane.show_edge
-        modify_plane_attr(self.selected_batoms, 
+        modify_plane_attr(self.selected_batoms,
                     self.selected_plane, 'show_edge', show_edge)
     def Callback_modify_color(self, context):
         plane = bpy.context.scene.batoms.plane
         color = plane.color
-        modify_plane_attr(self.selected_batoms, 
+        modify_plane_attr(self.selected_batoms,
                     self.selected_plane, 'color', color)
 
-    
+
     indices: IntVectorProperty(
         name="Miller indices", size = 3, default=(0, 0, 1),
         description = "Miller indices for the plane", update = Callback_modify_indices)
@@ -100,36 +100,36 @@ class PlaneProperties(bpy.types.PropertyGroup):
         name="Scale", default=1,
         description = "scale of the plane", update = Callback_modify_scale)
     crystal: BoolProperty(name="crystal",
-                default=False, 
+                default=False,
                 description = "plane to form crystal shape",
                 update = Callback_modify_crystal)
     center: BoolProperty(name="center",
-                default=False, 
+                default=False,
                 description = "Apply center to model",
                 update = Callback_modify_center)
     symmetry: BoolProperty(name="symmetry",
-                default=False, 
+                default=False,
                 description = "Apply symmetry to indices",
                 update = Callback_modify_symmetry)
     slicing: BoolProperty(name="slicing",
-                default=False, 
+                default=False,
                 description = "Apply slicing to volumetric data",
                 update = Callback_modify_slicing)
     boundary: BoolProperty(name="boundary",
-                default=False, 
+                default=False,
                 description = "Apply boundary to model",
                 update = Callback_modify_boundary)
     show_edge: BoolProperty(
         name = "show_edge", default=False,
         description = "show_edge", update = Callback_modify_show_edge)
     color: FloatVectorProperty(
-        name="color", 
+        name="color",
         subtype='COLOR',
         default=(0.1, 0.8, 0.4, 0.8),
         size =4,
         description="color picker",
         update = Callback_modify_color)
-    
+
 
 def modify_plane_attr(batoms_name_list, plane_name_list, key, value, center = False):
     selected_plane_new = []
@@ -148,10 +148,10 @@ def modify_plane_attr(batoms_name_list, plane_name_list, key, value, center = Fa
     for name in selected_plane_new:
         obj = bpy.data.objects.get(name)
         if obj is not None:
-            obj.select_set(True)      
-    
+            obj.select_set(True)
 
-def add_plane(indices, color, distance, scale, crystal, 
+
+def add_plane(indices, color, distance, scale, crystal,
                 symmetry, slicing, boundary, show_edge,
                 center = False):
     """
@@ -159,7 +159,7 @@ def add_plane(indices, color, distance, scale, crystal,
     selected_batoms = get_selected_batoms()
     for batoms_name in selected_batoms:
         batoms = Batoms(label = batoms_name)
-        batoms.planesetting[indices] = {'indices': indices, 
+        batoms.planesetting[indices] = {'indices': indices,
                                 'distance': distance,
                                 'scale': scale,
                                 'crystal': crystal,
@@ -167,7 +167,7 @@ def add_plane(indices, color, distance, scale, crystal,
                                 'slicing': slicing,
                                 'boundary': boundary,
                                 'show_edge': show_edge,
-                                'color': color, 
+                                'color': color,
                                 }
         batoms.planesetting.draw_lattice_plane()
         if center:
@@ -191,30 +191,30 @@ class AddButton(Operator):
         name="Scale", default=1,
         description = "scale of the plane", )
     crystal: BoolProperty(name="crystal",
-                default=False, 
+                default=False,
                 description = "plane to form crystal shape",
                 )
     center: BoolProperty(name="center",
-                default=False, 
+                default=False,
                 description = "Apply center to model",
                 )
     symmetry: BoolProperty(name="symmetry",
-                default=False, 
+                default=False,
                 description = "Apply symmetry to indices",
                 )
     slicing: BoolProperty(name="slicing",
-                default=False, 
+                default=False,
                 description = "Apply slicing to volumetric data",
                 )
     boundary: BoolProperty(name="boundary",
-                default=False, 
+                default=False,
                 description = "Apply boundary to model",
                 )
     show_edge: BoolProperty(
         name = "show_edge", default=False,
         description = "show_edge", )
     color: FloatVectorProperty(
-        name="color", 
+        name="color",
         subtype='COLOR',
         default=(0.1, 0.8, 0.4, 0.8),
         size =4,
@@ -222,10 +222,10 @@ class AddButton(Operator):
         )
 
     def execute(self, context):
-        add_plane(self.indices, 
-                    self.color, 
-                    self.distance, 
-                    self.scale, 
+        add_plane(self.indices,
+                    self.color,
+                    self.distance,
+                    self.scale,
                     self.crystal,
                     self.symmetry,
                     self.slicing,

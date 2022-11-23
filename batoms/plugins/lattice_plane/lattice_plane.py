@@ -308,7 +308,7 @@ class LatticePlane(PluginObject):
                                        cuts=cuts,
                                        cmap=cmap)
                     color_by_attribute = {'attribute_name': plane['color_by'],
-                              'ValToRGB':[plane['color1'], 
+                              'ValToRGB':[plane['color1'],
                                             plane['color2']]
                                         }
                 else:
@@ -325,7 +325,7 @@ class LatticePlane(PluginObject):
         """setting object."""
         deprecated('"setting" will be deprecated in the furture, please use "settings".')
         return self.settings
-    
+
     def as_dict(self):
         """
         """

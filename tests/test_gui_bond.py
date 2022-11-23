@@ -4,7 +4,7 @@ from batoms.bio.bio import read
 import pytest
 
 
-    
+
 def test_bondpair():
     """bondpair panel"""
     from batoms.batoms import Batoms

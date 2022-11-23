@@ -34,7 +34,7 @@ class VolumetricDataProperties(bpy.types.PropertyGroup):
         default=0
         )
     operator: EnumProperty(
-        name="operator", 
+        name="operator",
         items=[('Add', 'Add', '', 0),
                 ('Minus', 'Minus', '', 1)
               ],

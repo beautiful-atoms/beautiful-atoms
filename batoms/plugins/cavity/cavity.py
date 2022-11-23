@@ -156,7 +156,7 @@ class Cavity(ObjectGN, PluginObject):
             1) build a meshgrid
             2) calulated first neighbour distance by kdtree
             3) find the max distance (max radius sphere)
-            4) remove meshgrid within this sphere, 
+            4) remove meshgrid within this sphere,
             5) find next max radius, ..., untill radius < minCave
             6) remove all spheres contact with boundary
         Args:
@@ -487,7 +487,7 @@ class Cavity(ObjectGN, PluginObject):
         """setting object."""
         deprecated('"setting" will be deprecated in the furture, please use "settings".')
         return self.settings
-    
+
 
     def as_dict(self):
         """
@@ -504,7 +504,7 @@ class Cavity(ObjectGN, PluginObject):
     @minCave.setter
     def minCave(self, minCave):
         self.batoms.coll.Bcavity.minCave = minCave
-    
+
     @property
     def resolution(self):
         return self.batoms.coll.Bcavity.resolution
@@ -512,7 +512,7 @@ class Cavity(ObjectGN, PluginObject):
     @resolution.setter
     def resolution(self, resolution):
         self.batoms.coll.Bcavity.resolution = resolution
-    
+
     @property
     def atomRadius(self):
         return self.batoms.coll.Bcavity.atomRadius
@@ -520,4 +520,3 @@ class Cavity(ObjectGN, PluginObject):
     @atomRadius.setter
     def atomRadius(self, atomRadius):
         self.batoms.coll.Bcavity.atomRadius = atomRadius
-

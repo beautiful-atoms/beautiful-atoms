@@ -16,7 +16,7 @@ extras = dict(engine="cycles") if use_cycles else {}
 
 def test_polyhedra_species():
     """
-    This is an example to show different polyhedra for the same element, but different species. 
+    This is an example to show different polyhedra for the same element, but different species.
     """
     from batoms.bio import read
     bpy.ops.batoms.delete()

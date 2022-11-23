@@ -224,14 +224,14 @@ class BaseObject():
         bmesh.ops.delete(bm, geom=verts_select, context='VERTS')
         bm.to_mesh(obj.data)
         bm.clear()
-    
+
     @property
     def shape_keys(self):
         base_name = "Basis_%s"%self.obj_name
         if self.obj.data.shape_keys is None and len(self) > 0:
             sk = self.obj.shape_key_add(name=base_name)
         return self.obj.data.shape_keys
-    
+
     def __len__(self):
         return len(self.obj.data.vertices)
 
@@ -407,11 +407,11 @@ class ObjectGN(BaseObject):
         for att in self._attributes:
             attributes[att.name] = self.get_attribute(att.name)
         return attributes
-    
+
     def get_attribute(self, key, index=None):
         """Get an attribute of Batoms object by name
         If the attribute is single value, just use the attribute of mesh.
-        If the attribute is an array, we should gather several attributes 
+        If the attribute is an array, we should gather several attributes
         from the mesh.
 
         Args:
@@ -456,7 +456,7 @@ class ObjectGN(BaseObject):
 
     def set_attributes(self, attributes):
         """Set attributes
-        
+
         Args:
             attributes (dict): attributes bound to every atoms
         """
@@ -477,10 +477,10 @@ class ObjectGN(BaseObject):
     def set_attribute(self, key, array, index=None):
         """Set one attribute
 
-        An attribute is a generic term to describe data stored per-element 
-        in a geometry data-block. For example, every vertex can have an 
-        associated number or vector. 
-        
+        An attribute is a generic term to describe data stored per-element
+        in a geometry data-block. For example, every vertex can have an
+        associated number or vector.
+
         class bpy.types.Attribute
 
         Two cases:
@@ -492,7 +492,7 @@ class ObjectGN(BaseObject):
         2) Object mode, use data.attributes directly
 
         Special case:
-        1) String, can not use foreach_set. Must use bmesh with encode, 
+        1) String, can not use foreach_set. Must use bmesh with encode,
             otherwise, can not read use bmesh.
         2) Boolean, does not supported by bmesh. Must use Object mode.
            We set all Boolean properties to INT.
@@ -536,7 +536,7 @@ class ObjectGN(BaseObject):
                     set_mesh_attribute_bmesh(obj, sub_key, array[i*n:(i+1)*n], index)
                 else:
                     set_mesh_attribute(obj, sub_key, array[i*n:(i+1)*n], index)
-        logger.debug('Time: {:10s} {:5.2f}'.format(key, time() - tstart))    
+        logger.debug('Time: {:10s} {:5.2f}'.format(key, time() - tstart))
 
     def set_attribute_with_indices(self, name, indices, data):
         data0 = self.get_attribute(name)
@@ -548,7 +548,7 @@ class ObjectGN(BaseObject):
 
         Read the whole attribute, and then slice.
 
-        If len(indices) == 1, use get_attribute(key, index=indices[0]), 
+        If len(indices) == 1, use get_attribute(key, index=indices[0]),
         this is faster.
 
         Args:
@@ -842,7 +842,7 @@ class childObjectGN():
             positions = self.parent.positions
             positions[self.indices] = value
             self.parent.positions[self.indices] = positions
-        
+
     def get_position(self):
         """
         Get global position.
@@ -897,7 +897,7 @@ class childObjectGN():
         else:
             value = self.parent.get_attribute_with_indices(key, self.indices)
         return value
-    
+
     def set_attribute(self, key, value):
         """Helper function to set attribute
 

@@ -33,7 +33,7 @@ class IsosurfaceSetting(Base):
                                subtype='COLOR',
                                min=0, max=1,
                                default=[0, 0, 1, 1.0])
-    
+
     def get_volumetric_data(self, context):
         keys = bpy.data.collections[self.label].batoms.settings_volumetric_data.keys()
         # items = [("0", "None", "None")]
@@ -51,7 +51,7 @@ class IsosurfaceSetting(Base):
         default=None,
         update=None,
         )
-    
+
     def get_color_by(self, context):
         keys = bpy.data.collections[self.label].batoms.settings_volumetric_data.keys()
         items = [("None", "None", "None")]
@@ -60,7 +60,7 @@ class IsosurfaceSetting(Base):
             items.append((key, key, key))
             i += 1
         return items
-        
+
     color_by : EnumProperty(
         items=get_color_by,
         name="color_by",
@@ -92,7 +92,7 @@ class IsosurfaceSetting(Base):
 
 
 class Isosurface(bpy.types.PropertyGroup):
-    """This module defines the Isosurface properties to extend 
+    """This module defines the Isosurface properties to extend
     Blender’s internal data.
 
     """
@@ -105,7 +105,6 @@ class Isosurface(bpy.types.PropertyGroup):
 
     def as_dict(self) -> dict:
         setdict = {
-            
+
         }
         return setdict
-        

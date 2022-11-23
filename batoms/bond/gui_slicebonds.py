@@ -29,11 +29,11 @@ class Bond_PT_prepare(Panel):
     #         return obj.batoms.type == 'BOND' and obj.mode != 'EDIT'
     #     else:
     #         return False
-    
+
     def draw(self, context):
         layout = self.layout
         bond = context.scene.Bbond
-        
+
         layout.label(text="Bond style")
         col = layout.column()
         col.prop(bond, "style", expand=True)
@@ -65,12 +65,12 @@ def set_bond_attr_by_batoms(key):
             setattr(slicebonds, key, value)
             # bpy.ops.object.mode_set(mode="EDIT")
             bpy.context.view_layer.objects.active = slicebonds.obj
-    
+
     return setter
 
 def get_bond_attr(key):
     """
-    """ 
+    """
     def getter(self):
         bond = get_active_bond()
         if bond is not None:
@@ -81,13 +81,13 @@ def get_bond_attr(key):
             return value
         else:
             return self.bl_rna.properties[key].default
-    
+
     return getter
 
 
 class BondProperties(bpy.types.PropertyGroup):
-    
-    
+
+
     style: EnumProperty(
         name="style",
         description="bond style",
@@ -104,7 +104,7 @@ class BondProperties(bpy.types.PropertyGroup):
     width: FloatProperty(
         name="bondwidth", default=0.1,
         min=0, soft_max=1,
-        description="bondwidth", 
+        description="bondwidth",
         get=get_bond_attr("width"),
         set=set_bond_attr_by_batoms("width"),
     )
@@ -116,5 +116,5 @@ class BondProperties(bpy.types.PropertyGroup):
                        )
     show: BoolProperty(name="show", default=False,
                        get=get_bond_attr("show"),
-                       set=set_bond_attr_by_batoms("show"),    
+                       set=set_bond_attr_by_batoms("show"),
                        )

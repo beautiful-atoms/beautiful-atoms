@@ -110,4 +110,3 @@ def unregister_menu():
     import bpy
     bpy.types.TOPBAR_MT_file_import.remove(ops_io.menu_func_import_batoms)
     bpy.types.TOPBAR_MT_file_export.remove(ops_io.menu_func_export_batoms)
-    

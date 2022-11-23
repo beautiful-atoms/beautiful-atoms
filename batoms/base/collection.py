@@ -109,19 +109,19 @@ class Setting():
 
     The Setting object store the additional information for batoms.
     The inforation is a colleciton of data. For example, species, bond pairs.
-    In Batoms, collection properties are added to a bpy.type.collection 
+    In Batoms, collection properties are added to a bpy.type.collection
     or a bpy.type.object.
 
     Setting has "add", "remove", "find" and "extend" operators.
 
     Note: In blender, the colleciton properties is a list.
     Here, we build our Setting as a dict.
-    
+
     Parameters:
 
     label: str
         The label define the batoms object that a Setting belong to.
-        
+
     """
 
     def __init__(self, label, coll_name=None, obj_name=None) -> None:
@@ -194,14 +194,14 @@ class Setting():
     @property
     def ui_list_index(self):
         return self.get_ui_list_index()
-    
+
     def get_ui_list_index(self):
         return self.bpy_data.ui_list_index
-    
+
     @ui_list_index.setter
     def ui_list_index(self, value):
         self.set_ui_list_index(value)
-    
+
     def set_ui_list_index(self, value):
         self.bpy_data.ui_list_index = value
 
@@ -214,10 +214,10 @@ class Setting():
 
     def keys(self):
         return self.as_dict().keys()
-    
+
     def values(self):
         return self.as_dict().values()
-    
+
     def items(self):
         return self.as_dict().items()
 
@@ -252,7 +252,7 @@ class Setting():
         subset.flag = True
         for key, value in setdict.items():
             setattr(subset, key, value)
-        
+
 
     def __delitem__(self, key):
         self.remove(key)

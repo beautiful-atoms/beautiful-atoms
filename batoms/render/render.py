@@ -29,7 +29,7 @@ class Render(BaseCollection):
                  ):
         """Rendering Batoms object using blender.
 
-        Object to render batoms object. A Render object has 
+        Object to render batoms object. A Render object has
         one camera, a list of lights.
 
         Parameters:
@@ -130,7 +130,7 @@ class Render(BaseCollection):
         elif engine.upper() == 'CYCLES':
             self.scene.cycles.use_denoising = True
         self.scene.render.engine = engine.upper()
-    
+
     @property
     def compute_device_type(self):
         return self.get_compute_device_type()
@@ -213,7 +213,7 @@ class Render(BaseCollection):
     @run_render.setter
     def run_render(self, run_render):
         self.coll.Brender.run_render = run_render
-    
+
     @property
     def animation(self):
         return self.coll.Brender.animation

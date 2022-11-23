@@ -29,7 +29,7 @@ class PluginSettings(Setting):
         self.parent = parent
         self.name = 'B{}'.format(parent.name)
 
-    
+
 
 class PluginObject(BaseObject):
     def __init__(self,
@@ -51,7 +51,7 @@ class PluginObject(BaseObject):
         BaseObject.__init__(self, obj_name)
         self.settings = PluginSettings(
             self.label, parent=self)
-    
+
     def build_materials(self, name, color,
                         node_inputs=None,
                         material_style='default',
@@ -88,7 +88,7 @@ class PluginObject(BaseObject):
         for setting in self.settings.bpy_setting:
             self.draw_item(setting)
 
-    
+
     def draw_item(self, setting):
         """
         """
@@ -112,7 +112,7 @@ class PluginObject(BaseObject):
     @property
     def mat(self):
         return bpy.data.materials.get(self.name)
-   
+
     def as_dict(self):
         """
         """
@@ -120,7 +120,7 @@ class PluginObject(BaseObject):
         data['settings'] = self.settings.as_dict()
         data.update(self.settings.bpy_data.as_dict())
         return data
-    
+
     @property
     def show(self):
         return self.get_show()

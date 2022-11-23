@@ -184,7 +184,7 @@ class Batoms(BaseCollection, ObjectGN):
             if movie:
                 self.set_frames()
             self.show_unit_cell = show_unit_cell
-            
+
         self.ribbon = Ribbon(self.label, batoms=self, datas=info, update=True)
         show_index()
         self.hideOneLevel()
@@ -402,7 +402,7 @@ class Batoms(BaseCollection, ObjectGN):
         self._volumetric_data = VolumetricData(label, None, self)
         self._attributes = Attributes(label=label, parent=self, obj_name=self.obj_name)
         self.selects = Selects(label, self)
-    
+
     @classmethod
     def from_dict(cls, data):
         """Build batoms object from a dictionary.
@@ -437,6 +437,8 @@ class Batoms(BaseCollection, ObjectGN):
         # plugins
         for key, info in plugin_info.items():
             _name = '_{}'.format(key)
+            if len(info) == 0:
+                continue
             if getattr(getattr(self.coll, info[2]), 'active'):
                 plugin = getattr(self, key)
                 data[key] = plugin.as_dict()
@@ -515,7 +517,7 @@ class Batoms(BaseCollection, ObjectGN):
     def set_species(self, species):
         for key, data in species.items():
             self._species[key] = data
-    
+
     @property
     def volumetric_data(self):
         return self.get_volumetric_data()
@@ -887,7 +889,7 @@ class Batoms(BaseCollection, ObjectGN):
             slicebatoms = SliceBatoms(self.label, indices, batoms=self)
             # bpy.ops.object.mode_set(mode=mode)
             return slicebatoms
-        
+
 
     def __setitem__(self, indices, value):
         """Return a subset of the Batom.
@@ -962,7 +964,7 @@ class Batoms(BaseCollection, ObjectGN):
         self.repeat(m)
         return self
 
-    def copy(self, label):
+    def copy(self, label, displacement=[2, 2, 2]):
         """
         Return a copy.
 
@@ -978,12 +980,12 @@ class Batoms(BaseCollection, ObjectGN):
         # copy object first
         arrays = self.arrays
         batoms = self.__class__(label=label,
+                                location=self.location + np.array(displacement),
                                 species=arrays['species'],
-                                positions=arrays['positions'],
+                                positions=self.local_positions,
                                 pbc=self.pbc,
                                 cell=self.cell.array,
                                 )
-        batoms.translate([2, 2, 2])
         return batoms
 
     def extend(self, other):
@@ -1030,7 +1032,7 @@ class Batoms(BaseCollection, ObjectGN):
         """
         self += other
         return self
-    
+
     def separate(self):
         """
         Separate batoms object based on selects.
@@ -1068,7 +1070,7 @@ class Batoms(BaseCollection, ObjectGN):
             bpy.context.view_layer.objects.active = self.obj
 
 
-        
+
 
     def __iter__(self):
         batom = self.obj
@@ -1105,7 +1107,6 @@ class Batoms(BaseCollection, ObjectGN):
         # if kind exists, merger, otherwise build a new kind and add.
         mode = self.obj.mode
         bpy.context.view_layer.objects.active = self.obj
-        bpy.ops.object.mode_set(mode='OBJECT')
         if isinstance(species, str):
             ele = species.split('_')[0]
             species = [species, {'elements': {ele: {"occupancy": 1.0}}}]
@@ -1132,7 +1133,6 @@ class Batoms(BaseCollection, ObjectGN):
         self.set_attributes({'species': species_array})
         bpy.context.view_layer.objects.active = self.obj
         # print(mode)
-        bpy.ops.object.mode_set(mode=mode)
         # print(self.species)
         # for sp in self.species:
         self.bond.settings.add_species(species[0])
@@ -1338,7 +1338,7 @@ class Batoms(BaseCollection, ObjectGN):
         if isinstance(show, (bool, int)):
             show = np.ones(len(self), dtype=bool)*show
         self.set_attributes({'show': show})
-        #TODO: /home/xing/apps/beautiful-atoms/batoms/batoms.py:1269: 
+        #TODO: /home/xing/apps/beautiful-atoms/batoms/batoms.py:1269:
         # DeprecationWarning: In future, it will be an error for 'np.bool_'
         #  scalars to be interpreted as an index
         self.coll.batoms.show = show[0]
@@ -1547,7 +1547,7 @@ class Batoms(BaseCollection, ObjectGN):
         deprecated('"isosurfaces" will be deprecated in the furture, please use "isosurface".')
         return self.isosurface
 
-    
+
 
     @property
     def ms(self):
@@ -1903,7 +1903,7 @@ class Batoms(BaseCollection, ObjectGN):
             self.bond.show_search = False
             self.bond.update()
             self.polyhedra.update()
-    
+
     @property
     def segments(self):
         return self.get_segments()
@@ -1939,7 +1939,7 @@ class Batoms(BaseCollection, ObjectGN):
         self.set_attributes({'charges':charges})
         logger.debug("time: {:1.3f}".format(time() - tstart))
         return charges
-    
+
     def calc_electrostatic_potential(self, points):
         """Calc electrostatic potential on given points
             based on partial charges.
@@ -2005,9 +2005,9 @@ def hook_plugins(cls, plugin_info):
                     fset = create_setter(name),
                     doc = 'test',
                 ))
-    
+
     logger.debug("Hook plugins: {:1.2f}".format(time() - tstart))
- 
+
 
 
 hook_plugins(Batoms, plugin_info)

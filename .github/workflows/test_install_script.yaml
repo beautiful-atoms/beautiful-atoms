@@ -39,7 +39,7 @@ jobs:
           URL="${BLENDER_DOWN_URL}/Blender${MAJ_VER}/blender-${VER}-linux-x64.tar.xz"
           mkdir -p ../blender && curl -O ${URL} && tar -xvf blender-*-linux-x64.tar.xz -C ../blender
           echo "BLENDER_ROOT=../blender/blender-${VER}-linux-x64/${MAJ_VER}" >> $GITHUB_ENV
-      - name: Run normal installation & uninstall script 
+      - name: Run normal installation & uninstall script
         run: |
           echo Currently install in $(pwd)
           echo Use blender root ${BLENDER_ROOT}
@@ -132,7 +132,7 @@ jobs:
           $CONDA_PYTHON_EXE ${HOME}/install.py --uninstall ${BLENDER_ROOT}
         if: ${{ matrix.blender_ver != '3.2.0' }}
 
-      
+
 
   install-windows:
     defaults:
@@ -196,5 +196,3 @@ jobs:
           python install.py --use-pip ${BLENDER_ROOT} -t v2.1.0
           python install.py --use-pip --uninstall ${BLENDER_ROOT}
         if: ${{ matrix.blender_ver != '3.2.0' }}
-
-          

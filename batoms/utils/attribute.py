@@ -1,4 +1,4 @@
-""" 
+"""
 Get and set attribute
 """
 import numpy as np
@@ -69,7 +69,7 @@ def get_mesh_attribute(obj, key, index=None):
 
     When use this function:
     1) Object mode, read attribute directly
-    2) For BOOLEAN attribute, because bmesh does not support BOOLEAN.      
+    2) For BOOLEAN attribute, because bmesh does not support BOOLEAN.
 
     Args:
         key (string): name of the attribute

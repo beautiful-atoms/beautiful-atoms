@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 def map_volumetric_data(volumetric_data, coordinates):
-    """Interpolate value at given coordinates for 
+    """Interpolate value at given coordinates for
     the volumetric data
 
     Note: both volumetric data and coordinate are using scaled positions
@@ -46,7 +46,7 @@ def map_color(data, color1 = [1, 0, 0, 1], color2=[0, 0, 1, 1]):
     color_array = data[:, None]*dcolor
     color = color1 + color_array
     return color
-    
+
 def read_from_others(from_ase=None, from_pymatgen=None,
                      from_pybel=None):
     if from_ase is not None:
@@ -557,7 +557,7 @@ def type_blender_to_py(dtype, str = "str"):
         "BOOLEAN":"bool",
     }
     return type_dict[dtype]
-    
+
 def type_py_to_blender(dtype):
     """change python data type to Blender data type
 
@@ -567,7 +567,7 @@ def type_py_to_blender(dtype):
     Returns:
         _type_: _description_
     """
-    # Update the subdtype check according to 
+    # Update the subdtype check according to
         # https://github.com/numpy/numpy/blob/db481babcfa7ebc70833e77985858e9295a3135b/numpy/core/numerictypes.py#L357
     if np.issubdtype(dtype, np.integer):
         dtype = 'INT'

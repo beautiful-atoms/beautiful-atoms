@@ -243,7 +243,7 @@ class Species(BaseObject):
         >>> H2O['O'].elements = 'O'
         >>> H2O['O'].elements = {'O':1.0}
         >>> H2O['O'].elements = {'O':0.7, 'S': 0.3}
-        >>> H2O["O"].elements = {"O":{"occupancy": 0.7}, 
+        >>> H2O["O"].elements = {"O":{"occupancy": 0.7},
                             "S":{"occupancy"}}
         """
         data = self.data.as_dict()
@@ -337,7 +337,7 @@ class Species(BaseObject):
     @property
     def material_style(self):
         return self.data.material_style
-    
+
     @material_style.setter
     def material_style(self, material_style):
         self.data.material_style = material_style
@@ -427,7 +427,7 @@ class Bspecies(Setting):
 
     def get_ui_list_index(self):
         return self.bpy_data.ui_list_index_species
-    
+
     def set_ui_list_index(self, value):
         self.bpy_data.ui_list_index_species = value
 

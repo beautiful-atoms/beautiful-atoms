@@ -35,7 +35,7 @@ def set_logger(version):
     root_logger.info("Python version: {} ".format(sys.version))
     root_logger.info("Beautiful Atoms version: {} ".format(version))
     root_logger.info("Beautiful Atoms directory: {} ".format(batoms_dir))
-    
+
 
 def update_logging_level():
     prefs = bpy.context.preferences.addons['batoms'].preferences

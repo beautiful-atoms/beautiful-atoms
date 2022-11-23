@@ -1,4 +1,4 @@
-""" 
+"""
 #TODO wrap is 3d vector, do we need support all?
 """
 import bpy
@@ -10,7 +10,7 @@ from bpy.props import (
     StringProperty,
 )
 from batoms import Batoms
-from batoms.gui.utils import (get_active_bpy_data, 
+from batoms.gui.utils import (get_active_bpy_data,
         get_attr, get_enum_attr, set_attr, set_enum_attr)
 
 model_style_items = [("Space-filling", "Space-filling", "", 0),

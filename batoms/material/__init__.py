@@ -33,7 +33,7 @@ def create_material(name,
                     material_style='default',
                     backface_culling=True,
                     vertex_color=None,
-                    color_by_attribute=None, 
+                    color_by_attribute=None,
                     alpha = None,):
     """
     Creat material

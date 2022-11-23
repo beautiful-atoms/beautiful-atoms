@@ -12,7 +12,7 @@ class SliceBatoms(childObjectGN):
 
         Two cases:
         1) len(indices) > 1: return Batoms[indices]
-        1) one atoms: access properties of one atoms by reading attribute 
+        1) one atoms: access properties of one atoms by reading attribute
         from obj directly. This will be faster than Batoms[indices]
 
         Args:
@@ -66,7 +66,7 @@ class SliceBatoms(childObjectGN):
         if len(self.indices) == 1:
             self.attributes['model_style'].data[self.indices[0]].value = 2 if polyhedra else 1
         else:
-            self.parent.set_attribute_with_indices('model_style', 
+            self.parent.set_attribute_with_indices('model_style',
                 self.indices, [2 if polyhedra else 1]*len(self.indices))
         self.parent.draw_polyhedra()
 

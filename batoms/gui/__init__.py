@@ -99,7 +99,7 @@ def unregister_menu():
     bpy.types.VIEW3D_MT_add.remove(view3d_mt_batoms_add.menu_func)
     bpy.types.VIEW3D_MT_object_context_menu.remove(view3d_mt_object_context_menu.menu_func)
     bpy.types.VIEW3D_MT_edit_mesh_context_menu.remove(view3d_mt_edit_mesh_context_menu.menu_func)
-    
+
 
 
 # handle the keymap
@@ -129,4 +129,3 @@ def unregister_keymap():
         bpy.utils.unregister_tool(gui_toolbar.BatomsCell)
         bpy.utils.unregister_tool(gui_toolbar.MoleculeEditElement)
         bpy.utils.unregister_tool(gui_toolbar.MolecueEditBond)
-

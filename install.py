@@ -266,7 +266,7 @@ def _get_blender_bin(os_name, blender_bundle_root):
         ):
             extra_msg = f"""
             It seems you are running the installation script in WSL but points to Blender
-            installed on Windows host. Please rerun the script directly on Windows host, 
+            installed on Windows host. Please rerun the script directly on Windows host,
             see instructions at {help_url}
             """
         else:

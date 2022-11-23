@@ -113,7 +113,7 @@ class Magres(BaseObject):
             rotation_matrix = np.linalg.inv(evecs)
             ellipsoids.append([positions[i], evals, rotation_matrix])
         return ellipsoids
-    
+
     def draw_ellipsoids(self, name, datas, coll):
         objs = []
         for data in datas:
@@ -171,14 +171,14 @@ class Magres(BaseObject):
         """
         """
         pass
-    
+
     @property
     def setting(self):
         from batoms.utils import deprecated
         """setting object."""
         deprecated('"setting" will be deprecated in the furture, please use "settings".')
         return self.settings
-    
+
     def as_dict(self):
         """
         """

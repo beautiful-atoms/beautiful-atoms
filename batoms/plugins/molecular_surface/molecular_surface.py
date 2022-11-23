@@ -193,19 +193,19 @@ class MolecularSurface(BaseObject):
                 # scaled positions
                 scaled_verts = Cell(self.batoms.cell).scaled_positions(isosurface['vertices'])
                 data = map_volumetric_data(
-                                self.batoms.volumetric_data[ms.color_by], 
+                                self.batoms.volumetric_data[ms.color_by],
                                 scaled_verts
                                 )
             # normalize
             data = (data - np.min(data))/(np.max(data) - np.min(data))
-            # color_attribute = map_color(data, [1, 0, 0, ms.transparency], 
+            # color_attribute = map_color(data, [1, 0, 0, ms.transparency],
                                     # [0, 0, 1, ms.transparency])
             # set_vertex_color(obj, ms.color_by, color_attribute)
             obj.data.attributes.new(name='{}_data'.format(ms.color_by),
                                 type='FLOAT', domain='POINT')
             set_mesh_attribute(obj, '{}_data'.format(ms.color_by), data)
             color_by_attribute = {'attribute_name': '{}_data'.format(ms.color_by),
-                              'ValToRGB':[ms.color1[:], 
+                              'ValToRGB':[ms.color1[:],
                                         ms.color2[:]]
                                         }
         else:
@@ -216,7 +216,7 @@ class MolecularSurface(BaseObject):
                                 color_by_attribute = color_by_attribute,
                                    )
         obj.data.materials.append(mat)
-        
+
         obj.parent = self.batoms.obj
         obj.batoms.type = 'MS'
         obj.batoms.label = self.batoms.label
@@ -846,7 +846,7 @@ class MolecularSurface(BaseObject):
         """setting object."""
         deprecated('"setting" will be deprecated in the furture, please use "settings".')
         return self.settings
-    
+
     def as_dict(self):
         """
         """

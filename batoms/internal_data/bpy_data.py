@@ -135,12 +135,12 @@ class Battribute(Base):
     def natt(self) -> int:
         import numpy as np
         return np.product(self.shape)
-    
+
     @property
     def sub_name(self) -> int:
         sub_name = ["{}{}".format(self.name, i) for i in range(self.natt)]
         return sub_name
-    
+
     @property
     def shape(self) -> int:
         import numpy as np
@@ -174,7 +174,7 @@ class Battribute(Base):
         s += "] \n"
         s += "-"*80 + "\n"
         return s
-        
+
 class Bsite(bpy.types.PropertyGroup):
     """
     """
@@ -194,7 +194,7 @@ class Bcell(bpy.types.PropertyGroup):
                                subtype='COLOR',
                                min=0, max=1,
                                default=[0.2, 0.2, 0.2, 1])
-    
+
     def as_dict(self) -> dict:
         setdict = {
             'pbc': self.pbc,
@@ -210,7 +210,7 @@ class Bvolumetric_data(bpy.types.PropertyGroup):
     label: StringProperty(name="label", default='')
     npoint: IntProperty(name="npoint")
     shape: IntVectorProperty(name="shape", size=3)
-    
+
     def as_dict(self) -> dict:
         setdict = {
             'label': self.label,
@@ -312,6 +312,7 @@ items = [('OTHER', "Not Batoms", "Not Batoms"),
                ('MS', "MS", "Molecular Surface"),
                ('CAVITY', "CAVITY", "Cavity"),
                ('MARGES', "Marges", "NMR tensors"),
+               ('HIGHLIGHT', "HIGHLIGHT", "Highlight"),
                ]
 
 class BatomsCollection(bpy.types.PropertyGroup):
@@ -375,7 +376,7 @@ class BatomsCollection(bpy.types.PropertyGroup):
                                default=0)
     ui_list_index_volumetric_data: IntProperty(name="ui_list_index_volumetric_data",
                                default=0)
-    # collection                               
+    # collection
     settings_select: CollectionProperty(name='settings_select',
                                 type=Bselect)
 
@@ -417,4 +418,3 @@ class BatomsObject(bpy.types.PropertyGroup):
     # collection
     settings_attribute: CollectionProperty(name='settings_attribute',
                                  type=Battribute)
-

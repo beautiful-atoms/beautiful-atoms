@@ -44,5 +44,3 @@ class TemplateSettings(Setting):
                 setting.name,  setting.prop1)
         s += "-"*60 + "\n"
         return s
-    
-    

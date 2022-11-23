@@ -13,7 +13,7 @@ from bpy.props import (
 
 
 from batoms import Batoms
-from batoms.gui.utils import (get_active_bpy_data, 
+from batoms.gui.utils import (get_active_bpy_data,
         get_attr, get_enum_attr, set_attr, set_enum_attr,
         get_active_module, set_module_attr
         )

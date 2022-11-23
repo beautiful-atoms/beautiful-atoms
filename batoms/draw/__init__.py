@@ -47,7 +47,7 @@ def draw_cylinder(
     obj.data.materials.append(material)
     if len(datas['centers']) == 0:
         return obj
-    
+
     source = bond_source[datas['vertices']]
     # tstart = time()
     verts, faces = cylinder_mesh_from_vec(

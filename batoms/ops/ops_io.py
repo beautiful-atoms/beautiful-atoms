@@ -25,7 +25,7 @@ class IMPORT_OT_batoms(Operator, ImportHelper):
     render: BoolProperty(
         name="Add a default render", default=True,
         description="Do you need a render?")
-    
+
     model_style: EnumProperty(
         name="Type",
         description="Choose model",

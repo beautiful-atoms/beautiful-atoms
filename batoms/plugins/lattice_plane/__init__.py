@@ -46,7 +46,7 @@ def register_class():
 def unregister_class():
     from bpy.types import Collection, Object, Scene
     from bpy.utils import unregister_class
-    
+
 
     del Collection.Blatticeplane
     del Object.Blatticeplane

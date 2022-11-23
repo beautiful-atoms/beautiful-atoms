@@ -1,5 +1,5 @@
 """
-Use ASE's build function 
+Use ASE's build function
 https://wiki.fysik.dtu.dk/ase/ase/cluster/cluster.html?highlight=cluster#module-ase.cluster
 """
 

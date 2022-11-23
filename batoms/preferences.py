@@ -51,7 +51,7 @@ def get_plugin(key):
     """
     def getter(self):
         # self.get: returns the value of the custom property assigned to
-        # key or default when not found 
+        # key or default when not found
         value = self.bl_rna.properties[key].default
         return self.get(key, value)
     return getter
@@ -120,7 +120,7 @@ class BatomsDefaultStartup(bpy.types.Operator):
         import pathlib
         addon_dir = pathlib.Path(__file__).parent.resolve()
         blend_dir = os.path.join(addon_dir, "data/startup.blend")
-        bpy.ops.wm.open_mainfile(filepath=blend_dir, load_ui=True, use_scripts=True) 
+        bpy.ops.wm.open_mainfile(filepath=blend_dir, load_ui=True, use_scripts=True)
         ###################################################
         # Add additional settings to the startup file here
         ###################################################
@@ -149,7 +149,7 @@ class BatomsAddonPreferences(AddonPreferences):
     def get_logging_level(self):
         items = self.bl_rna.properties["logging_level"].enum_items
         # self.get: returns the value of the custom property assigned to
-        # key or default when not found 
+        # key or default when not found
         return items[self.get("logging_level", 2)].value
 
     def set_logging_level(self, value):
@@ -160,10 +160,10 @@ class BatomsAddonPreferences(AddonPreferences):
         self["logging_level"] = level
         # Set the logging level for all child loggers of "batoms"
         update_logging_level()
-        # Note the following logging info might not emit 
+        # Note the following logging info might not emit
         # if global level is higher than INFO
         logger.info("Set logging level to: {}".format(level))
-    
+
 
 
     def batoms_setting_path_update(self, context):
@@ -217,7 +217,7 @@ class BatomsAddonPreferences(AddonPreferences):
         set=set_logging_level,
         default=2,
         )
-    
+
     isosurface: BoolProperty(
         name="isosurface",
         description="Enable isosurface plugin",
@@ -247,6 +247,14 @@ class BatomsAddonPreferences(AddonPreferences):
         description="Enable magres plugin",
         get=get_plugin("magres"),
         set=set_plugin("magres"),
+        default=True,
+    )
+
+    highlight: BoolProperty(
+        name="highlight",
+        description="Enable highlight plugin",
+        get=get_plugin("highlight"),
+        set=set_plugin("highlight"),
         default=True,
     )
 
@@ -319,6 +327,7 @@ class BatomsAddonPreferences(AddonPreferences):
         split = layout.split()
         col = split.column()
         col.label(text="Custom Plugins")
+        col.prop(self, "highlight")
         col.prop(self, "isosurface")
         col.prop(self, "molecular_surface")
         col.prop(self, "crystal_shape")
@@ -334,7 +343,7 @@ class BatomsAddonPreferences(AddonPreferences):
         box.label(text="Custom Settings")
         box.prop(self, "logging_level")
         box.prop(self, "batoms_setting_path")
-        
+
 
 classes = [BatomsDefaultPreference,
             BatomsDefaultStartup,

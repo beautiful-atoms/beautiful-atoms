@@ -61,7 +61,7 @@ def test_scatter_and_gather_attribute():
     t = time() - tstart
     print("Gatther data for data (2, 2): {:1.2f}".format(t))
     assert t < 4
-    
+
 
 if __name__ == "__main__":
     test_position()

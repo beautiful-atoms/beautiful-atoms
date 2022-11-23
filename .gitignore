@@ -128,7 +128,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-# batoms 
+# batoms
 *.batoms.inp
 # Images
 *.png

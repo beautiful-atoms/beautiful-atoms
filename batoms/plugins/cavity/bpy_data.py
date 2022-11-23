@@ -50,7 +50,7 @@ class CavitySetting(Base):
         return s
 
 class Cavity(bpy.types.PropertyGroup):
-    """This module defines the cavity properties to extend 
+    """This module defines the cavity properties to extend
     Blender’s internal data.
 
     """
@@ -75,6 +75,6 @@ class Cavity(bpy.types.PropertyGroup):
 
     def as_dict(self) -> dict:
         setdict = {
-            
+
         }
         return setdict

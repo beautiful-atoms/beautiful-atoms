@@ -19,7 +19,7 @@ class Light(BaseObject):
                  lock_to_camera=False) -> None:
         """Light Class
 
-        A Light object is linked to a Light object in Blender. 
+        A Light object is linked to a Light object in Blender.
 
         Parameters:
 

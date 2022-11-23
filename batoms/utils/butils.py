@@ -140,7 +140,7 @@ def get_selected_vertices_all():
 def remove_collection(name, keep_batom=True):
     """
 
-    Note: to avoid crash in macOS, read the name first, 
+    Note: to avoid crash in macOS, read the name first,
     and then use get method
     """
     collection = bpy.data.collections.get(name)
@@ -428,7 +428,7 @@ def get_bmesh_layer(domain, key, dtype):
         layer = domain.layers.int.get(key)
     elif dtype == 'FLOAT':
         layer = domain.layers.float.get(key)
-    
+
     return layer
 
 
@@ -449,7 +449,7 @@ def set_vertex_color(obj, name, color):
     else:
         import bmesh
         if obj.mode == 'EDIT':
-            bm =bmesh.from_edit_mesh(obj.data)  
+            bm =bmesh.from_edit_mesh(obj.data)
             volume_layer = bm.loops.layers.color.new(name)
             for v in bm.verts:
                 for loop in v.link_loops:

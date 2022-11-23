@@ -21,25 +21,24 @@ classes = [
 ]
 
 
-        
+
 from bpy.types import Collection, Object
 
 def register_class():
     from bpy.utils import register_class
     for cls in classes:
         register_class(cls)
-    
+
     Collection.batoms = PointerProperty(name='Batoms',
                                         type=bpy_data.BatomsCollection)
     Object.batoms = PointerProperty(name='Batoms',
                                     type=bpy_data.BatomsObject)
-    
+
 
 def unregister_class():
     from bpy.utils import unregister_class
     for cls in reversed(classes):
         unregister_class(cls)
-    
+
     del Collection.batoms
     del Object.batoms
-    

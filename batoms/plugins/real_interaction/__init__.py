@@ -14,7 +14,7 @@ classes = [
     modal_force_field.Force_Field_Operator,
     modal_force_field.Force_Field_Modal_Panel,
     modal_force_field.ForceFieldProperties,
-    
+
 ]
 
 
@@ -25,8 +25,8 @@ def register_class():
     scene = bpy.types.Scene
     scene.rbpanel = PointerProperty(type=modal_rigid_body.RigidBodyProperties)
     scene.ffpanel = PointerProperty(type=modal_force_field.ForceFieldProperties)
-    
-    
+
+
 def unregister_class():
     from bpy.utils import unregister_class
     for cls in reversed(classes):
@@ -34,4 +34,3 @@ def unregister_class():
     scene = bpy.types.Scene
     del scene.rbpanel
     del scene.ffpanel
-    

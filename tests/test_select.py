@@ -19,7 +19,7 @@ def test_settings():
     # remove
     ch4.selects.remove('s1')
     assert ch4.coll.batoms.ui_list_index_select==0
-    
+
 
 def test_select():
     from ase.build import molecule, fcc111

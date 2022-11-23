@@ -56,7 +56,7 @@ class SpeciesUpdate(OperatorBatoms):
     bl_label = "Update Species"
     bl_description = ("Update Species to a Batoms")
 
-   
+
     def execute(self, context):
         obj = context.object
         batoms = Batoms(label=obj.batoms.label)

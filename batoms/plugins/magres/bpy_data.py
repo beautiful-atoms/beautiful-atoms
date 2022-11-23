@@ -58,7 +58,7 @@ class MagresSetting(Base):
 
 
 class Magres(bpy.types.PropertyGroup):
-    """This module defines the Magres properties to extend 
+    """This module defines the Magres properties to extend
     Blender’s internal data.
 
     """
@@ -71,6 +71,6 @@ class Magres(bpy.types.PropertyGroup):
 
     def as_dict(self) -> dict:
         setdict = {
-            
+
         }
         return setdict

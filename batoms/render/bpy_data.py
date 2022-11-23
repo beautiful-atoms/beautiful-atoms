@@ -35,7 +35,7 @@ class CameraSetting(bpy.types.PropertyGroup):
 
 
 class Render(bpy.types.PropertyGroup):
-    """This module defines the Render properties to extend 
+    """This module defines the Render properties to extend
     Blender’s internal data.
 
     """
@@ -54,7 +54,7 @@ class Render(bpy.types.PropertyGroup):
                             default=-1)
     padding: FloatVectorProperty(name="padding", default=[1, 1, 1, 1], size=4)
 
-    
+
     light_ui_list_index: IntProperty(name="light_ui_list_index",
                               default=0)
     camera_ui_list_index: IntProperty(name="camera_ui_list_index",
@@ -64,5 +64,3 @@ class Render(bpy.types.PropertyGroup):
                                 type=LightSetting)
     camera_settings: CollectionProperty(name='camerasetting',
                                 type=CameraSetting)
-
-    

@@ -66,7 +66,7 @@ class SearchBond(ObjectGN):
             self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
         else:
             self.build_object(default_search_bond_datas)
-    
+
     def loadable(self):
         """Check loadable or not
         """
@@ -80,7 +80,7 @@ class SearchBond(ObjectGN):
             # return False
         # return coll.Bbond.flag
         return True
-        
+
     def build_object(self, datas, attributes={}):
         """
         build child object and add it to main objects.
@@ -310,7 +310,7 @@ class SearchBond(ObjectGN):
                                 JoinGeometry.inputs['Geometry'])
 
     def update_geometry_node_instancer(self, spname, instancer):
-        """When instances are re-build, we need also update 
+        """When instances are re-build, we need also update
         the geometry node.
 
         Args:
@@ -324,7 +324,7 @@ class SearchBond(ObjectGN):
                                        'GeometryNodeObjectInfo')
         ObjectInfo.inputs['Object'].default_value = instancer
         logger.debug('update boundary instancer: {}'.format(spname))
-        
+
     @property
     def obj_o(self):
         return self.get_obj_o()

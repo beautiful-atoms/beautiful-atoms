@@ -31,7 +31,7 @@ class Template(PluginObject):
         self.settings = TemplateSettings(
             self.label, parent=self)
         self.settings.bpy_data.active = True
-    
+
     def build_materials(self, name, color,
                         node_inputs=None,
                         material_style='default',
@@ -66,7 +66,7 @@ class Template(PluginObject):
         for setting in self.settings.bpy_setting:
             self.draw_plugin(setting)
 
-    
+
     def draw_plugin(self, setting):
         """
         """
@@ -85,7 +85,7 @@ class Template(PluginObject):
     @property
     def mat(self):
         return bpy.data.materials.get(self.name)
-   
+
     def as_dict(self):
         """
         """

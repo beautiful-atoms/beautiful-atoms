@@ -70,7 +70,7 @@ class CrystalShapeSetting(Base):
 
 
 class CrystalShape(bpy.types.PropertyGroup):
-    """This module defines the CrystalShape properties to extend 
+    """This module defines the CrystalShape properties to extend
     Blender’s internal data.
 
     """
@@ -88,9 +88,9 @@ class CrystalShape(bpy.types.PropertyGroup):
 
     ui_list_index: IntProperty(name="ui_list_index",
                               default=0)
-    
+
     def as_dict(self) -> dict:
         setdict = {
-            
+
         }
         return setdict

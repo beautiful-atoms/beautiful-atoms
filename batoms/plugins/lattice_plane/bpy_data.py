@@ -49,7 +49,7 @@ class LatticePlaneSetting(Base):
                                subtype='COLOR',
                                min=0, max=1,
                                default=[0, 0, 1, 1.0])
-    
+
     def get_color_by(self, context):
         keys = bpy.data.collections[self.label].batoms.settings_volumetric_data.keys()
         items = [("None", "None", "None"),
@@ -59,7 +59,7 @@ class LatticePlaneSetting(Base):
             items.append((key, key, key))
             i += 1
         return items
-        
+
     color_by : EnumProperty(
         items=get_color_by,
         name="color_by",
@@ -67,7 +67,7 @@ class LatticePlaneSetting(Base):
         default=None,
         update=None,
         )
-        
+
     @property
     def name(self) -> str:
         return '%s-%s-%s' % (self.indices[0], self.indices[1], self.indices[2])
@@ -104,7 +104,7 @@ class LatticePlaneSetting(Base):
 
 
 class LatticePlane(bpy.types.PropertyGroup):
-    """This module defines the LatticePlane properties to extend 
+    """This module defines the LatticePlane properties to extend
     Blender’s internal data.
 
     """
@@ -125,6 +125,6 @@ class LatticePlane(bpy.types.PropertyGroup):
 
     def as_dict(self) -> dict:
         setdict = {
-            
+
         }
         return setdict

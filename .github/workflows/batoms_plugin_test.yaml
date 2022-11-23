@@ -68,7 +68,7 @@ jobs:
         run: |
           cd tests
           pytest -svv --ignore=test_default_preference.py --ignore=test_batomspy_shebang.py
-  
+
   shebang-test:
     runs-on: ubuntu-latest
     strategy:

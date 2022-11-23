@@ -83,16 +83,16 @@ class VolumetricDataCreate(OperatorBatoms):
         description="Volumetric data to be used.",
         default=0
     )
-    
+
     select_data2: EnumProperty(
-        name="select_data2", 
+        name="select_data2",
         items=get_volumetric_data,
         description="Volumetric data to be used.",
         default=0
     )
 
     operator: EnumProperty(
-        name="operator", 
+        name="operator",
         items=[('Add', 'Add', '', 0),
                 ('Minus', 'Minus', '', 1)
               ],
@@ -118,6 +118,3 @@ class VolumetricDataCreate(OperatorBatoms):
         context.view_layer.objects.active = obj
         self.report({"INFO"}, "Volumetric data {} is created.".format(self.name))
         return {'FINISHED'}
-
-
-

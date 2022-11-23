@@ -26,7 +26,7 @@ class CrystalShapeSettings(Setting):
         if plane is not None:
             for key, data in plane.items():
                 self[key] = data
-    
+
     def get_collection(self):
         if self.coll_name:
             coll = bpy.data.collections.get(self.coll_name)
