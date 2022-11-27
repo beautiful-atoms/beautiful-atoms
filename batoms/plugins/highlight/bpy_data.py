@@ -57,6 +57,7 @@ class Highlight(bpy.types.PropertyGroup):
     Blender’s internal data.
 
     """
+    active: BoolProperty(name="active", default=False)
     show: BoolProperty(name="show", default=True)
     settings: CollectionProperty(name='HighlightSetting',
                                 type=HighlightSetting)
