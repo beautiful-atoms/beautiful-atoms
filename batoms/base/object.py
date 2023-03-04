@@ -281,7 +281,7 @@ class ObjectGN(BaseObject):
         name = 'GeometryNodes_%s' % self.obj_name
         modifier = build_modifier(self.obj, name)
 
-    def vectorDotMatrix(self, gn, vectorNode, matrix, name):
+    def vectorDotMatrix(self, gn, vector_output, matrix, name):
         """
         """
         CombineXYZ = get_nodes_by_name(gn.node_group.nodes,
@@ -297,7 +297,7 @@ class ObjectGN(BaseObject):
             tmp.operation = 'DOT_PRODUCT'
             VectorDot.append(tmp)
             tmp.inputs[1].default_value = matrix[:, i]
-            gn.node_group.links.new(vectorNode.outputs[0], tmp.inputs[0])
+            gn.node_group.links.new(vector_output, tmp.inputs[0])
             gn.node_group.links.new(tmp.outputs['Value'], CombineXYZ.inputs[i])
         return CombineXYZ
 

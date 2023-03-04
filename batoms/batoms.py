@@ -297,7 +297,7 @@ class Batoms(BaseCollection, ObjectGN):
             cell = np.eye(3)
         icell = np.linalg.inv(cell)
         scaledPositionsNode = self.vectorDotMatrix(
-            gn, PositionBatoms, icell, 'scaled')
+            gn, PositionBatoms.outputs[0], icell, 'scaled')
         VectorWrap = get_nodes_by_name(gn.node_group.nodes,
                                        '%s_VectorWrap' % (self.label),
                                        'ShaderNodeVectorMath')
@@ -306,7 +306,7 @@ class Batoms(BaseCollection, ObjectGN):
         VectorWrap.inputs[2].default_value = [0, 0, 0]
         gn.node_group.links.new(
             scaledPositionsNode.outputs[0], VectorWrap.inputs['Vector'])
-        PositionsNode = self.vectorDotMatrix(gn, VectorWrap, cell, '')
+        PositionsNode = self.vectorDotMatrix(gn, VectorWrap.outputs[0], cell, '')
         gn.node_group.links.new(
             PositionsNode.outputs[0], SetPosition.inputs['Position'])
         self.wrap = self.pbc

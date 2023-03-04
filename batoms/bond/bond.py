@@ -257,7 +257,7 @@ class Bond(BaseCollection, ObjectGN):
             gn.node_group.links.new(ObjectBatoms.outputs['Geometry'],
                                     TransferBatoms[i].inputs[0])
             gn.node_group.links.new(PositionBatoms.outputs['Position'],
-                                    TransferBatoms[i].inputs[1])
+                                    TransferBatoms[i].inputs[3])
             gn.node_group.links.new(GroupInput.outputs[i + 1],
                                     TransferBatoms[i].inputs['Index'])
         # ------------------------------------------------------------------
@@ -266,6 +266,9 @@ class Bond(BaseCollection, ObjectGN):
         ObjectOffsets = []
         PositionOffsets = []
         TransferOffsets = []
+        InputIndex = get_nodes_by_name(gn.node_group.nodes,
+                                        '%s_InputIndex' % self.label,
+                                        'GeometryNodeInputIndex')
         for i in range(4):
             tmp = get_nodes_by_name(gn.node_group.nodes,
                                     '%s_ObjectOffsets%s' % (self.label, i),
@@ -284,7 +287,9 @@ class Bond(BaseCollection, ObjectGN):
             gn.node_group.links.new(ObjectOffsets[i].outputs['Geometry'],
                                     TransferOffsets[i].inputs[0])
             gn.node_group.links.new(PositionOffsets[i].outputs['Position'],
-                                    TransferOffsets[i].inputs[1])
+                                    TransferOffsets[i].inputs[3])
+            gn.node_group.links.new(InputIndex.outputs[0],
+                                    TransferOffsets[i].inputs["Index"])
         # we need five add operations
         # four: Get the positions with offset for four atoms
         # one: Get center = (positions1 + positions2)/2
@@ -296,9 +301,9 @@ class Bond(BaseCollection, ObjectGN):
             tmp.operation = 'ADD'
             VectorAdd.append(tmp)
         for i in range(4):
-            gn.node_group.links.new(TransferBatoms[i].outputs[0],
+            gn.node_group.links.new(TransferBatoms[i].outputs[2],
                                     VectorAdd[i].inputs[0])
-            gn.node_group.links.new(TransferOffsets[i].outputs[0],
+            gn.node_group.links.new(TransferOffsets[i].outputs[2],
                                     VectorAdd[i].inputs[1])
         #
         # divide by 2 to get the center

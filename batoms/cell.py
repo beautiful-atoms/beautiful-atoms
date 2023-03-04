@@ -104,7 +104,7 @@ class Bcell(ObjectGN):
             gn.node_group.links.new(GroupInput.outputs['Geometry'],
                                     TransferCell.inputs[0])
             gn.node_group.links.new(PositionCell.outputs['Position'],
-                                    TransferCell.inputs[1])
+                                    TransferCell.inputs[3])
             gn.node_group.links.new(InputInt.outputs[0],
                                     TransferCell.inputs['Index'])
             TransferCells.append(TransferCell)
@@ -117,19 +117,19 @@ class Bcell(ObjectGN):
             VectorAdd.operation = 'ADD'
             VectorAdds.append(VectorAdd)
         gn.node_group.links.new(
-            TransferCells[1].outputs[0], VectorAdds[0].inputs[0])
+            TransferCells[1].outputs[2], VectorAdds[0].inputs[0])
         gn.node_group.links.new(
-            TransferCells[2].outputs[0], VectorAdds[0].inputs[1])
+            TransferCells[2].outputs[2], VectorAdds[0].inputs[1])
         gn.node_group.links.new(
-            TransferCells[1].outputs[0], VectorAdds[1].inputs[0])
+            TransferCells[1].outputs[2], VectorAdds[1].inputs[0])
         gn.node_group.links.new(
-            TransferCells[3].outputs[0], VectorAdds[1].inputs[1])
+            TransferCells[3].outputs[2], VectorAdds[1].inputs[1])
         gn.node_group.links.new(
-            TransferCells[2].outputs[0], VectorAdds[2].inputs[0])
+            TransferCells[2].outputs[2], VectorAdds[2].inputs[0])
         gn.node_group.links.new(
-            TransferCells[3].outputs[0], VectorAdds[2].inputs[1])
+            TransferCells[3].outputs[2], VectorAdds[2].inputs[1])
         gn.node_group.links.new(
-            TransferCells[3].outputs[0], VectorAdds[3].inputs[0])
+            TransferCells[3].outputs[2], VectorAdds[3].inputs[0])
         gn.node_group.links.new(
             VectorAdds[0].outputs[0], VectorAdds[3].inputs[1])
         #============================================================
@@ -170,7 +170,8 @@ class Bcell(ObjectGN):
             gn.node_group.links.new(CurveToMesh.outputs[0],
                                 JoinGeometry.inputs[0])
             for j in range(4):
-                gn.node_group.links.new(input_nodes[faces[i][j]].outputs[0],
+                k = 2 if faces[i][j] < 4 else 0
+                gn.node_group.links.new(input_nodes[faces[i][j]].outputs[k],
                                 Quadrilateral.inputs[j + 7])
         setMaterial = get_nodes_by_name(self.gnodes.node_group.nodes,
                                                 '%s_setMaterial' % (self.label),

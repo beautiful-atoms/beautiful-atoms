@@ -196,7 +196,7 @@ class Boundary(ObjectGN):
         gn.node_group.links.new(ObjectBatoms.outputs['Geometry'],
                                 TransferBatoms.inputs[0])
         gn.node_group.links.new(PositionBatoms.outputs['Position'],
-                                TransferBatoms.inputs[1])
+                                TransferBatoms.inputs[3])
         gn.node_group.links.new(GroupInput.outputs[1],
                                 TransferBatoms.inputs['Index'])
         # ------------------------------------------------------------------
@@ -213,12 +213,17 @@ class Boundary(ObjectGN):
         TransferOffsets = get_nodes_by_name(gn.node_group.nodes,
                                         '%s_TransferOffsets' % self.label,
                                         'GeometryNodeSampleIndex')
+        InputIndex = get_nodes_by_name(gn.node_group.nodes,
+                                        '%s_InputIndex' % self.label,
+                                        'GeometryNodeInputIndex')
         TransferOffsets.data_type = 'FLOAT_VECTOR'
         gn.node_group.links.new(ObjectOffsets.outputs['Geometry'],
                                 TransferOffsets.inputs[0])
         gn.node_group.links.new(PositionOffsets.outputs['Position'],
-                                TransferOffsets.inputs[1])
-        OffsetNode = self.vectorDotMatrix(gn, TransferOffsets,
+                                TransferOffsets.inputs[3])
+        gn.node_group.links.new(InputIndex.outputs[0],
+                                TransferOffsets.inputs["Index"])
+        OffsetNode = self.vectorDotMatrix(gn, TransferOffsets.outputs[2],
                                           self.batoms.cell, '')
         # we need one add operation to get the positions with offset
         VectorAdd = get_nodes_by_name(gn.node_group.nodes,
@@ -227,7 +232,7 @@ class Boundary(ObjectGN):
         # ------------------------------------------------------------------
         # add positions with offsets
         VectorAdd.operation = 'ADD'
-        gn.node_group.links.new(TransferBatoms.outputs[0], VectorAdd.inputs[0])
+        gn.node_group.links.new(TransferBatoms.outputs[2], VectorAdd.inputs[0])
         gn.node_group.links.new(OffsetNode.outputs[0], VectorAdd.inputs[1])
         # set positions
         SetPosition = get_nodes_by_name(gn.node_group.nodes,
@@ -254,7 +259,7 @@ class Boundary(ObjectGN):
             gn.node_group.links.new(ObjectBatoms.outputs['Geometry'],
                                     TransferScale.inputs[0])
             gn.node_group.links.new(ScaleBatoms.outputs['Attribute'],
-                                    TransferScale.inputs[1])
+                                    TransferScale.inputs[3])
             gn.node_group.links.new(GroupInput.outputs[1],
                                     TransferScale.inputs['Index'])
 
@@ -301,7 +306,7 @@ class Boundary(ObjectGN):
                                         '%s_TransferScale' % (self.label),
                                         'GeometryNodeSampleIndex')
         gn.node_group.links.new(
-            TransferScale.outputs[0], InstanceOnPoint.inputs['Scale'])
+            TransferScale.outputs[2], InstanceOnPoint.inputs['Scale'])
         gn.node_group.links.new(CompareSpecies.outputs[0], BoolShow.inputs[1])
         gn.node_group.links.new(
             BoolShow.outputs['Boolean'], InstanceOnPoint.inputs['Selection'])

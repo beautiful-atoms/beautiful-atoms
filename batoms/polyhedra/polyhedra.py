@@ -212,7 +212,7 @@ class Polyhedra(ObjectGN):
         gn.node_group.links.new(ObjectBatoms.outputs['Geometry'],
                                 TransferBatoms.inputs[0])
         gn.node_group.links.new(PositionBatoms.outputs['Position'],
-                                TransferBatoms.inputs[1])
+                                TransferBatoms.inputs[3])
         gn.node_group.links.new(GroupInput.outputs[2],
                                 TransferBatoms.inputs['Index'])
         # ------------------------------------------------------------------
@@ -230,18 +230,23 @@ class Polyhedra(ObjectGN):
                                         '%s_TransferOffsets' % self.label,
                                         'GeometryNodeSampleIndex')
         TransferOffsets.data_type = 'FLOAT_VECTOR'
+        InputIndex = get_nodes_by_name(gn.node_group.nodes,
+                                        '%s_InputIndex' % self.label,
+                                        'GeometryNodeInputIndex')
         gn.node_group.links.new(ObjectOffsets.outputs['Geometry'],
                                 TransferOffsets.inputs[0])
         gn.node_group.links.new(PositionOffsets.outputs['Position'],
-                                TransferOffsets.inputs[1])
+                                TransferOffsets.inputs[3])
+        gn.node_group.links.new(InputIndex.outputs[0],
+                                TransferOffsets.inputs["Index"])
         # we need one add operation to get the positions with offset
         VectorAdd = get_nodes_by_name(gn.node_group.nodes,
                                       '%s_VectorAdd' % (self.label),
                                       'ShaderNodeVectorMath')
         VectorAdd.operation = 'ADD'
-        gn.node_group.links.new(TransferBatoms.outputs[0],
+        gn.node_group.links.new(TransferBatoms.outputs[2],
                                 VectorAdd.inputs[0])
-        gn.node_group.links.new(TransferOffsets.outputs[0],
+        gn.node_group.links.new(TransferOffsets.outputs[2],
                                 VectorAdd.inputs[1])
         # set positions
         SetPosition = get_nodes_by_name(gn.node_group.nodes,
