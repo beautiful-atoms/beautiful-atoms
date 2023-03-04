@@ -226,8 +226,7 @@ class Highlight(ObjectGN, PluginObject):
                                            'GeometryNodeInputPosition')
         TransferBatoms = get_nodes_by_name(gn.node_group.nodes,
                                            '%s_TransferBatoms' % (self.label),
-                                           'GeometryNodeAttributeTransfer')
-        TransferBatoms.mapping = 'INDEX'
+                                           'GeometryNodeSampleIndex')
         TransferBatoms.data_type = 'FLOAT_VECTOR'
         gn.node_group.links.new(ObjectBatoms.outputs['Geometry'],
                                 TransferBatoms.inputs[0])

@@ -260,9 +260,6 @@ class Batoms(BaseCollection, ObjectGN):
         inputs = modifier.node_group.inputs
         GroupInput = modifier.node_group.nodes[0]
         GroupOutput = modifier.node_group.nodes[1]
-        # add new output sockets
-        for att in default_GroupInput:
-            GroupInput.outputs.new(type=att[1], name=att[0])
         for att in default_GroupInput:
             inputs.new(att[1], att[0])
             id = inputs[att[0]].identifier
@@ -1966,6 +1963,11 @@ class Batoms(BaseCollection, ObjectGN):
         logger.debug("time: {:1.3f}".format(time() - tstart))
         return potentials
 
+    def set_hide(self, state):
+        self.obj.hide_render = state
+        self.obj.hide_set(state)
+        self.cell.hide = True
+        self.bond.hide = True
 
 
 def hook_plugins(cls, plugin_info):
