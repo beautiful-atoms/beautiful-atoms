@@ -193,7 +193,6 @@ class Highlight(ObjectGN, PluginObject):
         GroupOutput = modifier.node_group.nodes[1]
         # add new output sockets
         for att in default_GroupInput:
-            GroupInput.outputs.new(type=att[1], name=att[0])
             inputs.new(att[1], att[0])
             id = inputs[att[0]].identifier
             modifier['%s_use_attribute' % id] = True
@@ -231,7 +230,7 @@ class Highlight(ObjectGN, PluginObject):
         gn.node_group.links.new(ObjectBatoms.outputs['Geometry'],
                                 TransferBatoms.inputs[0])
         gn.node_group.links.new(PositionBatoms.outputs['Position'],
-                                TransferBatoms.inputs['Attribute'])
+                                TransferBatoms.inputs[3])
         gn.node_group.links.new(GroupInput.outputs[1],
                                 TransferBatoms.inputs['Index'])
         #
