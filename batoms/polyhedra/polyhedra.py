@@ -187,9 +187,6 @@ class Polyhedra(ObjectGN):
         inputs = modifier.node_group.inputs
         GroupInput = modifier.node_group.nodes[0]
         GroupOutput = modifier.node_group.nodes[1]
-        # add new output sockets
-        for att in default_GroupInput:
-            GroupInput.outputs.new(type=att[1], name=att[0])
         for att in default_GroupInput:
             inputs.new(att[1], att[0])
             id = inputs[att[0]].identifier
@@ -209,14 +206,13 @@ class Polyhedra(ObjectGN):
                                            '%s_PositionBatoms' % (self.label),
                                            'GeometryNodeInputPosition')
         TransferBatoms = get_nodes_by_name(gn.node_group.nodes,
-                                           '%s_TransferBatoms' % (self.label),
-                                           'GeometryNodeAttributeTransfer')
-        TransferBatoms.mapping = 'INDEX'
+                                        '%s_TransferBatoms' % (self.label),
+                                        'GeometryNodeSampleIndex')
         TransferBatoms.data_type = 'FLOAT_VECTOR'
         gn.node_group.links.new(ObjectBatoms.outputs['Geometry'],
                                 TransferBatoms.inputs[0])
         gn.node_group.links.new(PositionBatoms.outputs['Position'],
-                                TransferBatoms.inputs['Attribute'])
+                                TransferBatoms.inputs[3])
         gn.node_group.links.new(GroupInput.outputs[2],
                                 TransferBatoms.inputs['Index'])
         # ------------------------------------------------------------------
@@ -231,22 +227,26 @@ class Polyhedra(ObjectGN):
                                                 self.label),
                                             'GeometryNodeInputPosition')
         TransferOffsets = get_nodes_by_name(gn.node_group.nodes,
-                                            '%s_TransferOffsets' % self.label,
-                                            'GeometryNodeAttributeTransfer')
-        TransferOffsets.mapping = 'INDEX'
+                                        '%s_TransferOffsets' % self.label,
+                                        'GeometryNodeSampleIndex')
         TransferOffsets.data_type = 'FLOAT_VECTOR'
+        InputIndex = get_nodes_by_name(gn.node_group.nodes,
+                                        '%s_InputIndex' % self.label,
+                                        'GeometryNodeInputIndex')
         gn.node_group.links.new(ObjectOffsets.outputs['Geometry'],
                                 TransferOffsets.inputs[0])
         gn.node_group.links.new(PositionOffsets.outputs['Position'],
-                                TransferOffsets.inputs['Attribute'])
+                                TransferOffsets.inputs[3])
+        gn.node_group.links.new(InputIndex.outputs[0],
+                                TransferOffsets.inputs["Index"])
         # we need one add operation to get the positions with offset
         VectorAdd = get_nodes_by_name(gn.node_group.nodes,
                                       '%s_VectorAdd' % (self.label),
                                       'ShaderNodeVectorMath')
         VectorAdd.operation = 'ADD'
-        gn.node_group.links.new(TransferBatoms.outputs[0],
+        gn.node_group.links.new(TransferBatoms.outputs[2],
                                 VectorAdd.inputs[0])
-        gn.node_group.links.new(TransferOffsets.outputs[0],
+        gn.node_group.links.new(TransferOffsets.outputs[2],
                                 VectorAdd.inputs[1])
         # set positions
         SetPosition = get_nodes_by_name(gn.node_group.nodes,

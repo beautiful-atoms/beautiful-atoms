@@ -155,9 +155,6 @@ class SearchBond(ObjectGN):
         inputs = modifier.node_group.inputs
         GroupInput = modifier.node_group.nodes[0]
         GroupOutput = modifier.node_group.nodes[1]
-        # add new output sockets
-        for att in default_GroupInput:
-            GroupInput.outputs.new(type=att[1], name=att[0])
         for att in default_GroupInput:
             inputs.new(att[1], att[0])
             id = inputs[att[0]].identifier
@@ -183,13 +180,12 @@ class SearchBond(ObjectGN):
                                            'GeometryNodeInputPosition')
         TransferBatoms = get_nodes_by_name(gn.node_group.nodes,
                                            '%s_TransferBatoms' % (self.label),
-                                           'GeometryNodeAttributeTransfer')
-        TransferBatoms.mapping = 'INDEX'
+                                           'GeometryNodeSampleIndex')
         TransferBatoms.data_type = 'FLOAT_VECTOR'
         gn.node_group.links.new(ObjectBatoms.outputs['Geometry'],
                                 TransferBatoms.inputs[0])
         gn.node_group.links.new(PositionBatoms.outputs['Position'],
-                                TransferBatoms.inputs['Attribute'])
+                                TransferBatoms.inputs[1])
         gn.node_group.links.new(GroupInput.outputs[1],
                                 TransferBatoms.inputs['Index'])
         # ------------------------------------------------------------------
@@ -205,21 +201,20 @@ class SearchBond(ObjectGN):
                                             'GeometryNodeInputPosition')
         TransferOffsets = get_nodes_by_name(gn.node_group.nodes,
                                             '%s_TransferOffsets' % self.label,
-                                            'GeometryNodeAttributeTransfer')
-        TransferOffsets.mapping = 'INDEX'
+                                            'GeometryNodeSampleIndex')
         TransferOffsets.data_type = 'FLOAT_VECTOR'
         gn.node_group.links.new(ObjectOffsets.outputs['Geometry'],
                                 TransferOffsets.inputs[0])
         gn.node_group.links.new(PositionOffsets.outputs['Position'],
-                                TransferOffsets.inputs['Attribute'])
+                                TransferOffsets.inputs[1])
         OffsetNode = self.vectorDotMatrix(
-            gn, TransferOffsets, self.batoms.cell, '')
+            gn, TransferOffsets.outputs[2], self.batoms.cell, '')
         # we need one add operation to get the positions with offset
         VectorAdd = get_nodes_by_name(gn.node_group.nodes,
                                       '%s_VectorAdd' % (self.label),
                                       'ShaderNodeVectorMath')
         VectorAdd.operation = 'ADD'
-        gn.node_group.links.new(TransferBatoms.outputs[0], VectorAdd.inputs[0])
+        gn.node_group.links.new(TransferBatoms.outputs[2], VectorAdd.inputs[0])
         gn.node_group.links.new(OffsetNode.outputs[0], VectorAdd.inputs[1])
         # set positions
         SetPosition = get_nodes_by_name(gn.node_group.nodes,
@@ -241,13 +236,12 @@ class SearchBond(ObjectGN):
             ScaleBatoms.inputs[0].default_value = "scale"
             TransferScale = get_nodes_by_name(gn.node_group.nodes,
                                             '%s_TransferScale' % (self.label),
-                                            'GeometryNodeAttributeTransfer')
-            TransferScale.mapping = 'INDEX'
+                                            'GeometryNodeSampleIndex')
             TransferScale.data_type = 'FLOAT_VECTOR'
             gn.node_group.links.new(ObjectBatoms.outputs['Geometry'],
                                     TransferScale.inputs[0])
             gn.node_group.links.new(ScaleBatoms.outputs['Attribute'],
-                                    TransferScale.inputs['Attribute'])
+                                    TransferScale.inputs[1])
             gn.node_group.links.new(GroupInput.outputs[1],
                                     TransferScale.inputs['Index'])
 
@@ -294,9 +288,9 @@ class SearchBond(ObjectGN):
         if bpy.app.version_string >= '3.2.0':
             TransferScale = get_nodes_by_name(gn.node_group.nodes,
                                             '%s_TransferScale' % (self.label),
-                                            'GeometryNodeAttributeTransfer')
+                                            'GeometryNodeSampleIndex')
             gn.node_group.links.new(
-                TransferScale.outputs[0], InstanceOnPoint.inputs['Scale'])
+                TransferScale.outputs[2], InstanceOnPoint.inputs['Scale'])
         else:
             gn.node_group.links.new(GroupInput.outputs[6],
                                 InstanceOnPoint.inputs['Scale'])

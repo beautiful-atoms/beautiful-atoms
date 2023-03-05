@@ -220,9 +220,6 @@ class Bond(BaseCollection, ObjectGN):
         inputs = modifier.node_group.inputs
         GroupInput = modifier.node_group.nodes[0]
         GroupOutput = modifier.node_group.nodes[1]
-        # add new output sockets
-        for att in default_GroupInput:
-            GroupInput.outputs.new(type=att[1], name=att[0])
         # Blender 3.1.2 crashed on Win10
         # separate this from the aboved for loop avoid the crash
         # I don't know why, could be a bug of Blender
@@ -252,16 +249,15 @@ class Bond(BaseCollection, ObjectGN):
         TransferBatoms = []
         for i in range(4):
             tmp = get_nodes_by_name(gn.node_group.nodes,
-                                    '%s_TransferBatoms%s' % (self.label, i),
-                                    'GeometryNodeAttributeTransfer')
-            tmp.mapping = 'INDEX'
+                                '%s_TransferBatoms%s' % (self.label, i),
+                                'GeometryNodeSampleIndex')
             tmp.data_type = 'FLOAT_VECTOR'
             TransferBatoms.append(tmp)
         for i in range(4):
             gn.node_group.links.new(ObjectBatoms.outputs['Geometry'],
                                     TransferBatoms[i].inputs[0])
             gn.node_group.links.new(PositionBatoms.outputs['Position'],
-                                    TransferBatoms[i].inputs['Attribute'])
+                                    TransferBatoms[i].inputs[3])
             gn.node_group.links.new(GroupInput.outputs[i + 1],
                                     TransferBatoms[i].inputs['Index'])
         # ------------------------------------------------------------------
@@ -270,6 +266,9 @@ class Bond(BaseCollection, ObjectGN):
         ObjectOffsets = []
         PositionOffsets = []
         TransferOffsets = []
+        InputIndex = get_nodes_by_name(gn.node_group.nodes,
+                                        '%s_InputIndex' % self.label,
+                                        'GeometryNodeInputIndex')
         for i in range(4):
             tmp = get_nodes_by_name(gn.node_group.nodes,
                                     '%s_ObjectOffsets%s' % (self.label, i),
@@ -281,15 +280,16 @@ class Bond(BaseCollection, ObjectGN):
                                     'GeometryNodeInputPosition')
             PositionOffsets.append(tmp)
             tmp = get_nodes_by_name(gn.node_group.nodes,
-                                    '%s_TransferOffsets%i' % (self.label, i),
-                                    'GeometryNodeAttributeTransfer')
-            tmp.mapping = 'INDEX'
+                                '%s_TransferOffsets%i' % (self.label, i),
+                                'GeometryNodeSampleIndex')
             tmp.data_type = 'FLOAT_VECTOR'
             TransferOffsets.append(tmp)
             gn.node_group.links.new(ObjectOffsets[i].outputs['Geometry'],
                                     TransferOffsets[i].inputs[0])
             gn.node_group.links.new(PositionOffsets[i].outputs['Position'],
-                                    TransferOffsets[i].inputs['Attribute'])
+                                    TransferOffsets[i].inputs[3])
+            gn.node_group.links.new(InputIndex.outputs[0],
+                                    TransferOffsets[i].inputs["Index"])
         # we need five add operations
         # four: Get the positions with offset for four atoms
         # one: Get center = (positions1 + positions2)/2
@@ -301,9 +301,9 @@ class Bond(BaseCollection, ObjectGN):
             tmp.operation = 'ADD'
             VectorAdd.append(tmp)
         for i in range(4):
-            gn.node_group.links.new(TransferBatoms[i].outputs[0],
+            gn.node_group.links.new(TransferBatoms[i].outputs[2],
                                     VectorAdd[i].inputs[0])
-            gn.node_group.links.new(TransferOffsets[i].outputs[0],
+            gn.node_group.links.new(TransferOffsets[i].outputs[2],
                                     VectorAdd[i].inputs[1])
         #
         # divide by 2 to get the center

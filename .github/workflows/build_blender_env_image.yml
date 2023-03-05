@@ -4,7 +4,7 @@ env:
   DOCKERHUB_USERNAME: luciusm
   IMAGE_NAME: blender-env
   TEST_TAG: blender-env:tests
-  LATEST_VERSION: "3.2"
+  LATEST_VERSION: "3.4"
 
 on:
   push:
@@ -22,7 +22,7 @@ jobs:
     strategy:
       matrix:
         # Manually change these to match the blender image versions
-        blender-version: ["3.0", "3.1", "3.2"]
+        blender-version: ["3.0", "3.1", "3.2", "3.4"]
     steps:
       - name: Checkout
         uses: actions/checkout@v2

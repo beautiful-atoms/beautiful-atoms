@@ -260,9 +260,6 @@ class Batoms(BaseCollection, ObjectGN):
         inputs = modifier.node_group.inputs
         GroupInput = modifier.node_group.nodes[0]
         GroupOutput = modifier.node_group.nodes[1]
-        # add new output sockets
-        for att in default_GroupInput:
-            GroupInput.outputs.new(type=att[1], name=att[0])
         for att in default_GroupInput:
             inputs.new(att[1], att[0])
             id = inputs[att[0]].identifier
@@ -300,7 +297,7 @@ class Batoms(BaseCollection, ObjectGN):
             cell = np.eye(3)
         icell = np.linalg.inv(cell)
         scaledPositionsNode = self.vectorDotMatrix(
-            gn, PositionBatoms, icell, 'scaled')
+            gn, PositionBatoms.outputs[0], icell, 'scaled')
         VectorWrap = get_nodes_by_name(gn.node_group.nodes,
                                        '%s_VectorWrap' % (self.label),
                                        'ShaderNodeVectorMath')
@@ -309,7 +306,7 @@ class Batoms(BaseCollection, ObjectGN):
         VectorWrap.inputs[2].default_value = [0, 0, 0]
         gn.node_group.links.new(
             scaledPositionsNode.outputs[0], VectorWrap.inputs['Vector'])
-        PositionsNode = self.vectorDotMatrix(gn, VectorWrap, cell, '')
+        PositionsNode = self.vectorDotMatrix(gn, VectorWrap.outputs[0], cell, '')
         gn.node_group.links.new(
             PositionsNode.outputs[0], SetPosition.inputs['Position'])
         self.wrap = self.pbc
@@ -1966,6 +1963,11 @@ class Batoms(BaseCollection, ObjectGN):
         logger.debug("time: {:1.3f}".format(time() - tstart))
         return potentials
 
+    def set_hide(self, state):
+        self.obj.hide_render = state
+        self.obj.hide_set(state)
+        self.cell.hide = True
+        self.bond.hide = True
 
 
 def hook_plugins(cls, plugin_info):
