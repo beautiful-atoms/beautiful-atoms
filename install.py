@@ -24,9 +24,11 @@ import tempfile
 from pathlib import Path
 from threading import local
 from distutils import command
-from packaging.version import Version
 from os.path import expanduser, expandvars
-
+try:
+    from packaging.version import Version
+except ImportError:
+    from distutils.version import LooseVersion as Version
 # TODO: allow version control
 # TODO: windows privilege issue
 # TODO: complete install tutorial about the env variables
