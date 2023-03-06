@@ -30,7 +30,7 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: batoms
-          python-version: 3.10
+          python-version: "3.10"
           mamba-version: "*"
           channels: conda-forge,defaults
       - name: Update libstdc++ and
@@ -95,7 +95,7 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: batoms
-          python-version: 3.10
+          python-version: "3.10"
           mamba-version: "*"
           channels: conda-forge,defaults
       - name: Download portable blender
