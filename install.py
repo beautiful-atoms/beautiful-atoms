@@ -14,18 +14,18 @@ Alternatively, check what `install.py` can do by using
 python install.py --help
 ```
 """
-from distutils import command
 import os
 import re
-from os.path import expanduser, expandvars
+import stat
 import shutil
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from distutils.version import LooseVersion
 from threading import local
-import stat
+from distutils import command
+from packaging.version import Version
+from os.path import expanduser, expandvars
 
 # TODO: allow version control
 # TODO: windows privilege issue
@@ -538,12 +538,12 @@ def _ensure_mamba(conda_vars):
         try:
             _run_process(commands)
         except RuntimeError as e:
-            msg = ("Failed to install mamba install conda base environment. "
-            "You probably don't have write permission. \n"
-            "Please consider add --no-mamba to install.py"
+            msg = (
+                "Failed to install mamba install conda base environment. "
+                "You probably don't have write permission. \n"
+                "Please consider add --no-mamba to install.py"
             )
-            cprint(msg,
-            color="ERROR")
+            cprint(msg, color="ERROR")
             raise RuntimeError(msg) from e
     # Get the mamba binary in given env
     output = _run_process(
@@ -551,9 +551,10 @@ def _ensure_mamba(conda_vars):
         capture_output=True,
     ).stdout.decode("utf8")
     if "ERROR" in output:
-        msg = ("Cannot find mamba in your conda base environment"
+        msg = (
+            "Cannot find mamba in your conda base environment"
             "Please consider add --no-mamba to install.py"
-            )
+        )
         raise RuntimeError(output)
     return output.strip()
 
@@ -872,14 +873,11 @@ def install(parameters):
 
     # User warning for blender_version < 3.4 should be already resolved outside install(parameter)
     # only print the warning again
-    # Compare version
-    # if LooseVersion(str(version)) < LooseVersion(str(MIN_BLENDER_VER)):
-    # raise ValueError(
-    # f"Blender version {version} is not supported. Minimal requirement is {MIN_BLENDER_VER}"
-    # )
-    if LooseVersion(blender_version) in LooseVersion("3.4"):
-        cprint("Warning: support for beautiful-atoms in Blender <3.4 is deprecated!",
-        color="WARNING")
+    if Version(blender_version) < Version("3.4"):
+        cprint(
+            "Warning: support for beautiful-atoms in Blender <3.4 is deprecated!",
+            color="WARNING",
+        )
 
     print(blender_version, factory_py_ver, factory_numpy_ver)
 
@@ -906,9 +904,15 @@ def install(parameters):
             )
         if factory_python_source.is_symlink():
             os.unlink(factory_python_source)
-            cprint(f"{factory_python_source.as_posix()} is already a symlink and will be unlinked. No backup will be made.", color="WARNING")
+            cprint(
+                f"{factory_python_source.as_posix()} is already a symlink and will be unlinked. No backup will be made.",
+                color="WARNING",
+            )
         elif not factory_python_source.is_dir():
-            cprint(f"{factory_python_source.as_posix()} does not exist. Will not move.", color="WARNING")
+            cprint(
+                f"{factory_python_source.as_posix()} does not exist. Will not move.",
+                color="WARNING",
+            )
         else:
             shutil.move(factory_python_source, factory_python_target)
             cprint(
@@ -1297,17 +1301,24 @@ def main():
 
     # Perform a check on blender_version
     blender_version = _get_blender_version(true_blender_bin)
-    if LooseVersion(blender_version) < LooseVersion("3.4"):
-        # The warning 
+    if Version(blender_version) < Version("3.4"):
+        # The warning
         if args.plugin_version is None:
-            cprint(("Warning: support of beautiful-atoms in Blender < 3.4 is deprecated! "
-            "I will pin the source code of beautiful-atoms to version 793d6f (blender-3.2 branch)."
-            "To use latest features please install Blender >= 3.4."),
-            color="WARNING"
+            cprint(
+                (
+                    "Warning: support of beautiful-atoms in Blender < 3.4 is deprecated! \n"
+                    "I will pin the source code of beautiful-atoms to version blender-3.2 branch (793d6f). \n"
+                    "You can also manually set --plugin-version blender-3.2 to install.py. \n"
+                    "To use latest features please install Blender >= 3.4. "
+                ),
+                color="WARNING",
             )
-            plugin_version = "793d6f"
+            plugin_version = "blender-3.2"
         else:
-            cprint("You have specified the plugin_version option, so I suppose you know what you're doing!")
+            cprint(
+                "You have specified the plugin_version option, so I suppose you know what you're doing!",
+                color="WARNING",
+            )
             plugin_version = args.plugin_version
     else:
         plugin_version = args.plugin_version
