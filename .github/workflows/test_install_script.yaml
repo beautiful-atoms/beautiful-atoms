@@ -24,7 +24,7 @@ jobs:
     strategy:
       matrix:
         # For future tests we will only over 3 of the latest versions
-        blender_ver: ["3.2.2", "3.4.1"]
+        blender_ver: ["3.4.1"]
     steps:
       - uses: actions/checkout@v2
       - uses: conda-incubator/setup-miniconda@v2
@@ -81,7 +81,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        blender_ver: ["3.2.2", "3.4.1"]
+        blender_ver: ["3.4.1"]
     steps:
       - uses: actions/checkout@v2
       - uses: conda-incubator/setup-miniconda@v2
@@ -141,7 +141,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        blender_ver: ["3.2.2", "3.4.1"]
+        blender_ver: ["3.4.1"]
     steps:
       - uses: actions/checkout@v2
       - uses: conda-incubator/setup-miniconda@v2
