@@ -43,7 +43,8 @@ DEFAULT_PLUGIN_PATH = f"scripts/addons_contrib/{DEFAULT_PLUGIN_NAME}"
 DEFAULT_BLENDER_PY_VER = "3.10.2"
 DEFAULT_BLENDER_NUMPY_VER = "1.22.0"
 
-ALLOWED_BLENDER_VERSIONS = ["3.0", "3.1", "3.2", "3.3"]
+ALLOWED_BLENDER_VERSIONS = ["3.4", "3.5"]
+DEPRECATED_BLENDER_VERSIONS = ["3.0", "3.1", "3.2"]
 
 PY_PATH = "python"
 PY_BACKUP_PATH = "_old_python"
@@ -192,11 +193,6 @@ def _get_default_locations(os_name):
     Choose multiple possible
     """
     os_name = os_name.lower()
-    # Compare version
-    # if LooseVersion(str(version)) < LooseVersion(str(MIN_BLENDER_VER)):
-    # raise ValueError(
-    # f"Blender version {version} is not supported. Minimal requirement is {MIN_BLENDER_VER}"
-    # )
     if os_name not in ["windows", "macos", "linux"]:
         raise ValueError(f"{os_name} is not valid.")
     default_locations = {
@@ -235,7 +231,7 @@ def _get_default_locations(os_name):
     if match is None:
         raise FileNotFoundError(
             (
-                f"Cannot find Blender>=3.0 in default installation locations. "
+                f"Cannot find Blender>=3.4 in default installation locations. "
                 "Please specify the full path to the blender installation location."
             )
         )
@@ -874,6 +870,17 @@ def install(parameters):
     blender_version = _get_blender_version(blender_bin)
     blender_py = _get_blender_py(blender_bin)
 
+    # User warning for blender_version < 3.4 should be already resolved outside install(parameter)
+    # only print the warning again
+    # Compare version
+    # if LooseVersion(str(version)) < LooseVersion(str(MIN_BLENDER_VER)):
+    # raise ValueError(
+    # f"Blender version {version} is not supported. Minimal requirement is {MIN_BLENDER_VER}"
+    # )
+    if LooseVersion(blender_version) in LooseVersion("3.4"):
+        cprint("Warning: support for beautiful-atoms in Blender <3.4 is deprecated!",
+        color="WARNING")
+
     print(blender_version, factory_py_ver, factory_numpy_ver)
 
     # If need to output the env yaml only, do it now
@@ -1288,12 +1295,28 @@ def main():
         f"      blender bundle root at {true_blender_root.as_posix()}", color="OKGREEN"
     )
 
+    # Perform a check on blender_version
+    blender_version = _get_blender_version(true_blender_bin)
+    if LooseVersion(blender_version) < LooseVersion("3.4"):
+        # The warning 
+        if args.plugin_version is None:
+            cprint(("Warning: support of beautiful-atoms in Blender < 3.4 is deprecated! "
+            "I will pin the source code of beautiful-atoms to version 793d6f (blender-3.2 branch)."
+            "To use latest features please install Blender >= 3.4."),
+            color="WARNING"
+            )
+            plugin_version = "793d6f"
+        else:
+            cprint("You have specified the plugin_version option, so I suppose you know what you're doing!")
+            plugin_version = args.plugin_version
+    else:
+        plugin_version = args.plugin_version
+
     # Parameters can be provided to install / uninstall methods at this time
     # Do not process any information regarding blender version / python version
     parameters = dict(
         blender_root=true_blender_root,
         blender_bin=true_blender_bin,
-        # blender_version=_get_blender_version(true_blender_bin),
         os_name=os_name,
         use_pip=args.use_pip,
         repo_path=Path(expanduser(expandvars(args.local_repo_path))),
@@ -1304,7 +1327,7 @@ def main():
         use_preferences=args.use_preferences,
         develop=args.develop,
         no_mamba=args.no_mamba,
-        plugin_version=args.plugin_version,
+        plugin_version=plugin_version,
     )
 
     # Uninstallation does not need information about current environment
