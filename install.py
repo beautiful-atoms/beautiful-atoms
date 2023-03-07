@@ -68,7 +68,7 @@ dependencies:
   - ase>=3.21.0
   - openbabel>=3.1.1
   - scikit-image
-  - scipy>=1.6.0
+  - scipy>=1.6.0,<1.10
   - spglib
   - pip
   - pip:
