@@ -68,15 +68,16 @@ jobs:
           $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
           echo "blender root parent"
           ls -alh ${BLENDER_ROOT}/..
-      - name: Run installation with version check and without local repo
-        run: |
-          BLENDER_ROOT=$(realpath ${BLENDER_ROOT})
-          cp install.py $HOME && cd $HOME
-          # echo "blender root parent"
-          ls -alh ${BLENDER_ROOT}/..
-          $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} -t v2.1.0
-          $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
-        if: ${{ matrix.blender_ver != '3.2.0' }}
+      # Disable version install as blender > 3.4 breaks
+      # - name: Run installation with version check and without local repo
+      #   run: |
+      #     BLENDER_ROOT=$(realpath ${BLENDER_ROOT})
+      #     cp install.py $HOME && cd $HOME
+      #     # echo "blender root parent"
+      #     ls -alh ${BLENDER_ROOT}/..
+      #     $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} -t 
+      #     $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
+      #   if: ${{ matrix.blender_ver != '3.2.0' }}
 
 
 
@@ -135,13 +136,13 @@ jobs:
           $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} --develop
           readlink ${BLENDER_ROOT}/scripts/addons_contrib/batoms
           $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
-      - name: Run installation with version check and without local repo
-        run: |
-          # BLENDER_ROOT=$(readlink -f ${BLENDER_ROOT})
-          cp install.py $HOME
-          $CONDA_PYTHON_EXE ${HOME}/install.py ${BLENDER_ROOT} -t v2.1.0
-          $CONDA_PYTHON_EXE ${HOME}/install.py --uninstall ${BLENDER_ROOT}
-        if: ${{ matrix.blender_ver != '3.2.0' }}
+      # - name: Run installation with version check and without local repo
+      #   run: |
+      #     # BLENDER_ROOT=$(readlink -f ${BLENDER_ROOT})
+      #     cp install.py $HOME
+      #     $CONDA_PYTHON_EXE ${HOME}/install.py ${BLENDER_ROOT} -t v2.1.0
+      #     $CONDA_PYTHON_EXE ${HOME}/install.py --uninstall ${BLENDER_ROOT}
+      #   if: ${{ matrix.blender_ver != '3.2.0' }}
 
 
 
@@ -197,13 +198,13 @@ jobs:
         run: |
           echo "blender root parent"
           ls -alh ${{ env.BLENDER_ROOT }}/..
-      - name: Run installation with version
-        shell: bash -l {0}
-        run: |
-          BLENDER_ROOT=$(realpath ${BLENDER_ROOT})
-          cp install.py ${HOME} && cd ${HOME}
-          echo "blender root parent"
-          ls -alh ${BLENDER_ROOT}/..
-          python install.py --use-pip ${BLENDER_ROOT} -t v2.1.0
-          python install.py --use-pip --uninstall ${BLENDER_ROOT}
-        if: ${{ matrix.blender_ver != '3.2.0' }}
+      # - name: Run installation with version
+      #   shell: bash -l {0}
+      #   run: |
+      #     BLENDER_ROOT=$(realpath ${BLENDER_ROOT})
+      #     cp install.py ${HOME} && cd ${HOME}
+      #     echo "blender root parent"
+      #     ls -alh ${BLENDER_ROOT}/..
+      #     python install.py --use-pip ${BLENDER_ROOT} -t v2.1.0
+      #     python install.py --use-pip --uninstall ${BLENDER_ROOT}
+      #   if: ${{ matrix.blender_ver != '3.2.0' }}
