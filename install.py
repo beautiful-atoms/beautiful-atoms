@@ -38,6 +38,9 @@ except ImportError:
 # sys.version --> python version
 # numpy.__version__ --> numpy
 
+################################################################################
+# Section 1: default variables
+################################################################################
 
 DEFAULT_GITHUB_ACCOUNT = "beautiful-atoms"
 DEFAULT_REPO_NAME = "beautiful-atoms"
@@ -51,8 +54,19 @@ DEPRECATED_BLENDER_VERSIONS = ["3.0", "3.1", "3.2"]
 
 PY_PATH = "python"
 PY_BACKUP_PATH = "_old_python"
-BLENDER_BACKUP_PATH = "blender.origin"
+BLENDER_BACKUP_PATH = "blender.origin"  # Backup of the factory blender binary
 
+REPO_NAME = os.environ.get("GITHUB_REPO", DEFAULT_REPO_NAME)
+ACCOUNT_NAME = os.environ.get("GITHUB_ACCOUNT", DEFAULT_GITHUB_ACCOUNT)
+
+REPO_GIT = f"https://github.com/{ACCOUNT_NAME}/{REPO_NAME}.git"
+INSTALL_SCRIPT_PATH = (
+    f"https://raw.githubusercontent.com/{ACCOUNT_NAME}/{REPO_NAME}/main/install.py"
+)
+
+################################################################################
+# Section 2: temporary file script templates (python or yaml)
+################################################################################
 
 # Adding an embedded YAML file for better portability
 ENV_YAML = """
@@ -83,7 +97,6 @@ import numpy
 print("Python Version: ", sys.version)
 print("Numpy Version: ", numpy.__version__)
 """
-
 
 BLENDERPY_ENABLE_PLUGIN = f"""
 print('start')
@@ -135,9 +148,46 @@ bpy.ops.batoms.use_batoms_startup()
 print('Successfully setting preference.')
 """
 
-# A general purpose wrapper for blender, can either be used inside blender root
-# or link at conda env
-BLENDER_SH = """#!/bin/bash
+BATOMSPY_TEST = """#!/usr/bin/env batomspy
+import bpy
+from batoms import Batoms
+bpy.ops.batoms.molecule_add()
+ch4 = Batoms(label='CH4')
+"""
+
+################################################################################
+# Section 2.1: shell script (unix only)
+################################################################################
+
+
+# Similar to blender-softwaregl, invoke blender.origin but fix LD
+# This script is intended to replace <blender-dir>/blender
+BLENDER_REPLACE_SH = """#!/bin/sh
+BF_DIST_BIN=$(dirname "$0")
+BF_PROGRAM="blender.origin"
+
+LD_LIBRARY_PATH={dyn_lib_path}:${LD_LIBRARY_PATH}
+
+if [ -n "$LD_LIBRARYN32_PATH" ]; then
+    LD_LIBRARYN32_PATH={dyn_lib_path}:${LD_LIBRARYN32_PATH}
+fi
+if [ -n "$LD_LIBRARYN64_PATH" ]; then
+    LD_LIBRARYN64_PATH={dyn_lib_path}:${LD_LIBRARYN64_PATH}
+fi
+if [ -n "$LD_LIBRARY_PATH_64" ]; then
+    LD_LIBRARY_PATH_64={dyn_lib_path}:${LD_LIBRARY_PATH_64}
+fi
+
+
+export LD_LIBRARY_PATH LD_LIBRARYN32_PATH LD_LIBRARYN64_PATH LD_LIBRARY_PATH_64 LD_PRELOAD
+
+exec "$BF_DIST_BIN/$BF_PROGRAM" ${1+"$@"}
+"""
+
+# A blender wrapper to be inserted into the conda bin dir
+# This is intended to be used for any users, but could be more useful if the user
+# want to quickly use `blender` alias inside the conda env
+REPLACE_BLENDER_SH = """#!/bin/sh
 # This is an alias for blender but with LD_LIBRARY_PATH set
 # it is only intended to be used inside the blender conda environment
 export LD_LIBRARY_PATH={conda_prefix}/lib:${{LD_LIBRARY_PATH}}
@@ -153,6 +203,7 @@ fi
 exec "{blender_bin}" ${{1+"$@"}}
 """
 
+# Base for batomspy shabang support
 BATOMSPY_SH = """#!/bin/bash
 # Usage:
 # blenderpy script.py [options]
@@ -172,25 +223,19 @@ else
 fi
 """
 
-BATOMSPY_TEST = """#!/usr/bin/env batomspy
-import bpy
-from batoms import Batoms
-bpy.ops.batoms.molecule_add()
-ch4 = Batoms(label='CH4')
-"""
+################################################################################
+# Section 2.2: windows batch files (TBD)
+################################################################################
+
 
 # The directory to move factory python from conda
 
-repo_name = os.environ.get("GITHUB_REPO", DEFAULT_REPO_NAME)
-account_name = os.environ.get("GITHUB_ACCOUNT", DEFAULT_GITHUB_ACCOUNT)
 
-repo_git = f"https://github.com/{account_name}/{repo_name}.git"
-install_script_path = (
-    f"https://raw.githubusercontent.com/{account_name}/{repo_name}/main/install.py"
-)
 
-# Minimal class for terminal ANSI color output
 
+################################################################################
+# Section 3: Utils 
+################################################################################
 
 def cprint(content, color=None, **kwargs):
     """Color print wrapper"""
@@ -214,6 +259,101 @@ def cprint(content, color=None, **kwargs):
         )
     print(output, **kwargs)
     return
+
+def _is_empty_dir(p):
+    """Determin if path has no child dirs"""
+    p = Path(p)
+    try:
+        next(p.rglob("*"))
+        stat = False
+    except StopIteration:
+        stat = True
+    return stat
+
+def _get_os_name():
+    """Convient os name function"""
+    p_ = sys.platform
+    if p_ in ["win32"]:
+        return "windows"
+    elif p_ in ["linux", "linux2"]:
+        return "linux"
+    elif p_ in ["darwin"]:
+        return "macos"
+    else:
+        raise NotImplementedError(f"Unsupported platform {p_}")
+
+def _run_process(commands, shell=False, print_cmd=True, cwd=".", capture_output=False):
+    """Wrap around subprocess.run
+    Returns the process object
+    """
+    full_cmd = " ".join(commands)
+    if print_cmd:
+        cprint(" ".join(commands))
+    if shell is False:
+        proc = subprocess.run(
+            commands, shell=shell, cwd=cwd, capture_output=capture_output
+        )
+    else:
+        proc = subprocess.run(
+            full_cmd, shell=shell, cwd=cwd, capture_output=capture_output
+        )
+    if proc.returncode == 0:
+        return proc
+    else:
+        raise RuntimeError(f"Running {full_cmd} returned error code {proc.returncode}")
+
+def _run_blender_multiline_expr(blender_bin, expr, **kwargs):
+    """Use blender's interpreter to run multiline python expressions
+    """
+    blender_bin = str(blender_bin)
+    tmp_del = False if _get_os_name() in ["windows"] else True
+    with tempfile.NamedTemporaryFile(suffix=".py", delete=tmp_del) as py_file:
+        with open(py_file.name, "w") as fd:
+            fd.writelines(expr)
+        commands = [
+            blender_bin,
+            "-b",
+            "--python-exit-code",
+            "1",
+            "--python",
+            py_file.name,
+        ]
+        _run_process(commands, print_cmd=False, **kwargs)
+    return
+
+def _gitclone(workdir=".", version="main", url=REPO_GIT):
+    """Make a git clone to the directory
+    version can be a branch name or tag name
+    return the plugin source path name
+    """
+    workdir = Path(expanduser(expandvars(workdir)))
+    clone_into = workdir / REPO_NAME
+    os.makedirs(clone_into, exist_ok=True)
+    commands = [
+        "git",
+        "clone",
+        f"{url}",
+        clone_into.as_posix(),
+    ]
+    _run_process(commands)
+    cprint(f"Cloned repo into directory {clone_into.as_posix()}", color="OKGREEN")
+    _gitcheckout(workdi=clone_into.as_posix(), version=version)
+    return clone_into
+
+
+def _gitcheckout(workdir=".", version="main"):
+    """Check a git directory to a specific version"""
+    workdir = Path(expanduser(expandvars(workdir)))
+    commands = [
+        "git",
+        "checkout",
+        f"{version}",
+    ]
+    try:
+        _run_process(commands, cwd=workdir)
+        cprint(f"Checkout version {version}", color="OKGREEN")
+    except Exception as e:
+        raise RuntimeError(f"Failed to checkout version {version}") from e
 
 
 def _get_default_locations(os_name):
@@ -319,17 +459,7 @@ def _get_blender_py(blender_bin):
     return py_path
 
 
-def _get_os_name():
-    """Convient os name function"""
-    p_ = sys.platform
-    if p_ in ["win32"]:
-        return "windows"
-    elif p_ in ["linux", "linux2"]:
-        return "linux"
-    elif p_ in ["darwin"]:
-        return "macos"
-    else:
-        raise NotImplementedError(f"Unsupported platform {p_}")
+
 
 
 def _get_factory_versions(blender_bin):
@@ -360,71 +490,11 @@ def _get_blender_version(blender_bin):
     return bl_version
 
 
-def is_conda():
-    return "CONDA_PREFIX" in os.environ.keys()
 
 
-def _get_conda_variables():
-    results = {
-        key: os.environ.get(key, "")
-        for key in (
-            "CONDA_PREFIX",
-            "CONDA_PYTHON_EXE",
-            "CONDA_DEFAULT_ENV",
-            "CONDA_EXE",
-        )
-    }
-    return results
 
 
-def _is_empty_dir(p):
-    """Determin if path has no child dirs"""
-    p = Path(p)
-    try:
-        next(p.rglob("*"))
-        stat = False
-    except StopIteration:
-        stat = True
-    return stat
 
-
-def _run_process(commands, shell=False, print_cmd=True, cwd=".", capture_output=False):
-    """Wrap around subprocess.run
-    Returns the process object
-    """
-    full_cmd = " ".join(commands)
-    if print_cmd:
-        cprint(" ".join(commands))
-    if shell is False:
-        proc = subprocess.run(
-            commands, shell=shell, cwd=cwd, capture_output=capture_output
-        )
-    else:
-        proc = subprocess.run(
-            full_cmd, shell=shell, cwd=cwd, capture_output=capture_output
-        )
-    if proc.returncode == 0:
-        return proc
-    else:
-        raise RuntimeError(f"Running {full_cmd} returned error code {proc.returncode}")
-
-
-def _run_blender_multiline_expr(blender_bin, expr, **kwargs):
-    blender_bin = str(blender_bin)
-    tmp_del = False if _get_os_name() in ["windows"] else True
-    with tempfile.NamedTemporaryFile(suffix=".py", delete=tmp_del) as py_file:
-        with open(py_file.name, "w") as fd:
-            fd.writelines(expr)
-        commands = [
-            blender_bin,
-            "-b",
-            "--python-exit-code",
-            "1",
-            "--python",
-            py_file.name,
-        ]
-        _run_process(commands, print_cmd=False, **kwargs)
-    return
 
 
 def _blender_enable_plugin(blender_bin):
@@ -454,42 +524,7 @@ def _blender_test_uninstall(parameters):
     return
 
 
-def _gitclone(workdir=".", version="main", url=repo_git):
-    """Make a git clone to the directory
-    version can be a branch name or tag name
-    return the plugin source path name
-    """
-    workdir = Path(expanduser(expandvars(workdir)))
-    clone_into = workdir / repo_name
-    os.makedirs(clone_into, exist_ok=True)
-    commands = [
-        "git",
-        "clone",
-        "--depth",
-        "1",
-        "-b",
-        f"{version}",
-        f"{url}",
-        clone_into.as_posix(),
-    ]
-    _run_process(commands)
-    cprint(f"Cloned repo into directory {clone_into.as_posix()}", color="OKGREEN")
-    return clone_into
 
-
-def _gitcheckout(workdir=".", version="main"):
-    """Check a git directory to a specific version"""
-    workdir = Path(expanduser(expandvars(workdir)))
-    commands = [
-        "git",
-        "checkout",
-        f"{version}",
-    ]
-    try:
-        _run_process(commands, cwd=workdir)
-        cprint(f"Checkout version {version}", color="OKGREEN")
-    except Exception as e:
-        raise RuntimeError(f"Failed to checkout version {version}") from e
 
 
 def _rename_dir(src, dst):
@@ -1422,7 +1457,7 @@ def main():
         return
 
     # Cannot install without conda if pip install is enabled
-    if (not is_conda()) and (args.use_pip is False):
+    if (not ()) and (args.use_pip is False):
         cprint(
             "The installation script should be run inside a conda environment. Abort.",
             color="FAIL",
