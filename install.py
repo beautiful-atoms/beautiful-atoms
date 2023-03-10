@@ -25,6 +25,7 @@ from pathlib import Path
 from threading import local
 from distutils import command
 from os.path import expanduser, expandvars
+
 try:
     from packaging.version import Version
 except ImportError:
@@ -50,6 +51,7 @@ DEPRECATED_BLENDER_VERSIONS = ["3.0", "3.1", "3.2"]
 
 PY_PATH = "python"
 PY_BACKUP_PATH = "_old_python"
+BLENDER_BACKUP_PATH = "blender.origin"
 
 
 # Adding an embedded YAML file for better portability
@@ -133,11 +135,35 @@ bpy.ops.batoms.use_batoms_startup()
 print('Successfully setting preference.')
 """
 
-# wrapper for blender script.
-# Replace the value {blender_bin} at installation runtime
+# A general purpose wrapper for blender, can either be used inside blender root
+# or link at conda env
+BLENDER_SH = """#!/bin/bash
+# This is an alias for blender but with LD_LIBRARY_PATH set
+# it is only intended to be used inside the blender conda environment
+export LD_LIBRARY_PATH={conda_prefix}/lib:${{LD_LIBRARY_PATH}}
+os_name=$(uname -s)
+
+# Add DYLD_LIBRARY_PATH which may be relevant for Dawrin 
+# see https://docs.conda.io/projects/conda-build/en/stable/resources/use-shared-libraries.html
+if [ "$os_name" = "Darwin" ]
+then
+    export DYLD_LIBRARY_PATH={conda_prefix}/lib:${{DYLD_LIBRARY_PATH}}
+fi
+
+exec "{blender_bin}" ${{1+"$@"}}
+"""
+
 BATOMSPY_SH = """#!/bin/bash
 # Usage:
 # blenderpy script.py [options]
+export LD_LIBRARY_PATH={conda_prefix}/lib:${{LD_LIBRARY_PATH}}
+os_name=$(uname -s)
+
+if [ "$os_name" = "Darwin" ]
+then
+    export DYLD_LIBRARY_PATH={conda_prefix}/lib:${{DYLD_LIBRARY_PATH}}
+fi
+
 if [ "$#" -eq  "0" ]
 then
     {blender_bin} -b --python-console
@@ -784,6 +810,19 @@ def _find_conda_bin_path(env_name, conda_vars):
     return bindir
 
 
+def is_binary(filename):
+    with open(filename, "rb") as f:
+        for i in range(100):
+            byte = f.read(1)
+            if byte == b"":
+                # end of file
+                return False
+            elif byte == b"\0":
+                # null byte found
+                return True
+    return False
+
+
 def install(parameters):
     """Link current conda environment to blender's python root
     Copy batoms plugin under repo_path to plugin directory
@@ -806,6 +845,29 @@ def install(parameters):
 
     # Check conda environment status
     conda_vars = _get_conda_variables()
+
+    # Check if blender_bin is a binary?
+    # if so, move the binary to name
+
+    if local_parameters["os_name"] == "linux":
+        backup_blender_bin = blender_bin.with_name(BLENDER_BACKUP_PATH)
+        if is_binary(blender_bin):
+            shutil.move(blender_bin, backup_blender_bin)
+            cprint(f"Move the blender binary to location {backup_blender_bin}")
+        script_path = blender_bin
+        with open(script_path, "w") as fd:
+            content = BLENDER_SH.format(
+                blender_bin=backup_blender_bin.as_posix(),
+                conda_prefix=conda_vars["CONDA_PREFIX"],
+            )
+            fd.write(content)
+        os.chmod(script_path, 0o755)
+        cprint(f"blender script wrapper written to {script_path}", color="OKGREEN")
+    else:
+        cprint(
+            "blender script currently ignored in non-linux platforms", color="WARNING"
+        )
+        # Create a executable at the same place
 
     # Installation logic follows the COMPAS project
     # If the factory_python_target exists, restore factory python first
@@ -1020,7 +1082,10 @@ def install(parameters):
         )
         script_path = bindir / "batomspy"
         with open(script_path, "w") as fd:
-            content = BATOMSPY_SH.format(blender_bin=blender_bin.as_posix())
+            content = BATOMSPY_SH.format(
+                blender_bin=blender_bin.as_posix(),
+                conda_prefix=conda_vars["CONDA_PREFIX"],
+            )
             fd.write(content)
         os.chmod(script_path, 0o755)
         cprint(f"batomspy script written to {script_path}", color="OKGREEN")

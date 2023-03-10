@@ -160,3 +160,4 @@ Miniconda3-*.sh
 *blend
 archive/
 blender-*.tar.xz
+blender-*/
