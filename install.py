@@ -14,19 +14,22 @@ Alternatively, check what `install.py` can do by using
 python install.py --help
 ```
 """
-from distutils import command
 import os
 import re
-from os.path import expanduser, expandvars
+import stat
 import shutil
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from distutils.version import LooseVersion
 from threading import local
-import stat
+from distutils import command
+from os.path import expanduser, expandvars
 
+try:
+    from packaging.version import Version
+except ImportError:
+    from distutils.version import LooseVersion as Version
 # TODO: allow version control
 # TODO: windows privilege issue
 # TODO: complete install tutorial about the env variables
@@ -43,10 +46,12 @@ DEFAULT_PLUGIN_PATH = f"scripts/addons_contrib/{DEFAULT_PLUGIN_NAME}"
 DEFAULT_BLENDER_PY_VER = "3.10.2"
 DEFAULT_BLENDER_NUMPY_VER = "1.22.0"
 
-ALLOWED_BLENDER_VERSIONS = ["3.0", "3.1", "3.2", "3.3"]
+ALLOWED_BLENDER_VERSIONS = ["3.4", "3.5"]
+DEPRECATED_BLENDER_VERSIONS = ["3.0", "3.1", "3.2"]
 
 PY_PATH = "python"
 PY_BACKUP_PATH = "_old_python"
+BLENDER_BACKUP_PATH = "blender.origin"
 
 
 # Adding an embedded YAML file for better portability
@@ -130,11 +135,35 @@ bpy.ops.batoms.use_batoms_startup()
 print('Successfully setting preference.')
 """
 
-# wrapper for blender script.
-# Replace the value {blender_bin} at installation runtime
+# A general purpose wrapper for blender, can either be used inside blender root
+# or link at conda env
+BLENDER_SH = """#!/bin/bash
+# This is an alias for blender but with LD_LIBRARY_PATH set
+# it is only intended to be used inside the blender conda environment
+export LD_LIBRARY_PATH={conda_prefix}/lib:${{LD_LIBRARY_PATH}}
+os_name=$(uname -s)
+
+# Add DYLD_LIBRARY_PATH which may be relevant for Dawrin 
+# see https://docs.conda.io/projects/conda-build/en/stable/resources/use-shared-libraries.html
+if [ "$os_name" = "Darwin" ]
+then
+    export DYLD_LIBRARY_PATH={conda_prefix}/lib:${{DYLD_LIBRARY_PATH}}
+fi
+
+exec "{blender_bin}" ${{1+"$@"}}
+"""
+
 BATOMSPY_SH = """#!/bin/bash
 # Usage:
 # blenderpy script.py [options]
+export LD_LIBRARY_PATH={conda_prefix}/lib:${{LD_LIBRARY_PATH}}
+os_name=$(uname -s)
+
+if [ "$os_name" = "Darwin" ]
+then
+    export DYLD_LIBRARY_PATH={conda_prefix}/lib:${{DYLD_LIBRARY_PATH}}
+fi
+
 if [ "$#" -eq  "0" ]
 then
     {blender_bin} -b --python-console
@@ -192,11 +221,6 @@ def _get_default_locations(os_name):
     Choose multiple possible
     """
     os_name = os_name.lower()
-    # Compare version
-    # if LooseVersion(str(version)) < LooseVersion(str(MIN_BLENDER_VER)):
-    # raise ValueError(
-    # f"Blender version {version} is not supported. Minimal requirement is {MIN_BLENDER_VER}"
-    # )
     if os_name not in ["windows", "macos", "linux"]:
         raise ValueError(f"{os_name} is not valid.")
     default_locations = {
@@ -235,7 +259,7 @@ def _get_default_locations(os_name):
     if match is None:
         raise FileNotFoundError(
             (
-                f"Cannot find Blender>=3.0 in default installation locations. "
+                f"Cannot find Blender>=3.4 in default installation locations. "
                 "Please specify the full path to the blender installation location."
             )
         )
@@ -542,12 +566,12 @@ def _ensure_mamba(conda_vars):
         try:
             _run_process(commands)
         except RuntimeError as e:
-            msg = ("Failed to install mamba install conda base environment. "
-            "You probably don't have write permission. \n"
-            "Please consider add --no-mamba to install.py"
+            msg = (
+                "Failed to install mamba install conda base environment. "
+                "You probably don't have write permission. \n"
+                "Please consider add --no-mamba to install.py"
             )
-            cprint(msg,
-            color="ERROR")
+            cprint(msg, color="ERROR")
             raise RuntimeError(msg) from e
     # Get the mamba binary in given env
     output = _run_process(
@@ -555,9 +579,10 @@ def _ensure_mamba(conda_vars):
         capture_output=True,
     ).stdout.decode("utf8")
     if "ERROR" in output:
-        msg = ("Cannot find mamba in your conda base environment"
+        msg = (
+            "Cannot find mamba in your conda base environment"
             "Please consider add --no-mamba to install.py"
-            )
+        )
         raise RuntimeError(output)
     return output.strip()
 
@@ -785,6 +810,19 @@ def _find_conda_bin_path(env_name, conda_vars):
     return bindir
 
 
+def is_binary(filename):
+    with open(filename, "rb") as f:
+        for i in range(100):
+            byte = f.read(1)
+            if byte == b"":
+                # end of file
+                return False
+            elif byte == b"\0":
+                # null byte found
+                return True
+    return False
+
+
 def install(parameters):
     """Link current conda environment to blender's python root
     Copy batoms plugin under repo_path to plugin directory
@@ -807,6 +845,29 @@ def install(parameters):
 
     # Check conda environment status
     conda_vars = _get_conda_variables()
+
+    # Check if blender_bin is a binary?
+    # if so, move the binary to name
+
+    if local_parameters["os_name"] == "linux":
+        backup_blender_bin = blender_bin.with_name(BLENDER_BACKUP_PATH)
+        if is_binary(blender_bin):
+            shutil.move(blender_bin, backup_blender_bin)
+            cprint(f"Move the blender binary to location {backup_blender_bin}")
+        script_path = blender_bin
+        with open(script_path, "w") as fd:
+            content = BLENDER_SH.format(
+                blender_bin=backup_blender_bin.as_posix(),
+                conda_prefix=conda_vars["CONDA_PREFIX"],
+            )
+            fd.write(content)
+        os.chmod(script_path, 0o755)
+        cprint(f"blender script wrapper written to {script_path}", color="OKGREEN")
+    else:
+        cprint(
+            "blender script currently ignored in non-linux platforms", color="WARNING"
+        )
+        # Create a executable at the same place
 
     # Installation logic follows the COMPAS project
     # If the factory_python_target exists, restore factory python first
@@ -874,6 +935,14 @@ def install(parameters):
     blender_version = _get_blender_version(blender_bin)
     blender_py = _get_blender_py(blender_bin)
 
+    # User warning for blender_version < 3.4 should be already resolved outside install(parameter)
+    # only print the warning again
+    if Version(blender_version) < Version("3.4"):
+        cprint(
+            "Warning: support for beautiful-atoms in Blender <3.4 is deprecated!",
+            color="WARNING",
+        )
+
     print(blender_version, factory_py_ver, factory_numpy_ver)
 
     # If need to output the env yaml only, do it now
@@ -899,9 +968,15 @@ def install(parameters):
             )
         if factory_python_source.is_symlink():
             os.unlink(factory_python_source)
-            cprint(f"{factory_python_source.as_posix()} is already a symlink and will be unlinked. No backup will be made.", color="WARNING")
+            cprint(
+                f"{factory_python_source.as_posix()} is already a symlink and will be unlinked. No backup will be made.",
+                color="WARNING",
+            )
         elif not factory_python_source.is_dir():
-            cprint(f"{factory_python_source.as_posix()} does not exist. Will not move.", color="WARNING")
+            cprint(
+                f"{factory_python_source.as_posix()} does not exist. Will not move.",
+                color="WARNING",
+            )
         else:
             shutil.move(factory_python_source, factory_python_target)
             cprint(
@@ -1007,7 +1082,10 @@ def install(parameters):
         )
         script_path = bindir / "batomspy"
         with open(script_path, "w") as fd:
-            content = BATOMSPY_SH.format(blender_bin=blender_bin.as_posix())
+            content = BATOMSPY_SH.format(
+                blender_bin=blender_bin.as_posix(),
+                conda_prefix=conda_vars["CONDA_PREFIX"],
+            )
             fd.write(content)
         os.chmod(script_path, 0o755)
         cprint(f"batomspy script written to {script_path}", color="OKGREEN")
@@ -1288,12 +1366,35 @@ def main():
         f"      blender bundle root at {true_blender_root.as_posix()}", color="OKGREEN"
     )
 
+    # Perform a check on blender_version
+    blender_version = _get_blender_version(true_blender_bin)
+    if Version(blender_version) < Version("3.4"):
+        # The warning
+        if args.plugin_version is None:
+            cprint(
+                (
+                    "Warning: support of beautiful-atoms in Blender < 3.4 is deprecated! \n"
+                    "I will pin the source code of beautiful-atoms to version blender-3.2 branch (793d6f). \n"
+                    "You can also manually set --plugin-version blender-3.2 to install.py. \n"
+                    "To use latest features please install Blender >= 3.4. "
+                ),
+                color="WARNING",
+            )
+            plugin_version = "blender-3.2"
+        else:
+            cprint(
+                "You have specified the plugin_version option, so I suppose you know what you're doing!",
+                color="WARNING",
+            )
+            plugin_version = args.plugin_version
+    else:
+        plugin_version = args.plugin_version
+
     # Parameters can be provided to install / uninstall methods at this time
     # Do not process any information regarding blender version / python version
     parameters = dict(
         blender_root=true_blender_root,
         blender_bin=true_blender_bin,
-        # blender_version=_get_blender_version(true_blender_bin),
         os_name=os_name,
         use_pip=args.use_pip,
         repo_path=Path(expanduser(expandvars(args.local_repo_path))),
@@ -1304,7 +1405,7 @@ def main():
         use_preferences=args.use_preferences,
         develop=args.develop,
         no_mamba=args.no_mamba,
-        plugin_version=args.plugin_version,
+        plugin_version=plugin_version,
     )
 
     # Uninstallation does not need information about current environment
