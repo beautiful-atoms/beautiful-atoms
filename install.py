@@ -263,6 +263,8 @@ def cprint(content, color=None, **kwargs):
 def _is_empty_dir(p):
     """Determin if path has no child dirs"""
     p = Path(p)
+    if p.is_dir() is False:
+        raise FileNotFoundError(f"{p} is not a valid directory")
     try:
         next(p.rglob("*"))
         stat = False
@@ -337,7 +339,7 @@ def _gitclone(workdir=".", version="main", url=REPO_GIT):
     ]
     _run_process(commands)
     cprint(f"Cloned repo into directory {clone_into.as_posix()}", color="OKGREEN")
-    _gitcheckout(workdi=clone_into.as_posix(), version=version)
+    _gitcheckout(workdir=clone_into.as_posix(), version=version)
     return clone_into
 
 
