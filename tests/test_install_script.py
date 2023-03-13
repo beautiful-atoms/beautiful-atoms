@@ -34,10 +34,12 @@ def test_default_location_linux(fs):
     with pytest.raises(NotImplementedError):
         _get_default_locations("linux")
 
-def test_default_location_macos(fs):
+def test_default_location_macos(fs, monkeypatch):
     """Test requires the `pyfakefs` package's fs fixture
     """
+    monkeypatch.setattr('builtins.input', lambda _: "0")
     from pathlib import Path
+    import os
     from install import _get_default_locations
     # macos case 1
     fdn1 = "/Applications/Blender.app/Contents/Resources/3.4"
@@ -53,6 +55,12 @@ def test_default_location_macos(fs):
     fs.rmdir(fdn1)
     with pytest.raises(FileNotFoundError):
         _get_default_locations("macos")
-    
+    fs.rmdir(fdn2)
+
+    # macos case 3: both user and application blender
+    fdn3 = os.path.expandvars("$HOME/Applications/Blender.app/Contents/Resources/3.4")
+    fdd1 = fs.create_dir(fdn1)
+    fdd3 = fs.create_dir(fdn3)
+    assert _get_default_locations("macos") == Path(fdn1)
     
     
