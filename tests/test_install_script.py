@@ -62,5 +62,32 @@ def test_default_location_macos(fs, monkeypatch):
     fdd1 = fs.create_dir(fdn1)
     fdd3 = fs.create_dir(fdn3)
     assert _get_default_locations("macos") == Path(fdn1)
+
+def test_blender_bin(fs):
+    # Windows
+    from pathlib import Path
+    from install import _get_blender_bin
+    bundle_root = "Program Files/Blender Foundation/Blender 3.4/3.4"
+    fake_bin = "Program Files/Blender Foundation/Blender 3.4/blender.exe"
+    fs.create_dir(bundle_root)
+    fs.create_file(fake_bin)
+    assert _get_blender_bin("windows", bundle_root) == Path(fake_bin)
+    # User should not point to the upper level
+    with pytest.raises(FileNotFoundError):
+        _get_blender_bin("windows", Path(bundle_root).parent)
+    fs.rmdir(bundle_root)
+
+    # Linux
+    fs.create_dir("./blender/3.4")
+    fs.create_file("./blender/blender")
+    assert _get_blender_bin("linux", "blender/3.4") == Path("./blender/blender")
+    # fs.remove("./blender/blender")
+    # fs.rmdir("./blender")
+
+    #Macos
+    fs.create_dir("/Applications/Blender.app/Contents/Resources/3.4")
+    fs.create_file("/Applications/Blender.app/Contents/MacOS/Blender")
+    assert _get_blender_bin("macos", "/Applications/Blender.app/Contents/Resources/3.4")
+    
     
     

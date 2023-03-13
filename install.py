@@ -304,8 +304,10 @@ def _run_process(commands, shell=False, print_cmd=True, cwd=".", capture_output=
     else:
         raise RuntimeError(f"Running {full_cmd} returned error code {proc.returncode}")
 
-def _run_blender_multiline_expr(blender_bin, expr, **kwargs):
-    """Use blender's interpreter to run multiline python expressions
+def _run_blender_multiline_expr(blender_bin, expr,
+                                return_process=True, **kwargs):
+    """Use blender's interpreter to run multiline
+    python expressions.
     """
     blender_bin = str(blender_bin)
     tmp_del = False if _get_os_name() in ["windows"] else True
@@ -320,8 +322,11 @@ def _run_blender_multiline_expr(blender_bin, expr, **kwargs):
             "--python",
             py_file.name,
         ]
-        _run_process(commands, print_cmd=False, **kwargs)
-    return
+        proc = _run_process(commands, print_cmd=False, **kwargs)
+    if return_process:
+        return proc
+    else:
+        return None
 
 def _gitclone(workdir=".", version="main", url=REPO_GIT):
     """Make a git clone to the directory
@@ -446,13 +451,9 @@ def _get_blender_bin(os_name, blender_bundle_root):
 def _get_blender_py(blender_bin):
     """Get the blender executable path from current blender binary"""
     blender_bin = str(blender_bin)
-    commands = [
-        blender_bin,
-        "-b",
-        "--python-expr",
-        "import sys; print('Python binary: ', sys.executable)",
-    ]
-    proc = _run_process(commands, shell=False, capture_output=True)
+    expr =  "import sys; print('Python binary: ', sys.executable)"
+    proc = _run_blender_multiline_expr(blender_bin, expr)
+    # proc = _run_process(commands, shell=False, capture_output=True)
     output = proc.stdout.decode("utf8")
     cprint(output)
     pat = r"Python\s+binary\:\s+(.*)$"
