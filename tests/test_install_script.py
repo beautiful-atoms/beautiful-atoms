@@ -5,7 +5,6 @@ curdir = Path(__file__).parent.resolve()
 print(curdir)
 sys.path.append(curdir.parent.as_posix())
 print(sys.path)
-import install
 import os
 from tempfile import TemporaryDirectory
 
@@ -21,4 +20,39 @@ def test_empty_dir():
     with pytest.raises(FileNotFoundError):
         _is_empty_dir(tmpdir1)
         _is_empty_dir(tmpdir2)
+
+# def test_git_process(monkeypatch):
+#     import install
+#     from install import _gitclone, _gitcheckout
+    
+
+def test_default_location_linux(fs):
+    """Test requires the `pyfakefs` package's fs fixture
+    """
+    from pathlib import Path
+    from install import _get_default_locations
+    with pytest.raises(NotImplementedError):
+        _get_default_locations("linux")
+
+def test_default_location_macos(fs):
+    """Test requires the `pyfakefs` package's fs fixture
+    """
+    from pathlib import Path
+    from install import _get_default_locations
+    # macos case 1
+    fdn1 = "/Applications/Blender.app/Contents/Resources/3.4"
+    fdd1 = fs.create_dir(fdn1)
+    assert _get_default_locations("macos") == Path(fdn1)
+    
+
+    # macos case 2: Blender 3.4 and 3.1 both exist, should return 3.4
+    fdn2 = "/Applications/Blender.app/Contents/Resources/3.1"
+    fdd2 = fs.create_dir(fdn2)
+    assert _get_default_locations("macos").name == "3.4"
+
+    fs.rmdir(fdn1)
+    with pytest.raises(FileNotFoundError):
+        _get_default_locations("macos")
+    
+    
     
