@@ -85,7 +85,7 @@ dependencies:
   - openbabel>=3.1.1
   - scikit-image
   - scipy>=1.6.0
-  - spglib
+  - spglib>=2.0.0
   - pip
   - pip:
     - batoms-api
@@ -234,7 +234,7 @@ fi
 
 
 ################################################################################
-# Section 3: Utils 
+# Section 3.1: General Utils 
 ################################################################################
 
 def cprint(content, color=None, **kwargs):
@@ -260,29 +260,6 @@ def cprint(content, color=None, **kwargs):
     print(output, **kwargs)
     return
 
-def _is_empty_dir(p):
-    """Determin if path has no child dirs"""
-    p = Path(p)
-    if p.is_dir() is False:
-        raise FileNotFoundError(f"{p} is not a valid directory")
-    try:
-        next(p.rglob("*"))
-        stat = False
-    except StopIteration:
-        stat = True
-    return stat
-
-def _get_os_name():
-    """Convient os name function"""
-    p_ = sys.platform
-    if p_ in ["win32"]:
-        return "windows"
-    elif p_ in ["linux", "linux2"]:
-        return "linux"
-    elif p_ in ["darwin"]:
-        return "macos"
-    else:
-        raise NotImplementedError(f"Unsupported platform {p_}")
 
 def _run_process(commands, shell=False, print_cmd=True, cwd=".", capture_output=False):
     """Wrap around subprocess.run
@@ -361,6 +338,10 @@ def _gitcheckout(workdir=".", version="main"):
         cprint(f"Checkout version {version}", color="OKGREEN")
     except Exception as e:
         raise RuntimeError(f"Failed to checkout version {version}") from e
+
+################################################################################
+# Section 3.2: Tools by parsing blender's commandline output
+################################################################################
 
 
 def _get_default_locations(os_name):
@@ -472,7 +453,8 @@ def _get_factory_versions(blender_bin):
     blender_bin = str(blender_bin)
     # First get blender python version
     commands = [blender_bin, "-b", "--python-expr", BLENDER_CHK_VERSION]
-    proc = _run_process(commands, shell=False, capture_output=True)
+    # proc = _run_process(commands, shell=False, capture_output=True)
+    proc = _run_blender_multiline_expr(blender_bin, BLENDER_CHK_VERSION)
     output = proc.stdout.decode("utf8")
     pat_py_version = r"Python\s+Version\:\s+(\d+\.\d+.\d+)"
     pat_numpy_version = r"Numpy\s+Version\:\s+(\d+\.\d+.\d+)"
@@ -491,9 +473,6 @@ def _get_blender_version(blender_bin):
     pat_bl_version = r"Blender\s+(\d+\.\d+\.\d+)"
     bl_version = next(re.finditer(pat_bl_version, output))[1]
     return bl_version
-
-
-
 
 
 
@@ -526,14 +505,59 @@ def _blender_test_uninstall(parameters):
     _run_blender_multiline_expr(blender_bin, BLENDERPY_TEST_UNINSTALL)
     return
 
+################################################################################
+# Section 3.3: File system tools
+################################################################################
+def _is_binary_file(filename):
+    """Use heurestics to determine if a file is binary
+    executable file (containing 0x0) bit
+    """
+    with open(filename, "rb") as f:
+        for i in range(1024):
+            try:
+                byte = f.read(1)
+            except Exception:
+                break
+            if byte == b"":
+                # end of file
+                return False
+            elif byte == b"\0":
+                # null byte found
+                return True
+    return False
 
+def _is_empty_dir(p):
+    """Determin if path has no child dirs"""
+    p = Path(p)
+    if p.is_dir() is False:
+        raise FileNotFoundError(f"{p} is not a valid directory")
+    try:
+        next(p.rglob("*"))
+        stat = False
+    except StopIteration:
+        stat = True
+    return stat
+
+def _get_os_name():
+    """Convient os name function"""
+    p_ = sys.platform
+    if p_ in ["win32"]:
+        return "windows"
+    elif p_ in ["linux", "linux2"]:
+        return "linux"
+    elif p_ in ["darwin"]:
+        return "macos"
+    else:
+        raise NotImplementedError(f"Unsupported platform {p_}")
 
 
 
 def _rename_dir(src, dst):
-    """Rename dir from scr to dst use os.rename functionality if possible"""
+    """Rename dir from src to dst use os.rename functionality if possible"""
     src = Path(src)
     dst = Path(dst)
+    if not src.is_dir():
+        raise FileNotFoundError(f"{src} should be an existing directory!")
     if dst.exists():
         if (dst.is_symlink()) or (dst.is_file()):
             os.unlink(dst)
@@ -544,7 +568,6 @@ def _rename_dir(src, dst):
     try:
         os.rename(src, dst)
     except (OSError, PermissionError) as e:
-        # TODO: do something here
         raise
 
 
@@ -554,6 +577,8 @@ def _symlink_dir(src, dst):
     """
     src = Path(src)
     dst = Path(dst)
+    if not src.is_dir():
+        raise FileNotFoundError(f"{src} should be an existing directory!")
     if dst.exists():
         if (dst.is_symlink()) or (dst.is_file()):
             os.unlink(dst)
@@ -564,8 +589,11 @@ def _symlink_dir(src, dst):
     try:
         os.symlink(src, dst)
     except (OSError, PermissionError) as e:
-        # TODO: do something here
         raise
+
+################################################################################
+# Section 3.4: Conda tools
+################################################################################
 
 
 def _replace_conda_env(python_version=None, numpy_version=None):
@@ -683,14 +711,8 @@ def _conda_update(
             fd.writelines(env_file_content.lstrip())
 
         commands = commands_prefix + [
-            # conda_vars["CONDA_EXE"],
-            # "env",
-            # "update",
-            # "-n",
-            # env_name,
             "--file",
             tmp_yml,
-            # conda_env_file.as_posix(),
         ]
         _run_process(commands)
         cprint("Finished install conda packages.", color="OKGREEN")
@@ -699,7 +721,9 @@ def _conda_update(
 
 
 def _conda_cache_move(condition, conda_vars, blender_python_root):
-    """Install relevant package (spglib) in conda environment and move to python's site-packages
+    """The _conda_cache_move function is DEPRECATED since batoms 2.2.0 as spglib >= 2.0 now has full wheel support on Windows. (Assume no body is using ARM windows 11?)
+
+    Install relevant package (spglib) in conda environment and move to python's site-packages
     This is A DANGEROUS WORKAROUND as it can silently break many things.
     Only to use until the conda environment bug in blender fixed.
     blender_python_root looks like <root>/<3.x>/python
@@ -732,15 +756,13 @@ def _conda_cache_move(condition, conda_vars, blender_python_root):
     return
 
 
-def _pip_install(blender_py, blender_python_root, factory_py_ver, conda_vars):
+def _pip_install(blender_py, conda_vars):
     """Temporary workaround for installation on windows and blender>=3.1.0
     Try to install as many components as possible. Need specific version tweaks
     Installation order:
     1. factory numpy -- pinned
-    2. install spglib with pip first, if no compiler found, try building from conda-forge's distribution
-    3. ase / scipy / matplotlib / scikit-image all come with wheel
-    4. install pymatgen (>=2022.02)
-    5. install openbabel first, if no compiler found, skip
+    2. ase / scipy / matplotlib / scikit-image / spglib >= 2.0 / pymatgen (>=2022.02) all come with wheel
+    3. install openbabel first, if no compiler found, skip
     """
     blender_py = str(blender_py)
     pip_prefix = [blender_py, "-m", "pip"]
@@ -752,38 +774,39 @@ def _pip_install(blender_py, blender_python_root, factory_py_ver, conda_vars):
             "Cannot find package numpy. Your bundle python may be corrupt."
         )
 
-    # Step 2: install spglib
-    commands = pip_prefix + ["install", "--no-input", "spglib"]
-    try:
-        proc = _run_process(commands, shell=False, capture_output=True)
-    except RuntimeError:
-        cprint(
-            "Building spglib from source failed. We'll try to install from conda-distruted lib.",
-            color="WARNING",
-        )
-        # abbrevate version, i.e. 3.10 --> py310
-        abbrev_py_ver = "py" + "".join(factory_py_ver.split(".")[:2])
-        condition = f"spglib=*={abbrev_py_ver}*"
-        # cprint(condition)
-        _conda_cache_move(
-            condition=condition,
-            conda_vars=conda_vars,
-            blender_python_root=blender_python_root,
-        )
-    # check spglib installation
-    commands = pip_prefix + ["show", "spglib"]
-    proc = _run_process(commands, shell=False, capture_output=True)
-    if "Name: spglib" not in proc.stdout.decode("utf8"):
-        # TODO: improve error msg
-        raise RuntimeError("Spglib installation failed.")
+    # Step 2: install wheel dependencies
+    # commands = pip_prefix + ["install", "--no-input", "spglib"]
+    # try:
+    #     proc = _run_process(commands, shell=False, capture_output=True)
+    # except RuntimeError:
+    #     cprint(
+    #         "Building spglib from source failed. We'll try to install from conda-distruted lib.",
+    #         color="WARNING",
+    #     )
+    #     # abbrevate version, i.e. 3.10 --> py310
+    #     abbrev_py_ver = "py" + "".join(factory_py_ver.split(".")[:2])
+    #     condition = f"spglib=*={abbrev_py_ver}*"
+    #     # cprint(condition)
+    #     _conda_cache_move(
+    #         condition=condition,
+    #         conda_vars=conda_vars,
+    #         blender_python_root=blender_python_root,
+    #     )
+    # # check spglib installation
+    # commands = pip_prefix + ["show", "spglib"]
+    # proc = _run_process(commands, shell=False, capture_output=True)
+    # if "Name: spglib" not in proc.stdout.decode("utf8"):
+    #     # TODO: improve error msg
+    #     raise RuntimeError("Spglib installation failed.")
 
-    # Step 3: install ase pymatgen etc.
+    # Step 2: install ase pymatgen etc.
     commands = pip_prefix + [
         "install",
         "--no-input",
         "ase>=3.21.0",
-        "pymatgen<=2022.03",
+        "pymatgen<=2023.3.10",
         "scikit-image",
+        "spglib>=2.0.0"
     ]
     proc = _run_process(commands)
 
@@ -801,6 +824,8 @@ def _pip_install(blender_py, blender_python_root, factory_py_ver, conda_vars):
         )
 
     return
+
+
 
 
 def _pip_uninstall(blender_py, conda_vars):
@@ -821,7 +846,9 @@ def _pip_uninstall(blender_py, conda_vars):
         "Pillow",
         "openbabel",
         "mpmath",
+        "mp_api",
         "monty",
+        "msgpack",
         "latexcodec",
         "pybtex",
         "networkx",
@@ -848,17 +875,93 @@ def _find_conda_bin_path(env_name, conda_vars):
     return bindir
 
 
-def is_binary(filename):
-    with open(filename, "rb") as f:
-        for i in range(100):
-            byte = f.read(1)
-            if byte == b"":
-                # end of file
-                return False
-            elif byte == b"\0":
-                # null byte found
-                return True
-    return False
+################################################################################
+# Section 4.1: operations on blender file structure
+################################################################################
+
+def _restore_factory_python(blender_root):
+    """Restore the factory python directory and remove symlinks
+    """
+    blender_root = Path(blender_root)
+    factory_python_source = blender_root / PY_PATH
+    factory_python_target = blender_root / PY_BACKUP_PATH
+    if factory_python_target.exists():
+        try:
+            _rename_dir(factory_python_target, factory_python_source)
+        except Exception as e:
+            raise RuntimeError("Cannot move restore factory python") from e
+    # Test if the restored factory python is corrupt?
+    if _is_empty_dir(factory_python_source):
+        raise RuntimeError("Factory python folder is empty!")
+    if factory_python_source.is_symlink():
+        raise RuntimeError("Factory python folder is a symlink!")
+    try:
+        old_py = next(factory_python_source.glob("bin/python*"))
+    except StopIteration as e:
+        raise RuntimeError("Factory python binary not found!") from e
+    # Finally test if the python binary still works
+    try:
+        _run_process([str(old_py), "-V"])
+    except RuntimeError as e:
+        raise RuntimeError(
+                f"Found factory python at {old_py.as_posix()} "
+                "but it's not working. Your installation is corrupted."
+            ) from e
+    cprint(f"Restored {factory_python_target.as_posix()} to {factory_python_source.as_posix()}",color="OKGREEN",)
+    
+    
+    # if factory_python_target.exists():
+    #     # Empty symlink factory python might be mistakenly created
+    #     # just delete them
+    #     exception_corrupt = False
+    #     if _is_empty_dir(factory_python_target) or factory_python_target.is_symlink():
+    #         exception_corrupt = True
+    #     else:
+    #         cprint(f"Target path {factory_python_target.as_posix()} exists.")
+    #         try:
+    #             old_py = next(factory_python_target.glob("bin/python*"))
+    #         except StopIteration:
+    #             cprint("Factory python binary not found.", color="WARNING")
+    #             old_py = None
+    #             exception_corrupt = True
+    #         if old_py:
+    #             try:
+    #                 _run_process([str(old_py), "-V"])
+    #             except RuntimeError:
+    #                 cprint(
+    #                     (
+    #                         f"Found factory python at {old_py.as_posix()} "
+    #                         "but it's not working"
+    #                     ),
+    #                     color="WARNING",
+    #                 )
+    #                 exception_corrupt = True
+    #     # TODO: improve error msg
+    #     if exception_corrupt:
+    #         raise RuntimeError(
+    #             (
+    #                 f"Backup of Blender's factory python at {factory_python_target.as_posix()} "
+    #                 "is corrupt. Please replace it with a copy."
+    #             )
+    #         )
+    #     else:
+    #         if factory_python_source.exists():
+    #             if factory_python_source.is_symlink():
+    #                 os.unlink(factory_python_source)
+    #             elif factory_python_source.is_dir():
+    #                 raise OSError(
+    #                     f"{factory_python_source.as_posix()} is not symlink. Please backup its content and retry."
+    #                 )
+    #             else:
+    #                 os.unlink(factory_python_source)
+    #         # os.rename(factory_python_target, factory_python_source)
+    #         shutil.move(factory_python_target, factory_python_source)
+    #         cprint(
+    #             f"Renamed {factory_python_target.as_posix()} to {factory_python_source.as_posix()}",
+    #             color="OKGREEN",
+    #         )
+    
+
 
 
 def install(parameters):
