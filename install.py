@@ -278,12 +278,18 @@ def _run_process(commands, shell=False, print_cmd=True, cwd=".", capture_output=
     if proc.returncode == 0:
         return proc
     else:
-        raise RuntimeError(f"Running {full_cmd} returned error code {proc.returncode}")
+        raise RuntimeError((f"Running {full_cmd} returned error code {proc.returncode}. \n"
+                            "Below are the stdout message: \n"
+                            f"{proc.stdout.decode('utf8')}"
+                            "\n"
+                            "Below are the stderr message:\n"
+                            f"{proc.stderr.decode('utf8')}"
+                            ))
 
 
 def _run_blender_multiline_expr(blender_bin, expr, return_process=True, **kwargs):
     """Use blender's interpreter to run multiline
-    python expressions.
+    python expressions. Use `capture_output` to switch whether the output should be printed to stdout
     """
     blender_bin = str(blender_bin)
     tmp_del = False if _get_os_name() in ["windows"] else True
@@ -438,7 +444,6 @@ def _get_blender_py(blender_bin):
     blender_bin = str(blender_bin)
     expr = "import sys; print('Python binary: ', sys.executable)"
     proc = _run_blender_multiline_expr(blender_bin, expr)
-    # proc = _run_process(commands, shell=False, capture_output=True)
     output = proc.stdout.decode("utf8")
     cprint(output)
     pat = r"Python\s+binary\:\s+(.*)$"
@@ -452,9 +457,6 @@ def _get_factory_versions(blender_bin):
     This is only to be run BEFORE symlinking
     """
     blender_bin = str(blender_bin)
-    # First get blender python version
-    # commands = [blender_bin, "-b", "--python-expr", BLENDER_CHK_VERSION]
-    # proc = _run_process(commands, shell=False, capture_output=True)
     proc = _run_blender_multiline_expr(blender_bin, BLENDER_CHK_VERSION)
     output = proc.stdout.decode("utf8")
     pat_py_version = r"Python\s+Version\:\s+(\d+\.\d+.\d+)"
@@ -467,9 +469,9 @@ def _get_factory_versions(blender_bin):
 def _get_blender_version(blender_bin):
     """Parse blender's output to get the X.Y.Z version name"""
     blender_bin = str(blender_bin)
-    # First get blender python version
     commands = [blender_bin, "-b"]
-    proc = _run_process(commands, shell=False, capture_output=True)
+    proc = _run_process(commands, shell=False,
+                        capture_output=True)
     output = proc.stdout.decode("utf8")
     pat_bl_version = r"Blender\s+(\d+\.\d+\.\d+)"
     bl_version = next(re.finditer(pat_bl_version, output))[1]
@@ -479,18 +481,14 @@ def _get_blender_version(blender_bin):
 def _blender_enable_plugin(parameters):
     """Use blender's internal libary to enable plugin (and save as user script)"""
     blender_bin = parameters["blender_bin"]
-    _run_blender_multiline_expr(blender_bin, BLENDERPY_ENABLE_PLUGIN,
-                                # capture_output=False
-                                )
+    _run_blender_multiline_expr(blender_bin, BLENDERPY_ENABLE_PLUGIN)
     return
 
 
 def _blender_disable_plugin(parameters):
     """Use blender's internal libary to disable plugin (and save as user script)"""
     blender_bin = parameters["blender_bin"]
-    _run_blender_multiline_expr(blender_bin, BLENDERPY_DISABLE_PLUGIN,
-                                # capture_output=False,
-                                )
+    _run_blender_multiline_expr(blender_bin, BLENDERPY_DISABLE_PLUGIN,)
     print("finish output")
     return
 
@@ -500,9 +498,7 @@ def _blender_test_plugin(parameters):
         cprint("Skip plugin test.", color="WARNING")
         return
     blender_bin = str(parameters["blender_bin"])
-    _run_blender_multiline_expr(blender_bin, BLENDERPY_TEST_PLUGIN,
-                                # capture_output=False
-                                )
+    _run_blender_multiline_expr(blender_bin, BLENDERPY_TEST_PLUGIN,)
     return
 
 
@@ -753,16 +749,6 @@ def _conda_update(
         commands_prefix = [conda_bin, "env", "update", "-n", env_name]
     else:
         commands_prefix = [conda_bin, "env", "update", "-p", env_name]
-    #     # This is dangerous running outside conda env. Consider check the base first
-    # #     commands_prefix = [
-    # #         mamba_bin,
-    # #         "env",
-    # #         "update",
-    # #         "-n",
-    # #         env_name,
-    # #     ]
-    # # else:
-    #     commands_prefix = [conda_vars["CONDA_EXE"], "env", "update", "-n", env_name]
 
     # NamedTemporaryFile can only work on Windows if delete=False
     # see https://stackoverflow.com/questions/55081022/python-tempfile-with-a-context-manager-on-windows-10-leads-to-permissionerror
@@ -836,33 +822,6 @@ def _pip_install(blender_py):
         raise RuntimeError(
             "Cannot find package numpy. Your bundle python may be corrupt."
         )
-
-    # Step 2: install wheel dependencies
-    # commands = pip_prefix + ["install", "--no-input", "spglib"]
-    # try:
-    #     proc = _run_process(commands, shell=False, capture_output=True)
-    # except RuntimeError:
-    #     cprint(
-    #         "Building spglib from source failed. We'll try to install from conda-distruted lib.",
-    #         color="WARNING",
-    #     )
-    #     # abbrevate version, i.e. 3.10 --> py310
-    #     abbrev_py_ver = "py" + "".join(factory_py_ver.split(".")[:2])
-    #     condition = f"spglib=*={abbrev_py_ver}*"
-    #     # cprint(condition)
-    #     _conda_cache_move(
-    #         condition=condition,
-    #         conda_vars=conda_vars,
-    #         blender_python_root=blender_python_root,
-    #     )
-    # # check spglib installation
-    # commands = pip_prefix + ["show", "spglib"]
-    # proc = _run_process(commands, shell=False, capture_output=True)
-    # if "Name: spglib" not in proc.stdout.decode("utf8"):
-    #     # TODO: improve error msg
-    #     raise RuntimeError("Spglib installation failed.")
-
-    # Step 2: install ase pymatgen etc.
     commands = pip_prefix + [
         "install",
         "--no-input",
@@ -1302,50 +1261,6 @@ def _uninstall_dependencies(parameters):
     return
     
     
-    
-    #     if parameters["use_pip"]:
-    #         cprint(
-    #             "Beautiful-atoms and its dependencies have been successfully uninstalled!",
-    #             color="OKGREEN",
-    #         )
-    #     else:
-    #         cprint(
-    #             f"Backup of factory blender python path {factory_python_target.as_posix()} does not exist. Ignore.",
-    #             color="WARNING",
-    #         )
-    #         cprint(
-    #             "It seems beautiful-atoms has already been uninstalled from your Blender distribution.",
-    #             color="OKGREEN",
-    #         )
-    #     return
-    # else:
-    #     if parameters["use_pip"]:
-    #     if factory_python_source.is_dir():
-    #         if not _is_empty_dir(factory_python_source):
-    #             if factory_python_source.is_symlink():
-    #                 os.unlink(factory_python_source)
-    #             elif factory_python_source.is_dir():
-    #                 cprint(
-    #                     f"Current blender python path is not a symlink.", color="HEADER"
-    #                 )
-    #                 overwrite = (
-    #                     str(input("Overwrite? [y/N]") or "N").lower().startswith("y")
-    #                 )
-    #                 if overwrite:
-    #                     shutil.rmtree(factory_python_source)
-    #                 else:
-    #                     cprint("Ignored.", color="FAIL")
-    #                     return
-    #             else:
-    #                 pass
-    #         else:
-    #             os.rmdir(factory_python_source)
-
-    #     if factory_python_target.is_symlink():
-    #         origin = factory_python_target.readlink()
-    #         os.symlink(origin, factory_python_source)
-    #     else:
-    #         shutil.move(factory_python_target, factory_python_source)
 
 def _setup_startup_and_preferences(parameters):
     """Setup blender startup and preferences
@@ -1417,7 +1332,38 @@ def _print_success_uninstall(parameters):
         msg = base_msg + conda_msg
 
     cprint(msg, color="OKGREEN")
-    return 
+    return
+
+def _install_version_check(parameters):
+    """Pre-installation check of Blender version
+    to make sure batoms is compatible
+    """
+    true_blender_bin = parameters["blender_bin"]
+    plugin_version = parameters["plugin_version"]
+    # Perform a check on blender_version
+    blender_version = _get_blender_version(true_blender_bin)
+    if Version(blender_version) >= Version("3.4"):
+        cprint("Blender version compatibility OK.", color="OKGREEN")
+        return
+    
+    if plugin_version is None:
+        cprint(
+            (
+                "Warning: support of beautiful-atoms in Blender < 3.4 is deprecated! \n"
+                "I will pin the source code of beautiful-atoms to version blender-3.2 branch (793d6f). \n"
+                "You can also manually set --plugin-version blender-3.2 to install.py. \n"
+                "To use latest features please install Blender >= 3.4. "
+            ),
+            color="WARNING",
+        )
+        # This should be the only place parameter changes in-place
+        parameters["plugin_version"] = "blender-3.2"
+    else:
+        cprint(
+            "You have specified the plugin_version option, so I suppose you know what you're doing!",
+            color="WARNING",
+        )
+    return
  
 def _sanitize_parameters(parameters):
     """Clean up parameters for the installer / uninstaller"""
@@ -1431,6 +1377,38 @@ def _sanitize_parameters(parameters):
     parameters["factory_python_target"] = parameters["blender_root"] / PY_BACKUP_PATH
     parameters["conda_vars"] = _get_conda_variables()
 
+    # Only allow --use-pip for now.
+    # TODO: check later if conda-env issue is resolved
+    if parameters["os_name"] in ["windows"]:
+        prev_pip_state = parameters["use_pip"]
+        parameters["use_pip"] = True
+        if prev_pip_state is not parameters["use_pip"]:
+            cprint("For windows installations, I have added --use-pip option for you.", color="HEADER")
+        
+    # Additional checks
+    # 1. are we inside conda?
+    if not _is_conda():
+        if (parameters["use_pip"] is False):
+            cprint(
+                "The installation script should be run inside a conda environment or specify the --use-pip option. Abort.",
+                color="FAIL",
+            )
+            sys.exit(0)
+            return
+        else:
+            cprint(("You have specified --use-pip option and conda environment is activated. "
+            "Dependencies will be installed directly to blender's python distribution. \n"
+            "Some packages like openbabel may require additional setup to install."
+                    ), color="WARNING")
+    
+
+    # Use `which` to determine if the python executable may
+    # conflict with the environment
+    if parameters["os_name"] not in ["windows"]:
+        check_python_conflict()
+    return
+    
+
 
 def install(parameters):
     """Link current conda environment to blender's python root
@@ -1438,6 +1416,7 @@ def install(parameters):
     """
     parameters = parameters.copy()
     _sanitize_parameters(parameters)
+    _install_version_check(parameters)
     # Linux-only. Replace blender binary with  LD_LIBRARY_PATH awareness
     _restore_blender_binary(parameters)
     # TODO: make paths in binary script relative
@@ -1523,7 +1502,7 @@ def main():
             "If not provided, infer from os-dependent directories."
         ),
     )
-    # TODO: to be implemented later
+    
     parser.add_argument(
         "-t",
         "--plugin-version",
@@ -1600,11 +1579,15 @@ def main():
         action="store_true",
         help=("Use the default conda backend instead of mamba for version resolver"),
     )
+    parser.add_argument(
+        "--no-blender-alias",
+        action="store_true",
+        help=("Do not install the blender alias in conda env's root. Only relevant for unix systems."),
+    )
     args = parser.parse_args()
-    cprint(args)
     os_name = _get_os_name()
 
-    # When installing on linux / macos using conda method, makesure python interpreters do not conflict
+    
     if (os_name not in ["windows"]) and (args.uninstall is False):
         check_python_conflict()
 
@@ -1619,32 +1602,9 @@ def main():
         f"      blender bundle root at {true_blender_root.as_posix()}", color="OKGREEN"
     )
 
-    # Perform a check on blender_version
-    blender_version = _get_blender_version(true_blender_bin)
-    if Version(blender_version) < Version("3.4"):
-        # The warning
-        if args.plugin_version is None:
-            cprint(
-                (
-                    "Warning: support of beautiful-atoms in Blender < 3.4 is deprecated! \n"
-                    "I will pin the source code of beautiful-atoms to version blender-3.2 branch (793d6f). \n"
-                    "You can also manually set --plugin-version blender-3.2 to install.py. \n"
-                    "To use latest features please install Blender >= 3.4. "
-                ),
-                color="WARNING",
-            )
-            plugin_version = "blender-3.2"
-        else:
-            cprint(
-                "You have specified the plugin_version option, so I suppose you know what you're doing!",
-                color="WARNING",
-            )
-            plugin_version = args.plugin_version
-    else:
-        plugin_version = args.plugin_version
+    
 
     # Parameters can be provided to install / uninstall methods at this time
-    # Do not process any information regarding blender version / python version
     parameters = dict(
         blender_root=true_blender_root,
         blender_bin=true_blender_bin,
@@ -1658,53 +1618,13 @@ def main():
         use_preferences=args.use_preferences,
         develop=args.develop,
         no_mamba=args.no_mamba,
-        plugin_version=plugin_version,
+        no_blender_alias=args.no_blender_alias,
+        plugin_version=args.plugin_version,
     )
-
-    # Uninstallation does not need information about current environment
-    if args.uninstall:
-        if (parameters["os_name"] in ["windows"]) and (parameters["use_pip"] is False):
-            cprint(
-                (
-                    "To uninstall batoms depedencies on windows, please add the --use-pip tag to the script."
-                ),
-                color="FAIL",
-            )
-            sys.exit(0)
+    if not args.uninstall:
+        install(parameters)
+    else:
         uninstall(parameters)
-        return
-
-    # Cannot install without conda if pip install is enabled
-    if (not _is_conda()) and (args.use_pip is False):
-        cprint(
-            "The installation script should be run inside a conda environment. Abort.",
-            color="FAIL",
-        )
-        sys.exit(0)
-
-    # Sanity check. pip install only recommended for windows
-    if args.use_pip:
-        if os_name not in ["windows"]:
-            cprint(
-                (
-                    "Install dependencies via pip is only recommended for windows."
-                    " Please remove the --use-pip flag and try again"
-                ),
-                color="FAIL",
-            )
-            sys.exit(0)
-    elif os_name in ["windows"]:
-        cprint(
-            (
-                "Conda install currently not working for Blender>=3.0 "
-                "due to a bug in anaconda https://github.com/ContinuumIO/anaconda-issues/issues/11994.\n"
-                "Please add the --use-pip flag to installation script. "
-            ),
-            color="FAIL",
-        )
-        sys.exit(0)
-
-    install(parameters)
 
 
 if __name__ == "__main__":
