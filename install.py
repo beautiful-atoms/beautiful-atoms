@@ -879,26 +879,42 @@ def _pip_uninstall(blender_py, conda_vars):
 
 
 def _find_conda_bin_path(env_name, conda_vars):
-    """Return the path of binary search directory ($PATH) of the given conda env"""
+    """Return the path of binary search directory ($PATH) of the given conda env
+    Since there are some cases where the env is still empty,
+    the bindir may not (yet) exist, return None in that case.
+    """
     if env_name is None:
         env_name = conda_vars["CONDA_DEFAULT_ENV"]
 
-    output = (
-        _run_process(
-            [
-                conda_vars["CONDA_EXE"].as_posix(),
-                "run",
-                "-n",
-                env_name,
-                "which",
-                "python",
-            ],
-            capture_output=True,
+    # If env_name is already a prefix, then search its bin/ dir
+    if not _is_conda_name_abbrev(env_name):
+        bindir = env_name / "bin"
+        if not bindir.is_dir():
+            cprint(f"Path {bindir.as_posix()} does not exists!", color="WARNING")
+            bindir = None
+        return bindir
+
+    # Else use default name search method 
+    program = "python"
+    try:
+        output = (
+            _run_process(
+                [
+                    conda_vars["CONDA_EXE"].as_posix(),
+                    "run",
+                    "-n",
+                    env_name,
+                    "which",
+                    program,
+                ],
+                capture_output=True,
+            )
+            .stdout.decode("utf8")
+            .strip()
         )
-        .stdout.decode("utf8")
-        .strip()
-    )
-    bindir = Path(output).parent.resolve()
+        bindir = Path(output).parent.resolve()
+    except Exception:
+        bindir = None
     return bindir
 
 
@@ -1064,7 +1080,6 @@ def _replace_blender_binary(parameters):
     """Replace factory blender binary with a shell script
     that handles LD_LIBRARY_PATH. Only used for linux
     """
-    print(parameters)
     blender_bin = parameters["blender_bin"]
     conda_vars = parameters["conda_vars"]
     dyn_lib_path = parameters["blender_root"].resolve() / "python" / "lib"
@@ -1156,6 +1171,9 @@ def _remove_blender_alias(parameters):
     bindir = _find_conda_bin_path(
         env_name=parameters["custom_conda_env"], conda_vars=conda_vars
     )
+    if bindir is None:
+        # Do nothing if the bindir does not exist
+        return
     script_path = bindir / "blender"
     if script_path.is_file():
         os.remove(script_path)
@@ -1202,6 +1220,9 @@ def _remove_batomspy(parameters):
     bindir = _find_conda_bin_path(
         env_name=parameters["custom_conda_env"], conda_vars=conda_vars
     )
+    if bindir is None:
+        # Do nothing if the bindir does not exist
+        return
     script_path = bindir / "batomspy"
     if script_path.is_file():
         os.remove(script_path)
@@ -1286,7 +1307,6 @@ def _setup_startup_and_preferences(parameters):
 def _print_success_install(parameters):
     """Print message after installation
     """
-    print(parameters)
     conda_vars = parameters["conda_vars"]
     env_pref = conda_vars["CONDA_PREFIX"]
     blender_bin = parameters["blender_bin"]
@@ -1312,7 +1332,6 @@ def _print_success_install(parameters):
 def _print_success_uninstall(parameters):
     """Print message after installation
     """
-    print(parameters)
     conda_vars = parameters["conda_vars"]
     env_pref = conda_vars["CONDA_PREFIX"]
     blender_bin = parameters["blender_bin"]
