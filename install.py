@@ -999,15 +999,16 @@ def _install_plugin(parameters):
     # Make it error if both develop and version are provided
     # if parameters["develop"] and parameters["plugin_version"]:
         # raise 
-    if not _is_empty_dir(plugin_path_target):
-        cprint(
-            f"Target plugin installtion directory {plugin_path_target.as_posix()} is not empty.",
-            color="WARNING",
-        )
-        choice = str(input("Overwrite? [y/N]") or "N").lower().startswith("y")
-        if not choice:
-            cprint("Abort.", color="FAIL")
-            sys.exit(0)
+    if plugin_path_target.is_dir():
+        if not _is_empty_dir(plugin_path_target):
+            cprint(
+                f"Target plugin installtion directory {plugin_path_target.as_posix()} is not empty.",
+                color="WARNING",
+            )
+            choice = str(input("Overwrite? [y/N]") or "N").lower().startswith("y")
+            if not choice:
+                cprint("Abort.", color="FAIL")
+                sys.exit(0)
         if plugin_path_target.is_symlink():
             os.unlink(plugin_path_target)
         else:
@@ -1051,7 +1052,7 @@ def _replace_blender_binary(parameters):
     print(parameters)
     blender_bin = parameters["blender_bin"]
     conda_vars = parameters["conda_vars"]
-    dyn_lib_path = (parameters["blender_root"] / "lib")
+    dyn_lib_path = (parameters["blender_root"].resolve() / "lib")
     if parameters["os_name"] == "linux":
         backup_blender_bin = blender_bin.with_name(BLENDER_BACKUP_PATH)
         if _is_binary_file(blender_bin):
@@ -1184,12 +1185,20 @@ def install(parameters):
     """
     parameters = parameters.copy()
     _sanitize_parameters(parameters)
+    # Linux-only. Replace blender binary with  LD_LIBRARY_PATH awareness
     _restore_blender_binary(parameters)
+    # TODO: make paths in binary script relative
     _replace_blender_binary(parameters)
+    _restore_factory_python(parameters)
+    _move_factory_python(parameters)
+    # TODO: condition about generate env file?
+    # TODO: finish the conda part in between
+    _install_plugin(parameters)
+    
     
     
 
-def _old_uninstall(parameters):
+def uninstall(parameters):
     """Remove the plugin from target_directory and restore"""
     parameters = parameters.copy()
     _sanitize_parameters(parameters)
