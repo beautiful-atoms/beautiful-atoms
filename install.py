@@ -475,24 +475,26 @@ def _get_blender_version(blender_bin):
     return bl_version
 
 
-def _blender_enable_plugin(blender_bin):
+def _blender_enable_plugin(parameters):
     """Use blender's internal libary to enable plugin (and save as user script)"""
+    blender_bin = parameters["blender_bin"]
     _run_blender_multiline_expr(blender_bin, BLENDERPY_ENABLE_PLUGIN)
     return
 
 
-def _blender_disable_plugin(blender_bin):
+def _blender_disable_plugin(parameters):
     """Use blender's internal libary to disable plugin (and save as user script)"""
+    blender_bin = parameters["blender_bin"]
     _run_blender_multiline_expr(blender_bin, BLENDERPY_DISABLE_PLUGIN)
     return
 
 
 def _blender_test_plugin(parameters):
-    if parameters["dependency_only"] is False:
-        blender_bin = str(parameters["blender_bin"])
-        _run_blender_multiline_expr(blender_bin, BLENDERPY_TEST_PLUGIN)
-    else:
+    if parameters["dependency_only"]:
         cprint("Skip plugin test.", color="WARNING")
+        return
+    blender_bin = str(parameters["blender_bin"])
+    _run_blender_multiline_expr(blender_bin, BLENDERPY_TEST_PLUGIN)
     return
 
 
@@ -613,7 +615,7 @@ def _is_conda_name_abbrev(env_name):
     """Tell if the env_name is a valid conda-env name.
     If not, the env_name may be a full path to the env
     """
-    return any([c in env_name for c in (" ", "/", ":", "#")])
+    return not any([c in env_name for c in (" ", "/", ":", "#")])
 
 
 def _find_conda_bin_path(env_name, conda_vars):
@@ -623,7 +625,7 @@ def _find_conda_bin_path(env_name, conda_vars):
 
     # Distinguish if env_name is a prefix or name
     if _is_conda_name_abbrev(env_name):
-        commands = [conda_vars["CONDA_EXE"], "run", env_name, "which", "python"],
+        commands = [conda_vars["CONDA_EXE"], "run", "-p", env_name, "which", "python"],
     else:
         commands = [conda_vars["CONDA_EXE"], "run", "-n", env_name, "which", "python"],
 
@@ -1013,6 +1015,8 @@ def _link_conda_env(parameters):
     return
 
 
+
+
 def _install_plugin(parameters):
     """Install plugin into addons_contrib folder
     If in the develop mode, only symlink but not copy
@@ -1079,7 +1083,7 @@ def _replace_blender_binary(parameters):
     print(parameters)
     blender_bin = parameters["blender_bin"]
     conda_vars = parameters["conda_vars"]
-    dyn_lib_path = parameters["blender_root"].resolve() / "lib"
+    dyn_lib_path = parameters["blender_root"].resolve() / "python" / "lib"
     if parameters["os_name"] == "linux":
         backup_blender_bin = blender_bin.with_name(BLENDER_BACKUP_PATH)
         if _is_binary_file(blender_bin):
@@ -1145,8 +1149,19 @@ def _create_blender_alias(parameters):
             conda_prefix=conda_vars["CONDA_PREFIX"].as_posix(),
         )
         fd.write(content)
-        os.chmod(script_path, 0o755)
-        cprint(f"Alias for blender written to {script_path}", color="OKGREEN")
+    os.chmod(script_path, 0o755)
+    cprint(f"Alias for blender written to {script_path}", color="OKGREEN")
+
+    # Make a test
+    
+    # with tempfile.NamedTemporaryFile(suffix=".py", delete=False) as tmp_py:
+    #     tmp_py = Path(tmp_py.name)
+    #     with open(tmp_py, "w") as fd:
+    #         fd.write(BATOMSPY_TEST)
+    #         os.chmod(tmp_py, 0o755)
+    #     _run_process([tmp_py], capture_output=True)
+    #     cprint(f"Shebang support for batomspy is now activated",
+    #            color="OKGREEN")
     return
 
 
@@ -1181,8 +1196,18 @@ def _create_batomspy(parameters):
             conda_prefix=conda_vars["CONDA_PREFIX"].as_posix(),
         )
         fd.write(content)
-        os.chmod(script_path, 0o755)
-        cprint(f"batomspy script written to {script_path}", color="OKGREEN")
+    os.chmod(script_path, 0o755)
+    cprint(f"batomspy script written to {script_path}", color="OKGREEN")
+
+    # Make a test
+    with tempfile.NamedTemporaryFile(suffix=".py", delete=False) as tmp_py:
+        tmp_py = Path(tmp_py.name)
+        with open(tmp_py, "w") as fd:
+            fd.write(BATOMSPY_TEST)
+        os.chmod(tmp_py, 0o755)
+    _run_process([tmp_py], capture_output=True)
+    cprint(f"Shebang support for batomspy is now activated",
+           color="OKGREEN")
     return
 
 
@@ -1233,7 +1258,53 @@ def _install_dependencies(parameters):
     )
     return
 
+def _setup_startup_and_preferences(parameters):
+    """Setup blender startup and preferences
+    """
+    def _blender_set_startup(blender_bin):
+        """Use set default startup of batoms"""
+        _run_blender_multiline_expr(blender_bin, BLENDERPY_SETTING_STARTUP)
+        return
 
+
+    def _blender_set_preferences(blender_bin):
+        """Use set default preferences of batoms"""
+        _run_blender_multiline_expr(blender_bin, BLENDERPY_SETTING_PREFERENCES)
+        return
+
+    if parameters["use_startup"]:
+        _blender_set_startup(blender_bin)
+    if parameters["use_preferences"]:
+        _blender_set_preferences(blender_bin)
+    return
+
+
+def _print_success_install(parameters):
+    """Print message after installation
+    """
+    print(parameters)
+    conda_vars = parameters["conda_vars"]
+    env_pref = conda_vars["CONDA_PREFIX"]
+    blender_bin = parameters["blender_bin"]
+    base_msg = ("beautiful-atoms and its dependencies have been successfully installed in your Blender distribution.\n"
+            "If you want to add additional python packages, activate the conda environment first:\n"
+            "\n"
+            f"$ conda activate --prefix {env_pref.as_posix()}\n"
+            "\n"
+            "And use conda or pip for the installation.")
+    blender_alias_msg = ("\n\n"
+                         f"You can now use the alias `blender` for {blender_bin.as_posix()} when the conda environment is activated."
+                         )
+    batomspy_msg = ("\n\n"
+                    f"You can now use `batomspy` in the shebang line of python scripts. For more details please check beautful-atoms' documentation.")
+    if parameters["os_name"] != "windows":
+        msg = base_msg + blender_alias_msg + batomspy_msg
+    else:
+        msg = base_msg
+    msg += "\n\nHappy coding!"
+    cprint(msg, color="OKGREEN")
+    return
+ 
 def _sanitize_parameters(parameters):
     """Clean up parameters for the installer / uninstaller"""
     parameters["blender_root"] = Path(parameters["blender_root"])
@@ -1259,12 +1330,17 @@ def install(parameters):
     _replace_blender_binary(parameters)
     _restore_factory_python(parameters)
     _move_factory_python(parameters)
+    _link_conda_env(parameters)
     # TODO: condition about generate env file?
     # TODO: finish the conda part in between
     _install_dependencies(parameters)
     _install_plugin(parameters)
+    _setup_startup_and_preferences(parameters)
+    _blender_enable_plugin(parameters)
+    _blender_test_plugin(parameters)
     _create_blender_alias(parameters)
     _create_batomspy(parameters)
+    _print_success_install(parameters)
     return
 
 
@@ -1272,6 +1348,13 @@ def uninstall(parameters):
     """Remove the plugin from target_directory and restore"""
     parameters = parameters.copy()
     _sanitize_parameters(parameters)
+    _uninstall_plugin(parameters)
+    _uninstall_dependencies(parameters)
+    _remove_blender_alias(parameters)
+    _remove_batomspy(parameters)
+    _restore_factory_python(parameters)
+    _restore_blender_binary(parameters)
+    return
 
 
 def _old_install(parameters):
@@ -1525,10 +1608,7 @@ def _old_install(parameters):
     _blender_test_plugin(parameters)
 
     # TODO: embed condition in function
-    if parameters["use_startup"]:
-        _blender_set_startup(blender_bin)
-    if parameters["use_preferences"]:
-        _blender_set_preferences(blender_bin)
+
 
     # Add the batomspy script (for unix systems only)
     if parameters["os_name"] != "windows":
@@ -1547,14 +1627,6 @@ def _old_install(parameters):
     else:
         cprint("batoms script currently ignored in windows", color="WARNING")
 
-    if parameters["os_name"] != "windows":
-        with tempfile.NamedTemporaryFile(suffix=".py", delete=False) as tmp_py:
-            tmp_py = Path(tmp_py.name)
-            with open(tmp_py, "w") as fd:
-                fd.write(BATOMSPY_TEST)
-            os.chmod(tmp_py, 0o755)
-        _run_process([tmp_py], capture_output=True)
-        cprint(f"Shebang support for batomspy is now activated", color="OKGREEN")
 
     cprint(
         (
@@ -1699,16 +1771,7 @@ def check_python_conflict():
         return
 
 
-def _blender_set_startup(blender_bin):
-    """Use set default startup of batoms"""
-    _run_blender_multiline_expr(blender_bin, BLENDERPY_SETTING_STARTUP)
-    return
 
-
-def _blender_set_preferences(blender_bin):
-    """Use set default preferences of batoms"""
-    _run_blender_multiline_expr(blender_bin, BLENDERPY_SETTING_PREFERENCES)
-    return
 
 
 def main():

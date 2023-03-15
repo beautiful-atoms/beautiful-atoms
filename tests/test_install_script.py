@@ -20,10 +20,6 @@ def test_empty_dir():
     with pytest.raises(FileNotFoundError):
         _is_empty_dir(tmpdir1)
         _is_empty_dir(tmpdir2)
-
-# def test_git_process(monkeypatch):
-#     import install
-#     from install import _gitclone, _gitcheckout
     
 
 def test_default_location_linux(fs):
@@ -203,5 +199,9 @@ def test_binary_file(fs):
     assert _is_binary_file("test_bin")
 
 
-
-    
+def test_conda_name_recognition():
+    from install import _is_conda_name_abbrev
+    assert _is_conda_name_abbrev("base")
+    assert _is_conda_name_abbrev("my-test")
+    assert not _is_conda_name_abbrev("./local-env")
+    assert not _is_conda_name_abbrev("C:\\local-env")
