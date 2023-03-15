@@ -166,22 +166,22 @@ BLENDER_REPLACE_SH = """#!/bin/sh
 BF_DIST_BIN=$(dirname "$0")
 BF_PROGRAM="blender.origin"
 
-LD_LIBRARY_PATH={dyn_lib_path}:${LD_LIBRARY_PATH}
+LD_LIBRARY_PATH={dyn_lib_path}:${{LD_LIBRARY_PATH}}
 
 if [ -n "$LD_LIBRARYN32_PATH" ]; then
-    LD_LIBRARYN32_PATH={dyn_lib_path}:${LD_LIBRARYN32_PATH}
+    LD_LIBRARYN32_PATH={dyn_lib_path}:${{LD_LIBRARYN32_PATH}}
 fi
 if [ -n "$LD_LIBRARYN64_PATH" ]; then
-    LD_LIBRARYN64_PATH={dyn_lib_path}:${LD_LIBRARYN64_PATH}
+    LD_LIBRARYN64_PATH={dyn_lib_path}:${{LD_LIBRARYN64_PATH}}
 fi
 if [ -n "$LD_LIBRARY_PATH_64" ]; then
-    LD_LIBRARY_PATH_64={dyn_lib_path}:${LD_LIBRARY_PATH_64}
+    LD_LIBRARY_PATH_64={dyn_lib_path}:${{LD_LIBRARY_PATH_64}}
 fi
 
 
 export LD_LIBRARY_PATH LD_LIBRARYN32_PATH LD_LIBRARYN64_PATH LD_LIBRARY_PATH_64 LD_PRELOAD
 
-exec "$BF_DIST_BIN/$BF_PROGRAM" ${1+"$@"}
+exec "$BF_DIST_BIN/$BF_PROGRAM" ${{1+"$@"}}
 """
 
 # A blender wrapper to be inserted into the conda bin dir
@@ -399,7 +399,7 @@ def _get_blender_bin(os_name, blender_bundle_root):
     blender_bundle_root contains the distribution bundle
     and has the pattern <blender_root>/<version>/
     """
-    blender_bundle_root = Path(blender_bundle_root)
+    blender_bundle_root = Path(blender_bundle_root).resolve()
     if os_name == "windows":
         blender_bin = blender_bundle_root.parent / "blender.exe"
     elif os_name == "linux":
@@ -424,7 +424,7 @@ def _get_blender_bin(os_name, blender_bundle_root):
         else:
             extra_msg = f"Please refer to instructions at {help_url}"
         raise FileNotFoundError(
-            f"Cannot find blender binary at {blender_bin.as_posix()}!\n{extra_msg}"
+            f"Cannot find blender binary at {blender_bin.resolve().as_posix()}!\n{extra_msg}"
         )
     return blender_bin
 
@@ -1048,17 +1048,21 @@ def _replace_blender_binary(parameters):
     """Replace factory blender binary with a shell script
     that handles LD_LIBRARY_PATH. Only used for linux
     """
+    print(parameters)
     blender_bin = parameters["blender_bin"]
+    conda_vars = parameters["conda_vars"]
+    dyn_lib_path = (parameters["blender_root"] / "lib")
     if parameters["os_name"] == "linux":
         backup_blender_bin = blender_bin.with_name(BLENDER_BACKUP_PATH)
-        if _is_binary(blender_bin):
+        if _is_binary_file(blender_bin):
             shutil.move(blender_bin, backup_blender_bin)
             cprint(f"Move the blender binary to location {backup_blender_bin}", color="HEADER")
         script_path = blender_bin
         with open(script_path, "w") as fd:
             content = BLENDER_REPLACE_SH.format(
                 blender_bin=backup_blender_bin.as_posix(),
-                conda_prefix=conda_vars["CONDA_PREFIX"],
+                conda_prefix=conda_vars["CONDA_PREFIX"].as_posix(),
+                dyn_lib_path=dyn_lib_path.as_posix()
             )
             fd.write(content)
         os.chmod(script_path, 0o755)
@@ -1076,16 +1080,17 @@ def _restore_blender_binary(parameters):
         return
     blender_bin = parameters["blender_bin"]
     backup_blender_bin = blender_bin.with_name(BLENDER_BACKUP_PATH)
-    if _is_binary(blender_bin):
-        if _is_binary(backup_blender_bin):
+    if backup_blender_bin.exists():
+        if not _is_binary_file(backup_blender_bin):
+            raise RuntimeError(f"{backup_blender_bin} exists but is not a binary file!")
+        if _is_binary_file(blender_bin):
             raise RuntimeError(f"Both {blender_bin} and {backup_blender_bin} exist. There is something wrong with your installation!")
-        else:
-            return
-    
-    os.remove(blender_bin)
-    shutil.move(backup_blender_bin, blender_bin)
-    cprint(f"Restored the blender binary location {backup_blender_bin}",
-           color="HEADER")
+        os.remove(blender_bin)
+        shutil.move(backup_blender_bin, blender_bin)
+        cprint(f"Restored the blender binary location {backup_blender_bin}",
+               color="HEADER")
+    if not _is_binary_file(blender_bin):
+        raise RuntimeError(f"{blender_bin} is corrupted!")
     return
 
 def _create_blender_alias(parameters):
@@ -1094,7 +1099,7 @@ def _create_blender_alias(parameters):
     if parameters["os_name"] == "windows":
         cprint("blender alias currently ignored in windows", color="HEADER")
         return
-    
+    blender_bin = parameters["blender_bin"]
     conda_vars = parameters["conda_vars"]
     bindir = _find_conda_bin_path(
             env_name=parameters["custom_conda_env"], conda_vars=conda_vars)
@@ -1102,7 +1107,7 @@ def _create_blender_alias(parameters):
     with open(script_path, "w") as fd:
         content = BLENDER_ALIAS_SH.format(
             blender_bin=blender_bin.as_posix(),
-            conda_prefix=conda_vars["CONDA_PREFIX"],
+            conda_prefix=conda_vars["CONDA_PREFIX"].as_posix(),
             )
         fd.write(content)
         os.chmod(script_path, 0o755)
@@ -1127,7 +1132,7 @@ def _create_batomspy(parameters):
     if parameters["os_name"] == "windows":
         cprint("batoms script currently ignored in windows", color="HEADER")
         return
-    
+    blender_bin = parameters["blender_bin"]
     conda_vars = parameters["conda_vars"]
     bindir = _find_conda_bin_path(
             env_name=parameters["custom_conda_env"], conda_vars=conda_vars)
@@ -1135,7 +1140,7 @@ def _create_batomspy(parameters):
     with open(script_path, "w") as fd:
         content = BATOMSPY_SH.format(
             blender_bin=blender_bin.as_posix(),
-            conda_prefix=conda_vars["CONDA_PREFIX"],
+            conda_prefix=conda_vars["CONDA_PREFIX"].as_posix(),
             )
         fd.write(content)
         os.chmod(script_path, 0o755)
@@ -1171,15 +1176,32 @@ def _sanitize_parameters(parameters):
     parameters["factory_python_target"] = parameters["blender_root"] / PY_BACKUP_PATH
     parameters["conda_vars"] = _get_conda_variables()
     
-    
-    
-    
-    
 
 
 def install(parameters):
     """Link current conda environment to blender's python root
     Copy batoms plugin under repo_path to plugin directory
+    """
+    parameters = parameters.copy()
+    _sanitize_parameters(parameters)
+    _restore_blender_binary(parameters)
+    _replace_blender_binary(parameters)
+    
+    
+
+def _old_uninstall(parameters):
+    """Remove the plugin from target_directory and restore"""
+    parameters = parameters.copy()
+    _sanitize_parameters(parameters)
+    
+    
+
+
+def _old_install(parameters):
+    """Link current conda environment to blender's python root
+    Copy batoms plugin under repo_path to plugin directory
+
+    DEPRECATED
     """
     parameters = parameters.copy()
     _sanitize_parameters(parameters)
@@ -1471,7 +1493,7 @@ def install(parameters):
     return
 
 
-def uninstall(parameters):
+def _olduninstall(parameters):
     """Remove the plugin from target_directory and restore"""
     parameters = parameters.copy()
     blender_root = Path(parameters["blender_root"])
@@ -1778,7 +1800,7 @@ def main():
         return
 
     # Cannot install without conda if pip install is enabled
-    if (not ()) and (args.use_pip is False):
+    if (not _is_conda()) and (args.use_pip is False):
         cprint(
             "The installation script should be run inside a conda environment. Abort.",
             color="FAIL",
