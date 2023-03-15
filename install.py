@@ -16,14 +16,11 @@ python install.py --help
 """
 import os
 import re
-import stat
 import shutil
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from threading import local
-from distutils import command
 from os.path import expanduser, expandvars
 
 try:
@@ -134,14 +131,14 @@ except ImportError:
     print('batoms cleanly uninstalled.')
 """
 
-BLENDERPY_SETTING_PREFERENCES = f"""
+BLENDERPY_SETTING_PREFERENCES = """
 print('start setting preferences')
 import bpy
 bpy.ops.batoms.use_batoms_preference()
 print('Successfully setting and preference.')
 """
 
-BLENDERPY_SETTING_STARTUP = f"""
+BLENDERPY_SETTING_STARTUP = """
 print('start setting startup')
 import bpy
 bpy.ops.batoms.use_batoms_startup()
@@ -231,11 +228,10 @@ fi
 # The directory to move factory python from conda
 
 
-
-
 ################################################################################
-# Section 3.1: General Utils 
+# Section 3.1: General Utils
 ################################################################################
+
 
 def cprint(content, color=None, **kwargs):
     """Color print wrapper"""
@@ -265,6 +261,9 @@ def _run_process(commands, shell=False, print_cmd=True, cwd=".", capture_output=
     """Wrap around subprocess.run
     Returns the process object
     """
+    for i in range(len(commands)):
+        if isinstance(commands[i], Path):
+            commands[i] = commands[i].as_posix()
     full_cmd = " ".join(commands)
     if print_cmd:
         cprint(" ".join(commands))
@@ -281,13 +280,15 @@ def _run_process(commands, shell=False, print_cmd=True, cwd=".", capture_output=
     else:
         raise RuntimeError(f"Running {full_cmd} returned error code {proc.returncode}")
 
-def _run_blender_multiline_expr(blender_bin, expr,
-                                return_process=True, **kwargs):
+
+def _run_blender_multiline_expr(blender_bin, expr, return_process=True, **kwargs):
     """Use blender's interpreter to run multiline
     python expressions.
     """
     blender_bin = str(blender_bin)
     tmp_del = False if _get_os_name() in ["windows"] else True
+    # The multiline expression must capture
+    kwargs["capture_output"] = True
     with tempfile.NamedTemporaryFile(suffix=".py", delete=tmp_del) as py_file:
         with open(py_file.name, "w") as fd:
             fd.writelines(expr)
@@ -304,6 +305,7 @@ def _run_blender_multiline_expr(blender_bin, expr,
         return proc
     else:
         return None
+
 
 def _gitclone(workdir=".", version="main", url=REPO_GIT):
     """Make a git clone to the directory
@@ -338,6 +340,7 @@ def _gitcheckout(workdir=".", version="main"):
         cprint(f"Checkout version {version}", color="OKGREEN")
     except Exception as e:
         raise RuntimeError(f"Failed to checkout version {version}") from e
+
 
 ################################################################################
 # Section 3.2: Tools by parsing blender's commandline output
@@ -432,7 +435,7 @@ def _get_blender_bin(os_name, blender_bundle_root):
 def _get_blender_py(blender_bin):
     """Get the blender executable path from current blender binary"""
     blender_bin = str(blender_bin)
-    expr =  "import sys; print('Python binary: ', sys.executable)"
+    expr = "import sys; print('Python binary: ', sys.executable)"
     proc = _run_blender_multiline_expr(blender_bin, expr)
     # proc = _run_process(commands, shell=False, capture_output=True)
     output = proc.stdout.decode("utf8")
@@ -443,16 +446,13 @@ def _get_blender_py(blender_bin):
     return py_path
 
 
-
-
-
 def _get_factory_versions(blender_bin):
     """Get the blender version, bundled python and numpy versions
     This is only to be run BEFORE symlinking
     """
     blender_bin = str(blender_bin)
     # First get blender python version
-    commands = [blender_bin, "-b", "--python-expr", BLENDER_CHK_VERSION]
+    # commands = [blender_bin, "-b", "--python-expr", BLENDER_CHK_VERSION]
     # proc = _run_process(commands, shell=False, capture_output=True)
     proc = _run_blender_multiline_expr(blender_bin, BLENDER_CHK_VERSION)
     output = proc.stdout.decode("utf8")
@@ -473,10 +473,6 @@ def _get_blender_version(blender_bin):
     pat_bl_version = r"Blender\s+(\d+\.\d+\.\d+)"
     bl_version = next(re.finditer(pat_bl_version, output))[1]
     return bl_version
-
-
-
-
 
 
 def _blender_enable_plugin(blender_bin):
@@ -505,6 +501,7 @@ def _blender_test_uninstall(parameters):
     _run_blender_multiline_expr(blender_bin, BLENDERPY_TEST_UNINSTALL)
     return
 
+
 ################################################################################
 # Section 3.3: File system tools
 ################################################################################
@@ -526,6 +523,7 @@ def _is_binary_file(filename):
                 return True
     return False
 
+
 def _is_empty_dir(p):
     """Determin if path has no child dirs"""
     p = Path(p)
@@ -538,6 +536,7 @@ def _is_empty_dir(p):
         stat = True
     return stat
 
+
 def _get_os_name():
     """Convient os name function"""
     p_ = sys.platform
@@ -549,7 +548,6 @@ def _get_os_name():
         return "macos"
     else:
         raise NotImplementedError(f"Unsupported platform {p_}")
-
 
 
 def _rename_dir(src, dst):
@@ -591,27 +589,26 @@ def _symlink_dir(src, dst):
     except (OSError, PermissionError) as e:
         raise
 
+
 ################################################################################
 # Section 3.4: Conda tools
 ################################################################################
 
+
 def _get_conda_variables():
-    """Path-objects for conda variables
-    """
+    """Path-objects for conda variables"""
     results = {}
-    for key in (
-        "CONDA_PREFIX",
-        "CONDA_PYTHON_EXE",
-        "CONDA_DEFAULT_ENV",
-        "CONDA_EXE"):
+    for key in ("CONDA_PREFIX", "CONDA_PYTHON_EXE", "CONDA_DEFAULT_ENV", "CONDA_EXE"):
         value = os.environ.get(key, "")
         if value != "":
             value = Path(value).resolve()
         results[key] = value
     return results
 
+
 def _is_conda():
     return "CONDA_PREFIX" in os.environ.keys()
+
 
 def _find_conda_bin_path(env_name, conda_vars):
     """Return the path of binary search directory ($PATH) of the given conda env"""
@@ -649,12 +646,12 @@ def _ensure_mamba(conda_vars):
     Note: if mamba is not avaivable or install to base is not possible, let user use conda instead
     """
     proc = _run_process(
-        [conda_vars["CONDA_EXE"], "list", "-n", "base", "mamba"], capture_output=True
+        [conda_vars["CONDA_EXE"].as_posix(), "list", "-n", "base", "mamba"], capture_output=True
     )
     output = proc.stdout.decode("utf8")
     if "mamba" not in output:
         commands = [
-            conda_vars["CONDA_EXE"],
+            conda_vars["CONDA_EXE"].as_posix(),
             "install",
             "-y",
             "-n",
@@ -675,7 +672,7 @@ def _ensure_mamba(conda_vars):
             raise RuntimeError(msg) from e
     # Get the mamba binary in given env
     output = _run_process(
-        [conda_vars["CONDA_EXE"], "run", "-n", "base", "which", "mamba"],
+        [conda_vars["CONDA_EXE"].as_posix(), "run", "-n", "base", "which", "mamba"],
         capture_output=True,
     ).stdout.decode("utf8")
     if "ERROR" in output:
@@ -790,7 +787,7 @@ def _conda_cache_move(condition, conda_vars, blender_python_root):
     return
 
 
-def _pip_install(blender_py, conda_vars):
+def _pip_install(blender_py):
     """Temporary workaround for installation on windows and blender>=3.1.0
     Try to install as many components as possible. Need specific version tweaks
     Installation order:
@@ -840,7 +837,7 @@ def _pip_install(blender_py, conda_vars):
         "ase>=3.21.0",
         "pymatgen<=2023.3.10",
         "scikit-image",
-        "spglib>=2.0.0"
+        "spglib>=2.0.0",
     ]
     proc = _run_process(commands)
 
@@ -858,8 +855,6 @@ def _pip_install(blender_py, conda_vars):
         )
 
     return
-
-
 
 
 def _pip_uninstall(blender_py, conda_vars):
@@ -899,7 +894,14 @@ def _find_conda_bin_path(env_name, conda_vars):
 
     output = (
         _run_process(
-            [conda_vars["CONDA_EXE"], "run", "-n", env_name, "which", "python"],
+            [
+                conda_vars["CONDA_EXE"].as_posix(),
+                "run",
+                "-n",
+                env_name,
+                "which",
+                "python",
+            ],
             capture_output=True,
         )
         .stdout.decode("utf8")
@@ -913,16 +915,17 @@ def _find_conda_bin_path(env_name, conda_vars):
 # Section 4.1: operations on blender file structure
 ################################################################################
 
+
 def _restore_factory_python(parameters):
     """Restore the factory python directory and remove symlinks
     Logic:
-    1) 
+    1)
     """
     # source: <root>/python
     # target: <root>/_old_python
     factory_python_source = parameters["factory_python_source"]
     factory_python_target = parameters["factory_python_target"]
-    
+
     if factory_python_target.exists():
         # _rename_dir will remove directory if it's empty or a symlink
         try:
@@ -943,10 +946,13 @@ def _restore_factory_python(parameters):
         _run_process([str(old_py), "-V"])
     except RuntimeError as e:
         raise RuntimeError(
-                f"Found factory python at {old_py.as_posix()} "
-                "but it's not working. Your installation is corrupted."
-            ) from e
-    cprint(f"Restored {factory_python_target.as_posix()} to {factory_python_source.as_posix()}",color="OKGREEN")
+            f"Found factory python at {old_py.as_posix()} "
+            "but it's not working. Your installation is corrupted."
+        ) from e
+    cprint(
+        f"Restored {factory_python_target.as_posix()} to {factory_python_source.as_posix()}",
+        color="OKGREEN",
+    )
     return
 
 
@@ -957,18 +963,20 @@ def _move_factory_python(parameters):
     # blender_root = Path(parameters["blender_root"])
     factory_python_source = parameters["factory_python_source"]
     factory_python_target = parameters["factory_python_target"]
-    
+
     try:
         _rename_dir(factory_python_source, factory_python_target)
     except Exception as e:
         raise RuntimeError("Cannot move backup factory python") from e
     cprint(
-        f"Renamed {factory_python_source.as_posix()} to {factory_python_target.as_posix()}", color="OKGREEN")
+        f"Renamed {factory_python_source.as_posix()} to {factory_python_target.as_posix()}",
+        color="OKGREEN",
+    )
     return
 
+
 def _link_conda_env(parameters):
-    """Make a symlink from conda environment --> <root>/python
-    """
+    """Make a symlink from conda environment --> <root>/python"""
     # blender_root = Path(parameters["blender_root"])
     factory_python_source = parameters["factory_python_source"]
     factory_python_target = parameters["factory_python_target"]
@@ -981,8 +989,9 @@ def _link_conda_env(parameters):
     cprint(
         f"Created symlink {conda_prefix} --> {factory_python_source.as_posix()}",
         color="OKGREEN",
-        )
+    )
     return
+
 
 def _install_plugin(parameters):
     """Install plugin into addons_contrib folder
@@ -996,9 +1005,6 @@ def _install_plugin(parameters):
             color="OKGREEN",
         )
         return
-    # Make it error if both develop and version are provided
-    # if parameters["develop"] and parameters["plugin_version"]:
-        # raise 
     if plugin_path_target.is_dir():
         if not _is_empty_dir(plugin_path_target):
             cprint(
@@ -1029,7 +1035,7 @@ def _install_plugin(parameters):
         ).resolve()
         # develop option should be disabled
         parameters["develop"] = False
-    
+
     if parameters["develop"]:
         _symlink_dir(plugin_path_source, plugin_path_target)
         cprint("Installation in development mode!", color="HEADER")
@@ -1045,6 +1051,7 @@ def _install_plugin(parameters):
 
     return
 
+
 def _replace_blender_binary(parameters):
     """Replace factory blender binary with a shell script
     that handles LD_LIBRARY_PATH. Only used for linux
@@ -1052,18 +1059,21 @@ def _replace_blender_binary(parameters):
     print(parameters)
     blender_bin = parameters["blender_bin"]
     conda_vars = parameters["conda_vars"]
-    dyn_lib_path = (parameters["blender_root"].resolve() / "lib")
+    dyn_lib_path = parameters["blender_root"].resolve() / "lib"
     if parameters["os_name"] == "linux":
         backup_blender_bin = blender_bin.with_name(BLENDER_BACKUP_PATH)
         if _is_binary_file(blender_bin):
             shutil.move(blender_bin, backup_blender_bin)
-            cprint(f"Move the blender binary to location {backup_blender_bin}", color="HEADER")
+            cprint(
+                f"Move the blender binary to location {backup_blender_bin}",
+                color="HEADER",
+            )
         script_path = blender_bin
         with open(script_path, "w") as fd:
             content = BLENDER_REPLACE_SH.format(
                 blender_bin=backup_blender_bin.as_posix(),
                 conda_prefix=conda_vars["CONDA_PREFIX"].as_posix(),
-                dyn_lib_path=dyn_lib_path.as_posix()
+                dyn_lib_path=dyn_lib_path.as_posix(),
             )
             fd.write(content)
         os.chmod(script_path, 0o755)
@@ -1074,9 +1084,9 @@ def _replace_blender_binary(parameters):
         )
     return
 
+
 def _restore_blender_binary(parameters):
-    """Remove the script alias of blender binary
-    """
+    """Remove the script alias of blender binary"""
     if parameters["os_name"] != "linux":
         return
     blender_bin = parameters["blender_bin"]
@@ -1085,75 +1095,84 @@ def _restore_blender_binary(parameters):
         if not _is_binary_file(backup_blender_bin):
             raise RuntimeError(f"{backup_blender_bin} exists but is not a binary file!")
         if _is_binary_file(blender_bin):
-            raise RuntimeError(f"Both {blender_bin} and {backup_blender_bin} exist. There is something wrong with your installation!")
+            raise RuntimeError(
+                f"Both {blender_bin} and {backup_blender_bin} exist. There is something wrong with your installation!"
+            )
         os.remove(blender_bin)
         shutil.move(backup_blender_bin, blender_bin)
-        cprint(f"Restored the blender binary location {backup_blender_bin}",
-               color="HEADER")
+        cprint(
+            f"Restored the blender binary location {backup_blender_bin}", color="HEADER"
+        )
     if not _is_binary_file(blender_bin):
         raise RuntimeError(f"{blender_bin} is corrupted!")
     return
 
+
 def _create_blender_alias(parameters):
-    """Install the alias `blender` script in current conda env.
-    """
+    """Install the alias `blender` script in current conda env."""
     if parameters["os_name"] == "windows":
         cprint("blender alias currently ignored in windows", color="HEADER")
         return
     blender_bin = parameters["blender_bin"]
     conda_vars = parameters["conda_vars"]
     bindir = _find_conda_bin_path(
-            env_name=parameters["custom_conda_env"], conda_vars=conda_vars)
+        env_name=parameters["custom_conda_env"], conda_vars=conda_vars
+    )
     script_path = bindir / "blender"
     with open(script_path, "w") as fd:
         content = BLENDER_ALIAS_SH.format(
             blender_bin=blender_bin.as_posix(),
             conda_prefix=conda_vars["CONDA_PREFIX"].as_posix(),
-            )
+        )
         fd.write(content)
         os.chmod(script_path, 0o755)
         cprint(f"Alias for blender written to {script_path}", color="OKGREEN")
     return
+
 
 def _remove_blender_alias(parameters):
     if parameters["os_name"] == "windows":
         return
     conda_vars = parameters["conda_vars"]
     bindir = _find_conda_bin_path(
-            env_name=parameters["custom_conda_env"], conda_vars=conda_vars)
+        env_name=parameters["custom_conda_env"], conda_vars=conda_vars
+    )
     script_path = bindir / "blender"
     if script_path.is_file():
         os.remove(script_path)
         cprint(f"Removed blender alias from {script_path}", color="OKGREEN")
     return
 
+
 def _create_batomspy(parameters):
-    """Install the entrypoint `batomspy` into conda environment's bindir
-    """
+    """Install the entrypoint `batomspy` into conda environment's bindir"""
     if parameters["os_name"] == "windows":
         cprint("batoms script currently ignored in windows", color="HEADER")
         return
     blender_bin = parameters["blender_bin"]
     conda_vars = parameters["conda_vars"]
     bindir = _find_conda_bin_path(
-            env_name=parameters["custom_conda_env"], conda_vars=conda_vars)
+        env_name=parameters["custom_conda_env"], conda_vars=conda_vars
+    )
     script_path = bindir / "batomspy"
     with open(script_path, "w") as fd:
         content = BATOMSPY_SH.format(
             blender_bin=blender_bin.as_posix(),
             conda_prefix=conda_vars["CONDA_PREFIX"].as_posix(),
-            )
+        )
         fd.write(content)
         os.chmod(script_path, 0o755)
         cprint(f"batomspy script written to {script_path}", color="OKGREEN")
     return
+
 
 def _remove_batomspy(parameters):
     if parameters["os_name"] == "windows":
         return
     conda_vars = parameters["conda_vars"]
     bindir = _find_conda_bin_path(
-            env_name=parameters["custom_conda_env"], conda_vars=conda_vars)
+        env_name=parameters["custom_conda_env"], conda_vars=conda_vars
+    )
     script_path = bindir / "batomspy"
     if script_path.is_file():
         os.remove(script_path)
@@ -1161,12 +1180,42 @@ def _remove_batomspy(parameters):
     return
 
 
+def _install_dependencies(parameters):
+    """Install dependencies from conda or pip"""
+    blender_bin = parameters["blender_bin"].as_posix()
+    blender_version = _get_blender_version(blender_bin)
+    blender_py = _get_blender_py(blender_bin)
+    factory_py_ver, factory_numpy_ver = _get_factory_versions(blender_bin)
+    # conda_vars = parameters["conda_vars"]
+
+    if parameters["generate_env_file"] is not None:
+        env_file_name = Path(parameters["generate_env_file"])
+        with open(env_file_name, "w") as fd:
+            fd.writelines(_replace_conda_env(factory_py_ver, factory_numpy_ver))
+        cprint(
+            f"Conda env exported to {env_file_name.as_posix()}. Exit.", color="OKGREEN"
+        )
+        sys.exit(0)
+    if parameters["use_pip"]:
+        _pip_install(blender_py)
+        return
+    # Rest of the installation will use conda
+    if parameters["no_mamba"]:
+        backend = "conda"
+    else:
+        backend = "mamba"
+    _conda_update(
+        parameters["conda_env_file"],
+        parameters["conda_vars"],
+        python_version=factory_py_ver,
+        numpy_version=factory_numpy_ver,
+        backend=backend,
+    )
+    return
 
 
-    
 def _sanitize_parameters(parameters):
-    """Clean up parameters for the installer / uninstaller
-    """
+    """Clean up parameters for the installer / uninstaller"""
     parameters["blender_root"] = Path(parameters["blender_root"])
     parameters["blender_bin"] = Path(parameters["blender_bin"])
     parameters["repo_path"] = Path(parameters["repo_path"])
@@ -1176,7 +1225,6 @@ def _sanitize_parameters(parameters):
     parameters["factory_python_source"] = parameters["blender_root"] / PY_PATH
     parameters["factory_python_target"] = parameters["blender_root"] / PY_BACKUP_PATH
     parameters["conda_vars"] = _get_conda_variables()
-    
 
 
 def install(parameters):
@@ -1193,17 +1241,17 @@ def install(parameters):
     _move_factory_python(parameters)
     # TODO: condition about generate env file?
     # TODO: finish the conda part in between
+    _install_dependencies(parameters)
     _install_plugin(parameters)
-    
-    
-    
+    _create_blender_alias(parameters)
+    _create_batomspy(parameters)
+    return
+
 
 def uninstall(parameters):
     """Remove the plugin from target_directory and restore"""
     parameters = parameters.copy()
     _sanitize_parameters(parameters)
-    
-    
 
 
 def _old_install(parameters):
