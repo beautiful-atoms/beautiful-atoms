@@ -319,11 +319,11 @@ def _gitclone(workdir=".", version="main", url=REPO_GIT):
         "git",
         "clone",
         f"{url}",
-        clone_into.as_posix(),
+        clone_into,
     ]
     _run_process(commands)
     cprint(f"Cloned repo into directory {clone_into.as_posix()}", color="OKGREEN")
-    _gitcheckout(workdir=clone_into.as_posix(), version=version)
+    _gitcheckout(workdir=clone_into, version=version)
     return clone_into
 
 
@@ -600,7 +600,7 @@ def _get_conda_variables():
     results = {}
     for key in ("CONDA_PREFIX", "CONDA_PYTHON_EXE", "CONDA_DEFAULT_ENV", "CONDA_EXE"):
         value = os.environ.get(key, "")
-        if value != "":
+        if (value != "") and (key != "CONDA_DEFAULT_ENV"):
             value = Path(value).resolve()
         results[key] = value
     return results
@@ -609,15 +609,28 @@ def _get_conda_variables():
 def _is_conda():
     return "CONDA_PREFIX" in os.environ.keys()
 
+def _is_conda_name_abbrev(env_name):
+    """Tell if the env_name is a valid conda-env name.
+    If not, the env_name may be a full path to the env
+    """
+    return any([c in env_name for c in (" ", "/", ":", "#")])
+
 
 def _find_conda_bin_path(env_name, conda_vars):
     """Return the path of binary search directory ($PATH) of the given conda env"""
     if env_name is None:
         env_name = conda_vars["CONDA_DEFAULT_ENV"]
 
+    # Distinguish if env_name is a prefix or name
+    if _is_conda_name_abbrev(env_name):
+        commands = [conda_vars["CONDA_EXE"], "run", env_name, "which", "python"],
+    else:
+        commands = [conda_vars["CONDA_EXE"], "run", "-n", env_name, "which", "python"],
+
+    
     output = (
         _run_process(
-            [conda_vars["CONDA_EXE"], "run", "-n", env_name, "which", "python"],
+            commands,
             capture_output=True,
         )
         .stdout.decode("utf8")
@@ -646,12 +659,12 @@ def _ensure_mamba(conda_vars):
     Note: if mamba is not avaivable or install to base is not possible, let user use conda instead
     """
     proc = _run_process(
-        [conda_vars["CONDA_EXE"].as_posix(), "list", "-n", "base", "mamba"], capture_output=True
+        [conda_vars["CONDA_EXE"], "list", "-n", "base", "mamba"], capture_output=True
     )
     output = proc.stdout.decode("utf8")
     if "mamba" not in output:
         commands = [
-            conda_vars["CONDA_EXE"].as_posix(),
+            conda_vars["CONDA_EXE"],
             "install",
             "-y",
             "-n",
@@ -720,17 +733,24 @@ def _conda_update(
     # Install from the env.yaml
     cprint("Updating conda environment")
     if backend == "mamba":
-        mamba_bin = _ensure_mamba(conda_vars)
-        # This is dangerous running outside conda env. Consider check the base first
-        commands_prefix = [
-            mamba_bin,
-            "env",
-            "update",
-            "-n",
-            env_name,
-        ]
+        conda_bin = _ensure_mamba(conda_vars)
     else:
-        commands_prefix = [conda_vars["CONDA_EXE"], "env", "update", "-n", env_name]
+        conda_bin = conda_vars["CONDA_EXE"]
+
+    if _is_conda_name_abbrev(env_name):
+        commands_prefix = [conda_bin, "env", "update", "-n", env_name]
+    else:
+        commands_prefix = [conda_bin, "env", "update", "-p", env_name]
+    #     # This is dangerous running outside conda env. Consider check the base first
+    # #     commands_prefix = [
+    # #         mamba_bin,
+    # #         "env",
+    # #         "update",
+    # #         "-n",
+    # #         env_name,
+    # #     ]
+    # # else:
+    #     commands_prefix = [conda_vars["CONDA_EXE"], "env", "update", "-n", env_name]
 
     # NamedTemporaryFile can only work on Windows if delete=False
     # see https://stackoverflow.com/questions/55081022/python-tempfile-with-a-context-manager-on-windows-10-leads-to-permissionerror
@@ -1182,7 +1202,7 @@ def _remove_batomspy(parameters):
 
 def _install_dependencies(parameters):
     """Install dependencies from conda or pip"""
-    blender_bin = parameters["blender_bin"].as_posix()
+    blender_bin = parameters["blender_bin"]
     blender_version = _get_blender_version(blender_bin)
     blender_py = _get_blender_py(blender_bin)
     factory_py_ver, factory_numpy_ver = _get_factory_versions(blender_bin)
@@ -1533,7 +1553,7 @@ def _old_install(parameters):
             with open(tmp_py, "w") as fd:
                 fd.write(BATOMSPY_TEST)
             os.chmod(tmp_py, 0o755)
-        _run_process([tmp_py.as_posix()], capture_output=True)
+        _run_process([tmp_py], capture_output=True)
         cprint(f"Shebang support for batomspy is now activated", color="OKGREEN")
 
     cprint(
