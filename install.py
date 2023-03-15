@@ -288,7 +288,8 @@ def _run_blender_multiline_expr(blender_bin, expr, return_process=True, **kwargs
     blender_bin = str(blender_bin)
     tmp_del = False if _get_os_name() in ["windows"] else True
     # The multiline expression must capture
-    kwargs["capture_output"] = True
+    if "capture_output" not in kwargs:
+        kwargs["capture_output"] = True
     with tempfile.NamedTemporaryFile(suffix=".py", delete=tmp_del) as py_file:
         with open(py_file.name, "w") as fd:
             fd.writelines(expr)
@@ -478,14 +479,19 @@ def _get_blender_version(blender_bin):
 def _blender_enable_plugin(parameters):
     """Use blender's internal libary to enable plugin (and save as user script)"""
     blender_bin = parameters["blender_bin"]
-    _run_blender_multiline_expr(blender_bin, BLENDERPY_ENABLE_PLUGIN)
+    _run_blender_multiline_expr(blender_bin, BLENDERPY_ENABLE_PLUGIN,
+                                # capture_output=False
+                                )
     return
 
 
 def _blender_disable_plugin(parameters):
     """Use blender's internal libary to disable plugin (and save as user script)"""
     blender_bin = parameters["blender_bin"]
-    _run_blender_multiline_expr(blender_bin, BLENDERPY_DISABLE_PLUGIN)
+    _run_blender_multiline_expr(blender_bin, BLENDERPY_DISABLE_PLUGIN,
+                                # capture_output=False,
+                                )
+    print("finish output")
     return
 
 
@@ -494,13 +500,17 @@ def _blender_test_plugin(parameters):
         cprint("Skip plugin test.", color="WARNING")
         return
     blender_bin = str(parameters["blender_bin"])
-    _run_blender_multiline_expr(blender_bin, BLENDERPY_TEST_PLUGIN)
+    _run_blender_multiline_expr(blender_bin, BLENDERPY_TEST_PLUGIN,
+                                # capture_output=False
+                                )
     return
 
 
 def _blender_test_uninstall(parameters):
     blender_bin = str(parameters["blender_bin"])
-    _run_blender_multiline_expr(blender_bin, BLENDERPY_TEST_UNINSTALL)
+    _run_blender_multiline_expr(blender_bin, BLENDERPY_TEST_UNINSTALL,
+                                # capture_output=False
+                                )
     return
 
 
@@ -1075,6 +1085,21 @@ def _install_plugin(parameters):
 
     return
 
+def _uninstall_plugin(parameters):
+    blender_root = Path(parameters["blender_root"])
+    plugin_path_target = blender_root / DEFAULT_PLUGIN_PATH
+    if plugin_path_target.is_symlink():
+        os.unlink(plugin_path_target)
+    elif plugin_path_target.is_dir():
+        shutil.rmtree(plugin_path_target)
+    else:
+        cprint(
+            f"Plugin directory {plugin_path_target.as_posix()} does not exist. Ignore.",
+            color="WARNING",
+        )
+    cprint("beautiful-atoms has been removed from blender's addons_contrib folder.", color="OKGREEN")
+    return
+
 
 def _replace_blender_binary(parameters):
     """Replace factory blender binary with a shell script
@@ -1258,6 +1283,70 @@ def _install_dependencies(parameters):
     )
     return
 
+def _uninstall_dependencies(parameters):
+       # _old_python not found, ignore
+    if not parameters["use_pip"]:
+        cprint("Dependencies in conda environment will not be removed.", color="HEADER")
+        return
+
+    if factory_python_target.exists():
+        raise RuntimeError(
+            "Uninstall via pip cannot be performed when bundled python moved to another location. Abort"
+        )
+        
+    # 
+    blender_bin = parameters["blender"]
+    blender_py = _get_blender_py(blender_bin)
+    _pip_uninstall(blender_py, conda_vars)
+    cprint("Pip dependencies for beautiful-atoms have been removed", color="OKGREEN")
+    return
+    
+    
+    
+    #     if parameters["use_pip"]:
+    #         cprint(
+    #             "Beautiful-atoms and its dependencies have been successfully uninstalled!",
+    #             color="OKGREEN",
+    #         )
+    #     else:
+    #         cprint(
+    #             f"Backup of factory blender python path {factory_python_target.as_posix()} does not exist. Ignore.",
+    #             color="WARNING",
+    #         )
+    #         cprint(
+    #             "It seems beautiful-atoms has already been uninstalled from your Blender distribution.",
+    #             color="OKGREEN",
+    #         )
+    #     return
+    # else:
+    #     if parameters["use_pip"]:
+    #     if factory_python_source.is_dir():
+    #         if not _is_empty_dir(factory_python_source):
+    #             if factory_python_source.is_symlink():
+    #                 os.unlink(factory_python_source)
+    #             elif factory_python_source.is_dir():
+    #                 cprint(
+    #                     f"Current blender python path is not a symlink.", color="HEADER"
+    #                 )
+    #                 overwrite = (
+    #                     str(input("Overwrite? [y/N]") or "N").lower().startswith("y")
+    #                 )
+    #                 if overwrite:
+    #                     shutil.rmtree(factory_python_source)
+    #                 else:
+    #                     cprint("Ignored.", color="FAIL")
+    #                     return
+    #             else:
+    #                 pass
+    #         else:
+    #             os.rmdir(factory_python_source)
+
+    #     if factory_python_target.is_symlink():
+    #         origin = factory_python_target.readlink()
+    #         os.symlink(origin, factory_python_source)
+    #     else:
+    #         shutil.move(factory_python_target, factory_python_source)
+
 def _setup_startup_and_preferences(parameters):
     """Setup blender startup and preferences
     """
@@ -1304,6 +1393,31 @@ def _print_success_install(parameters):
     msg += "\n\nHappy coding!"
     cprint(msg, color="OKGREEN")
     return
+
+def _print_success_uninstall(parameters):
+    """Print message after installation
+    """
+    print(parameters)
+    conda_vars = parameters["conda_vars"]
+    env_pref = conda_vars["CONDA_PREFIX"]
+    blender_bin = parameters["blender_bin"]
+    base_msg = ("Beautiful-atoms uninstallation finished!")
+    pip_msg = ("All dependencies installed by pip have been removed."
+               )
+    conda_msg = ("Dependencies installed in the conda environment are not removed.\n"
+                 "If you don't need to reuse the conda environment, remove it by:\n"
+                 "\n"
+                 "$ conda deactivate\n"
+                 f"$ conda env remove --prefix {env_pref}\n"
+                 "\n"
+                 )
+    if parameters["use_pip"]:
+        msg = base_msg + pip_msg
+    else:
+        msg = base_msg + conda_msg
+
+    cprint(msg, color="OKGREEN")
+    return 
  
 def _sanitize_parameters(parameters):
     """Clean up parameters for the installer / uninstaller"""
@@ -1348,12 +1462,15 @@ def uninstall(parameters):
     """Remove the plugin from target_directory and restore"""
     parameters = parameters.copy()
     _sanitize_parameters(parameters)
+    _blender_disable_plugin(parameters)
     _uninstall_plugin(parameters)
     _uninstall_dependencies(parameters)
     _remove_blender_alias(parameters)
     _remove_batomspy(parameters)
     _restore_factory_python(parameters)
     _restore_blender_binary(parameters)
+    _blender_test_uninstall(parameters)
+    _print_success_uninstall(parameters)
     return
 
 
