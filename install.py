@@ -563,8 +563,8 @@ def _symlink_dir(src, dst):
     """Make symlink from src to dst.
     If dst is an empty directory or simlink, simply remove and do symlink
     """
-    src = Path(src)
-    dst = Path(dst)
+    src = Path(src).resolve().absolute()
+    dst = Path(dst).resolve().absolute()
     if not src.is_dir():
         raise FileNotFoundError(f"{src} should be an existing directory!")
     if dst.exists():
@@ -1002,8 +1002,40 @@ def _move_factory_python(parameters):
     )
     return
 
+def _link_pip_dir(parameters):
+    """Copy the _old_python folder to _pip_python and link to python source
+    only to be called when use_pip is enabled
+    """
+    if parameters["use_pip"] is False:
+        raise ValueError("Should not use _link_pip_dir when use_pip not enabled")
+    factory_python_source = parameters["factory_python_source"]
+    factory_python_target = parameters["factory_python_target"]
+    pip_python = factory_python_source.with_name("_pip_python")
+    if pip_python.is_dir():
+        cprint(f"Pip python directory {pip_python} already exists", color="OKBLUE")
+    else:
+        shutil.copy(factory_python_target, pip_python)
+        cprint(f"Copy {factory_python_target} -->  {pip_python}", color="OKGREEN")
+    _symlink_dir(pip_python, factory_python_source)
+    cprint(f"Symlink {pip_python} --> {factory_python_source}", color="OKGREEN")
+    return
 
-def _link_conda_env(parameters):
+def _remove_pip_python(parameters):
+    """Copy the _old_python folder to _pip_python and link to python source
+    only to be called when use_pip is enabled
+    """
+    if parameters["use_pip"] is False:
+        return
+    factory_python_source = parameters["factory_python_source"]
+    factory_python_target = parameters["factory_python_target"]
+    pip_python = factory_python_source.with_name("_pip_python")
+    if pip_python.is_dir():
+        shutil.rmtree(pip_python)
+        cprint(f"Pip python directory {pip_python} removed", color="OKBLUE")
+    return
+
+
+def _link_env(parameters):
     """Make a symlink from conda environment --> <root>/python"""
     # blender_root = Path(parameters["blender_root"])
     # if parameters["use_pip"]:
@@ -1013,6 +1045,10 @@ def _link_conda_env(parameters):
     factory_python_target = parameters["factory_python_target"]
     conda_vars = parameters["conda_vars"]
     conda_prefix = conda_vars["CONDA_PREFIX"]
+    if parameters["use_pip"]:
+        cprint("--use-pip option enabled. Ignore conda env.", color="HEADER")
+        _link_pip_dir(parameters)
+        return
     if parameters["dry_run"]:
         cprint(
             (
@@ -1038,6 +1074,7 @@ def _install_plugin(parameters):
     """Install plugin into addons_contrib folder
     If in the develop mode, only symlink but not copy
     """
+    print(parameters)
     plugin_path_source = parameters["plugin_source"]
     plugin_path_target = parameters["plugin_target"]
     if parameters["dry_run"]:
@@ -1082,7 +1119,12 @@ def _install_plugin(parameters):
     # Cases where plugin version should be specified / download from web
     local_plugin_version = parameters["plugin_version"]
     # if the local_plugin_version is not None, download the latest to tmpdir
-    if _is_empty_dir(plugin_path_source) or (not plugin_path_source.is_dir()):
+    if not plugin_path_source.is_dir():
+        need_download = True
+    else:
+        need_download = _is_empty_dir(plugin_path_source)
+             
+    if need_download:
         cprint(
             f"Local repo path {plugin_path_source} does not exist. Run git clone.",
         )
@@ -1105,9 +1147,12 @@ def _install_plugin(parameters):
     else:
         shutil.copytree(plugin_path_source, plugin_path_target)
         cprint(f"Plugin copied to {plugin_path_target}.", color="OKGREEN")
+    # Manual cleanup but not necessary to return 0
     if "tempdir" in locals():
-        shutil.rmtree(tempdir)
-
+        try:
+            shutil.rmtree(tempdir)
+        except Exception:
+            pass
     return
 
 
@@ -1370,7 +1415,12 @@ def _install_dependencies(parameters):
             fd.writelines(_replace_conda_env(factory_py_ver, factory_numpy_ver))
         cprint(f"Conda env exported to {env_file_name}. Exit.", color="OKGREEN")
         sys.exit(0)
-        
+    
+    if parameters["use_pip"]:
+        _ensure_pip(blender_py)
+        _pip_install(blender_py)
+        return
+
     # Rest of the installation will use conda
     if parameters["no_mamba"]:
         backend = "conda"
@@ -1379,7 +1429,7 @@ def _install_dependencies(parameters):
 
     # If use_pip, only install python
     # pip and download utils
-    minimal_env = parameters["use_pip"]
+    #minimal_env = parameters["use_pip"]
     env_file = parameters["conda_env_file"]
     _conda_update(
         parameters["conda_env_file"],
@@ -1387,13 +1437,9 @@ def _install_dependencies(parameters):
         python_version=factory_py_ver,
         numpy_version=factory_numpy_ver,
         backend=backend,
-        minimal_env=minimal_env
+    #   minimal_env=minimal_env
     )
 
-    if parameters["use_pip"]:
-        _ensure_pip(blender_py)
-        _pip_install(blender_py)
-        return
     return
 
 
@@ -1689,7 +1735,7 @@ def install(parameters):
     # Change the blender environment
     _replace_blender_binary(parameters)
     _move_factory_python(parameters)
-    _link_conda_env(parameters)
+    _link_env(parameters)
     # TODO: condition about generate env file?
     # TODO: finish the conda part in between
     _install_dependencies(parameters)
@@ -1713,6 +1759,7 @@ def uninstall(parameters):
     _remove_blender_alias(parameters)
     _remove_batomspy(parameters)
     _restore_factory_python(parameters)
+    _remove_pip_python(parameters)
     _restore_blender_binary(parameters)
     _blender_test_uninstall(parameters)
     _print_success_uninstall(parameters)
