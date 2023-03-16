@@ -586,8 +586,8 @@ def _symlink_dir(src, dst):
     """Make symlink from src to dst.
     If dst is an empty directory or simlink, simply remove and do symlink
     """
-    src = Path(src).resolve().absolute()
-    dst = Path(dst).resolve().absolute()
+    src = Path(src)
+    dst = Path(dst)
     if not src.is_dir():
         raise FileNotFoundError(f"{src} should be an existing directory!")
     if dst.exists():

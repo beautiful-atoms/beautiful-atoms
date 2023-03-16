@@ -16,6 +16,43 @@ env:
   BLENDER_DOWN_URL: "https://mirror.clarkson.edu/blender/release"
 
 jobs:
+  unittest-linux:
+    defaults:
+      run:
+        shell: bash -l {0}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # For future tests we will only over 3 of the latest versions
+        blender_ver: ["3.4.1"]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: batoms
+          python-version: "3.10"
+          mamba-version: "*"
+          channels: conda-forge,defaults
+      - name: Update libstdc++ and
+        run: |
+           sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test &&\
+           sudo apt-get update &&\
+           sudo apt-get install -y libxxf86vm1 libstdc++6
+      - name: Download portable blender
+        run: |
+          echo Currently install in $(pwd)
+          VER=${{ matrix.blender_ver }}
+          MAJ_VER=${VER%.*}
+          echo $VER $MAJ_VER
+          URL="${BLENDER_DOWN_URL}/Blender${MAJ_VER}/blender-${VER}-linux-x64.tar.xz"
+          mkdir -p ../blender && curl -O ${URL} && tar -xvf blender-*-linux-x64.tar.xz -C ../blender
+          echo "BLENDER_ROOT=../blender/blender-${VER}-linux-x64/${MAJ_VER}" >> $GITHUB_ENV
+      - name: Pytest and dependencies
+        run:  |
+            pip install pytest pyfakefs
+      - name: Run pytest
+        run:  |
+            pytest -svv tests/test_install_script.py
   install-linux:
     defaults:
       run:

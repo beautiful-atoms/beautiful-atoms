@@ -63,11 +63,11 @@ def test_blender_bin(fs):
     # Windows
     from pathlib import Path
     from install import _get_blender_bin
-    bundle_root = "Program Files/Blender Foundation/Blender 3.4/3.4"
-    fake_bin = "Program Files/Blender Foundation/Blender 3.4/blender.exe"
+    bundle_root = "/c/Program Files/Blender Foundation/Blender 3.4/3.4"
+    fake_bin = "/c/Program Files/Blender Foundation/Blender 3.4/blender.exe"
     fs.create_dir(bundle_root)
     fs.create_file(fake_bin)
-    assert _get_blender_bin("windows", bundle_root) == Path(fake_bin)
+    assert _get_blender_bin("windows", bundle_root) == Path(fake_bin).resolve()
     # User should not point to the upper level
     with pytest.raises(FileNotFoundError):
         _get_blender_bin("windows", Path(bundle_root).parent)
@@ -76,7 +76,7 @@ def test_blender_bin(fs):
     # Linux
     fs.create_dir("./blender/3.4")
     fs.create_file("./blender/blender")
-    assert _get_blender_bin("linux", "blender/3.4") == Path("./blender/blender")
+    assert _get_blender_bin("linux", "./blender/3.4") == Path("./blender/blender").resolve()
     # fs.remove("./blender/blender")
     # fs.rmdir("./blender")
 
