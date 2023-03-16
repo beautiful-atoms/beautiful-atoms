@@ -803,7 +803,7 @@ def _ensure_pip(blender_py):
     proc = _run_process(commands, shell=False)
     return
 
-def _pip_install(blender_py):
+def _pip_install(blender_py, numpy_version=DEFAULT_BLENDER_NUMPY_VER):
     """Temporary workaround for installation on windows and blender>=3.1.0
     Try to install as many components as possible. Need specific version tweaks
     Installation order:
@@ -813,16 +813,12 @@ def _pip_install(blender_py):
     """
     blender_py = str(blender_py)
     pip_prefix = [blender_py, "-m", "pip"]
-    # Step 1: check numpy installation
-    commands = pip_prefix + ["show", "numpy"]
-    proc = _run_process(commands, shell=False, capture_output=True)
-    if "Name: numpy" not in proc.stdout.decode("utf8"):
-        raise RuntimeError(
-            "Cannot find package numpy. Your bundle python may be corrupt."
-        )
+    # For some systems like linux, blender is not shipped with pip and
+    # we need to make sure numpy version doesn't bump
     commands = pip_prefix + [
         "install",
         "--no-input",
+        f"numpy=={numpy_version}",
         "ase>=3.21.0",
         "pymatgen<=2023.3.10",
         "scikit-image",
@@ -844,6 +840,7 @@ def _pip_install(blender_py):
         )
 
     return
+
 
 
 def _pip_uninstall(blender_py):
@@ -1418,7 +1415,7 @@ def _install_dependencies(parameters):
     
     if parameters["use_pip"]:
         _ensure_pip(blender_py)
-        _pip_install(blender_py)
+        _pip_install(blender_py, numpy_version=factory_numpy_ver)
         return
 
     # Rest of the installation will use conda
