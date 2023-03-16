@@ -77,6 +77,7 @@ INSTALL_SCRIPT_PATH = (
     f"https://raw.githubusercontent.com/{ACCOUNT_NAME}/{REPO_NAME}/main/install.py"
 )
 
+
 ################################################################################
 # Section 2: temporary file script templates (python or yaml)
 ################################################################################
@@ -174,6 +175,7 @@ bpy.ops.batoms.use_batoms_startup()
 print('Successfully setting preference.')
 """
 
+
 BATOMSPY_TEST = """#!/usr/bin/env batomspy
 import bpy
 from batoms import Batoms
@@ -228,6 +230,7 @@ fi
 
 exec "{blender_bin}" ${{1+"$@"}}
 """
+
 
 # Base for batomspy shabang support
 BATOMSPY_SH = """#!/bin/bash
@@ -984,6 +987,7 @@ def _find_conda_bin_path(env_name, conda_vars):
     return bindir
 
 
+
 ################################################################################
 # Section 4.1: operations on blender file structure.
 # All functions here take only the `parameters` argument
@@ -1009,6 +1013,7 @@ def _restore_factory_python(parameters):
             color="OKBLUE",
         )
         return
+
 
     if factory_python_target.exists():
         # _rename_dir will remove directory if it's empty or a symlink
@@ -1044,9 +1049,6 @@ def _move_factory_python(parameters):
     """Reverse of _restore_factory_python.
     No sanity check of current python directory
     """
-    # if parameters["use_pip"]:
-    # cprint(("--use-pip switch, use factory python."), color="HEADER")
-    # return
 
     factory_python_source = parameters["factory_python_source"]
     factory_python_target = parameters["factory_python_target"]
@@ -2013,6 +2015,30 @@ def main():
     true_blender_bin = _get_blender_bin(os_name, true_blender_root)
     cprint(f"Found blender binary at {true_blender_bin}", color="OKGREEN")
     cprint(f"      blender bundle root at {true_blender_root}", color="OKGREEN")
+
+    # Perform a check on blender_version
+    blender_version = _get_blender_version(true_blender_bin)
+    if Version(blender_version) < Version("3.4"):
+        # The warning
+        if args.plugin_version is None:
+            cprint(
+                (
+                    "Warning: support of beautiful-atoms in Blender < 3.4 is deprecated! \n"
+                    "I will pin the source code of beautiful-atoms to version blender-3.2 branch (793d6f). \n"
+                    "You can also manually set --plugin-version blender-3.2 to install.py. \n"
+                    "To use latest features please install Blender >= 3.4. "
+                ),
+                color="WARNING",
+            )
+            plugin_version = "blender-3.2"
+        else:
+            cprint(
+                "You have specified the plugin_version option, so I suppose you know what you're doing!",
+                color="WARNING",
+            )
+            plugin_version = args.plugin_version
+    else:
+        plugin_version = args.plugin_version
 
     # Parameters can be provided to install / uninstall methods at this time
     parameters = dict(

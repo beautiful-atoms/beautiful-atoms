@@ -162,4 +162,4 @@ archive/
 blender-*.tar.xz
 blender-*/
 *~
-beautiful-atoms/
+**/beautiful-atoms/
