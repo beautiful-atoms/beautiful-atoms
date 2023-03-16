@@ -278,13 +278,16 @@ def _run_process(commands, shell=False, print_cmd=True, cwd=".", capture_output=
     if proc.returncode == 0:
         return proc
     else:
-        raise RuntimeError((f"Running {full_cmd} returned error code {proc.returncode}. \n"
-                            "Below are the stdout message: \n"
-                            f"{proc.stdout.decode('utf8')}"
-                            "\n"
-                            "Below are the stderr message:\n"
-                            f"{proc.stderr.decode('utf8')}"
-                            ))
+        raise RuntimeError(
+            (
+                f"Running {full_cmd} returned error code {proc.returncode}. \n"
+                "Below are the stdout message: \n"
+                f"{proc.stdout.decode('utf8')}"
+                "\n"
+                "Below are the stderr message:\n"
+                f"{proc.stderr.decode('utf8')}"
+            )
+        )
 
 
 def _run_blender_multiline_expr(blender_bin, expr, return_process=True, **kwargs):
@@ -329,7 +332,7 @@ def _gitclone(workdir=".", version="main", url=REPO_GIT):
         clone_into,
     ]
     _run_process(commands)
-    cprint(f"Cloned repo into directory {clone_into.as_posix()}", color="OKGREEN")
+    cprint(f"Cloned repo into directory {clone_into}", color="OKGREEN")
     _gitcheckout(workdir=clone_into, version=version)
     return clone_into
 
@@ -387,7 +390,7 @@ def _get_default_locations(os_name):
     if len(matches) > 1:
         cprint(f"Multiple blender installations exists:", color="HEADER")
         for i, m in enumerate(matches):
-            cprint(f"{i}: {m.as_posix()}", color="HEADER")
+            cprint(f"{i}: {m}", color="HEADER")
         choice = int(input("Choose one (default 0): ") or "0")
         match = matches[choice]
     elif len(matches) == 1:
@@ -434,7 +437,7 @@ def _get_blender_bin(os_name, blender_bundle_root):
         else:
             extra_msg = f"Please refer to instructions at {help_url}"
         raise FileNotFoundError(
-            f"Cannot find blender binary at {blender_bin.resolve().as_posix()}!\n{extra_msg}"
+            f"Cannot find blender binary at {blender_bin.resolve()}!\n{extra_msg}"
         )
     return blender_bin
 
@@ -470,44 +473,11 @@ def _get_blender_version(blender_bin):
     """Parse blender's output to get the X.Y.Z version name"""
     blender_bin = str(blender_bin)
     commands = [blender_bin, "-b"]
-    proc = _run_process(commands, shell=False,
-                        capture_output=True)
+    proc = _run_process(commands, shell=False, capture_output=True)
     output = proc.stdout.decode("utf8")
     pat_bl_version = r"Blender\s+(\d+\.\d+\.\d+)"
     bl_version = next(re.finditer(pat_bl_version, output))[1]
     return bl_version
-
-
-def _blender_enable_plugin(parameters):
-    """Use blender's internal libary to enable plugin (and save as user script)"""
-    blender_bin = parameters["blender_bin"]
-    _run_blender_multiline_expr(blender_bin, BLENDERPY_ENABLE_PLUGIN)
-    return
-
-
-def _blender_disable_plugin(parameters):
-    """Use blender's internal libary to disable plugin (and save as user script)"""
-    blender_bin = parameters["blender_bin"]
-    _run_blender_multiline_expr(blender_bin, BLENDERPY_DISABLE_PLUGIN,)
-    print("finish output")
-    return
-
-
-def _blender_test_plugin(parameters):
-    if parameters["dependency_only"]:
-        cprint("Skip plugin test.", color="WARNING")
-        return
-    blender_bin = str(parameters["blender_bin"])
-    _run_blender_multiline_expr(blender_bin, BLENDERPY_TEST_PLUGIN,)
-    return
-
-
-def _blender_test_uninstall(parameters):
-    blender_bin = str(parameters["blender_bin"])
-    _run_blender_multiline_expr(blender_bin, BLENDERPY_TEST_UNINSTALL,
-                                # capture_output=False
-                                )
-    return
 
 
 ################################################################################
@@ -570,7 +540,7 @@ def _rename_dir(src, dst):
         elif _is_empty_dir(dst):
             os.rmdir(dst)
         else:
-            raise OSError(f"Directory {dst.as_posix()} is not empty!")
+            raise OSError(f"Directory {dst} is not empty!")
     try:
         os.rename(src, dst)
     except (OSError, PermissionError) as e:
@@ -591,7 +561,7 @@ def _symlink_dir(src, dst):
         elif _is_empty_dir(dst):
             os.rmdir(dst)
         else:
-            raise OSError(f"Directory {dst.as_posix()} is not empty!")
+            raise OSError(f"Directory {dst} is not empty!")
     try:
         os.symlink(src, dst)
     except (OSError, PermissionError) as e:
@@ -617,6 +587,7 @@ def _get_conda_variables():
 def _is_conda():
     return "CONDA_PREFIX" in os.environ.keys()
 
+
 def _is_conda_name_abbrev(env_name):
     """Tell if the env_name is a valid conda-env name.
     If not, the env_name may be a full path to the env
@@ -631,11 +602,14 @@ def _find_conda_bin_path(env_name, conda_vars):
 
     # Distinguish if env_name is a prefix or name
     if _is_conda_name_abbrev(env_name):
-        commands = [conda_vars["CONDA_EXE"], "run", "-p", env_name, "which", "python"],
+        commands = (
+            [conda_vars["CONDA_EXE"], "run", "-p", env_name, "which", "python"],
+        )
     else:
-        commands = [conda_vars["CONDA_EXE"], "run", "-n", env_name, "which", "python"],
+        commands = (
+            [conda_vars["CONDA_EXE"], "run", "-n", env_name, "which", "python"],
+        )
 
-    
     output = (
         _run_process(
             commands,
@@ -890,11 +864,11 @@ def _find_conda_bin_path(env_name, conda_vars):
     if not _is_conda_name_abbrev(env_name):
         bindir = env_name / "bin"
         if not bindir.is_dir():
-            cprint(f"Path {bindir.as_posix()} does not exists!", color="WARNING")
+            cprint(f"Path {bindir} does not exists!", color="WARNING")
             bindir = None
         return bindir
 
-    # Else use default name search method 
+    # Else use default name search method
     program = "python"
     try:
         output = (
@@ -919,7 +893,8 @@ def _find_conda_bin_path(env_name, conda_vars):
 
 
 ################################################################################
-# Section 4.1: operations on blender file structure
+# Section 4.1: operations on blender file structure.
+# All functions here take only the `parameters` argument
 ################################################################################
 
 
@@ -932,6 +907,16 @@ def _restore_factory_python(parameters):
     # target: <root>/_old_python
     factory_python_source = parameters["factory_python_source"]
     factory_python_target = parameters["factory_python_target"]
+
+    if parameters["dry_run"]:
+        cprint(
+            (
+                "Simulate: restore blender's factory python\n"
+                f"action: move {factory_python_target} --> {factory_python_source}\n"
+            ),
+            color="OKBLUE",
+        )
+        return
 
     if factory_python_target.exists():
         # _rename_dir will remove directory if it's empty or a symlink
@@ -953,11 +938,11 @@ def _restore_factory_python(parameters):
         _run_process([str(old_py), "-V"])
     except RuntimeError as e:
         raise RuntimeError(
-            f"Found factory python at {old_py.as_posix()} "
+            f"Found factory python at {old_py} "
             "but it's not working. Your installation is corrupted."
         ) from e
     cprint(
-        f"Restored {factory_python_target.as_posix()} to {factory_python_source.as_posix()}",
+        f"Restored {factory_python_target} to {factory_python_source}",
         color="OKGREEN",
     )
     return
@@ -970,13 +955,22 @@ def _move_factory_python(parameters):
     # blender_root = Path(parameters["blender_root"])
     factory_python_source = parameters["factory_python_source"]
     factory_python_target = parameters["factory_python_target"]
+    if parameters["dry_run"]:
+        cprint(
+            (
+                "Simulate: backup blender's factory python\n"
+                f"action: move {factory_python_source} --> {factory_python_target}\n"
+            ),
+            color="OKBLUE",
+        )
+        return
 
     try:
         _rename_dir(factory_python_source, factory_python_target)
     except Exception as e:
         raise RuntimeError("Cannot move backup factory python") from e
     cprint(
-        f"Renamed {factory_python_source.as_posix()} to {factory_python_target.as_posix()}",
+        f"Renamed {factory_python_source} to {factory_python_target}",
         color="OKGREEN",
     )
     return
@@ -989,17 +983,25 @@ def _link_conda_env(parameters):
     factory_python_target = parameters["factory_python_target"]
     conda_vars = parameters["conda_vars"]
     conda_prefix = conda_vars["CONDA_PREFIX"]
+    if parameters["dry_run"]:
+        cprint(
+            (
+                "Simulate: symlink conda environment to blender\n"
+                f"action: link {conda_prefix} --> {factory_python_source}\n"
+            ),
+            color="OKBLUE",
+        )
+        return
+
     try:
         _symlink_dir(conda_prefix, factory_python_source)
     except OSError:
         raise
     cprint(
-        f"Created symlink {conda_prefix} --> {factory_python_source.as_posix()}",
+        f"Created symlink {conda_prefix} --> {factory_python_source}",
         color="OKGREEN",
     )
     return
-
-
 
 
 def _install_plugin(parameters):
@@ -1008,16 +1010,33 @@ def _install_plugin(parameters):
     """
     plugin_path_source = parameters["plugin_source"]
     plugin_path_target = parameters["plugin_target"]
+    if parameters["dry_run"]:
+        if parameters["dependency_only"]:
+            cprint(
+                "Simulate: install dependency only. Batoms plugin will not be copied.\n",
+                color="OKBLUE",
+            )
+        else:
+            cprint(
+                (
+                    "Simulate: install batoms plugin into blender\n"
+                    f"action: copy {plugin_path_source} --> {plugin_path_target}\n"
+                ),
+                color="OKBLUE",
+            )
+        return
+
     if parameters["dependency_only"]:
         cprint(
             "Install dependency only. Batoms plugin will not be copied.",
             color="OKGREEN",
         )
+        os.ex
         return
     if plugin_path_target.is_dir():
         if not _is_empty_dir(plugin_path_target):
             cprint(
-                f"Target plugin installtion directory {plugin_path_target.as_posix()} is not empty.",
+                f"Target plugin installtion directory {plugin_path_target} is not empty.",
                 color="WARNING",
             )
             choice = str(input("Overwrite? [y/N]") or "N").lower().startswith("y")
@@ -1034,7 +1053,7 @@ def _install_plugin(parameters):
     # if the local_plugin_version is not None, download the latest to tmpdir
     if _is_empty_dir(plugin_path_source) or (not plugin_path_source.is_dir()):
         cprint(
-            f"Local repo path {plugin_path_source.as_posix()} does not exist. Run git clone.",
+            f"Local repo path {plugin_path_source} does not exist. Run git clone.",
         )
         local_plugin_version = "main"
     if local_plugin_version:
@@ -1049,30 +1068,44 @@ def _install_plugin(parameters):
         _symlink_dir(plugin_path_source, plugin_path_target)
         cprint("Installation in development mode!", color="HEADER")
         cprint(
-            f"Created symlink {plugin_path_source.as_posix()} --> {plugin_path_target.as_posix()}.",
+            f"Created symlink {plugin_path_source} --> {plugin_path_target}.",
             color="HEADER",
         )
     else:
         shutil.copytree(plugin_path_source, plugin_path_target)
-        cprint(f"Plugin copied to {plugin_path_target.as_posix()}.", color="OKGREEN")
+        cprint(f"Plugin copied to {plugin_path_target}.", color="OKGREEN")
     if "tempdir" in locals():
         shutil.rmtree(tempdir)
 
     return
 
+
 def _uninstall_plugin(parameters):
     blender_root = Path(parameters["blender_root"])
     plugin_path_target = blender_root / DEFAULT_PLUGIN_PATH
+    if parameters["dry_run"]:
+        cprint(
+            (
+                "Simulate: uninstall plugin from blender\n"
+                f"action: remove {plugin_path_target}\n"
+            ),
+            color="OKBLUE",
+        )
+        return
+
     if plugin_path_target.is_symlink():
         os.unlink(plugin_path_target)
     elif plugin_path_target.is_dir():
         shutil.rmtree(plugin_path_target)
     else:
         cprint(
-            f"Plugin directory {plugin_path_target.as_posix()} does not exist. Ignore.",
+            f"Plugin directory {plugin_path_target} does not exist. Ignore.",
             color="WARNING",
         )
-    cprint("beautiful-atoms has been removed from blender's addons_contrib folder.", color="OKGREEN")
+    cprint(
+        "beautiful-atoms has been removed from blender's addons_contrib folder.",
+        color="OKGREEN",
+    )
     return
 
 
@@ -1083,8 +1116,19 @@ def _replace_blender_binary(parameters):
     blender_bin = parameters["blender_bin"]
     conda_vars = parameters["conda_vars"]
     dyn_lib_path = parameters["blender_root"].resolve() / "python" / "lib"
+
     if parameters["os_name"] == "linux":
         backup_blender_bin = blender_bin.with_name(BLENDER_BACKUP_PATH)
+        if parameters["dry_run"]:
+            cprint(
+                (
+                    "Simulate: replace blender binary with script including LD_LIBRARY_PATH\n"
+                    f"action: move {blender_bin} --> {backup_blender_bin}\n"
+                ),
+                color="OKBLUE",
+            )
+        return
+
         if _is_binary_file(blender_bin):
             shutil.move(blender_bin, backup_blender_bin)
             cprint(
@@ -1114,6 +1158,16 @@ def _restore_blender_binary(parameters):
         return
     blender_bin = parameters["blender_bin"]
     backup_blender_bin = blender_bin.with_name(BLENDER_BACKUP_PATH)
+    if parameters["dry_run"]:
+        cprint(
+            (
+                "Simulate: restore factory blender binary\n"
+                f"action: ensure binary {blender_bin} exists\n"
+            ),
+            color="OKBLUE",
+        )
+        return
+
     if backup_blender_bin.exists():
         if not _is_binary_file(backup_blender_bin):
             raise RuntimeError(f"{backup_blender_bin} exists but is not a binary file!")
@@ -1136,12 +1190,18 @@ def _create_blender_alias(parameters):
     if parameters["os_name"] == "windows":
         cprint("blender alias currently ignored in windows", color="HEADER")
         return
+    if parameters["dry_run"]:
+        cprint(
+            ("Simulate: create blender alias script\n" "action: None\n"), color="OKBLUE"
+        )
+        return
     blender_bin = parameters["blender_bin"]
     conda_vars = parameters["conda_vars"]
     bindir = _find_conda_bin_path(
         env_name=parameters["custom_conda_env"], conda_vars=conda_vars
     )
     script_path = bindir / "blender"
+
     with open(script_path, "w") as fd:
         content = BLENDER_ALIAS_SH.format(
             blender_bin=blender_bin.as_posix(),
@@ -1152,7 +1212,7 @@ def _create_blender_alias(parameters):
     cprint(f"Alias for blender written to {script_path}", color="OKGREEN")
 
     # Make a test
-    
+
     # with tempfile.NamedTemporaryFile(suffix=".py", delete=False) as tmp_py:
     #     tmp_py = Path(tmp_py.name)
     #     with open(tmp_py, "w") as fd:
@@ -1167,6 +1227,11 @@ def _create_blender_alias(parameters):
 def _remove_blender_alias(parameters):
     if parameters["os_name"] == "windows":
         return
+    if parameters["dry_run"]:
+        cprint(
+            ("Simulate: remove blender alias script\n" "action: None\n"), color="OKBLUE"
+        )
+        return
     conda_vars = parameters["conda_vars"]
     bindir = _find_conda_bin_path(
         env_name=parameters["custom_conda_env"], conda_vars=conda_vars
@@ -1174,6 +1239,7 @@ def _remove_blender_alias(parameters):
     if bindir is None:
         # Do nothing if the bindir does not exist
         return
+
     script_path = bindir / "blender"
     if script_path.is_file():
         os.remove(script_path)
@@ -1186,12 +1252,17 @@ def _create_batomspy(parameters):
     if parameters["os_name"] == "windows":
         cprint("batoms script currently ignored in windows", color="HEADER")
         return
+    if parameters["dry_run"]:
+        cprint(("Simulate: create batomspy script\n" "action: None\n"), color="OKBLUE")
+        return
+
     blender_bin = parameters["blender_bin"]
     conda_vars = parameters["conda_vars"]
     bindir = _find_conda_bin_path(
         env_name=parameters["custom_conda_env"], conda_vars=conda_vars
     )
     script_path = bindir / "batomspy"
+
     with open(script_path, "w") as fd:
         content = BATOMSPY_SH.format(
             blender_bin=blender_bin.as_posix(),
@@ -1208,14 +1279,17 @@ def _create_batomspy(parameters):
             fd.write(BATOMSPY_TEST)
         os.chmod(tmp_py, 0o755)
     _run_process([tmp_py], capture_output=True)
-    cprint(f"Shebang support for batomspy is now activated",
-           color="OKGREEN")
+    cprint(f"Shebang support for batomspy is now activated", color="OKGREEN")
     return
 
 
 def _remove_batomspy(parameters):
     if parameters["os_name"] == "windows":
         return
+    if parameters["dry_run"]:
+        cprint(("Simulate: remove batomspy script\n" f"action: None\n"), color="OKBLUE")
+        return
+
     conda_vars = parameters["conda_vars"]
     bindir = _find_conda_bin_path(
         env_name=parameters["custom_conda_env"], conda_vars=conda_vars
@@ -1223,7 +1297,9 @@ def _remove_batomspy(parameters):
     if bindir is None:
         # Do nothing if the bindir does not exist
         return
+
     script_path = bindir / "batomspy"
+
     if script_path.is_file():
         os.remove(script_path)
         cprint(f"Removed batomspy script from {script_path}", color="OKGREEN")
@@ -1232,7 +1308,16 @@ def _remove_batomspy(parameters):
 
 def _install_dependencies(parameters):
     """Install dependencies from conda or pip"""
-    print(parameters)
+    if parameters["dry_run"]:
+        cprint(
+            (
+                "Simulate: install dependencies using conda update\n"
+                "action: conda install dependencies\n"
+            ),
+            color="OKBLUE",
+        )
+        return
+
     blender_bin = parameters["blender_bin"]
     blender_version = parameters.get("blender_version", None)
     blender_py = parameters.get("blender_py", None)
@@ -1246,9 +1331,7 @@ def _install_dependencies(parameters):
         env_file_name = Path(parameters["generate_env_file"])
         with open(env_file_name, "w") as fd:
             fd.writelines(_replace_conda_env(factory_py_ver, factory_numpy_ver))
-        cprint(
-            f"Conda env exported to {env_file_name.as_posix()}. Exit.", color="OKGREEN"
-        )
+        cprint(f"Conda env exported to {env_file_name}. Exit.", color="OKGREEN")
         sys.exit(0)
     if parameters["use_pip"]:
         _pip_install(blender_py)
@@ -1267,8 +1350,13 @@ def _install_dependencies(parameters):
     )
     return
 
+
 def _uninstall_dependencies(parameters):
-       # _old_python not found, ignore
+    # _old_python not found, ignore
+    if parameters["dry_run"]:
+        cprint(("Simulate: remove dependencies\n" "action: None \n"), color="OKBLUE")
+        return
+
     if not parameters["use_pip"]:
         cprint("Dependencies in conda environment will not be removed.", color="HEADER")
         return
@@ -1277,24 +1365,28 @@ def _uninstall_dependencies(parameters):
         raise RuntimeError(
             "Uninstall via pip cannot be performed when bundled python moved to another location. Abort"
         )
-        
-    # 
+
+    #
     blender_bin = parameters["blender"]
     blender_py = _get_blender_py(blender_bin)
     _pip_uninstall(blender_py, conda_vars)
     cprint("Pip dependencies for beautiful-atoms have been removed", color="OKGREEN")
     return
-    
-    
+
 
 def _setup_startup_and_preferences(parameters):
-    """Setup blender startup and preferences
-    """
+    """Setup blender startup and preferences"""
+    if parameters["dry_run"]:
+        cprint(
+            ("Simulate: enable startup and preferences\n" "action: None\n"),
+            color="OKBLUE",
+        )
+        return
+
     def _blender_set_startup(blender_bin):
         """Use set default startup of batoms"""
         _run_blender_multiline_expr(blender_bin, BLENDERPY_SETTING_STARTUP)
         return
-
 
     def _blender_set_preferences(blender_bin):
         """Use set default preferences of batoms"""
@@ -1308,23 +1400,86 @@ def _setup_startup_and_preferences(parameters):
     return
 
 
+def _blender_enable_plugin(parameters):
+    """Use blender's internal libary to enable plugin (and save as user script)"""
+    blender_bin = parameters["blender_bin"]
+    if parameters["dry_run"]:
+        cprint(("Simulate: enable batoms plugin\n" "action: None\n"), color="OKBLUE")
+        return
+
+    _run_blender_multiline_expr(blender_bin, BLENDERPY_ENABLE_PLUGIN)
+    return
+
+
+def _blender_disable_plugin(parameters):
+    """Use blender's internal libary to disable plugin (and save as user script)"""
+    blender_bin = parameters["blender_bin"]
+    if parameters["dry_run"]:
+        cprint(("Simulate: disable batoms plugin\n" "action: None\n"), color="OKBLUE")
+        return
+    _run_blender_multiline_expr(
+        blender_bin,
+        BLENDERPY_DISABLE_PLUGIN,
+    )
+    print("finish output")
+    return
+
+
+def _blender_test_plugin(parameters):
+    if parameters["dry_run"]:
+        cprint(("Simulate: test blender plugin\n" "action: None\n"), color="OKBLUE")
+        return
+
+    if parameters["dependency_only"]:
+        cprint("Skip plugin test.", color="WARNING")
+        return
+    blender_bin = str(parameters["blender_bin"])
+    _run_blender_multiline_expr(
+        blender_bin,
+        BLENDERPY_TEST_PLUGIN,
+    )
+    return
+
+
+def _blender_test_uninstall(parameters):
+    blender_bin = str(parameters["blender_bin"])
+    if parameters["dry_run"]:
+        cprint(
+            ("Simulate: test if batoms plugin uninstalled \n" "action: None\n"),
+            color="OKBLUE",
+        )
+        return
+    _run_blender_multiline_expr(
+        blender_bin,
+        BLENDERPY_TEST_UNINSTALL,
+        # capture_output=False
+    )
+    return
+
+
 def _print_success_install(parameters):
-    """Print message after installation
-    """
+    """Print message after installation"""
+    if parameters["dry_run"]:
+        return
     conda_vars = parameters["conda_vars"]
     env_pref = conda_vars["CONDA_PREFIX"]
     blender_bin = parameters["blender_bin"]
-    base_msg = ("beautiful-atoms and its dependencies have been successfully installed in your Blender distribution.\n"
-            "If you want to add additional python packages, activate the conda environment first:\n"
-            "\n"
-            f"$ conda activate --prefix {env_pref.as_posix()}\n"
-            "\n"
-            "And use conda or pip for the installation.")
-    blender_alias_msg = ("\n\n"
-                         f"You can now use the alias `blender` for {blender_bin.as_posix()} when the conda environment is activated."
-                         )
-    batomspy_msg = ("\n\n"
-                    f"You can now use `batomspy` in the shebang line of python scripts. For more details please check beautful-atoms' documentation.")
+    base_msg = (
+        "beautiful-atoms and its dependencies have been successfully installed in your Blender distribution.\n"
+        "If you want to add additional python packages, activate the conda environment first:\n"
+        "\n"
+        f"$ conda activate --prefix {env_pref}\n"
+        "\n"
+        "And use conda or pip for the installation."
+    )
+    blender_alias_msg = (
+        "\n\n"
+        f"You can now use the alias `blender` for {blender_bin} when the conda environment is activated."
+    )
+    batomspy_msg = (
+        "\n\n"
+        f"You can now use `batomspy` in the shebang line of python scripts. For more details please check beautful-atoms' documentation."
+    )
     if parameters["os_name"] != "windows":
         msg = base_msg + blender_alias_msg + batomspy_msg
     else:
@@ -1333,22 +1488,24 @@ def _print_success_install(parameters):
     cprint(msg, color="OKGREEN")
     return
 
+
 def _print_success_uninstall(parameters):
-    """Print message after installation
-    """
+    """Print message after installation"""
+    if parameters["dry_run"]:
+        return
     conda_vars = parameters["conda_vars"]
     env_pref = conda_vars["CONDA_PREFIX"]
     blender_bin = parameters["blender_bin"]
-    base_msg = ("Beautiful-atoms uninstallation finished!")
-    pip_msg = ("All dependencies installed by pip have been removed."
-               )
-    conda_msg = ("Dependencies installed in the conda environment are not removed.\n"
-                 "If you don't need to reuse the conda environment, remove it by:\n"
-                 "\n"
-                 "$ conda deactivate\n"
-                 f"$ conda env remove --prefix {env_pref}\n"
-                 "\n"
-                 )
+    base_msg = "Beautiful-atoms uninstallation finished!"
+    pip_msg = "All dependencies installed by pip have been removed."
+    conda_msg = (
+        "Dependencies installed in the conda environment are not removed.\n"
+        "If you don't need to reuse the conda environment, remove it by:\n"
+        "\n"
+        "$ conda deactivate\n"
+        f"$ conda env remove --prefix {env_pref}\n"
+        "\n"
+    )
     if parameters["use_pip"]:
         msg = base_msg + pip_msg
     else:
@@ -1357,6 +1514,7 @@ def _print_success_uninstall(parameters):
     cprint(msg, color="OKGREEN")
     return
 
+
 def _install_version_check(parameters):
     """Pre-installation check of Blender version to make sure batoms
     is compatible At this stage the blender binary and python should
@@ -1364,6 +1522,12 @@ def _install_version_check(parameters):
     and numpy versions
 
     """
+    if parameters["dry_run"]:
+        cprint(
+            ("Simulate: check blender and python versions\n" "action: None\n"),
+            color="OKBLUE",
+        )
+        return
     blender_bin = parameters["blender_bin"]
     plugin_version = parameters["plugin_version"]
     # Perform a check on blender_version
@@ -1378,7 +1542,7 @@ def _install_version_check(parameters):
     if Version(blender_version) >= Version("3.4"):
         cprint("Blender version compatibility OK.", color="OKGREEN")
         return
-    
+
     if plugin_version is None:
         cprint(
             (
@@ -1397,7 +1561,8 @@ def _install_version_check(parameters):
             color="WARNING",
         )
     return
- 
+
+
 def _sanitize_parameters(parameters):
     """Clean up parameters for the installer / uninstaller"""
     parameters["blender_root"] = Path(parameters["blender_root"])
@@ -1416,12 +1581,15 @@ def _sanitize_parameters(parameters):
         prev_pip_state = parameters["use_pip"]
         parameters["use_pip"] = True
         if prev_pip_state is not parameters["use_pip"]:
-            cprint("For windows installations, I have added --use-pip option for you.", color="HEADER")
-        
+            cprint(
+                "For windows installations, I have added --use-pip option for you.",
+                color="HEADER",
+            )
+
     # Additional checks
     # 1. are we inside conda?
     if not _is_conda():
-        if (parameters["use_pip"] is False):
+        if parameters["use_pip"] is False:
             cprint(
                 "The installation script should be run inside a conda environment or specify the --use-pip option. Abort.",
                 color="FAIL",
@@ -1429,18 +1597,31 @@ def _sanitize_parameters(parameters):
             sys.exit(0)
             return
         else:
-            cprint(("You have specified --use-pip option and conda environment is activated. "
-            "Dependencies will be installed directly to blender's python distribution. \n"
-            "Some packages like openbabel may require additional setup to install."
-                    ), color="WARNING")
-    
+            cprint(
+                (
+                    "You have specified --use-pip option and conda environment is activated. "
+                    "Dependencies will be installed directly to blender's python distribution. \n"
+                    "Some packages like openbabel may require additional setup to install."
+                ),
+                color="WARNING",
+            )
 
     # Use `which` to determine if the python executable may
     # conflict with the environment
     if parameters["os_name"] not in ["windows"]:
         check_python_conflict()
+
+    if parameters["dry_run"]:
+        cprint(
+            (
+                "Dry-run mode.\n"
+                "The following steps will be executed by this program. "
+                "Please check if the file / directory names are correct.\n"
+            ),
+            color="HEADER",
+        )
+        return
     return
-    
 
 
 def install(parameters):
@@ -1452,10 +1633,10 @@ def install(parameters):
     # Restore and blender binary and python to factory settings
     _restore_blender_binary(parameters)
     _restore_factory_python(parameters)
-    
+
     # Check blender version, python version and numpy version
     _install_version_check(parameters)
-    
+
     # Change the blender environment
     _replace_blender_binary(parameters)
     _move_factory_python(parameters)
@@ -1489,7 +1670,6 @@ def uninstall(parameters):
     return
 
 
-
 def check_python_conflict():
     """Detect if the python interpreter used to run the installation script
     is the same as the python executable in current environment
@@ -1521,9 +1701,6 @@ def check_python_conflict():
         return
 
 
-
-
-
 def main():
     import argparse
 
@@ -1538,7 +1715,7 @@ def main():
             "If not provided, infer from os-dependent directories."
         ),
     )
-    
+
     parser.add_argument(
         "-t",
         "--plugin-version",
@@ -1618,12 +1795,20 @@ def main():
     parser.add_argument(
         "--no-blender-alias",
         action="store_true",
-        help=("Do not install the blender alias in conda env's root. Only relevant for unix systems."),
+        help=(
+            "Do not install the blender alias in conda env's root. Only relevant for unix systems."
+        ),
     )
+
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help=("Output simulated changes but do nothing."),
+    )
+
     args = parser.parse_args()
     os_name = _get_os_name()
 
-    
     if (os_name not in ["windows"]) and (args.uninstall is False):
         check_python_conflict()
 
@@ -1633,12 +1818,8 @@ def main():
     else:
         true_blender_root = _get_default_locations(os_name)
     true_blender_bin = _get_blender_bin(os_name, true_blender_root)
-    cprint(f"Found blender binary at {true_blender_bin.as_posix()}", color="OKGREEN")
-    cprint(
-        f"      blender bundle root at {true_blender_root.as_posix()}", color="OKGREEN"
-    )
-
-    
+    cprint(f"Found blender binary at {true_blender_bin}", color="OKGREEN")
+    cprint(f"      blender bundle root at {true_blender_root}", color="OKGREEN")
 
     # Parameters can be provided to install / uninstall methods at this time
     parameters = dict(
@@ -1656,6 +1837,7 @@ def main():
         no_mamba=args.no_mamba,
         no_blender_alias=args.no_blender_alias,
         plugin_version=args.plugin_version,
+        dry_run=args.dry_run,
     )
     if not args.uninstall:
         install(parameters)
