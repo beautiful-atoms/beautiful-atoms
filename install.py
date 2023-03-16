@@ -555,7 +555,10 @@ def _get_os_name():
 
 
 def _rename_dir(src, dst):
-    """Rename dir from src to dst use os.rename functionality if possible"""
+    """Rename dir from src to dst use
+    os.rename functionality if possible
+    otherwise
+    """
     src = Path(src)
     dst = Path(dst)
     if not src.is_dir():
@@ -570,7 +573,10 @@ def _rename_dir(src, dst):
     try:
         os.rename(src, dst)
     except (OSError, PermissionError) as e:
-        raise
+        try:
+            shutil.move(src, dst)
+        except Exception as e:
+            raise RuntimeError(f"Cannot move {src} --> {dst}!") from e
 
 
 def _symlink_dir(src, dst):
@@ -1541,12 +1547,15 @@ def _uninstall_dependencies(parameters):
 
     #
     blender_bin = parameters["blender_bin"]
-    python_root_now = parameters["factory_python_source"].absolute()
-    python_root_old = parameters["factory_python_target"].absolute()
-    blender_py = _get_blender_py(blender_bin).absolute()
-    relative_py_path = blender_py.relative_to(python_root_now)
-    old_blender_py = python_root_old / relative_py_path
-    print(old_blender_py)
+    python_root_now = parameters["factory_python_source"]
+    python_root_old = parameters["factory_python_target"]
+    blender_py = _get_blender_py(blender_bin)
+    try:
+        relative_py_path = blender_py.relative_to(python_root_now)
+        old_blender_py = python_root_old / relative_py_path
+    except Exception as e:
+        cprint(f"Encountered error {e} getting old python.", color="FAIL")
+        old_blender_py=None
     _ensure_pip(blender_py)
     _pip_uninstall(blender_py, old_blender_py)
     cprint("Pip dependencies for beautiful-atoms have been removed", color="OKGREEN")
@@ -1572,6 +1581,7 @@ def _setup_startup_and_preferences(parameters):
         _run_blender_multiline_expr(blender_bin, BLENDERPY_SETTING_PREFERENCES)
         return
 
+    blender_bin = parameters["blender_bin"]
     if parameters["use_startup"]:
         _blender_set_startup(blender_bin)
     if parameters["use_preferences"]:
@@ -1751,9 +1761,9 @@ def _install_version_check(parameters):
 
 def _sanitize_parameters(parameters):
     """Clean up parameters for the installer / uninstaller"""
-    parameters["blender_root"] = Path(parameters["blender_root"])
-    parameters["blender_bin"] = Path(parameters["blender_bin"])
-    parameters["repo_path"] = Path(parameters["repo_path"])
+    parameters["blender_root"] = Path(parameters["blender_root"]).resolve()
+    parameters["blender_bin"] = Path(parameters["blender_bin"]).resolve()
+    parameters["repo_path"] = Path(parameters["repo_path"]).resolve()
     parameters["conda_env_file"] = parameters["repo_path"] / "env.yml"
     parameters["plugin_source"] = parameters["repo_path"] / DEFAULT_PLUGIN_NAME
     parameters["plugin_target"] = parameters["blender_root"] / DEFAULT_PLUGIN_PATH
