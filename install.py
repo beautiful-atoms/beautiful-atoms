@@ -1232,10 +1232,14 @@ def _remove_batomspy(parameters):
 
 def _install_dependencies(parameters):
     """Install dependencies from conda or pip"""
+    print(parameters)
     blender_bin = parameters["blender_bin"]
-    blender_version = _get_blender_version(blender_bin)
-    blender_py = _get_blender_py(blender_bin)
-    factory_py_ver, factory_numpy_ver = _get_factory_versions(blender_bin)
+    blender_version = parameters.get("blender_version", None)
+    blender_py = parameters.get("blender_py", None)
+    factory_py_ver = parameters.get("factory_py_ver", None)
+    factory_numpy_ver = parameters.get("factory_numpy_ver", None)
+    if None in (blender_version, blender_py, factory_py_ver, factory_numpy_ver):
+        raise RuntimeError("Please store the version info in parameters first!")
     # conda_vars = parameters["conda_vars"]
 
     if parameters["generate_env_file"] is not None:
@@ -1354,13 +1358,23 @@ def _print_success_uninstall(parameters):
     return
 
 def _install_version_check(parameters):
-    """Pre-installation check of Blender version
-    to make sure batoms is compatible
+    """Pre-installation check of Blender version to make sure batoms
+    is compatible At this stage the blender binary and python should
+    be same as factory.  So use the binary to determine the blender
+    and numpy versions
+
     """
-    true_blender_bin = parameters["blender_bin"]
+    blender_bin = parameters["blender_bin"]
     plugin_version = parameters["plugin_version"]
     # Perform a check on blender_version
-    blender_version = _get_blender_version(true_blender_bin)
+    blender_version = _get_blender_version(blender_bin)
+    blender_py = _get_blender_py(blender_bin)
+    factory_py_ver, factory_numpy_ver = _get_factory_versions(blender_bin)
+    parameters["blender_version"] = blender_version
+    parameters["blender_py"] = blender_py
+    parameters["factory_py_ver"] = factory_py_ver
+    parameters["factory_numpy_ver"] = factory_numpy_ver
+    print(parameters)
     if Version(blender_version) >= Version("3.4"):
         cprint("Blender version compatibility OK.", color="OKGREEN")
         return
@@ -1435,12 +1449,15 @@ def install(parameters):
     """
     parameters = parameters.copy()
     _sanitize_parameters(parameters)
-    _install_version_check(parameters)
-    # Linux-only. Replace blender binary with  LD_LIBRARY_PATH awareness
+    # Restore and blender binary and python to factory settings
     _restore_blender_binary(parameters)
-    # TODO: make paths in binary script relative
-    _replace_blender_binary(parameters)
     _restore_factory_python(parameters)
+    
+    # Check blender version, python version and numpy version
+    _install_version_check(parameters)
+    
+    # Change the blender environment
+    _replace_blender_binary(parameters)
     _move_factory_python(parameters)
     _link_conda_env(parameters)
     # TODO: condition about generate env file?
