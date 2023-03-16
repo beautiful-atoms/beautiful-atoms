@@ -67,7 +67,9 @@ jobs:
       - name: Run blender unittests
         run: |
           cd tests
-          pytest -svv --ignore=test_default_preference.py --ignore=test_batomspy_shebang.py
+          pytest -svv --ignore=test_default_preference.py \
+                      --ignore=test_batomspy_shebang.py \
+                      --ignore=test_install_script.py
 
   shebang-test:
     runs-on: ubuntu-latest

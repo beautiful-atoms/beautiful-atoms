@@ -21,13 +21,13 @@ USER root
 #COPY batoms ${BLENDER_PATH}/scripts/addons_contrib/batoms
 ADD ./ /tmp/beautiful-atoms/
 RUN cd /tmp/beautiful-atoms &&\
-    conda init bash &&\
-    export CONDA_DEFAULT_ENV=base &&\
-    export CONDA_DIR=/opt/conda &&\
-    export CONDA_PREFIX=/opt/conda &&\
-    export CONDA_EXE=/opt/conda/bin/conda &&\
-    yes | python install.py -p ./ ${BLENDER_PATH} &&\
-    rm -rf /tmp/*
+        conda init bash &&\
+        export CONDA_DEFAULT_ENV=base &&\
+        export CONDA_DIR=/opt/conda &&\
+        export CONDA_PREFIX=/opt/conda &&\
+        export CONDA_EXE=/opt/conda/bin/conda &&\
+        yes | python install.py -p ./ ${BLENDER_PATH} &&\
+        rm -rf /tmp/*
 
 RUN chown ${B_UID}:${B_GID} -R ${BLENDER_PATH} &&\
         chmod 755 -R ${BLENDER_PATH} &&\
@@ -39,7 +39,9 @@ WORKDIR /workdir
 
 # Enable batoms addon and test (under the user)
 # remember to delete the temp log files under /tmp
-RUN blender -b \
+RUN blender -b --python-exit-code 1 \
+        --python-expr "import scipy.stats" &&\
+        blender -b \
         --python-exit-code 1 \
         --python-expr  \
         "import bpy; import addon_utils; addon_utils.enable('batoms', default_set=True); bpy.ops.wm.save_userpref(); print('success')" &&\
