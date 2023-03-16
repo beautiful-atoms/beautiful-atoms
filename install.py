@@ -307,14 +307,12 @@ def _run_process(commands, shell=False, print_cmd=True, cwd=".", capture_output=
     if proc.returncode == 0:
         return proc
     else:
-        msg = (f"Running {full_cmd} returned error code {proc.returncode}. \n")
+        msg = f"Running {full_cmd} returned error code {proc.returncode}. \n"
         if proc.stdout is not None:
-            msg += ("Below are the stdout message: \n"
-                f"{proc.stdout.decode('utf8')}\n")
+            msg += "Below are the stdout message: \n" f"{proc.stdout.decode('utf8')}\n"
         if proc.stderr is not None:
-            msg += ("Below are the stderr message: \n"
-                f"{proc.stderr.decode('utf8')}\n")
-        
+            msg += "Below are the stderr message: \n" f"{proc.stderr.decode('utf8')}\n"
+
         raise RuntimeError(msg)
 
 
@@ -711,13 +709,13 @@ def _ensure_mamba(conda_vars):
 
 
 def _conda_update(
-        conda_env_file,
-        conda_vars,
-        env_name=None,
-        python_version=None,
-        numpy_version=None,
-        backend="mamba",
-        minimal_env=False,
+    conda_env_file,
+    conda_vars,
+    env_name=None,
+    python_version=None,
+    numpy_version=None,
+    backend="mamba",
+    minimal_env=False,
 ):
     """Update conda environment using env file.
     If env_name is None, use default env
@@ -762,7 +760,9 @@ def _conda_update(
     with tempfile.NamedTemporaryFile(suffix=".yml", delete=tmp_del) as ftemp:
         tmp_yml = ftemp.name
         with open(tmp_yml, "w") as fd:
-            env_file_content = _replace_conda_env(python_version, numpy_version, minimal_env)
+            env_file_content = _replace_conda_env(
+                python_version, numpy_version, minimal_env
+            )
             fd.writelines(env_file_content.lstrip())
 
         commands = commands_prefix + [
@@ -810,6 +810,7 @@ def _conda_cache_move(condition, conda_vars, blender_python_root):
         shutil.copytree(dir, lib_pip / name, dirs_exist_ok=True)
     return
 
+
 def _ensure_pip(blender_py):
     """We want to make sure the user has access to
     pip in all cases
@@ -818,6 +819,7 @@ def _ensure_pip(blender_py):
     commands = [blender_py, "-m", "ensurepip"]
     proc = _run_process(commands, shell=False)
     return
+
 
 def _pip_install(blender_py, numpy_version=DEFAULT_BLENDER_NUMPY_VER):
     """Temporary workaround for installation on windows and blender>=3.1.0
@@ -861,13 +863,13 @@ def _pip_install(blender_py, numpy_version=DEFAULT_BLENDER_NUMPY_VER):
 def _pip_get_packages(blender_py):
     """Use pip list to get a list of installed pacakges"""
     import json
+
     commands = [str(blender_py), "-m", "pip", "list", "--format", "json"]
     proc = _run_process(commands, capture_output=True)
     json_string = proc.stdout.decode("utf8")
     json_dict = json.loads(json_string)
     packages = [entry["name"] for entry in json_dict]
     return packages
-    
 
 
 def _pip_uninstall(blender_py, old_blender_py=None):
@@ -884,32 +886,52 @@ def _pip_uninstall(blender_py, old_blender_py=None):
         factory_pip_packages = []
 
     if len(factory_pip_packages) < 5:
-        cprint("List of factory packages by pip is too small, I'll use the default values.", color="WARNING")
+        cprint(
+            "List of factory packages by pip is too small, I'll use the default values.",
+            color="WARNING",
+        )
         factory_pip_packages = FACTORY_PIP_PACKAGES
 
     try:
         installed_packages = _pip_get_packages(blender_py)
         print(installed_packages)
-        remove_packages = [p for p in installed_packages if p not in factory_pip_packages]
+        remove_packages = [
+            p for p in installed_packages if p not in factory_pip_packages
+        ]
     except Exception:
-        cprint("Unknown error when getting installed packages. Use default values.", color="WARNING")
+        cprint(
+            "Unknown error when getting installed packages. Use default values.",
+            color="WARNING",
+        )
         # Last resolution, remove known dependencies
-        remove_packages = ["ase", "scipy", "matplotlib",
-        "spglib", "scikit-image",
-        "plotly",
-        "Pillow",
-        "openbabel",
-        "mpmath",
-        "mp_api",
-        "monty",
-        "msgpack",
-        "latexcodec",
-        "pybtex",
-        "networkx",
-        "pandas",]
+        remove_packages = [
+            "ase",
+            "scipy",
+            "matplotlib",
+            "spglib",
+            "scikit-image",
+            "plotly",
+            "Pillow",
+            "openbabel",
+            "mpmath",
+            "mp_api",
+            "monty",
+            "msgpack",
+            "latexcodec",
+            "pybtex",
+            "networkx",
+            "pandas",
+        ]
 
     if len(remove_packages) > 0:
-        commands = pip_prefix + ["uninstall", "-y",] + remove_packages
+        commands = (
+            pip_prefix
+            + [
+                "uninstall",
+                "-y",
+            ]
+            + remove_packages
+        )
         _run_process(commands)
     else:
         cprint("No packages to remove! Skip.", color="OKBLUE")
@@ -1017,9 +1039,9 @@ def _move_factory_python(parameters):
     No sanity check of current python directory
     """
     # if parameters["use_pip"]:
-        # cprint(("--use-pip switch, use factory python."), color="HEADER")
-        # return
-    
+    # cprint(("--use-pip switch, use factory python."), color="HEADER")
+    # return
+
     factory_python_source = parameters["factory_python_source"]
     factory_python_target = parameters["factory_python_target"]
     if parameters["dry_run"]:
@@ -1042,6 +1064,7 @@ def _move_factory_python(parameters):
     )
     return
 
+
 def _link_pip_dir(parameters):
     """Copy the _old_python folder to _pip_python and link to python source
     only to be called when use_pip is enabled
@@ -1060,10 +1083,11 @@ def _link_pip_dir(parameters):
     cprint(f"Symlink {pip_python} --> {factory_python_source}", color="OKGREEN")
     return
 
+
 def _remove_pip_python(parameters):
     """Copy the _old_python folder to _pip_python and link to python source
     only to be called when use_pip is enabled
-    
+
     In the production stage we don't automatically remove the _pip_python clone since user may want to reuse for the sake of speed
     """
     if parameters["use_pip"] is False:
@@ -1081,8 +1105,8 @@ def _link_env(parameters):
     """Make a symlink from conda environment --> <root>/python"""
     # blender_root = Path(parameters["blender_root"])
     # if parameters["use_pip"]:
-        # cprint("--use-pip switch, ignore conda env linking", color="HEADER")
-        # return
+    # cprint("--use-pip switch, ignore conda env linking", color="HEADER")
+    # return
     factory_python_source = parameters["factory_python_source"]
     factory_python_target = parameters["factory_python_target"]
     conda_vars = parameters["conda_vars"]
@@ -1116,14 +1140,15 @@ def _install_plugin(parameters):
     """Install plugin into addons_contrib folder
     If in the develop mode, only symlink but not copy
     """
-    print(parameters)
     plugin_path_source = parameters["plugin_source"]
     plugin_path_target = parameters["plugin_target"]
     if parameters["dry_run"]:
         if parameters["dependency_only"]:
             cprint(
-                ("Simulate: install dependency only. Batoms plugin will not be copied.\n"
-                 "action: None"),
+                (
+                    "Simulate: install dependency only. Batoms plugin will not be copied.\n"
+                    "action: None"
+                ),
                 color="OKBLUE",
             )
             sys.exit(0)
@@ -1165,7 +1190,7 @@ def _install_plugin(parameters):
         need_download = True
     else:
         need_download = _is_empty_dir(plugin_path_source)
-             
+
     if need_download:
         cprint(
             f"Local repo path {plugin_path_source} does not exist. Run git clone.",
@@ -1428,16 +1453,18 @@ def _install_dependencies(parameters):
     """Install dependencies from conda or pip"""
     if parameters["dry_run"]:
         if parameters["generate_env_file"] is not None:
-            cprint(("Simulater: export conda environment configuration\n"
-                    f"action: write {parameters['generate_env_file']}"), color="OKBLUE")
+            cprint(
+                (
+                    "Simulater: export conda environment configuration\n"
+                    f"action: write {parameters['generate_env_file']}"
+                ),
+                color="OKBLUE",
+            )
             sys.exit(0)
 
         pkgman = "pip" if parameters["use_pip"] else "conda"
         cprint(
-            (
-                f"Simulate: install dependencies using {pkgman}\n"
-                "action: None\n"
-            ),
+            (f"Simulate: install dependencies using {pkgman}\n" "action: None\n"),
             color="OKBLUE",
         )
         return
@@ -1457,7 +1484,7 @@ def _install_dependencies(parameters):
             fd.writelines(_replace_conda_env(factory_py_ver, factory_numpy_ver))
         cprint(f"Conda env exported to {env_file_name}. Exit.", color="OKGREEN")
         sys.exit(0)
-    
+
     if parameters["use_pip"]:
         _ensure_pip(blender_py)
         _pip_install(blender_py, numpy_version=factory_numpy_ver)
@@ -1471,7 +1498,7 @@ def _install_dependencies(parameters):
 
     # If use_pip, only install python
     # pip and download utils
-    #minimal_env = parameters["use_pip"]
+    # minimal_env = parameters["use_pip"]
     env_file = parameters["conda_env_file"]
     _conda_update(
         parameters["conda_env_file"],
@@ -1479,7 +1506,7 @@ def _install_dependencies(parameters):
         python_version=factory_py_ver,
         numpy_version=factory_numpy_ver,
         backend=backend,
-    #   minimal_env=minimal_env
+        #   minimal_env=minimal_env
     )
 
     return
@@ -1489,9 +1516,18 @@ def _uninstall_dependencies(parameters):
     # _old_python not found, ignore
     if parameters["dry_run"]:
         if parameters["use_pip"]:
-            cprint(("Simulate: remove pip-installed dependencies\n" "action: None \n"), color="OKBLUE")
+            cprint(
+                ("Simulate: remove pip-installed dependencies\n" "action: None \n"),
+                color="OKBLUE",
+            )
         else:
-            cprint(("Simulate: skip removing conda-installed dependencies\n" "action: None \n"), color="OKBLUE")
+            cprint(
+                (
+                    "Simulate: skip removing conda-installed dependencies\n"
+                    "action: None \n"
+                ),
+                color="OKBLUE",
+            )
         return
 
     if not parameters["use_pip"]:
@@ -1642,11 +1678,13 @@ def _print_success_uninstall(parameters):
     factory_python_source = parameters["factory_python_source"]
     factory_python_target = parameters["factory_python_target"]
     pip_python = factory_python_source.with_name("_pip_python").absolute()
-    
+
     base_msg = "Beautiful-atoms uninstallation finished!"
-    pip_msg = ("All dependencies installed by pip have been removed.\n"
-               f"The cloned environment at {pip_python} may be safely deleted now.\n")
-    
+    pip_msg = (
+        "All dependencies installed by pip have been removed.\n"
+        f"The cloned environment at {pip_python} may be safely deleted now.\n"
+    )
+
     conda_msg = (
         "Dependencies installed in the conda environment are not removed.\n"
         "If you don't need to reuse the conda environment, remove it by:\n"
@@ -1687,7 +1725,6 @@ def _install_version_check(parameters):
     parameters["blender_py"] = blender_py
     parameters["factory_py_ver"] = factory_py_ver
     parameters["factory_numpy_ver"] = factory_numpy_ver
-    print(parameters)
     if Version(blender_version) >= Version("3.4"):
         cprint("Blender version compatibility OK.", color="OKGREEN")
         return
@@ -1749,14 +1786,12 @@ def _sanitize_parameters(parameters):
             (
                 "You have specified --use-pip option and conda environment is activated. "
                 "Dependencies will be installed directly to blender's python distribution. \n"
-                "Some packages like openbabel may require additional setup to install."
+                "However, some packages like pymatgen and openbabel may require additional setup to install.\n"
+                "We recommend using the conda installation method on Unix systems."
             ),
             color="WARNING",
         )
-
-    # Use `which` to determine if the python executable may
-    # conflict with the environment
-    if parameters["os_name"] not in ["windows"]:
+    elif not parameters["uninstall"]:
         check_python_conflict()
 
     if parameters["dry_run"]:
@@ -1959,9 +1994,6 @@ def main():
     args = parser.parse_args()
     os_name = _get_os_name()
 
-    if (os_name not in ["windows"]) and (args.uninstall is False):
-        check_python_conflict()
-
     # Use blender_root supplied to commandline if exists, otherwise try to guess
     if args.blender_root:
         true_blender_root = Path(expanduser(expandvars(args.blender_root)))
@@ -1988,6 +2020,7 @@ def main():
         no_blender_alias=args.no_blender_alias,
         plugin_version=args.plugin_version,
         dry_run=args.dry_run,
+        uninstall=args.uninstall,
     )
     if not args.uninstall:
         install(parameters)
