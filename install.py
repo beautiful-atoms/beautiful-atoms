@@ -1838,9 +1838,10 @@ def install(parameters):
     # TODO: finish the conda part in between
     _install_dependencies(parameters)
     _install_plugin(parameters)
-    _setup_startup_and_preferences(parameters)
     _blender_enable_plugin(parameters)
     _blender_test_plugin(parameters)
+    # Startup setting should occur after plugin enabled
+    _setup_startup_and_preferences(parameters)
     _create_blender_alias(parameters)
     _create_batomspy(parameters)
     _print_success_install(parameters)
