@@ -1127,7 +1127,7 @@ def _replace_blender_binary(parameters):
                 ),
                 color="OKBLUE",
             )
-        return
+            return
 
         if _is_binary_file(blender_bin):
             shutil.move(blender_bin, backup_blender_bin)
