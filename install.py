@@ -880,7 +880,6 @@ def _pip_uninstall(blender_py, old_blender_py=None):
 
     try:
         factory_pip_packages = _pip_get_packages(old_blender_py)
-        print(factory_pip_packages)
     except Exception as e:
         factory_pip_packages = []
 
@@ -908,12 +907,12 @@ def _pip_uninstall(blender_py, old_blender_py=None):
         "pybtex",
         "networkx",
         "pandas",]
-    
-    # not exhaustive, but should be the most dependent ones
-    # TODO: cleanup the dependencies
-    print(remove_packages)
-    commands = pip_prefix + ["uninstall", "-y",] + remove_packages
-    _run_process(commands)
+
+    if len(remove_packages) > 0:
+        commands = pip_prefix + ["uninstall", "-y",] + remove_packages
+        _run_process(commands)
+    else:
+        cprint("No packages to remove! Skip.", color="OKBLUE")
     return
 
 
@@ -1064,6 +1063,8 @@ def _link_pip_dir(parameters):
 def _remove_pip_python(parameters):
     """Copy the _old_python folder to _pip_python and link to python source
     only to be called when use_pip is enabled
+    
+    In the production stage we don't automatically remove the _pip_python clone since user may want to reuse for the sake of speed
     """
     if parameters["use_pip"] is False:
         return
@@ -1638,8 +1639,14 @@ def _print_success_uninstall(parameters):
     conda_vars = parameters["conda_vars"]
     env_pref = conda_vars["CONDA_PREFIX"]
     blender_bin = parameters["blender_bin"]
+    factory_python_source = parameters["factory_python_source"]
+    factory_python_target = parameters["factory_python_target"]
+    pip_python = factory_python_source.with_name("_pip_python").absolute()
+    
     base_msg = "Beautiful-atoms uninstallation finished!"
-    pip_msg = "All dependencies installed by pip have been removed."
+    pip_msg = ("All dependencies installed by pip have been removed.\n"
+               f"The cloned environment at {pip_python} may be safely deleted now.\n")
+    
     conda_msg = (
         "Dependencies installed in the conda environment are not removed.\n"
         "If you don't need to reuse the conda environment, remove it by:\n"
@@ -1805,7 +1812,8 @@ def uninstall(parameters):
     _remove_blender_alias(parameters)
     _remove_batomspy(parameters)
     _restore_factory_python(parameters)
-    _remove_pip_python(parameters)
+    # Do not automatically remove _pip_python
+    # _remove_pip_python(parameters)
     _restore_blender_binary(parameters)
     _blender_test_uninstall(parameters)
     _print_success_uninstall(parameters)
