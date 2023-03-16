@@ -1013,9 +1013,11 @@ def _install_plugin(parameters):
     if parameters["dry_run"]:
         if parameters["dependency_only"]:
             cprint(
-                "Simulate: install dependency only. Batoms plugin will not be copied.\n",
+                ("Simulate: install dependency only. Batoms plugin will not be copied.\n"
+                 "action: None"),
                 color="OKBLUE",
             )
+            sys.exit(0)
         else:
             cprint(
                 (
@@ -1031,7 +1033,6 @@ def _install_plugin(parameters):
             "Install dependency only. Batoms plugin will not be copied.",
             color="OKGREEN",
         )
-        os.ex
         return
     if plugin_path_target.is_dir():
         if not _is_empty_dir(plugin_path_target):
@@ -1309,13 +1310,18 @@ def _remove_batomspy(parameters):
 def _install_dependencies(parameters):
     """Install dependencies from conda or pip"""
     if parameters["dry_run"]:
-        cprint(
-            (
-                "Simulate: install dependencies using conda update\n"
-                "action: conda install dependencies\n"
-            ),
+        if parameters["generate_env_file"] is not None:
+            cprint(("Simulater: export conda environment configuration\n"
+                    f"action: write {parameters['generate_env_file']}"), color="OKBLUE")
+            sys.exit(0)
+        else:
+            cprint(
+                (
+                    "Simulate: install dependencies using conda update\n"
+                    "action: conda install dependencies\n"
+                ),
             color="OKBLUE",
-        )
+            )
         return
 
     blender_bin = parameters["blender_bin"]
