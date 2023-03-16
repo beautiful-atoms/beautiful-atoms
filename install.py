@@ -45,6 +45,22 @@ DEFAULT_PLUGIN_NAME = "batoms"
 DEFAULT_PLUGIN_PATH = f"scripts/addons_contrib/{DEFAULT_PLUGIN_NAME}"
 DEFAULT_BLENDER_PY_VER = "3.10.2"
 DEFAULT_BLENDER_NUMPY_VER = "1.22.0"
+# Default packages provided by blender.
+FACTORY_PIP_PACKAGES = [
+    "autopep8",
+    "certifi",
+    "charset-normalizer",
+    "Cython",
+    "idna",
+    "numpy",
+    "pip",
+    "pycodestyle",
+    "requests",
+    "setuptools",
+    "toml",
+    "urllib3",
+    "zstandard",
+]
 
 ALLOWED_BLENDER_VERSIONS = ["3.4", "3.5"]
 DEPRECATED_BLENDER_VERSIONS = ["3.0", "3.1", "3.2"]
@@ -842,21 +858,45 @@ def _pip_install(blender_py, numpy_version=DEFAULT_BLENDER_NUMPY_VER):
     return
 
 
+def _pip_get_packages(blender_py):
+    """Use pip list to get a list of installed pacakges"""
+    import json
+    commands = [str(blender_py), "-m", "pip", "list", "--format", "json"]
+    proc = _run_process(commands, capture_output=True)
+    json_string = proc.stdout.decode("utf8")
+    json_dict = json.loads(json_string)
+    packages = [entry["name"] for entry in json_dict]
+    return packages
+    
 
-def _pip_uninstall(blender_py):
-    """uninstall pip components"""
+
+def _pip_uninstall(blender_py, old_blender_py=None):
+    """Uninstall pip components
+    if old_blender_py is not None, use its pip to determine then
+    default packages that should be kept
+    """
     blender_py = str(blender_py)
     pip_prefix = [blender_py, "-m", "pip"]
-    # not exhaustive, but should be the most dependent ones
-    # TODO: cleanup the dependencies
-    commands = pip_prefix + [
-        "uninstall",
-        "-y",
-        "ase",
-        "scipy",
-        "matplotlib",
-        "spglib",
-        "scikit-image",
+
+    try:
+        factory_pip_packages = _pip_get_packages(old_blender_py)
+        print(factory_pip_packages)
+    except Exception as e:
+        factory_pip_packages = []
+
+    if len(factory_pip_packages) < 5:
+        cprint("List of factory packages by pip is too small, I'll use the default values.", color="WARNING")
+        factory_pip_packages = FACTORY_PIP_PACKAGES
+
+    try:
+        installed_packages = _pip_get_packages(blender_py)
+        print(installed_packages)
+        remove_packages = [p for p in installed_packages if p not in factory_pip_packages]
+    except Exception:
+        cprint("Unknown error when getting installed packages. Use default values.", color="WARNING")
+        # Last resolution, remove known dependencies
+        remove_packages = ["ase", "scipy", "matplotlib",
+        "spglib", "scikit-image",
         "plotly",
         "Pillow",
         "openbabel",
@@ -867,8 +907,12 @@ def _pip_uninstall(blender_py):
         "latexcodec",
         "pybtex",
         "networkx",
-        "pandas",
-    ]
+        "pandas",]
+    
+    # not exhaustive, but should be the most dependent ones
+    # TODO: cleanup the dependencies
+    print(remove_packages)
+    commands = pip_prefix + ["uninstall", "-y",] + remove_packages
     _run_process(commands)
     return
 
@@ -1460,9 +1504,14 @@ def _uninstall_dependencies(parameters):
 
     #
     blender_bin = parameters["blender_bin"]
-    blender_py = _get_blender_py(blender_bin)
+    python_root_now = parameters["factory_python_source"].absolute()
+    python_root_old = parameters["factory_python_target"].absolute()
+    blender_py = _get_blender_py(blender_bin).absolute()
+    relative_py_path = blender_py.relative_to(python_root_now)
+    old_blender_py = python_root_old / relative_py_path
+    print(old_blender_py)
     _ensure_pip(blender_py)
-    _pip_uninstall(blender_py)
+    _pip_uninstall(blender_py, old_blender_py)
     cprint("Pip dependencies for beautiful-atoms have been removed", color="OKGREEN")
     return
 
