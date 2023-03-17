@@ -207,7 +207,7 @@ else
   fi
 fi
 SCRIPT_DIR=$(dirname "$SCRIPT")
-BF_DIST_BIN=${SCRIPT_DIR}
+BF_DIST_BIN=${{SCRIPT_DIR}}
 BF_PROGRAM="blender.origin"
 
 LD_LIBRARY_PATH={dyn_lib_path}:${{LD_LIBRARY_PATH}}
@@ -1003,7 +1003,6 @@ def _find_conda_bin_path(env_name, conda_vars):
     return bindir
 
 
-
 ################################################################################
 # Section 4.1: operations on blender file structure.
 # All functions here take only the `parameters` argument
@@ -1029,7 +1028,6 @@ def _restore_factory_python(parameters):
             color="OKBLUE",
         )
         return
-
 
     if factory_python_target.exists():
         # _rename_dir will remove directory if it's empty or a symlink
@@ -1573,7 +1571,7 @@ def _uninstall_dependencies(parameters):
         old_blender_py = python_root_old / relative_py_path
     except Exception as e:
         cprint(f"Encountered error {e} getting old python.", color="FAIL")
-        old_blender_py=None
+        old_blender_py = None
     _ensure_pip(blender_py)
     _pip_uninstall(blender_py, old_blender_py)
     cprint("Pip dependencies for beautiful-atoms have been removed", color="OKGREEN")
