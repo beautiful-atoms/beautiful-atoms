@@ -191,7 +191,22 @@ ch4 = Batoms(label='CH4')
 # Similar to blender-softwaregl, invoke blender.origin but fix LD
 # This script is intended to replace <blender-dir>/blender
 BLENDER_REPLACE_SH = """#!/bin/sh
-BF_DIST_BIN=$(dirname "$0")
+# Make sure all calls to ./blender is using the abspath
+# Try to use readlink to get the absolute path of the script
+if command -v readlink >/dev/null 2>&1; then
+  SCRIPT=$(readlink -f "$0")
+else
+  if command -v realpath >/dev/null 2>&1; then
+    SCRIPT=$(realpath "$0")
+  else
+    # Last resolution to use manual symlink check
+    SCRIPT="$0"
+    while test -h "$SCRIPT"; do
+        SCRIPT=$(ls -ld "$SCRIPT" | awk '{print $NF}')
+    done
+fi
+SCRIPT_DIR=$(dirname "$SCRIPT")
+BF_DIST_BIN=${SCRIPT_DIR}
 BF_PROGRAM="blender.origin"
 
 LD_LIBRARY_PATH={dyn_lib_path}:${{LD_LIBRARY_PATH}}
