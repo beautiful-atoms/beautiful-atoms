@@ -202,8 +202,9 @@ else
     # Last resolution to use manual symlink check
     SCRIPT="$0"
     while test -h "$SCRIPT"; do
-        SCRIPT=$(ls -ld "$SCRIPT" | awk '{print $NF}')
+        SCRIPT=$(ls -ld "$SCRIPT" | awk '{{print $NF}}')
     done
+  fi
 fi
 SCRIPT_DIR=$(dirname "$SCRIPT")
 BF_DIST_BIN=${SCRIPT_DIR}
