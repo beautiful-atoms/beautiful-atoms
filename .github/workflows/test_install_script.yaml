@@ -91,8 +91,8 @@ jobs:
           $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT}
           command -v batomspy >/dev/null 2>&1 || { echo >&2 "No batomspy installed"; exit 1; }
           # Test symlink blender
-          rm -rf /tmp/blener && ln -s ${BLENDER_ROOT}/blender /tmp/blender
-          /tmp/blender >/dev/null 2>&1 || { echo >&2 "Symlinking blender doesn't work!"; exit 1; }
+          rm -rf /tmp/blender && ln -s ${BLENDER_ROOT}/blender /tmp/blender
+          /tmp/blender -b >/dev/null 2>&1 || { echo >&2 "Symlinking blender doesn't work!"; exit 1; }
           rm -rf /tmp/blender
           $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
           ! ( command -v batomspy >/dev/null 2>&1 ) || { echo >&2 "batomspy not removed"; exit 1; }
