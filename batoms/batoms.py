@@ -943,8 +943,8 @@ class Batoms(BaseCollection, ObjectGN):
         # self.set_frames(frames_new)
         self.cell.repeat(m)
         self.update_gn_cell()
-        # if self.volumetric_data is not None:
-        # self.volumetric_data = np.tile(self.volumetric_data, m)
+        if self.volumetric_data is not None:
+            self._volumetric_data *= m
         self.species.update_geometry_node()
         if self._boundary is not None:
             self.boundary.update()

@@ -82,3 +82,13 @@ def test_ops_create():
         operator='Minus')
     assert h2o.coll.batoms.ui_list_index_volumetric_data == 2
     assert np.isclose(h2o.volumetric_data['diff'], 0).all()
+
+def test_repeat():
+    from batoms.bio.bio import read
+    bpy.ops.batoms.delete()
+    h2o = read("../tests/datas/h2o-homo.cube")
+    shape = h2o.volumetric_data["h2o_homo"].shape
+    M = [2, 2, 1]
+    h2o._volumetric_data *= M
+    new_shape = h2o.volumetric_data["h2o_homo"].shape
+    assert list(new_shape) == [shape[i]*M[i] for i in range(3)]
