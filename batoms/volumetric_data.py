@@ -90,6 +90,8 @@ class VolumetricData(Setting):
         name = "{}_volume_{}".format(self.label, setting.name)
         if name in bpy.data.objects:
             bpy.data.objects.remove(bpy.data.objects[name], do_unlink=True)
+        if name in bpy.data.meshes:
+            bpy.data.meshes.remove(bpy.data.meshes[name], do_unlink=True)
         shape = volume.shape
         volume = volume.reshape(-1, 1)
         npoint = len(volume)
@@ -98,11 +100,12 @@ class VolumetricData(Setting):
         dn = 3 - npoint % 3
         verts = np.append(volume, np.zeros((dn, 1)), axis=0)
         verts = verts.reshape(-1, 3)
-        mesh = bpy.data.meshes.new("%s_volume" % self.label)
+        mesh = bpy.data.meshes.new(name)
         mesh.from_pydata(verts, [], [])
         mesh.update()
         obj = bpy.data.objects.new(name, mesh)
         obj.data = mesh
+        obj.parent = self.parent.obj
         obj.batoms.type = 'VOLUME'
         obj.batoms.volume.shape = shape
         self.coll.objects.link(obj)
@@ -134,6 +137,12 @@ class VolumetricData(Setting):
         # print('Read volume: {0:1.2f}'.format(time() - tstart))
         return volume
 
+    def __imul__(self, m):
+        import numpy as np
+        for volume in self.bpy_setting:
+            data = self[volume.name]
+            self[volume.name] = np.tile(data, m)
+        return self
 
     def __repr__(self) -> str:
         s = "-"*60 + "\n"
