@@ -99,7 +99,17 @@ def test_geometry_node_object():
     assert tio2.boundary.gnodes.node_group.nodes['ObjectInfo_tio2_Ti'].inputs['Object'].default_value is not None
     assert tio2.bond.search_bond.gnodes.node_group.nodes['ObjectInfo_tio2_Ti'].inputs['Object'].default_value is not None
 
-
+def test_color_by_attribute():
+    from ase.build import bulk
+    from batoms import Batoms
+    import numpy as np
+    au = bulk("Au", cubic=True)*[5, 5, 5]
+    au = Batoms(label = "au", from_ase = au)
+    z = au.positions[:, 2]
+    au.set_attributes({"z_coor": (z-np.min(z))/(np.max(z)-np.min(z)) })
+    au.species.color_by_attribute("z_coor")
+    assert au.species['Au'].materials['Au'].node_tree.nodes['Attribute'].attribute_name == "z_coor"
+    assert len(au.species['Au'].materials['Au'].node_tree.links) > 2
 
 if __name__ == "__main__":
     test_batoms_species()
