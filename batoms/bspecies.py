@@ -159,6 +159,10 @@ class Species(BaseObject):
             Attrribute = mat.node_tree.nodes.new('ShaderNodeAttribute')
             Attrribute.attribute_type = 'INSTANCER'
             ValToRGB = mat.node_tree.nodes.new('ShaderNodeValToRGB')
+            ValToRGB.color_ramp.elements.new(0.5)
+            ValToRGB.color_ramp.elements[0].color = (1, 0, 0, 1)
+            ValToRGB.color_ramp.elements[1].color = (0, 1, 0, 1)
+            ValToRGB.color_ramp.elements[2].color = (0, 0, 1, 1)
             mat.node_tree.links.new(Attrribute.outputs['Fac'],
                                 ValToRGB.inputs['Fac'])
             
@@ -351,17 +355,21 @@ class Species(BaseObject):
         self.build_materials(material_style = material_style)
         self.assign_materials()
 
-    def color_by_attribute(self, attribute, colors=[(0, 0, 1, 1), (1, 0, 0, 1)]):
-        """
-        """
+    def color_by_attribute(self, attribute, colors=[(1, 0, 0, 1), (0, 1, 0, 1), (0, 0, 1, 1)]):
+        """Color by attribute"""
         node_tree = self.materials[self.main_element].node_tree
-        print("node: ", node_tree.nodes['Attribute'])
-        print("name: ", node_tree.nodes['Attribute'].attribute_name)
-        node_tree.nodes['Attribute'].attribute_name = attribute
-        node_tree.nodes['Color Ramp'].color_ramp.elements[0].color = colors[0]
-        node_tree.nodes['Color Ramp'].color_ramp.elements[1].color = colors[1]
-        node_tree.links.new(node_tree.nodes['Color Ramp'].outputs['Color'],
-                                node_tree.nodes['Principled BSDF'].inputs['Base Color'])
+        if attribute in ["element"]:
+            # remove the link
+            for link in node_tree.links:
+                if link.from_node.name == 'Color Ramp' and link.to_node.name == 'Principled BSDF':
+                    node_tree.links.remove(link)
+        else:
+            node_tree.nodes['Attribute'].attribute_name = attribute
+            node_tree.nodes['Color Ramp'].color_ramp.elements[0].color = colors[0]
+            node_tree.nodes['Color Ramp'].color_ramp.elements[1].color = colors[1]
+            node_tree.nodes['Color Ramp'].color_ramp.elements[2].color = colors[2]
+            node_tree.links.new(node_tree.nodes['Color Ramp'].outputs['Color'],
+                                    node_tree.nodes['Principled BSDF'].inputs['Base Color'])
 
     @property
     def radius(self):
@@ -659,3 +667,7 @@ class Bspecies(Setting):
         for name, sp in species.items():
             data[name] = sp.as_dict()
         return data
+
+    def color_by_attribute(self, attribute, colors=[(1, 0, 0, 1), (0, 1, 0, 1), (0, 0, 1, 1)]):
+        for _, sp in self.species.items():
+            sp.color_by_attribute(attribute, colors=colors)
