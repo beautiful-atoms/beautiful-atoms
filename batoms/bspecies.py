@@ -155,6 +155,13 @@ class Species(BaseObject):
                                   node_inputs=node_inputs,
                                   material_style=material_style,
                                   backface_culling=True)
+            # add attribute and color ramp
+            Attrribute = mat.node_tree.nodes.new('ShaderNodeAttribute')
+            Attrribute.attribute_type = 'INSTANCER'
+            ValToRGB = mat.node_tree.nodes.new('ShaderNodeValToRGB')
+            mat.node_tree.links.new(Attrribute.outputs['Fac'],
+                                ValToRGB.inputs['Fac'])
+            
             mesh.materials.append(mat)
             self.parent.batoms.obj.data.materials.append(mat)
             i += 1
@@ -343,6 +350,18 @@ class Species(BaseObject):
         self.data.material_style = material_style
         self.build_materials(material_style = material_style)
         self.assign_materials()
+
+    def color_by_attribute(self, attribute, colors=[(0, 0, 1, 1), (1, 0, 0, 1)]):
+        """
+        """
+        node_tree = self.materials[self.main_element].node_tree
+        print("node: ", node_tree.nodes['Attribute'])
+        print("name: ", node_tree.nodes['Attribute'].attribute_name)
+        node_tree.nodes['Attribute'].attribute_name = attribute
+        node_tree.nodes['Color Ramp'].color_ramp.elements[0].color = colors[0]
+        node_tree.nodes['Color Ramp'].color_ramp.elements[1].color = colors[1]
+        node_tree.links.new(node_tree.nodes['Color Ramp'].outputs['Color'],
+                                node_tree.nodes['Principled BSDF'].inputs['Base Color'])
 
     @property
     def radius(self):
