@@ -355,8 +355,9 @@ class Species(BaseObject):
         self.build_materials(material_style = material_style)
         self.assign_materials()
 
-    def color_by_attribute(self, attribute, colors=[(1, 0, 0, 1), (0, 1, 0, 1), (0, 0, 1, 1)]):
+    def color_by_attribute(self, attribute, cmap="viridis"):
         """Color by attribute"""
+        import matplotlib.pyplot as plt
         node_tree = self.materials[self.main_element].node_tree
         if attribute in ["element"]:
             # remove the link
@@ -370,6 +371,8 @@ class Species(BaseObject):
             else:
                 color_ramp_node = node_tree.nodes.get('ColorRamp')
             node_tree.nodes['Attribute'].attribute_name = attribute
+            colormap = plt.get_cmap(cmap)
+            colors = colormap([0, 0.5, 1])
             color_ramp_node.color_ramp.elements[0].color = colors[0]
             color_ramp_node.color_ramp.elements[1].color = colors[1]
             color_ramp_node.color_ramp.elements[2].color = colors[2]
@@ -673,6 +676,6 @@ class Bspecies(Setting):
             data[name] = sp.as_dict()
         return data
 
-    def color_by_attribute(self, attribute, colors=[(1, 0, 0, 1), (0, 1, 0, 1), (0, 0, 1, 1)]):
+    def color_by_attribute(self, attribute, cmap="viridis"):
         for _, sp in self.species.items():
-            sp.color_by_attribute(attribute, colors=colors)
+            sp.color_by_attribute(attribute, cmap=cmap)
