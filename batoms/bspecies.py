@@ -165,7 +165,7 @@ class Species(BaseObject):
             ValToRGB.color_ramp.elements[2].color = (0, 0, 1, 1)
             mat.node_tree.links.new(Attrribute.outputs['Fac'],
                                 ValToRGB.inputs['Fac'])
-            
+
             mesh.materials.append(mat)
             self.parent.batoms.obj.data.materials.append(mat)
             i += 1
@@ -361,14 +361,19 @@ class Species(BaseObject):
         if attribute in ["element"]:
             # remove the link
             for link in node_tree.links:
-                if link.from_node.name == 'Color Ramp' and link.to_node.name == 'Principled BSDF':
+                if link.from_node.name in ['Color Ramp', 'ColorRamp'] and link.to_node.name == 'Principled BSDF':
                     node_tree.links.remove(link)
         else:
+            # Blender 3.6: 'Color Ramp', Blender 3.4: 'ColorRamp'
+            if node_tree.nodes.get('Color Ramp'):
+                color_ramp_node = node_tree.nodes.get('Color Ramp')
+            else:
+                color_ramp_node = node_tree.nodes.get('ColorRamp')
             node_tree.nodes['Attribute'].attribute_name = attribute
-            node_tree.nodes['Color Ramp'].color_ramp.elements[0].color = colors[0]
-            node_tree.nodes['Color Ramp'].color_ramp.elements[1].color = colors[1]
-            node_tree.nodes['Color Ramp'].color_ramp.elements[2].color = colors[2]
-            node_tree.links.new(node_tree.nodes['Color Ramp'].outputs['Color'],
+            color_ramp_node.color_ramp.elements[0].color = colors[0]
+            color_ramp_node.color_ramp.elements[1].color = colors[1]
+            color_ramp_node.color_ramp.elements[2].color = colors[2]
+            node_tree.links.new(color_ramp_node.outputs['Color'],
                                     node_tree.nodes['Principled BSDF'].inputs['Base Color'])
 
     @property

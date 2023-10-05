@@ -353,8 +353,7 @@ class Batoms(BaseCollection, ObjectGN):
                                             'SetMaterial_%s_%s' % (
                                                 self.label, spname),
                                             'GeometryNodeSetMaterial')
-        mat_name = '%s_%s_%s' % (self.label, spname, spname)
-        SetMaterial.inputs[2].default_value = bpy.data.materials[mat_name]
+        SetMaterial.inputs[2].default_value = instancer.data.materials[0]
         #
         gn.node_group.links.new(SetPosition.outputs['Geometry'],
                                 InstanceOnPoint.inputs['Points'])
