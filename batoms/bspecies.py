@@ -155,6 +155,17 @@ class Species(BaseObject):
                                   node_inputs=node_inputs,
                                   material_style=material_style,
                                   backface_culling=True)
+            # add attribute and color ramp
+            Attrribute = mat.node_tree.nodes.new('ShaderNodeAttribute')
+            Attrribute.attribute_type = 'INSTANCER'
+            ValToRGB = mat.node_tree.nodes.new('ShaderNodeValToRGB')
+            ValToRGB.color_ramp.elements.new(0.5)
+            ValToRGB.color_ramp.elements[0].color = (1, 0, 0, 1)
+            ValToRGB.color_ramp.elements[1].color = (0, 1, 0, 1)
+            ValToRGB.color_ramp.elements[2].color = (0, 0, 1, 1)
+            mat.node_tree.links.new(Attrribute.outputs['Fac'],
+                                ValToRGB.inputs['Fac'])
+
             mesh.materials.append(mat)
             self.parent.batoms.obj.data.materials.append(mat)
             i += 1
@@ -343,6 +354,30 @@ class Species(BaseObject):
         self.data.material_style = material_style
         self.build_materials(material_style = material_style)
         self.assign_materials()
+
+    def color_by_attribute(self, attribute, cmap="viridis"):
+        """Color by attribute"""
+        import matplotlib.pyplot as plt
+        node_tree = self.materials[self.main_element].node_tree
+        if attribute in ["element"]:
+            # remove the link
+            for link in node_tree.links:
+                if link.from_node.name in ['Color Ramp', 'ColorRamp'] and link.to_node.name == 'Principled BSDF':
+                    node_tree.links.remove(link)
+        else:
+            # Blender 3.6: 'Color Ramp', Blender 3.4: 'ColorRamp'
+            if node_tree.nodes.get('Color Ramp'):
+                color_ramp_node = node_tree.nodes.get('Color Ramp')
+            else:
+                color_ramp_node = node_tree.nodes.get('ColorRamp')
+            node_tree.nodes['Attribute'].attribute_name = attribute
+            colormap = plt.get_cmap(cmap)
+            colors = colormap([0, 0.5, 1])
+            color_ramp_node.color_ramp.elements[0].color = colors[0]
+            color_ramp_node.color_ramp.elements[1].color = colors[1]
+            color_ramp_node.color_ramp.elements[2].color = colors[2]
+            node_tree.links.new(color_ramp_node.outputs['Color'],
+                                    node_tree.nodes['Principled BSDF'].inputs['Base Color'])
 
     @property
     def radius(self):
@@ -640,3 +675,7 @@ class Bspecies(Setting):
         for name, sp in species.items():
             data[name] = sp.as_dict()
         return data
+
+    def color_by_attribute(self, attribute, cmap="viridis"):
+        for _, sp in self.species.items():
+            sp.color_by_attribute(attribute, cmap=cmap)

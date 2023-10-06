@@ -348,6 +348,12 @@ class Batoms(BaseCollection, ObjectGN):
                                      'BooleanMath_%s_%s_1' % (
                                          self.label, spname),
                                      'FunctionNodeBooleanMath')
+        # set materials
+        SetMaterial = get_nodes_by_name(gn.node_group.nodes,
+                                            'SetMaterial_%s_%s' % (
+                                                self.label, spname),
+                                            'GeometryNodeSetMaterial')
+        SetMaterial.inputs[2].default_value = instancer.data.materials[0]
         #
         gn.node_group.links.new(SetPosition.outputs['Geometry'],
                                 InstanceOnPoint.inputs['Points'])
@@ -362,6 +368,8 @@ class Batoms(BaseCollection, ObjectGN):
         gn.node_group.links.new(ObjectInfo.outputs['Geometry'],
                                 InstanceOnPoint.inputs['Instance'])
         gn.node_group.links.new(InstanceOnPoint.outputs['Instances'],
+                                SetMaterial.inputs['Geometry'])
+        gn.node_group.links.new(SetMaterial.outputs['Geometry'],
                                 JoinGeometry.inputs['Geometry'])
 
     def check_batoms(self, label):
