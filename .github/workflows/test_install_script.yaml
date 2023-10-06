@@ -31,7 +31,8 @@ jobs:
         with:
           activate-environment: batoms
           python-version: "3.10"
-          mamba-version: "*"
+          #mamba-version: "*"
+          miniforge-variant: Mambaforge # Fix according to https://github.com/nextstrain/cli/commit/4a764976519ca5c540c745463548a9d883eae079
           channels: conda-forge,defaults
       - name: Update libstdc++ and
         run: |
@@ -68,7 +69,8 @@ jobs:
         with:
           activate-environment: batoms
           python-version: "3.10"
-          mamba-version: "*"
+          #mamba-version: "*"
+          miniforge-variant: Mambaforge # Fix according to https://github.com/nextstrain/cli/commit/4a764976519ca5c540c745463548a9d883eae079
           channels: conda-forge,defaults
       - name: Update libstdc++ and
         run: |
@@ -138,7 +140,8 @@ jobs:
         with:
           activate-environment: batoms
           python-version: "3.10"
-          mamba-version: "*"
+          #mamba-version: "*"
+          miniforge-variant: Mambaforge # Fix according to https://github.com/nextstrain/cli/commit/4a764976519ca5c540c745463548a9d883eae079
           channels: conda-forge,defaults
       - name: Download portable blender
         run: |
