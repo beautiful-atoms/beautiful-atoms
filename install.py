@@ -62,7 +62,7 @@ FACTORY_PIP_PACKAGES = [
     "zstandard",
 ]
 
-ALLOWED_BLENDER_VERSIONS = ["3.4", "3.5"]
+ALLOWED_BLENDER_VERSIONS = ["3.4", "3.5", "3.6"]
 DEPRECATED_BLENDER_VERSIONS = ["3.0", "3.1", "3.2"]
 
 PY_PATH = "python"
