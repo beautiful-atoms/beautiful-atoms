@@ -53,7 +53,7 @@ def get_default_bl_py_version(blender_root):
 def extract_python_source(blender_root, python_version):
     short_version = ".".join(python_version.split(".")[:2])
     url = f"https://www.python.org/ftp/python/{python_version}/Python-{python_version}.tgz"
-    commands = f"wget {url} && tar -xzf Python-*.tgz && cp -r Python-*/Include/* {blender_root}/python/include/python{short_version}/ && rm -rf Python-*"
+    commands = f"wget {url} && tar -xzf Python-*.tgz && mkdir -p {blender_root}/python/include/python{short_version} && cp -r Python-*/Include/* {blender_root}/python/include/python{short_version}/ && rm -rf Python-*"
     proc = run(commands, shell=True)
     if proc.returncode != 0:
         raise RuntimeError("Error extracting python source")
