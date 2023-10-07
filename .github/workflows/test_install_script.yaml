@@ -134,7 +134,7 @@ jobs:
     strategy:
       matrix:
         # Somehow the macos installers are throwing segfault, could we check?
-        blender_ver: ["3.4.2"]
+        blender_ver: ["3.4.1"]
         
     steps:
       - uses: actions/checkout@v2
