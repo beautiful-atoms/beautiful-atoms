@@ -133,7 +133,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        blender_ver: ["3.6.4"]
+        blender_ver: ["3.6.2"]
     steps:
       - uses: actions/checkout@v2
       - uses: conda-incubator/setup-miniconda@v2
