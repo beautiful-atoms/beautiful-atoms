@@ -158,6 +158,10 @@ jobs:
           chmod -R u+x $HOME/Applications/Blender.app
           # ls "$HOME/Library/Application Support/Blender/${MAJ_VER}/config/"
       # Just debugger session
+      - name: try call macos blender
+        run: |
+          /Users/runner/Applications/Blender.app/Contents/MacOS/Blender -b || true
+          find /var/folders -name blender.crash.txt -exec cat {} \;
       - name: Setup upterm session
         uses: lhotari/action-upterm@v1
       - name: Run installation and uninstallation script
