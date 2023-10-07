@@ -133,7 +133,9 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        blender_ver: ["3.6.2"]
+        # Somehow the macos installers are throwing segfault, could we check?
+        blender_ver: ["3.4.2"]
+        
     steps:
       - uses: actions/checkout@v2
       - uses: conda-incubator/setup-miniconda@v2
@@ -161,9 +163,9 @@ jobs:
       - name: try call macos blender
         run: |
           /Users/runner/Applications/Blender.app/Contents/MacOS/Blender -b || true
-          find /var/folders -name blender.crash.txt -exec cat {} \;
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
+          find /var/folders -name blender.crash.txt -exec cat {} \; || true
+      # - name: Setup upterm session
+      #   uses: lhotari/action-upterm@v1
       - name: Run installation and uninstallation script
         run: |
           echo Currently install in $(pwd)
