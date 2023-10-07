@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
 
 env:
-  BLENDER_DOWN_URL: "https://mirror.clarkson.edu/blender/release"
+  BLENDER_DOWN_URL: "https://mirrors.ocf.berkeley.edu/blender/release"
 
 jobs:
   unittest-linux:
