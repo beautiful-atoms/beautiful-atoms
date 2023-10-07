@@ -157,6 +157,9 @@ jobs:
           echo "BLENDER_ROOT=$HOME/Applications/Blender.app/Contents/Resources/${MAJ_VER}" >> $GITHUB_ENV
           chmod -R u+x $HOME/Applications/Blender.app
           # ls "$HOME/Library/Application Support/Blender/${MAJ_VER}/config/"
+      # Just debugger session
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
       - name: Run installation and uninstallation script
         run: |
           echo Currently install in $(pwd)
