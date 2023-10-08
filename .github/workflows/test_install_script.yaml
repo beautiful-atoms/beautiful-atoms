@@ -145,6 +145,8 @@ jobs:
           #mamba-version: "*"
           miniforge-variant: Mambaforge # Fix according to https://github.com/nextstrain/cli/commit/4a764976519ca5c540c745463548a9d883eae079
           channels: conda-forge,defaults
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
       - name: Download portable blender
         run: |
           echo Currently install in $(pwd)
