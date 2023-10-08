@@ -147,6 +147,8 @@ jobs:
           channels: conda-forge,defaults
       - name: Setup upterm session
         uses: lhotari/action-upterm@v1
+        with:
+          limit-access-to-actor: false
       - name: Download portable blender
         run: |
           echo Currently install in $(pwd)
