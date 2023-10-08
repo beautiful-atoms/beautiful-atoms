@@ -130,7 +130,7 @@ jobs:
     defaults:
       run:
         shell: bash -l {0}
-    runs-on: macos-latest
+    runs-on: macos-13
     strategy:
       matrix:
         # Somehow the macos installers are throwing segfault, could we check?
