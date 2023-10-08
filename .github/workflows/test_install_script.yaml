@@ -134,7 +134,7 @@ jobs:
     strategy:
       matrix:
         # Somehow the macos installers are throwing segfault, could we check?
-        blender_ver: ["3.4.1"]
+        blender_ver: ["3.6.0"]
         
     steps:
       - uses: actions/checkout@v2
@@ -145,10 +145,10 @@ jobs:
           #mamba-version: "*"
           miniforge-variant: Mambaforge # Fix according to https://github.com/nextstrain/cli/commit/4a764976519ca5c540c745463548a9d883eae079
           channels: conda-forge,defaults
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
-        with:
-          limit-access-to-actor: false
+      # - name: Setup upterm session
+      #   uses: lhotari/action-upterm@v1
+      #   with:
+      #     limit-access-to-actor: false
       - name: Download portable blender
         run: |
           echo Currently install in $(pwd)
