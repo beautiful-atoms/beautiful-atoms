@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
 
 env:
-  BLENDER_DOWN_URL: "https://mirror.clarkson.edu/blender/release"
+  BLENDER_DOWN_URL: "https://mirrors.ocf.berkeley.edu/blender/release"
 
 jobs:
   unittest-linux:
@@ -24,14 +24,15 @@ jobs:
     strategy:
       matrix:
         # For future tests we will only over 3 of the latest versions
-        blender_ver: ["3.4.1"]
+        blender_ver: ["3.6.4"]
     steps:
       - uses: actions/checkout@v2
       - uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: batoms
           python-version: "3.10"
-          mamba-version: "*"
+          #mamba-version: "*"
+          miniforge-variant: Mambaforge # Fix according to https://github.com/nextstrain/cli/commit/4a764976519ca5c540c745463548a9d883eae079
           channels: conda-forge,defaults
       - name: Update libstdc++ and
         run: |
@@ -61,14 +62,15 @@ jobs:
     strategy:
       matrix:
         # For future tests we will only over 3 of the latest versions
-        blender_ver: ["3.4.1"]
+        blender_ver: ["3.6.4"]
     steps:
       - uses: actions/checkout@v2
       - uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: batoms
           python-version: "3.10"
-          mamba-version: "*"
+          #mamba-version: "*"
+          miniforge-variant: Mambaforge # Fix according to https://github.com/nextstrain/cli/commit/4a764976519ca5c540c745463548a9d883eae079
           channels: conda-forge,defaults
       - name: Update libstdc++ and
         run: |
@@ -131,14 +133,17 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
+        # Somehow the macos installers are throwing segfault, could we check?
         blender_ver: ["3.4.1"]
+        
     steps:
       - uses: actions/checkout@v2
       - uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: batoms
           python-version: "3.10"
-          mamba-version: "*"
+          #mamba-version: "*"
+          miniforge-variant: Mambaforge # Fix according to https://github.com/nextstrain/cli/commit/4a764976519ca5c540c745463548a9d883eae079
           channels: conda-forge,defaults
       - name: Download portable blender
         run: |
@@ -154,6 +159,13 @@ jobs:
           echo "BLENDER_ROOT=$HOME/Applications/Blender.app/Contents/Resources/${MAJ_VER}" >> $GITHUB_ENV
           chmod -R u+x $HOME/Applications/Blender.app
           # ls "$HOME/Library/Application Support/Blender/${MAJ_VER}/config/"
+      # Just debugger session
+      - name: try call macos blender
+        run: |
+          /Users/runner/Applications/Blender.app/Contents/MacOS/Blender -b || true
+          find /var/folders -name blender.crash.txt -exec cat {} \; || true
+      # - name: Setup upterm session
+      #   uses: lhotari/action-upterm@v1
       - name: Run installation and uninstallation script
         run: |
           echo Currently install in $(pwd)
@@ -194,7 +206,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        blender_ver: ["3.4.1"]
+        blender_ver: ["3.6.4"]
     steps:
       - uses: actions/checkout@v2
       - uses: conda-incubator/setup-miniconda@v2

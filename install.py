@@ -62,7 +62,7 @@ FACTORY_PIP_PACKAGES = [
     "zstandard",
 ]
 
-ALLOWED_BLENDER_VERSIONS = ["3.4", "3.5"]
+ALLOWED_BLENDER_VERSIONS = ["3.4", "3.5", "3.6"]
 DEPRECATED_BLENDER_VERSIONS = ["3.0", "3.1", "3.2"]
 
 PY_PATH = "python"
@@ -424,11 +424,13 @@ def _get_default_locations(os_name):
             )
         )
     matches = []
+    true_search_locations = []
     for l in default_locations[os_name]:
         for version in ALLOWED_BLENDER_VERSIONS:
             true_location = Path(
                 expandvars(expanduser(l.format(version=version)))
             ).absolute()
+            true_search_locations.append(true_location)
             if true_location.is_dir():
                 matches.append(true_location)
     # Multiple blender installation may occur on macos
@@ -445,7 +447,8 @@ def _get_default_locations(os_name):
     if match is None:
         raise FileNotFoundError(
             (
-                f"Cannot find Blender>=3.4 in default installation locations. "
+                f"Cannot find Blender>=3.4 in default installation locations: \n"
+                f"{true_search_locations} \n"
                 "Please specify the full path to the blender installation location."
             )
         )

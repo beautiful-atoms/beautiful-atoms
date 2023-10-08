@@ -24,7 +24,7 @@ jobs:
     strategy:
       matrix:
         # Manually change these to match the blender image versions
-        blender-version: ["3.4"]
+        blender-version: ["3.6"]
     container:
       # env is not
       image: ghcr.io/beautiful-atoms/blender-env:blender${{ matrix.blender-version }}
@@ -75,7 +75,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        blender-version: ["3.4"]
+        blender-version: ["3.6"]
     container:
       image: ghcr.io/beautiful-atoms/beautiful-atoms:blender${{ matrix.blender-version }}
       options: --user root
