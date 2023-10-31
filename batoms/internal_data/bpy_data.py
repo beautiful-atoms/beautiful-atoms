@@ -168,7 +168,7 @@ class Battribute(Base):
         s = "-"*60 + "\n"
         s = "{:20s}{:10s}{:10s}{:10s}{:10s}   {:20s}\n".format("Name", "Type", "Domain", "delimiter", "Dimension", "Shape")
         s += "{:20s}{:10s}{:10s}{:10s}{:10d}  [".format(
-            self.name, self.type, self.domain, self.delimiter, self.dimension)
+            self.name, self.data_type, self.domain, self.delimiter, self.dimension)
         for i in range(self.dimension):
             s += "  {}  ".format(self.shape[i])
         s += "] \n"
