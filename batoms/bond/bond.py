@@ -217,17 +217,13 @@ class Bond(BaseCollection, ObjectGN):
         name = 'GeometryNodes_%s_bond' % self.label
         modifier = build_modifier(self.obj, name)
         # ------------------------------------------------------------------
-        inputs = modifier.node_group.inputs
+        interface = modifier.node_group.interface
         GroupInput = modifier.node_group.nodes[0]
         GroupOutput = modifier.node_group.nodes[1]
-        # Blender 3.1.2 crashed on Win10
-        # separate this from the aboved for loop avoid the crash
-        # I don't know why, could be a bug of Blender
         for att in default_GroupInput:
-            inputs.new(att[1], att[0])
-            id = inputs[att[0]].identifier
-            modifier['%s_use_attribute' % id] = True
-            modifier['%s_attribute_name' % id] = att[0]
+            socket = interface.new_socket(name=att[0], socket_type=att[1], in_out='INPUT')
+            modifier['%s_use_attribute' % socket.identifier] = True
+            modifier['%s_attribute_name' % socket.identifier] = att[0]
         gn = modifier
         # ------------------------------------------------------------------
         JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
