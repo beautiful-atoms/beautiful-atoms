@@ -451,7 +451,7 @@ class ObjectGN(BaseObject):
                 else:
                     attribute[i*n:(i+1)*n] = get_mesh_attribute(obj, name, index)
             # reshape to (n, shape)
-            attribute = attribute.reshape((n, ) + att.shape)
+            attribute = attribute.reshape((n, ) + att.shape, order='F')
         return attribute
 
     def set_attributes(self, attributes):
@@ -527,7 +527,7 @@ class ObjectGN(BaseObject):
         else:
             # M is the number of sub-array, for 2x2 array, M is 4
             M = att_coll.natt
-            array = array.reshape(-1, 1)
+            array = array.reshape(-1, 1, order='F')
             for i in range(M):
                 sub_key = "{}{}{}".format(key, delimiter, i)
                 att = me.attributes.get(sub_key)
