@@ -165,7 +165,7 @@ class Batoms(BaseCollection, ObjectGN):
                       'species': species,
                       'species_index': [string2Number(sp) for sp in species],
                       'scale': np.ones(natom)*scale,
-                      'show': np.ones(natom, dtype=int),
+                      'show': np.ones(natom, dtype=bool),
                       'model_style': np.ones(natom, dtype=int)*model_style,
                       'select': np.zeros(natom, dtype=int),
                       }
@@ -257,14 +257,14 @@ class Batoms(BaseCollection, ObjectGN):
         from batoms.utils.butils import build_modifier
         name = 'GeometryNodes_%s' % self.label
         modifier = build_modifier(self.obj, name)
-        inputs = modifier.node_group.inputs
+        # blender 4.0 use a interface to add sockets, both input and output
+        interface = modifier.node_group.interface
         GroupInput = modifier.node_group.nodes[0]
         GroupOutput = modifier.node_group.nodes[1]
         for att in default_GroupInput:
-            inputs.new(att[1], att[0])
-            id = inputs[att[0]].identifier
-            modifier['%s_use_attribute' % id] = True
-            modifier['%s_attribute_name' % id] = att[0]
+            socket = interface.new_socket(name=att[0], socket_type=att[1], in_out='INPUT')
+            modifier['%s_use_attribute' % socket.identifier] = True
+            modifier['%s_attribute_name' % socket.identifier] = att[0]
         gn = modifier
         # print(gn.name)
         JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
@@ -320,7 +320,7 @@ class Batoms(BaseCollection, ObjectGN):
             instancer (bpy.data.object):
                 Object to be instanced
         """
-        from batoms.utils.butils import compareNodeType
+        from batoms.utils.butils import compareNodeType, get_socket_by_identifier
         gn = self.gnodes
         GroupInput = gn.node_group.nodes[0]
         JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
@@ -333,8 +333,9 @@ class Batoms(BaseCollection, ObjectGN):
                                                self.label, spname),
                                            compareNodeType)
         CompareSpecies.operation = 'EQUAL'
-        # CompareSpecies.data_type = 'INT'
-        CompareSpecies.inputs[1].default_value = string2Number(spname)
+        CompareSpecies.data_type = 'INT'
+        socket = get_socket_by_identifier(CompareSpecies, "B_INT")
+        socket.default_value = int(string2Number(spname))
         InstanceOnPoint = get_nodes_by_name(gn.node_group.nodes,
                                             'InstanceOnPoint_%s_%s' % (
                                                 self.label, spname),
@@ -357,8 +358,9 @@ class Batoms(BaseCollection, ObjectGN):
         #
         gn.node_group.links.new(SetPosition.outputs['Geometry'],
                                 InstanceOnPoint.inputs['Points'])
+        socket = get_socket_by_identifier(CompareSpecies, "A_INT")
         gn.node_group.links.new(GroupInput.outputs[2],
-                                CompareSpecies.inputs[0])
+                                socket)
         gn.node_group.links.new(GroupInput.outputs[3], BoolShow.inputs[0])
         gn.node_group.links.new(GroupInput.outputs[4],
                                 InstanceOnPoint.inputs['Scale'])

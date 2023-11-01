@@ -377,9 +377,8 @@ def build_modifier(obj, name):
         # bpy.context.view_layer.objects.active = obj
         # bpy.context.object.modifiers.active = modifier
         # bpy.ops.node.new_geometry_node_group_assign()
-        group = geometry_node_group_empty_new()
+        group = geometry_node_group_empty_new(name)
         modifier.node_group = group
-    modifier.node_group.name = name
     return modifier
 
 def get_att_length(mesh, att):
@@ -464,6 +463,14 @@ def set_vertex_color(obj, name, color):
                     loop[volume_layer] = color[v.index]
             bm.to_mesh(obj.data)
             bm.free()
+
+def get_socket_by_identifier(node, identifier):
+    """Get sockets by identifier"""
+    for inp in node.inputs:
+        if inp.identifier == identifier:
+            return inp
+    return None
+
 
 # ========================================================
 if bpy.app.version_string >= '3.1.0':
