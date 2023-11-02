@@ -70,7 +70,7 @@ class Batoms(BaseCollection, ObjectGN):
                  from_ase=None,
                  from_pymatgen=None,
                  from_pybel=None,
-                 movie=True,
+                 trajectory=False,
                  segments=None,
                  ):
         """Batoms Class
@@ -114,7 +114,7 @@ class Batoms(BaseCollection, ObjectGN):
                 Import structure from pymatgen. Defaults to None.
             metaball (bool, optional):
                 Show atoms as metaball. Defaults to False.
-            movie (bool, optional):
+            trajectory (bool, optional):
                 Load all frames. Defaults to True.
             segments (_type_, optional):
                 Resolution of the sphere. Defaults to None.
@@ -180,7 +180,7 @@ class Batoms(BaseCollection, ObjectGN):
             self._volumetric_data = VolumetricData(label, volume, self)
             self.set_pbc(pbc)
             # self.label = label
-            if movie:
+            if trajectory:
                 self.set_frames()
             self.show_unit_cell = show_unit_cell
 
@@ -237,10 +237,6 @@ class Batoms(BaseCollection, ObjectGN):
         obj.batoms.type = 'BATOMS'
         obj.batoms.label = label
         self.coll.objects.link(obj)
-        # add shape_keys
-        if self.obj.data.shape_keys is None:
-            self.obj.shape_key_add(name="Basis_{}".format(self.label))
-        #
         # add cell object as its child
         self.cell.obj.parent = self.obj
         # add attributes
@@ -857,7 +853,11 @@ class Batoms(BaseCollection, ObjectGN):
     def get_frames(self, local=True):
         """
         """
-        frames = self.get_obj_frames(self.obj, local=local)
+        import numpy as np
+        if self.nframe == 0:
+            frames = np.array([self.local_positions])
+        else:
+            frames = self.get_obj_frames(self.obj, local=local)
         return frames
 
     def set_frames(self, frames=None, frame_start=0, only_basis=False):
@@ -995,6 +995,8 @@ class Batoms(BaseCollection, ObjectGN):
         # could also use self.add_arrays(other.positions)
         # object_mode()
         # merge bondetting
+        if self.nframe > 0 or other.nframe > 0:
+            raise Exception('Extend is not supported for frames!')
         self.bond.settings.extend(other.bond.settings)
         # creat new selections
         n1 = len(self)
@@ -1010,9 +1012,6 @@ class Batoms(BaseCollection, ObjectGN):
         self._species.extend(other._species)
         self.selects.add(self.label, indices1)
         self.selects.add(other.label, indices2)
-        # remove shape key from mol
-        sp = self.obj.data.shape_keys.key_blocks.get('Basis_%s' % other.label)
-        self.obj.shape_key_remove(sp)
         # remove old
         bpy.ops.batoms.delete(label=other.label)
 

@@ -614,7 +614,9 @@ class ObjectGN(BaseObject):
         if natom == 0:
             return
         local_positions = local_positions.reshape((natom*3, 1))
-        self.shape_keys.key_blocks[0].data.foreach_set(
+        self.obj.data.vertices.foreach_set('co', local_positions)
+        if self.nframe > 0:
+            self.shape_keys.key_blocks[0].data.foreach_set(
             'co', local_positions)
         self.obj.data.update()
         bpy.context.view_layer.objects.active = self.obj
@@ -814,7 +816,10 @@ class childObjectGN():
 
     @property
     def vertice(self):
-        return self.obj.data.shape_keys.key_blocks[0].data[self.indices[0]]
+        if self.obj.data.shape_keys is None:
+            return self.obj.data.vertices[self.indices[0]]
+        else:
+            return self.obj.data.shape_keys.key_blocks[0].data[self.indices[0]]
 
     @property
     def bm(self):

@@ -71,9 +71,3 @@ def test_boundary_reload():
     au = Batoms("au")
     np.isclose(au.boundary[0,0], -1)
     assert len(au.boundary) == 10
-
-
-
-if __name__ == "__main__":
-    test_boundary()
-    print("\n Bondsetting: All pass! \n")

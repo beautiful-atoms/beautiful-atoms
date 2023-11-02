@@ -319,8 +319,9 @@ class Boundary(ObjectGN):
         frames = self.batoms.get_frames()
         images = self.batoms.as_ase()
         nframe = self.batoms.nframe
-        if nframe == 1:
+        if nframe == 0:
             images = [images]
+            nframe = 1
         tstart = time()
         for f in range(nframe):
             # print('update boundary: ', f)
