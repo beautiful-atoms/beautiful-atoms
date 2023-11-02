@@ -238,7 +238,7 @@ BLENDER_ALIAS_SH = """#!/bin/sh
 export LD_LIBRARY_PATH={conda_prefix}/lib:${{LD_LIBRARY_PATH}}
 os_name=$(uname -s)
 
-# Add DYLD_LIBRARY_PATH which may be relevant for Dawrin 
+# Add DYLD_LIBRARY_PATH which may be relevant for Dawrin
 # see https://docs.conda.io/projects/conda-build/en/stable/resources/use-shared-libraries.html
 if [ "$os_name" = "Darwin" ]
 then

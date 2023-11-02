@@ -6,7 +6,6 @@ This module defines the polyhedras object in the Batoms package.
 
 import bpy
 from time import time
-from batoms.attribute import Attributes
 from batoms.utils.butils import object_mode, compareNodeType, get_nodes_by_name
 from batoms.utils import string2Number
 import numpy as np
@@ -18,12 +17,12 @@ logger = logging.getLogger(__name__)
 
 
 default_attributes = [
-    {"name":'atoms_index1', "data_type": 'INT', "dimension": 0},
-    {"name":'atoms_index2', "data_type": 'INT', "dimension": 0},
-    {"name":'species_index', "data_type": 'INT', "dimension": 0},
-    {"name":'face_species_index', "data_type": 'INT', "dimension": 0, "domain": 'FACE'},
-    {"name":'show', "data_type": 'INT', "dimension": 0},
-    {"name":'style', "data_type": 'INT', "dimension": 0},
+    {"name":'atoms_index1', "data_type": 'INT'},
+    {"name":'atoms_index2', "data_type": 'INT'},
+    {"name":'species_index', "data_type": 'INT'},
+    {"name":'face_species_index', "data_type": 'INT', "domain": 'FACE'},
+    {"name":'show', "data_type": 'INT'},
+    {"name":'style', "data_type": 'INT'},
 ]
 
 
@@ -103,9 +102,6 @@ class Polyhedra(ObjectGN):
         flag = self.load()
         if not flag and polyhedra_datas is not None:
             self.build_object(polyhedra_datas)
-        else:
-            self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
-
 
     def build_object(self, datas, attributes={}):
         object_mode()
@@ -143,9 +139,9 @@ class Polyhedra(ObjectGN):
             vertices, datas['edges'], datas['faces'])
         mesh.update()
         obj = bpy.data.objects.new(name, mesh)
-        self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
         # Add attributes
-        self._attributes.add(default_attributes)
+        for att in default_attributes:
+            self.add_attribute(**att)
         self.settings.coll.objects.link(obj)
         obj.batoms.type = 'POLYHEDRA'
         obj.batoms.label = self.label
@@ -161,6 +157,7 @@ class Polyhedra(ObjectGN):
         obj.hide_set(True)
         bpy.context.view_layer.update()
         self.set_attributes(attributes)
+        self.init_geometry_node_modifier(default_GroupInput)
         self.build_geometry_node()
         self.set_frames(self._frames, only_basis=True)
         # self.assign_materials()
@@ -179,19 +176,11 @@ class Polyhedra(ObjectGN):
         """
         Geometry node for everything!
         """
-        from batoms.utils.butils import get_nodes_by_name, build_modifier
+        from batoms.utils.butils import get_nodes_by_name
         tstart = time()
-        name = 'GeometryNodes_%s_polyhedra' % self.label
-        modifier = build_modifier(self.obj, name)
-        # ------------------------------------------------------------------
-        interface = modifier.node_group.interface
-        GroupInput = modifier.node_group.nodes[0]
-        GroupOutput = modifier.node_group.nodes[1]
-        for att in default_GroupInput:
-            socket = interface.new_socket(name=att[0], socket_type=att[1], in_out='INPUT')
-            modifier['%s_use_attribute' % socket.identifier] = True
-            modifier['%s_attribute_name' % socket.identifier] = att[0]
-        gn = modifier
+        gn = self.gnodes
+        GroupInput = gn.node_group.nodes[0]
+        GroupOutput = gn.node_group.nodes[1]
         # ------------------------------------------------------------------
         # ------------------------------------------------------------------
         # calculate bond vector, length, rotation based on the index

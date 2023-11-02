@@ -7,7 +7,6 @@ This module defines the Bond object in the Batoms package.
 import bpy
 import bmesh
 from time import time
-from batoms.attribute import Attributes
 from batoms.utils.butils import object_mode, compareNodeType, get_nodes_by_name
 from batoms.utils import string2Number, number2String
 import numpy as np
@@ -21,18 +20,18 @@ import logging
 logger = logging.getLogger(__name__)
 
 default_attributes = [
-    {"name": 'atoms_index1', "data_type": 'INT', "dimension": 0},
-    {"name": 'atoms_index2', "data_type": 'INT', "dimension": 0},
-    {"name": 'atoms_index3', "data_type": 'INT', "dimension": 0},
-    {"name": 'atoms_index4', "data_type": 'INT', "dimension": 0},
-    {"name": 'species_index1', "data_type": 'INT', "dimension": 0},
-    {"name": 'species_index2', "data_type": 'INT', "dimension": 0},
-    {"name": 'order', "data_type": 'INT', "dimension": 0},
-    {"name": 'style', "data_type": 'INT', "dimension": 0},
-    {"name": 'show', "data_type": 'INT', "dimension": 0},
-    {"name": 'model_style', "data_type": 'INT', "dimension": 0},
-    {"name": 'polyhedra', "data_type": 'INT', "dimension": 0},
-    {"name": 'second_bond', "data_type": 'INT', "dimension": 0},
+    {"name": 'atoms_index1', "data_type": 'INT'},
+    {"name": 'atoms_index2', "data_type": 'INT'},
+    {"name": 'atoms_index3', "data_type": 'INT'},
+    {"name": 'atoms_index4', "data_type": 'INT'},
+    {"name": 'species_index1', "data_type": 'INT'},
+    {"name": 'species_index2', "data_type": 'INT'},
+    {"name": 'order', "data_type": 'INT'},
+    {"name": 'style', "data_type": 'INT'},
+    {"name": 'show', "data_type": 'INT'},
+    {"name": 'model_style', "data_type": 'INT'},
+    {"name": 'polyhedra', "data_type": 'INT'},
+    {"name": 'second_bond', "data_type": 'INT'},
 ]
 
 default_GroupInput = [
@@ -104,7 +103,6 @@ class Bond(BaseCollection, ObjectGN):
         elif self.loadable():
             # load old object
             self.settings = BondSettings(self.label, batoms=batoms, bonds=self)
-            self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
         else:
             # create empty new object
             self.build_object(default_bond_datas)
@@ -176,9 +174,9 @@ class Bond(BaseCollection, ObjectGN):
         mesh.from_pydata(centers, [], [])
         mesh.update()
         obj = bpy.data.objects.new(name, mesh)
-        self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
         # Add attributes
-        self._attributes.add(default_attributes)
+        for att in default_attributes:
+            self.add_attribute(**att)
         self.coll.objects.link(obj)
         obj.parent = self.batoms.obj
         obj.batoms.type = 'BOND'
@@ -201,6 +199,7 @@ class Bond(BaseCollection, ObjectGN):
         #
         bpy.context.view_layer.update()
         self.set_attributes(attributes)
+        self.init_geometry_node_modifier(default_GroupInput)
         self.build_geometry_node()
         self.set_frames(self._frames, only_basis=False)
         #
@@ -210,21 +209,12 @@ class Bond(BaseCollection, ObjectGN):
         """
         todo: add width to nodes
         """
-        from batoms.utils.butils import get_nodes_by_name, compareNodeType, \
-                            build_modifier
+        from batoms.utils.butils import get_nodes_by_name, compareNodeType
         from batoms.utils import string2Number
         tstart = time()
-        name = 'GeometryNodes_%s_bond' % self.label
-        modifier = build_modifier(self.obj, name)
-        # ------------------------------------------------------------------
-        interface = modifier.node_group.interface
-        GroupInput = modifier.node_group.nodes[0]
-        GroupOutput = modifier.node_group.nodes[1]
-        for att in default_GroupInput:
-            socket = interface.new_socket(name=att[0], socket_type=att[1], in_out='INPUT')
-            modifier['%s_use_attribute' % socket.identifier] = True
-            modifier['%s_attribute_name' % socket.identifier] = att[0]
-        gn = modifier
+        gn = self.gnodes
+        GroupInput = gn.node_group.nodes[0]
+        GroupOutput = gn.node_group.nodes[1]
         # ------------------------------------------------------------------
         JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
                                          '%s_JoinGeometry' % self.label,

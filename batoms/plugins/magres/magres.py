@@ -129,11 +129,12 @@ class Magres(BaseObject):
             objs.append(obj)
         objs[0].name = name
         objs[0].data.name = name
-        c = {}
-        c["object"] = c["active_object"] = objs[0]
-        c["selected_objects"] = c["selected_editable_objects"] = objs
+        ctx = bpy.context.copy()
+        ctx["object"] = ctx["active_object"] = objs[0]
+        ctx["selected_objects"] = ctx["selected_editable_objects"] = objs
         # bpy.context.view_layer.objects.active = obj
-        bpy.ops.object.join(c)
+        #TODO join objects is not working
+        # bpy.ops.object.join(ctx)
         bpy.ops.object.shade_smooth()
         return bpy.data.objects[name]
 
@@ -148,7 +149,11 @@ class Magres(BaseObject):
             return
         # select atoms
         positions = self.batoms.positions[indices]
-        tensors = self.batoms.get_attribute('ms')[indices]
+        tensors = np.zeros((len(indices), 3, 3))
+        for i in range(3):
+            for j in range(3):
+                tensors[:, i, j] = self.batoms.get_attribute(
+                    'ms_%d%d' % (i, j))[indices]
         ellipsoids = self.build_ellipsoids(positions, tensors, scale)
         ms_name = '%s_%s_ms' % (self.label, magres.name)
         self.delete_obj(ms_name)

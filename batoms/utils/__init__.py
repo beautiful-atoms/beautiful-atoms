@@ -552,7 +552,12 @@ def type_blender_to_py(dtype, str = "str"):
     """
     type_dict = {
         "INT":"int",
+        "INT32_2D": "int",
         "FLOAT":"float",
+        "FLOAT2":"float",
+        "FLOAT_VECTOR":"float",
+        "FLOAT_COLOR":"float",
+        "QUATERNION": "float",
         "STRING":str,
         "BOOLEAN":"bool",
     }
