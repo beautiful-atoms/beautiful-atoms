@@ -1,21 +1,19 @@
 import bpy
 import numpy as np
-from time import time
-from batoms.attribute import Attributes
 from batoms.base.object import ObjectGN
-from batoms.utils.butils import object_mode, compareNodeType
+from batoms.utils.butils import object_mode, compareNodeType, get_nodes_by_name
 from batoms.utils import number2String, string2Number
 import logging
 # logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 
 default_attributes = [
-    {"name": 'atoms_index', "data_type": 'INT', "dimension": 0},
-    {"name": 'species_index', "data_type": 'INT', "dimension": 0},
-    {"name": 'show', "data_type": 'INT', "dimension": 0},
-    {"name": 'select', "data_type": 'INT', "dimension": 0},
-    {"name": 'model_style', "data_type": 'INT', "dimension": 0},
-    {"name": 'scale', "data_type": 'FLOAT', "dimension": 0},
+    {"name": 'atoms_index', "data_type": 'INT'},
+    {"name": 'species_index', "data_type": 'INT'},
+    {"name": 'show', "data_type": 'INT'},
+    {"name": 'select', "data_type": 'INT'},
+    {"name": 'model_style', "data_type": 'INT'},
+    {"name": 'scale', "data_type": 'FLOAT'},
 ]
 
 default_GroupInput = [
@@ -62,8 +60,6 @@ class SearchBond(ObjectGN):
         ObjectGN.__init__(self, label, name)
         if search_bond_datas is not None:
             self.build_object(search_bond_datas)
-        elif self.loadable():
-            self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
         else:
             self.build_object(default_search_bond_datas)
 
@@ -115,9 +111,9 @@ class SearchBond(ObjectGN):
         mesh.from_pydata(positions, [], [])
         mesh.update()
         obj = bpy.data.objects.new(name, mesh)
-        self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
         # Add attributes
-        self._attributes.add(default_attributes)
+        for att in default_attributes:
+            self.add_attribute(**att)
         self.batoms.coll.objects.link(obj)
         obj.batoms.type = 'BOND'
         obj.batoms.label = self.batoms.label
@@ -135,6 +131,7 @@ class SearchBond(ObjectGN):
         obj.parent = self.obj
         bpy.context.view_layer.update()
         self.set_attributes(attributes)
+        self.init_geometry_node_modifier(default_GroupInput)
         self.build_geometry_node()
         self.set_frames(self._frames, only_basis=True)
         # print('boundary: build_object: {0:10.2f} s'.format(time() - tstart))
@@ -148,19 +145,9 @@ class SearchBond(ObjectGN):
     def build_geometry_node(self):
         """
         """
-        from batoms.utils.butils import get_nodes_by_name, build_modifier
-        name = 'GeometryNodes_%s_search_bond' % self.label
-        modifier = build_modifier(self.obj, name)
-        # ------------------------------------------------------------------
-        inputs = modifier.node_group.inputs
-        GroupInput = modifier.node_group.nodes[0]
-        GroupOutput = modifier.node_group.nodes[1]
-        for att in default_GroupInput:
-            inputs.new(att[1], att[0])
-            id = inputs[att[0]].identifier
-            modifier['%s_use_attribute' % id] = True
-            modifier['%s_attribute_name' % id] = att[0]
-        gn = modifier
+        gn = self.gnodes
+        GroupInput = gn.node_group.nodes[0]
+        GroupOutput = gn.node_group.nodes[1]
         # ------------------------------------------------------------------
         JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
                                          '%s_JoinGeometry' % self.label,
@@ -248,7 +235,6 @@ class SearchBond(ObjectGN):
     def add_geometry_node(self, spname):
         """
         """
-        from batoms.utils.butils import get_nodes_by_name
         gn = self.gnodes
         GroupInput = gn.node_group.nodes[0]
         SetPosition = get_nodes_by_name(gn.node_group.nodes,

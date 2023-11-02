@@ -103,6 +103,22 @@ def get_mesh_attribute(obj, key, index=None):
                 attribute[i] = att.data[i].value
         elif dtype in ["INT", "FLOAT", "BOOLEAN"]:
             att.data.foreach_get("value", attribute)
+        elif dtype == "FLOAT2":
+            attribute = np.zeros(n*2, dtype="float")
+            att.data.foreach_get("vector", attribute)
+            attribute = attribute.reshape(n, 2)
+        elif dtype == "FLOAT_VECTOR":
+            attribute = np.zeros(n*3, dtype="float")
+            att.data.foreach_get("vector", attribute)
+            attribute = attribute.reshape(n, 3)
+        elif dtype in ["FLOAT_COLOR"]:
+            attribute = np.zeros(n*4, dtype="float")
+            att.data.foreach_get("color", attribute)
+            attribute = attribute.reshape(n, 4)
+        elif dtype in ["QUATERNION"]:
+            attribute = np.zeros(n*4, dtype="float")
+            att.data.foreach_get("value", attribute)
+            attribute = attribute.reshape(n, 4)
         else:
             raise KeyError('Attribute type: %s is not support.' % dtype)
         attribute = np.array(attribute)
@@ -177,5 +193,17 @@ def set_mesh_attribute(obj, key, value, index=None):
         if att.data_type == 'STRING':
             for j in range(n):
                 att.data[j].value = value[j]
+        elif att.data_type == "FLOAT2":
+            value = value.reshape((n*2, 1))
+            att.data.foreach_set("vector", value)
+        elif att.data_type == "FLOAT_VECTOR":
+            value = value.reshape((n*3, 1))
+            att.data.foreach_set("vector", value)
+        elif att.data_type in ["FLOAT_COLOR"]:
+            value = value.reshape((n*4, 1))
+            att.data.foreach_set("color", value)
+        elif att.data_type in ["QUATERNION"]:
+            value = value.reshape((n*4, 1))
+            att.data.foreach_set("value", value)
         else:
             att.data.foreach_set("value", value)

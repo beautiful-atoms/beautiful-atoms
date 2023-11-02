@@ -238,7 +238,7 @@ class BaseObject():
 
 class ObjectGN(BaseObject):
     """
-    Object with Geometry Node
+    Object with Geometry Node.
 
     """
 
@@ -270,7 +270,19 @@ class ObjectGN(BaseObject):
         name = 'GeometryNodes_%s' % self.obj_name
         modifier = self.obj.modifiers.get(name)
         if modifier is None:
-            self.build_geometry_node()
+            self.init_geometry_node_modifier()
+        return modifier
+
+    def init_geometry_node_modifier(self, inputs=[]):
+        # blender 4.0 use a interface to add sockets, both input and output
+        from batoms.utils.butils import build_modifier
+        name = 'GeometryNodes_%s' % self.obj_name
+        modifier = build_modifier(self.obj, name)
+        interface = modifier.node_group.interface
+        for input in inputs:
+            socket = interface.new_socket(name=input[0], socket_type=input[1], in_out='INPUT')
+            modifier['%s_use_attribute' % socket.identifier] = True
+            modifier['%s_attribute_name' % socket.identifier] = input[0]
         return modifier
 
     def build_geometry_node(self):
@@ -404,7 +416,9 @@ class ObjectGN(BaseObject):
             dict: attributes dict
         """
         attributes = {}
-        for att in self._attributes:
+        for att in self.obj.data.attributes:
+            if att.name.startswith('.'):
+                continue
             attributes[att.name] = self.get_attribute(att.name)
         return attributes
 
@@ -428,31 +442,56 @@ class ObjectGN(BaseObject):
         from batoms.utils.attribute import get_mesh_attribute,get_mesh_attribute_bmesh
         # get the mesh
         obj = self.obj
-        att = self._attributes[key]
-        if att.dimension == 0:
-            if obj.mode == 'EDIT' and att.data_type in ['STRING', 'INT', 'FLOAT']:
-                attribute = get_mesh_attribute_bmesh(obj, att.name, index)
-            else:
-                attribute = get_mesh_attribute(obj, att.name, index)
+        att = obj.data.attributes[key]
+        if obj.mode == 'EDIT' and att.data_type in ['STRING', 'INT', 'FLOAT']:
+            attribute = get_mesh_attribute_bmesh(obj, att.name, index)
         else:
-            natt = att.natt
-            name = "{}{}{}".format(att.name, att.delimiter, 0)
-            # init a large array has the size of n*np.product(shape)
-            if index is not None:
-                n = 1
-            else:
-                mesh_att = obj.data.attributes.get(name)
-                n = get_att_length(obj.data, mesh_att)
-            attribute = np.zeros(natt*n, dtype=type_blender_to_py(att.data_type))
-            for i in range(natt):
-                name = "{}{}{}".format(att.name, att.delimiter, i)
-                if obj.mode == 'EDIT' and att.data_type in ['STRING', 'INT', 'FLOAT']:
-                    attribute[i*n:(i+1)*n] = get_mesh_attribute_bmesh(obj, name, index)
-                else:
-                    attribute[i*n:(i+1)*n] = get_mesh_attribute(obj, name, index)
-            # reshape to (n, shape)
-            attribute = attribute.reshape((n, ) + att.shape, order='F')
+            attribute = get_mesh_attribute(obj, att.name, index)
+        
         return attribute
+
+    def add_attribute_from_array(self, name, data):
+        """Add an attribute from array
+        """
+        from batoms.utils import type_py_to_blender
+        # check the type of the array, and convert it to blender type
+        # only the first element is checked
+        # check if shape of the data array
+        # if 1x2, 1x3, 1x4
+        try:
+            if len(data.shape) == 1:
+                array = np.asarray(data)
+                type_py = type(array.flat[0])
+                dtype_bl = type_py_to_blender(type_py)
+                if dtype_bl is False:
+                    print(f'Attribute: {name} is not added. The type of the array: {type_py} is not supported.')
+                    return False
+                self.add_attribute(name=name, data_type=dtype_bl, domain="POINT")
+            elif len(data.shape) == 2:
+                if data.shape[1] == 2:
+                    self.add_attribute(name=name, data_type="FLOAT2", domain="POINT")
+                elif data.shape[1] == 3:
+                    self.add_attribute(name=name, data_type="FLOAT_VECTOR", domain="POINT")
+                elif data.shape[1] == 4:
+                    self.add_attribute(name=name, data_type="QUATERNION", domain="POINT")
+                else:
+                    print(f'Attribute: {name} is not added. The shape of the array: {data.shape} is not supported.')
+                    return False
+            else:
+                # print a Warning message
+                print(f'Attribute: {name} is not added. The shape of the array: {data.shape} is not supported.')
+                return False
+        except:
+            print(f'Attribute: {name} is not added. The shape of the array: {data.shape} is not supported.')
+            return False
+
+        
+
+    def add_attribute(self, name, data_type='FLOAT', domain='POINT'):
+        """Add an attribute to the mesh"""
+        self.obj.data.attributes.new(name=name,
+                type=data_type, domain=domain)
+        return True
 
     def set_attributes(self, attributes):
         """Set attributes
@@ -465,11 +504,12 @@ class ObjectGN(BaseObject):
         # print(attributes)
         for key, array in attributes.items():
             # if key in self._attributes
-            if not self._attributes.find(key):
+            if key not in obj.data.attributes:
                 # try to create a new attribute
-                flag = self._attributes.from_array(key, array)
+                flag = self.add_attribute_from_array(key, array)
+                logger.debug(f'Add new attribute: {key}')
                 # if failed, do not add this attribute
-                if not flag:
+                if flag is False:
                     continue
             self.set_attribute(key, array)
         me.update()
@@ -501,43 +541,24 @@ class ObjectGN(BaseObject):
             key (str): name of the attribute
             array (np.array): value of the attribute
         """
-        from batoms.utils.butils import get_att_length
         from batoms.utils.attribute import set_mesh_attribute, set_mesh_attribute_bmesh
-        tstart = time()
+        logger.debug('Set attribute: {}'.format(key))
         obj = self.obj
         me = obj.data
-        att_coll = self._attributes[key]
-        shape = att_coll.shape
-        dimension = att_coll.dimension
-        delimiter = att_coll.delimiter
-        #
+        if key not in me.attributes:
+            raise KeyError('Attribute: {} is not exist. Please add it first.'.format(key))
         array = np.array(array)
         if len(array.shape) == 0:
             array = np.array([array])
         if len(array) == 0:
             return
         # single value data
-        if dimension == 0:
-            att = me.attributes.get(key)
-            if att.data_type == 'STRING' or (obj.mode == 'EDIT' and att.data_type in ['INT', 'FLOAT']):
-                set_mesh_attribute_bmesh(obj, key, array, index)
-            else:
-                set_mesh_attribute(obj, key, array, index)
-        # array data
+        att = me.attributes.get(key)
+        if att.data_type == 'STRING' or (obj.mode == 'EDIT' and att.data_type in ['INT', 'FLOAT']):
+            set_mesh_attribute_bmesh(obj, key, array, index)
         else:
-            # M is the number of sub-array, for 2x2 array, M is 4
-            M = att_coll.natt
-            array = array.reshape(-1, 1, order='F')
-            for i in range(M):
-                sub_key = "{}{}{}".format(key, delimiter, i)
-                att = me.attributes.get(sub_key)
-                n = get_att_length(obj.data, att)
-                if obj.mode == 'EDIT' and att.data_type in ['STRING', 'INT', 'FLOAT']:
-                    set_mesh_attribute_bmesh(obj, sub_key, array[i*n:(i+1)*n], index)
-                else:
-                    set_mesh_attribute(obj, sub_key, array[i*n:(i+1)*n], index)
-        logger.debug('Time: {:10s} {:5.2f}'.format(key, time() - tstart))
-
+            set_mesh_attribute(obj, key, array, index)
+        
     def set_attribute_with_indices(self, name, indices, data):
         data0 = self.get_attribute(name)
         data0[indices] = data

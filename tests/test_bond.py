@@ -16,12 +16,7 @@ except ImportError:
 extras = dict(engine="cycles") if use_cycles else {}
 
 
-def test_bond():
-    bpy.ops.batoms.delete()
-    from batoms.batoms import Batoms
-    from ase.build import molecule
-    c2h6so = molecule("C2H6SO")
-    c2h6so = Batoms("c2h6so", from_ase=c2h6so)
+def test_bond(c2h6so):
     c2h6so.model_style = 1
     c2h6so.show = [0, 0, 1, 1, 1, 1, 1, 1, 1, 1]
     c2h6so.model_style = 1
@@ -30,12 +25,8 @@ def test_bond():
     c2h6so.model_style = 1
     c2h6so.bond[0].order = 2
 
-def test_settings():
+def test_settings(c2h6so):
     """key search"""
-    from batoms.batoms import Batoms
-    bpy.ops.batoms.delete()
-    bpy.ops.batoms.molecule_add(label = 'c2h6so', formula="C2H6SO")
-    c2h6so = Batoms('c2h6so')
     # species tuple
     assert c2h6so.bond.settings.find(('C', 'H')) is not None
     # species list
@@ -53,11 +44,7 @@ def test_settings():
     assert c2h6so.bond.settings.find(('C', 'H')) is None
 
 
-def test_color():
-    bpy.ops.batoms.delete()
-    from batoms.batoms import Batoms
-    bpy.ops.batoms.molecule_add(label="c2h6so", formula="C2H6SO")
-    c2h6so = Batoms("c2h6so")
+def test_color(c2h6so):
     c2h6so.model_style = 1
     assert np.isclose(c2h6so.bond.settings.\
         instancers['C-H']['1_1'].data.materials[1].\
@@ -105,10 +92,7 @@ def test_bond_add():
 
 
 
-def test_bond_search_bond_0():
-    from batoms.bio.bio import read
-    bpy.ops.batoms.delete()
-    tio2 = read("../tests/datas/tio2.cif")
+def test_bond_search_bond_0(tio2):
     tio2.bond.settings[("Ti", "O")].search = 0
     tio2.model_style = 1
     tio2.boundary = 0.01
@@ -142,11 +126,7 @@ def test_bond_search_bond_2():
     mof.get_image([0, 1, 0], output="mof-5.png", **extras)
 
 
-def test_bond_search_bond_3():
-    from ase.io import read
-    bpy.ops.batoms.delete()
-    tio2 = read("../tests/datas/tio2.cif", ":")
-    tio2 = Batoms("tio2", from_ase=tio2)
+def test_bond_search_bond_3(tio2):
     tio2.boundary = 0.01
     tio2.model_style = 1
     # assert len(tio2.bond.search_bond) < 20
@@ -163,15 +143,10 @@ def test_hydrogen_bond():
         set_cycles_res(ch3oh)
     ch3oh.get_image([1, 0, 0], output="bond-hb.png", **extras)
 
-def test_bond_reload():
+def test_bond_reload(tio2):
     """save to blend file and reload
     """
     import os
-    from ase.io import read
-    from batoms import Batoms
-    bpy.ops.batoms.delete()
-    tio2 = read("../tests/datas/tio2.cif", ":")
-    tio2 = Batoms("tio2", from_ase=tio2)
     tio2.boundary = 0.01
     tio2.model_style = 1
     tio2.bond.show_search = True
@@ -184,12 +159,3 @@ def test_bond_reload():
     assert len(tio2.bond.search_bond) == 43
 
 
-if __name__ == "__main__":
-    test_bond()
-    test_bond_high_order()
-    test_bond_performance()
-    test_bond_add()
-    test_bond_search_bond_1()
-    test_bond_search_bond_2()
-    test_hydrogen_bond()
-    print("\n Bond.settings: All pass! \n")

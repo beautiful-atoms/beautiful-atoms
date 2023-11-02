@@ -65,6 +65,7 @@ class Bcell(ObjectGN):
         # materials
         mat = self.build_materials(self.label, color=self.color)
         obj.data.materials.append(mat)
+        self.init_geometry_node_modifier()
         self.build_geometry_node()
         self.set_frames(self._frames)
         bpy.context.view_layer.update()
@@ -72,13 +73,9 @@ class Bcell(ObjectGN):
     def build_geometry_node(self):
         """
         """
-        from batoms.utils.butils import get_nodes_by_name, build_modifier
-        name = 'GeometryNodes_%s_cell' % self.label
-        modifier = build_modifier(self.obj, name)
-        # ------------------------------------------------------------------
-        # select attributes
-        gn = modifier
-        GroupInput = modifier.node_group.nodes[0]
+        from batoms.utils.butils import get_nodes_by_name
+        gn = self.gnodes
+        GroupInput = gn.node_group.nodes[0]
         GroupOutput = gn.node_group.nodes[1]
         JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
                                          '%s_JoinGeometry' % self.label,

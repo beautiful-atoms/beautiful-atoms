@@ -4,9 +4,10 @@ import numpy as np
 import pytest
 
 try:
-    from pytest_blender.test import pytest_blender_unactive
+    import spglib
+    has_spglib = True
 except ImportError:
-    pytest_blender_unactive = False
+    has_spglib = False
 
 
 def test_settings():
@@ -52,7 +53,7 @@ def test_batoms_species():
     assert np.isclose(h2o["H"].color, np.array([1, 0.8, 0.8, 1])).all()
     # materials
     h2o.species["H"].materials = {
-        "Metallic": 0.9, "Specular": 1.0, "Roughness": 0.01}
+        "Metallic": 0.9, "IOR": 1.0, "Roughness": 0.01}
     # elements
     h2o.species["H"].elements = {"H": 0.5, "O": 0.4}
     assert len(h2o["H"].elements) == 3
@@ -73,6 +74,10 @@ def test_species_color():
     assert np.isclose(ch4.species["C"].color, np.array([1, 0, 0, 1])).all()
 
 
+@pytest.mark.skipif(
+    not has_spglib,
+    reason="Requires spglib.",
+)
 def test_auto_build_species():
     """auto build species use spglib"""
     from batoms.bio.bio import read
@@ -110,10 +115,3 @@ def test_color_by_attribute():
     au.species.color_by_attribute("z_coor")
     assert au.species['Au'].materials['Au'].node_tree.nodes['Attribute'].attribute_name == "z_coor"
     assert len(au.species['Au'].materials['Au'].node_tree.links) > 2
-
-if __name__ == "__main__":
-    test_batoms_species()
-    test_species_color()
-    test_geometry_node_object()
-    test_auto_build_species()
-    print("\n Batoms: All pass! \n")
