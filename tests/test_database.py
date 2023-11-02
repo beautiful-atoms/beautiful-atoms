@@ -2,8 +2,12 @@ import bpy
 import pytest
 from batoms import Batoms
 from batoms.database.pymatgen import pymatgen_search
-from pymatgen.core.structure import Molecule
-from pymatgen.core import Lattice, Structure
+
+try:
+    import pymatgen
+    has_pymatgen = True
+except ImportError:
+    has_pymatgen = False
 
 
 def test_database_materials_project():
@@ -17,8 +21,13 @@ def test_database_pubchem():
     bpy.ops.batoms.delete()
     bas = pubchem_search("31423")
 
-
+@pytest.mark.skipif(
+    not has_pymatgen,
+    reason="Requires pymatgen.",
+)
 def test_database_pymatgen():
+    from pymatgen.core.structure import Molecule
+    from pymatgen.core import Lattice, Structure
     bpy.ops.batoms.delete()
     # molecule
     co = Molecule(["C", "O"], [[0.0, 0.0, 0.0], [0.0, 0.0, 1.2]])

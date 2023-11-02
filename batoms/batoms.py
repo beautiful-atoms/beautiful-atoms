@@ -7,7 +7,6 @@
 import bpy
 from batoms.bspecies import Bspecies
 from batoms.volumetric_data import VolumetricData
-from batoms.attribute import Attributes
 from batoms.cell import Bcell
 from batoms.bselect import Selects
 from batoms.base.collection import BaseCollection
@@ -26,12 +25,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 default_attributes = [
-    {"name": 'select', "data_type": 'INT', "dimension": 0},
-    {"name": 'species_index', "data_type": 'INT', "dimension": 0},
-    {"name": 'species', "data_type": 'STRING', "dimension": 0},
-    {"name": 'show', "data_type": 'INT', "dimension": 0},
-    {"name": 'scale', "data_type": 'FLOAT', "dimension": 0},
-    {"name": 'model_style', "data_type": 'INT', "dimension": 0},
+    {"name": 'select', "data_type": 'INT'},
+    {"name": 'species_index', "data_type": 'INT'},
+    {"name": 'species', "data_type": 'STRING'},
+    {"name": 'show', "data_type": 'BOOLEAN'},
+    {"name": 'scale', "data_type": 'FLOAT'},
+    {"name": 'model_style', "data_type": 'INT'},
 ]
 
 
@@ -242,30 +241,22 @@ class Batoms(BaseCollection, ObjectGN):
         if self.obj.data.shape_keys is None:
             self.obj.shape_key_add(name="Basis_{}".format(self.label))
         #
-        self._attributes = Attributes(label=label, parent=self, obj_name=self.obj_name)
-        # Add attributes
-        self._attributes.add(default_attributes)
         # add cell object as its child
         self.cell.obj.parent = self.obj
+        # add attributes
+        for att in default_attributes:
+            self.add_attribute(**att)
         self.set_attributes(arrays)
+        self.init_geometry_node_modifier(default_GroupInput)
         self.build_geometry_node()
         logger.info("Add object {}".format(self.label))
 
     def build_geometry_node(self):
         """Geometry node for instancing sphere on vertices!
         """
-        from batoms.utils.butils import build_modifier
-        name = 'GeometryNodes_%s' % self.label
-        modifier = build_modifier(self.obj, name)
-        # blender 4.0 use a interface to add sockets, both input and output
-        interface = modifier.node_group.interface
-        GroupInput = modifier.node_group.nodes[0]
-        GroupOutput = modifier.node_group.nodes[1]
-        for att in default_GroupInput:
-            socket = interface.new_socket(name=att[0], socket_type=att[1], in_out='INPUT')
-            modifier['%s_use_attribute' % socket.identifier] = True
-            modifier['%s_attribute_name' % socket.identifier] = att[0]
-        gn = modifier
+        gn = self.gnodes
+        GroupInput = gn.node_group.nodes[0]
+        GroupOutput = gn.node_group.nodes[1]
         # print(gn.name)
         JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
                                          '%s_JoinGeometry' % self.label,
@@ -407,7 +398,6 @@ class Batoms(BaseCollection, ObjectGN):
         self._cell = Bcell(label=label, batoms = self)
         self._species = Bspecies(label, {}, self)
         self._volumetric_data = VolumetricData(label, None, self)
-        self._attributes = Attributes(label=label, parent=self, obj_name=self.obj_name)
         self.selects = Selects(label, self)
 
     @classmethod
@@ -1879,8 +1869,9 @@ class Batoms(BaseCollection, ObjectGN):
             obj.select_set(True)
         if filename.endswith('.x3d'):
             bpy.ops.export_scene.x3d(filepath=filename, use_selection=True)
-        elif filename.endswith('.obj') or filename.endswith('.mtl'):
-            bpy.ops.export_scene.obj(filepath=filename, use_selection=True)
+        #  obj is not supported in Blender 4.0
+        # elif filename.endswith('.obj') or filename.endswith('.mtl'):
+            # bpy.ops.export_scene.obj(filepath=filename, use_selection=True)
         elif filename.endswith('.fbx'):
             bpy.ops.export_scene.fbx(filepath=filename, use_selection=True)
         else:

@@ -7,7 +7,6 @@ This module defines the Cavity object in the Batoms package.
 import bpy
 from time import time
 import numpy as np
-from batoms.attribute import Attributes
 from batoms.base.object import ObjectGN
 from batoms.plugins.base import PluginObject
 from .setting import CavitySettings
@@ -19,10 +18,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 default_attributes = [
-    {"name": 'species_index', "data_type": 'INT', "dimension": 0},
-    {"name": 'species', "data_type": 'STRING', "dimension": 0},
-    {"name": 'show', "data_type": 'INT', "dimension": 0},
-    {"name": 'scale', "data_type": 'FLOAT', "dimension": 0},
+    {"name": 'species_index', "data_type": 'INT'},
+    {"name": 'species', "data_type": 'STRING'},
+    {"name": 'show', "data_type": 'INT'},
+    {"name": 'scale', "data_type": 'FLOAT'},
 ]
 
 default_GroupInput = [
@@ -75,7 +74,6 @@ class Cavity(ObjectGN, PluginObject):
         else:
             self.settings = CavitySettings(
                 self.label, batoms=batoms, parent=self)
-            self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
         self.settings.bpy_data.active = True
 
     def build_materials(self, name, color, node_inputs=None,
@@ -344,30 +342,21 @@ class Cavity(ObjectGN, PluginObject):
         obj.batoms.type = 'CAVITY'
         obj.batoms.label = self.batoms.label
         self.batoms.coll.objects.link(obj)
-        self._attributes = Attributes(label=self.label, parent=self, obj_name=self.obj_name)
         # Add attributes
-        self._attributes.add(default_attributes)
+        for att in default_attributes:
+            self.add_attribute(**att)
         # add cell object as its child
         obj.parent = self.batoms.obj
         self.set_attributes(attributes)
+        self.init_geometry_node_modifier(default_GroupInput)
         self.build_geometry_node()
 
     def build_geometry_node(self):
         """Geometry node for instancing sphere on vertices!
         """
-        from batoms.utils.butils import build_modifier
-        name = 'GeometryNodes_%s' % self.obj_name
-        modifier = build_modifier(self.obj, name)
-        inputs = modifier.node_group.inputs
-        GroupInput = modifier.node_group.nodes[0]
-        GroupOutput = modifier.node_group.nodes[1]
-        # add new output sockets
-        for att in default_GroupInput:
-            inputs.new(att[1], att[0])
-            id = inputs[att[0]].identifier
-            modifier['%s_use_attribute' % id] = True
-            modifier['%s_attribute_name' % id] = att[0]
-        gn = modifier
+        gn = self.gnodes
+        GroupInput = gn.node_group.nodes[0]
+        GroupOutput = gn.node_group.nodes[1]
         # print(gn.name)
         JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
                                          '%s_JoinGeometry' % self.label,
