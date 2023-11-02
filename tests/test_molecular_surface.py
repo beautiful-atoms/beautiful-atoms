@@ -11,6 +11,13 @@ try:
 except ImportError:
     use_cycles = False
 
+try:
+    from openbabel import pybel
+    has_openbabel = True
+except ImportError:
+    has_openbabel = False
+
+
 extras = dict(engine="cycles") if use_cycles else {}
 
 def test_SAS():
@@ -40,6 +47,10 @@ def test_SAS_location():
     assert bpy.data.objects['h2o_1_sas'].data.vertices[0].co[0] < 0
     # area = h2o.molecular_surface.get_psasa()
 
+@pytest.mark.skipif(
+    not has_openbabel,
+    reason="Requires openbabel.",
+)
 def test_EPM():
     """Electrostatic Potential Maps
     """

@@ -114,9 +114,12 @@ def test_batoms_transform():
         positions=[[0, 0, 0.40], [0, -0.76, -0.2], [0, 0.76, -0.2]],
     )
     h2o.translate([0, 0, 2])
-    assert np.isclose(h2o.positions[0], np.array([0, 0, 2.40])).all()
+    # local positions
+    assert np.isclose(h2o.positions[0], np.array([0, 0, 0.40])).all()
+    # global positions
+    assert np.isclose(h2o.global_positions[0], np.array([0, 0, 2.40])).all()
     h2o.mirror("Z")
-    assert np.isclose(h2o.positions[0], np.array([0, 0, 1.6])).all()
+    assert np.isclose(h2o.global_positions[0], np.array([0, 0, 1.6])).all()
     # h2o.rotate(90, "Z")
     # assert np.isclose(h2o.positions[0], np.array([0.76, 0, -2.2])).all()
 
@@ -294,6 +297,7 @@ def test_repeat():
     h2o.pbc = True
     h2o.repeat([2, 2, 2])
     assert len(h2o) == 24
+    print(h2o.positions)
     assert np.isclose(h2o.positions[3] - h2o.positions[0], np.array([0, 0, 3])).all()
 
 

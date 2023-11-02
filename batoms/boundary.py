@@ -100,13 +100,13 @@ class Boundary(ObjectGN):
         """
         # tstart = time()
         if len(datas['positions'].shape) == 2:
-            self._frames = {'positions': np.array([datas['positions']]),
+            self._trajectory = {'positions': np.array([datas['positions']]),
                             'offsets': np.array([datas['offsets']]),
                             }
             positions = datas['positions']
             offsets = datas['offsets']
         elif len(datas['positions'].shape) == 3:
-            self._frames = {'positions': datas['positions'],
+            self._trajectory = {'positions': datas['positions'],
                             'offsets': datas['offsets'],
                             }
             positions = datas['positions'][0]
@@ -151,7 +151,7 @@ class Boundary(ObjectGN):
         self.set_attributes(attributes)
         self.init_geometry_node_modifier(default_GroupInput)
         self.build_geometry_node()
-        self.set_frames(self._frames, only_basis=True)
+        self.set_trajectory()
         # print('boundary: build_object: {0:10.2f} s'.format(time() - tstart))
 
     def build_geometry_node(self):
@@ -316,11 +316,13 @@ class Boundary(ObjectGN):
         if not self.active:
             self.set_arrays(default_boundary_datas)
             return
-        frames = self.batoms.get_frames()
+        positions = self.batoms.positions
+        trajectory = self.batoms.get_trajectory()['positions']
         images = self.batoms.as_ase()
         nframe = self.batoms.nframe
         if nframe == 0:
             images = [images]
+            trajectory = np.array([positions])
             nframe = 1
         tstart = time()
         for f in range(nframe):
@@ -336,7 +338,7 @@ class Boundary(ObjectGN):
                     boundary_lists, boundary_list, axis=0)
         boundary_lists = np.unique(boundary_lists, axis=0)
         boundary_datas = self.calc_boundary_data(
-            boundary_lists, images[0].arrays, frames, self.batoms.cell)
+            boundary_lists, images[0].arrays, trajectory, self.batoms.cell)
         # update unit cell
 
         #
@@ -452,7 +454,7 @@ class Boundary(ObjectGN):
             return
         self.positions = arrays["positions"][0]
         self.offsets = arrays["offsets"][0]
-        self.set_frames(arrays)
+        self.set_trajectory(arrays)
         self.update_mesh()
         species_index = [string2Number(sp) for sp in arrays['species']]
         self.set_attributes({
@@ -521,7 +523,7 @@ class Boundary(ObjectGN):
         offsets = np.empty(n*3, dtype=int)
         if n == 0:
             return
-        self.obj_o.data.shape_keys.key_blocks[0].data.foreach_get(
+        self.obj_o.data.vertices.foreach_get(
             'co', offsets)
         return offsets.reshape((n, 3))
 
@@ -541,10 +543,7 @@ class Boundary(ObjectGN):
         if n == 0:
             return
         offsets = offsets.reshape((n*3, 1))
-        if self.obj_o.data.shape_keys is None and len(self) > 0:
-            base_name = "Basis_%s"%self.obj_o.name
-            self.obj_o.shape_key_add(name=base_name)
-        self.obj_o.data.shape_keys.key_blocks[0].data.foreach_set(
+        self.obj_o.data.vertices.foreach_set(
             'co', offsets)
         self.obj_o.data.update()
         # bpy.context.view_layer.objects.active = self.obj_o
@@ -559,27 +558,24 @@ class Boundary(ObjectGN):
         bondlists = self.batoms.bonds.arrays
         return bondlists
 
-    def get_frames(self):
+    def get_trajectory(self):
         """
         """
-        frames = {}
-        frames['positions'] = self.get_obj_frames(self.obj)
-        frames['offsets'] = self.get_obj_frames(self.obj_o)
-        return frames
+        trajectory = {}
+        trajectory['positions'] = self.get_obj_trajectory(self.obj)
+        trajectory['offsets'] = self.get_obj_trajectory(self.obj_o)
+        return trajectory
 
-    def set_frames(self, frames=None, frame_start=0, only_basis=False):
-        if frames is None:
-            frames = self._frames
-        nframe = len(frames)
-        if nframe == 0:
-            return
+    def set_trajectory(self, trajectory=None, frame_start=0):
+        if trajectory is None:
+            trajectory = self._trajectory
         name = '%s_boundary' % (self.label)
         obj = self.obj
-        self.set_obj_frames(name, obj, frames['positions'])
+        self.set_shape_key(name, obj, trajectory['positions'], frame_start=frame_start)
         #
         name = '%s_boundary_offset' % (self.label)
         obj = self.obj_o
-        self.set_obj_frames(name, obj, frames['offsets'])
+        self.set_shape_key(name, obj, trajectory['offsets'], frame_start=frame_start)
 
     def calc_boundary_data(self, boundary_lists, arrays, positions, cell):
         """

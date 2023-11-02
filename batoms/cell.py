@@ -36,14 +36,14 @@ class Bcell(ObjectGN):
         array = np.array(array)
         positions = np.zeros([4, 3])
         if array is None:
-            self._frames = {'positions': [positions]}
+            self._trajectory = {'positions': []}
         elif array.shape in [(3, ), (3, 1), (6, ), (6, 1), (3, 3)]:
             cell = Cell.new(array)
             positions[1:4, :] = cell.array
-            self._frames = {'positions': [positions]}
+            self._trajectory = {'positions': [positions]}
         elif len(array.shape) == 3:
             positions = array[0]
-            self._frames = {'positions': [positions]}
+            self._trajectory = {'positions': [positions]}
         else:
             raise Exception('Shape of cell %s is not corrected!' % array.shape)
 
@@ -67,7 +67,7 @@ class Bcell(ObjectGN):
         obj.data.materials.append(mat)
         self.init_geometry_node_modifier()
         self.build_geometry_node()
-        self.set_frames(self._frames)
+        self.set_attributes({"positions": positions})
         bpy.context.view_layer.update()
 
     def build_geometry_node(self):
@@ -188,16 +188,6 @@ class Bcell(ObjectGN):
         mat = bpy.data.materials.get(name)
         return mat
 
-    def set_frames(self, frames=None, frame_start=0, only_basis=False):
-        if frames is None:
-            frames = self._frames
-        nframe = len(frames)
-        if nframe == 0:
-            return
-        name = self.label
-        obj = self.obj
-        self.set_obj_frames(name, obj, frames["positions"])
-
     def __repr__(self) -> str:
         numbers = np.round(self.array, 3).tolist()
         s = 'Cell({})'.format(numbers)
@@ -214,9 +204,9 @@ class Bcell(ObjectGN):
         Examples:
 
         """
-        local_positions = self.local_positions
-        local_positions[1:4, :][index] = value
-        self.local_positions = local_positions
+        positions = self.positions
+        positions[1:4, :][index] = value
+        self.positions = positions
         self.batoms.update_gn_cell()
         self.batoms.boundary.update_gn_cell()
 
@@ -269,6 +259,23 @@ class Bcell(ObjectGN):
                                                 'GeometryNodeSetMaterial')
         setMaterial.inputs[2].default_value = self.material
 
+    def get_trajectory(self, local=True):
+        """
+        """
+        trajectory = {"positions": self.get_shape_key(self.obj, local=local)}
+        return trajectory
+
+    def set_trajectory(self, trajectory=None, frame_start=0):
+        if trajectory is None:
+            trajectory = self._trajectory
+        nframe = len(trajectory['positions'])
+        if nframe == 0:
+            return
+        name = self.label
+        obj = self.obj
+        self.set_shape_key(name, obj, trajectory['positions'],
+                           frame_start=frame_start)
+
     @property
     def local_array(self):
         return self.get_local_array()
@@ -281,7 +288,7 @@ class Bcell(ObjectGN):
         Returns:
             (3x3 local_array): The array of cell.
         """
-        positions = self.local_positions
+        positions = self.positions
         local_array = np.array([positions[1] - positions[0],
                                 positions[2] - positions[0],
                                 positions[3] - positions[0]])
