@@ -20,7 +20,7 @@ def test_empty_dir():
     with pytest.raises(FileNotFoundError):
         _is_empty_dir(tmpdir1)
         _is_empty_dir(tmpdir2)
-    
+
 
 def test_default_location_linux(fs):
     """Test requires the `pyfakefs` package's fs fixture
@@ -41,7 +41,7 @@ def test_default_location_macos(fs, monkeypatch):
     fdn1 = "/Applications/Blender.app/Contents/Resources/3.4"
     fdd1 = fs.create_dir(fdn1)
     assert _get_default_locations("macos") == Path(fdn1)
-    
+
 
     # macos case 2: Blender 3.4 and 3.1 both exist, should return 3.4
     fdn2 = "/Applications/Blender.app/Contents/Resources/3.1"

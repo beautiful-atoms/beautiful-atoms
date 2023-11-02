@@ -157,5 +157,3 @@ def test_bond_reload(tio2):
     bpy.ops.wm.open_mainfile(filepath=filepath)
     tio2 = Batoms("tio2")
     assert len(tio2.bond.search_bond) == 43
-
-

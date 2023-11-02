@@ -447,7 +447,7 @@ class ObjectGN(BaseObject):
             attribute = get_mesh_attribute_bmesh(obj, att.name, index)
         else:
             attribute = get_mesh_attribute(obj, att.name, index)
-        
+
         return attribute
 
     def add_attribute_from_array(self, name, data):
@@ -485,7 +485,7 @@ class ObjectGN(BaseObject):
             print(f'Attribute: {name} is not added. The shape of the array: {data.shape} is not supported.')
             return False
 
-        
+
 
     def add_attribute(self, name, data_type='FLOAT', domain='POINT'):
         """Add an attribute to the mesh"""
@@ -558,7 +558,7 @@ class ObjectGN(BaseObject):
             set_mesh_attribute_bmesh(obj, key, array, index)
         else:
             set_mesh_attribute(obj, key, array, index)
-        
+
     def set_attribute_with_indices(self, name, indices, data):
         data0 = self.get_attribute(name)
         data0[indices] = data
