@@ -1,6 +1,5 @@
 import bpy
 from batoms import Batoms
-import pytest
 
 
 def test_batoms_delete():
@@ -28,6 +27,7 @@ def test_batoms_delete():
     h2o.obj.select_set(True)
     bpy.ops.batoms.delete_selected_batoms()
     assert "h2o" not in bpy.data.collections
+    bpy.ops.batoms.delete()
 
 
 def test_batoms_apply_model_style(h2o):
@@ -81,6 +81,7 @@ def test_ase_molecule():
     bpy.ops.batoms.molecule_add(label="nh3", formula="NH3")
     nh3 = Batoms("nh3")
     assert len(nh3) == 4
+    bpy.ops.batoms.delete()
 
 
 def test_ase_bulk():
@@ -92,6 +93,7 @@ def test_ase_bulk():
     # surface
     au.obj.select_set(True)
     bpy.ops.batoms.surface_add()
+    bpy.ops.batoms.delete()
 
 
 def test_ase_surface():
@@ -143,6 +145,7 @@ def test_ase_surface():
     bpy.ops.surface.diamond111_add(label="c111")
     c111 = Batoms("c111")
     assert len(c111) == 4
+    bpy.ops.batoms.delete()
 
 
 # ==============================================

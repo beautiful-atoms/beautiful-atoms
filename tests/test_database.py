@@ -36,10 +36,3 @@ def test_database_pymatgen():
     fe = Structure(Lattice.cubic(2.8), ["Fe", "Fe"], [[0, 0, 0], [0.5, 0.5, 0.5]])
     fe = Batoms(label="fe", from_pymatgen=fe)
     assert fe.pbc == [True, True, True]
-
-
-if __name__ == "__main__":
-    test_database_materials_project()
-    test_database_pubchem()
-    test_database_pymatgen()
-    print("\n Database: All pass! \n")
