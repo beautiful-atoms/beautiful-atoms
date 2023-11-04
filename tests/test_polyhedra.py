@@ -1,9 +1,6 @@
 import bpy
-import pytest
 from batoms.batoms import Batoms
-from ase.io import read
 from ase.build import molecule
-import numpy as np
 
 try:
     from _common_helpers import has_display, set_cycles_res
@@ -14,14 +11,10 @@ except ImportError:
 
 extras = dict(engine="cycles") if use_cycles else {}
 
-def test_polyhedra_species():
+def test_polyhedra_species(tio2):
     """
     This is an example to show different polyhedra for the same element, but different species.
     """
-    from batoms.bio import read
-    bpy.ops.batoms.delete()
-    # First, we read a TiO2 structure from file.
-    tio2 = read("../tests/datas/tio2.cif")
     assert len(tio2.polyhedra.settings) == 1
     # We set the first one to a new species Ti_1.
     tio2.replace([0], 'Ti_1')
@@ -48,20 +41,14 @@ def test_polyhedra_molecule():
     ch4.model_style = 1
 
 
-def test_polyhedra_crystal():
-    from ase.io import read
-    bpy.ops.batoms.delete()
-    tio2 = read("../tests/datas/tio2.cif")
-    tio2 = Batoms("tio2", from_ase=tio2)
+def test_polyhedra_crystal(tio2):
     tio2.model_style = 2
     tio2 = tio2 * [3, 3, 3]
     tio2.pbc = False
     tio2.model_style = 2
 
 
-def test_polyhedra_setting():
-    bpy.ops.batoms.delete()
-    ch4 = Batoms("ch4", from_ase=molecule("CH4"))
+def test_polyhedra_setting(ch4):
     ch4.bond.settings[("C", "H")].polyhedra = True
     ch4.model_style = 2
     ch4.pbc = True
@@ -79,11 +66,3 @@ def test_polyhedra_setting():
     if use_cycles:
         set_cycles_res(ch4)
     ch4.get_image([1, 1, 0], output="polyhedra.png", **extras)
-
-
-if __name__ == "__main__":
-    test_polyhedra_species()
-    test_polyhedra_molecule()
-    test_polyhedra_crystal()
-    test_polyhedra_setting()
-    print("\n Polyhedra: All pass! \n")

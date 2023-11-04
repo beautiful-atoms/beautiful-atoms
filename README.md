@@ -40,6 +40,32 @@ Features:
 * pymatgen
 * openbabel
 
+### Development
+
+#### Editor
+We recommend using [Visual Studio Code](https://code.visualstudio.com/) with the [Blender extension](https://github.com/JacquesLucke/blender_vscode).
+
+#### Test
+To run the tests, you need to install the development dependencies:
+
+```console
+$ pip install -r requirements-test.txt
+```
+
+We recommend using [pytest-blender](https://pypi.org/project/pytest-blender/). To run the tests, run:
+
+```console
+$ cd tests
+$ pytest
+```
+
+#### Pre-commit
+To install the pre-commit hooks, run:
+
+```console
+$ pre-commit install
+```
+
 ### How to use
 
 Please vist: https://beautiful-atoms.readthedocs.io/en/latest/

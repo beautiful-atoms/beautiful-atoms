@@ -1,19 +1,13 @@
 import bpy
-from batoms import Batoms
-import numpy as np
-import pytest
 
-def test_batoms():
+def test_batoms(ch4):
     """Batoms panel"""
-    from batoms.batoms import Batoms
-    bpy.ops.batoms.delete()
-    bpy.ops.batoms.molecule_add()
-    ch4 = Batoms('CH4')
-    ch4.obj.select_set(True)
+    bpy.ops.object.select_all(action='DESELECT')
+    bpy.context.view_layer.objects.active = ch4.obj
     # model_style
-    assert bpy.context.scene.batoms.batoms.model_style.upper() == "BALL-AND-STICK"
-    bpy.context.scene.batoms.batoms.model_style = "Space-filling"
-    assert ch4.model_style == 0
+    assert bpy.context.scene.batoms.batoms.model_style.upper() == "SPACE-FILLING"
+    bpy.context.scene.batoms.batoms.model_style = "Ball-and-stick"
+    assert ch4.model_style == 1
     # radius_style
     assert bpy.context.scene.batoms.batoms.radius_style.upper() == "COVALENT"
     bpy.context.scene.batoms.batoms.radius_style = "VDW"
