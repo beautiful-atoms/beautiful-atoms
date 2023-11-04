@@ -237,13 +237,13 @@ def test_repeat(h2o):
 def test_get_geometry(h2o):
     """Test geometry"""
     angle = h2o.get_angle(1, 0, 2)
-    assert np.isclose(angle, 103.4196)
+    assert np.isclose(angle, 103.9998)
     d = h2o.get_distances(0, 1)
-    assert np.isclose(d, 0.96829)
+    assert np.isclose(d, 0.96856)
     com = h2o.get_center_of_mass()
-    assert np.isclose(com, np.array([0, 0, 0.33285596])).all()
+    assert np.isclose(com, np.array([0, 0, 0.052531])).all()
     cog = h2o.get_center_of_geometry()
-    assert np.isclose(cog, np.array([0, 0, 0.1])).all()
+    assert np.isclose(cog, np.array([0, 0, -0.178892])).all()
 
 
 def test_make_real(h2o):

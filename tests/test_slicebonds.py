@@ -3,6 +3,7 @@
 def test_slicebonds(ch4):
     """Setting sliced Bonds"""
     import numpy as np
+    ch4.model_style = 1
     # one atoms
     assert ch4.bond[0].order == 1
     ch4.bond[1].order = 2

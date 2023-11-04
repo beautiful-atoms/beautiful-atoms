@@ -44,3 +44,4 @@ def test_select_protein():
     sel1 = batoms.selects.add("sel1", np.where(batoms.arrays["types"] == "HETATM")[0])
     sel1.show = 1
     sel1.model_style = 1
+    bpy.ops.batoms.delete()

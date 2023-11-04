@@ -31,8 +31,6 @@ def test_batoms_delete():
 
 
 def test_batoms_apply_model_style(h2o):
-    bpy.ops.object.select_all(action='DESELECT')
-    h2o.obj.select_set(True)
     bpy.context.view_layer.objects.active = h2o.obj
     assert h2o.model_style == 0
     # model_style
@@ -46,46 +44,35 @@ def test_batoms_apply_model_style(h2o):
     assert h2o.color_style == "2"
 
 
-def test_batoms_join_seperate():
+def test_batoms_join_seperate(h2o, ch4):
     """ """
-    from batoms import Batoms
-
-    bpy.ops.batoms.delete()
-    bpy.ops.batoms.molecule_add(label="nh3", formula="NH3")
-    bpy.ops.batoms.molecule_add(label="h2o", formula="H2O")
-    nh3 = Batoms("nh3")
-    nh3.obj.select_set(True)
-    h2o = Batoms("h2o")
+    ch4.obj.select_set(True)
     h2o.obj.select_set(True)
     # join
-    bpy.ops.batoms.join(label="nh3")
-    assert len(nh3) == 7
+    bpy.ops.batoms.join(label="ch4")
+    assert len(ch4) == 8
     # separate
-    nh3.separate()
-    assert len(nh3) == 4
+    ch4.separate()
+    assert len(ch4) == 5
     assert len(h2o) == 3
     # join with another name
-    nh3.obj.select_set(True)
+    ch4.obj.select_set(True)
     h2o.obj.select_set(True)
     bpy.ops.batoms.join(label="a")
     a = Batoms("a")
-    assert len(a) == 7
+    assert len(a) == 8
     # separate
     a.separate()
-    assert len(nh3) == 4
+    assert len(ch4) == 5
     assert len(h2o) == 3
 
 
-def test_batoms_apply_label():
-    from batoms import Batoms
-
-    bpy.ops.batoms.delete()
-    bpy.ops.batoms.molecule_add(label="nh3", formula="NH3")
-    nh3 = Batoms("nh3")
+def test_batoms_apply_label(h2o):
+    bpy.context.view_layer.objects.active = h2o.obj
     bpy.ops.batoms.apply_label(label="elements")
-    assert nh3.show_label == "elements"
+    assert h2o.show_label == "elements"
     bpy.ops.batoms.apply_label(label="")
-    assert nh3.show_label == ""
+    assert h2o.show_label == ""
 
 
 def test_ase_molecule():
@@ -161,35 +148,21 @@ def test_ase_surface():
 # ==============================================
 # Below for edit mode
 # ==============================================
-def test_batoms_apply_model_style_selected():
+def test_batoms_apply_model_style_selected(h2o):
     import numpy as np
     from batoms import Batoms
 
-    bpy.ops.batoms.delete()
-    bpy.ops.batoms.molecule_add(label="nh3", formula="NH3")
     bpy.ops.surface.fcc111_add(label="au111", symbol="Au", size=(1, 1, 4))
-    nh3 = Batoms("nh3")
     au111 = Batoms("au111")
-    au111 += nh3
+    au111 += h2o
     au111.model_style = 0
     bpy.context.view_layer.objects.active = au111.obj
-    # only select nh3
-    au111.obj.data.vertices.foreach_set("select", [0, 0, 0, 0, 1, 1, 1, 1])
+    # only select h2o
+    au111.obj.data.vertices.foreach_set("select", [0, 0, 0, 0, 1, 1, 1])
     # change model_style for selected atoms
     bpy.ops.batoms.apply_model_style_selected(model_style="1")
     assert au111.get_attribute("model_style")[0] == 0
     assert au111.get_attribute("model_style")[-1] == 1
     assert np.isclose(au111.get_attribute("scale")[0], 1)
     assert np.isclose(au111.get_attribute("scale")[-1], 0.4)
-
-
-if __name__ == "__main__":
-    test_batoms_delete()
-    test_batoms_apply_model_style()
-    test_batoms_join_seperate()
-    test_batoms_apply_label()
-    test_ase_molecule()
-    test_ase_bulk()
-    test_ase_surface()
-    test_batoms_apply_model_style_selected()
-    print("\n Ops: All pass! \n")
+    bpy.ops.batoms.delete()
