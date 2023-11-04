@@ -1,17 +1,7 @@
-import bpy
-import pytest
-from ase.build import molecule
-from batoms import Batoms
-import numpy as np
 
-
-def test_slicebatoms():
+def test_slicebatoms(ch4):
     """Setting sliced Batoms"""
-    from batoms import Batoms
     import numpy as np
-    bpy.ops.batoms.delete()
-    bpy.ops.batoms.molecule_add()
-    ch4 = Batoms("CH4")
     # one atoms
     assert ch4[0].species == 'C'
     ch4[1].scale = 1
@@ -27,8 +17,3 @@ def test_slicebatoms():
     assert np.isclose(ch4[0:2].scale, np.array([0.4, 1])).all()
     ch4[0:2].scale = 2
     assert np.isclose(ch4[0:2].scale, np.array([2, 2])).all()
-
-
-if __name__ == "__main__":
-    test_slicebatoms()
-    print("\n SliceBatoms: All pass! \n")

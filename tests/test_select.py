@@ -1,17 +1,10 @@
 import bpy
-import pytest
-from ase.build import molecule, fcc111
 from batoms.batoms import Batoms
 import numpy as np
-from time import time
 
 
-def test_settings():
+def test_settings(ch4):
     """species panel"""
-    from batoms.batoms import Batoms
-    bpy.ops.batoms.delete()
-    bpy.ops.batoms.molecule_add()
-    ch4 = Batoms('CH4')
     assert ch4.coll.batoms.ui_list_index_select==0
     # add
     ch4.selects.add('s1', [1])
@@ -51,9 +44,3 @@ def test_select_protein():
     sel1 = batoms.selects.add("sel1", np.where(batoms.arrays["types"] == "HETATM")[0])
     sel1.show = 1
     sel1.model_style = 1
-
-
-if __name__ == "__main__":
-    test_select()
-    test_select_protein()
-    print("\n Select: All pass! \n")

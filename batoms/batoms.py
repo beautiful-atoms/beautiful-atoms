@@ -149,7 +149,7 @@ class Batoms(BaseCollection, ObjectGN):
             self.set_collection(label, color_style=color_style, radius_style=radius_style)
             self._cell = Bcell(label, cell, batoms=self)
             positions = np.array(positions)
-            if len(positions.shape) == 3 and load_trajectory:
+            if len(positions.shape) == 3:
                 self._trajectory = {"positions": positions}
                 positions = positions[0]
             else:

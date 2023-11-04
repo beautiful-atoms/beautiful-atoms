@@ -1,7 +1,4 @@
 import bpy
-import pytest
-from batoms.batoms import Batoms
-from batoms.bio.bio import read
 import numpy as np
 from time import time
 

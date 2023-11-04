@@ -11,12 +11,9 @@ except ImportError:
 def h2o():
     import bpy
     from batoms import Batoms
+    from ase.build import molecule
     # setup fixture h2o
-    h2o = Batoms(
-        "h2o",
-        species=["O", "H", "H"],
-        positions=[[0, 0, 0.40], [0, -0.76, -0.2], [0, 0.76, -0.2]],
-    )
+    h2o = Batoms("h2o", from_ase=molecule("H2O"))
     yield h2o
     # teardown fixture h2o
     bpy.ops.batoms.delete()
@@ -45,16 +42,8 @@ def ch4():
 def au():
     import bpy
     from batoms import Batoms
-    a = 4.08
-    positions = [[0, 0, 0], [a / 2, a / 2, 0],
-                 [a / 2, 0, a / 2], [0, a / 2, a / 2]]
-    au = Batoms(
-        label="au",
-        species=["Au"] * len(positions),
-        positions=positions,
-        pbc=True,
-        cell=(a, a, a),
-    )
+    from ase.build import bulk
+    au = Batoms("au", from_ase=bulk("Au", cubic=True))
     yield au
     bpy.ops.batoms.delete()
 
