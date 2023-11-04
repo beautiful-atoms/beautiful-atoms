@@ -2,7 +2,8 @@ import bpy
 
 def test_batoms(ch4):
     """Batoms panel"""
-    ch4.obj.select_set(True)
+    bpy.ops.object.select_all(action='DESELECT')
+    bpy.context.view_layer.objects.active = ch4.obj
     # model_style
     assert bpy.context.scene.batoms.batoms.model_style.upper() == "SPACE-FILLING"
     bpy.context.scene.batoms.batoms.model_style = "Ball-and-stick"

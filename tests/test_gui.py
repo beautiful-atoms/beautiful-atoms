@@ -6,7 +6,7 @@ import pytest
 def test_render(ch4):
     """Render panel"""
     ch4.cell = [1, 2, 3]
-    ch4.obj.select_set(True)
+    bpy.context.view_layer.objects.active = ch4.obj
     # bpy.ops.batoms.render_add()
     ch4.render.init()
     assert ch4._render is not None
@@ -35,7 +35,7 @@ def test_render(ch4):
 
 def test_batom(ch4):
     """Batom panel"""
-    ch4.obj.select_set(True)
+    bpy.context.view_layer.objects.active = ch4.obj
     # scale
     assert np.isclose(bpy.context.scene.batoms.batom.scale, ch4[0].scale)
     bpy.context.scene.batoms.batom.scale = 1

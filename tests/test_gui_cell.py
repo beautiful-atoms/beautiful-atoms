@@ -4,7 +4,7 @@ import bpy
 def test_cell(ch4):
     """Cell panel"""
     import numpy as np
-    ch4.obj.select_set(True)
+    bpy.context.view_layer.objects.active = ch4.obj
     # model_style
     assert np.isclose(bpy.context.scene.batoms.cell.cell_a0, 0)
     bpy.context.scene.batoms.cell.cell_a0 = 3

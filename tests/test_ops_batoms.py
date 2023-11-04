@@ -30,22 +30,20 @@ def test_batoms_delete():
     assert "h2o" not in bpy.data.collections
 
 
-def test_batoms_apply_model_style():
-    from batoms import Batoms
-
-    bpy.ops.batoms.delete()
-    bpy.ops.batoms.molecule_add(label="nh3", formula="NH3")
-    nh3 = Batoms("nh3")
-    assert nh3.model_style == 1
+def test_batoms_apply_model_style(h2o):
+    bpy.ops.object.select_all(action='DESELECT')
+    h2o.obj.select_set(True)
+    bpy.context.view_layer.objects.active = h2o.obj
+    assert h2o.model_style == 0
     # model_style
-    bpy.ops.batoms.apply_model_style(model_style="0")
-    assert nh3.model_style == 0
+    bpy.ops.batoms.apply_model_style(model_style="1")
+    assert h2o.model_style == 1
     # radius_style
     bpy.ops.batoms.apply_radius_style(radius_style="1")
-    assert nh3.radius_style == "1"
+    assert h2o.radius_style == "1"
     # color_style
     bpy.ops.batoms.apply_color_style(color_style="2")
-    assert nh3.color_style == "2"
+    assert h2o.color_style == "2"
 
 
 def test_batoms_join_seperate():

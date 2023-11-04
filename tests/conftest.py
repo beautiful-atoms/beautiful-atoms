@@ -55,3 +55,11 @@ def tio2():
     tio2 = read("../tests/datas/tio2.cif")
     yield tio2
     bpy.ops.batoms.delete()
+
+@pytest.fixture
+def h2o_homo():
+    import bpy
+    from batoms.bio.bio import read
+    h2o_homo = read("../tests/datas/h2o-homo.cube")
+    yield h2o_homo
+    bpy.ops.batoms.delete()

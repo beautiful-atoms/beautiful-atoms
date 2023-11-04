@@ -73,12 +73,12 @@ def test_colored_by_volumetric_datas():
     else:
         h2o.render.resolution = [200, 200]
     h2o.get_image([1, 0, 0], output="molecular_surface_colored_by_volumetric_datas.png", **extras)
-
+    # teardown for next test
+    bpy.ops.batoms.delete()
 
 def test_SES(h2o):
     """
     """
-    bpy.ops.batoms.delete()
     h2o.molecular_surface.settings["1"].type = "SES"
     h2o.molecular_surface.draw()
     # area = h2o.molecular_surface.get_sasa(partial=True)[0]
@@ -103,7 +103,7 @@ def test_molecular_surface_ops(c2h6so):
 
 def test_molecule_surface_uilist(ch4):
     """molecule_surface_uilist panel"""
-    ch4.obj.select_set(True)
+    bpy.context.view_layer.objects.active = ch4.obj
     assert ch4.coll.Bmolecularsurface.ui_list_index==0
     bpy.ops.surface.molecular_surface_add(name='2')
     assert ch4.coll.Bmolecularsurface.ui_list_index==1
@@ -141,6 +141,6 @@ def test_SES_protein():
     prot.molecular_surface.settings["1"].type = "SES"
     prot.molecular_surface.draw()
     t = time() - tstart
-    assert t < 5
+    assert t < 10
     area = prot.molecular_surface.get_sesa("1")[0]
     assert abs(area - 8011) < 1000

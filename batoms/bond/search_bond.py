@@ -59,7 +59,7 @@ class SearchBond(ObjectGN):
         self.label = label
         name = 'search_bond'
         ObjectGN.__init__(self, label, name)
-        if not load:
+        if not load or not self.loadable():
             if search_bond_datas is not None:
                 self.build_object(search_bond_datas)
             else:

@@ -75,7 +75,7 @@ class Boundary(ObjectGN):
         self.label = label
         name = 'boundary'
         ObjectGN.__init__(self, label, name)
-        if not load:
+        if not load or not self.loadable():
             if boundary_datas is not None:
                 self.build_object(boundary_datas)  # , location=location)
             else:
