@@ -1,19 +1,14 @@
 import bpy
 from batoms import Batoms
 import pytest
-
-try:
-    from openbabel import pybel
-    no_pybel = False
-except ImportError:
-    no_pybel = True
-
+from conftest import has_openbabel
 
 @pytest.mark.skipif(
-    no_pybel,
+    not has_openbabel,
     reason="Requires pybel module",
 )
 def test_pybel_smiles():
+    from openbabel import pybel
     bpy.ops.batoms.delete()
     smiles = 'CCO'
     mol = pybel.readstring("smi", smiles)
@@ -23,17 +18,13 @@ def test_pybel_smiles():
 
 
 @pytest.mark.skipif(
-    no_pybel,
+    not has_openbabel,
     reason="Requires pybel module",
 )
 def test_pybel_bond_order():
     bpy.ops.batoms.delete()
-    bpy.ops.batoms.molecule_add(label = 'c6h6', formula = 'C6H6')
+    bpy.ops.batoms.molecule_add(label='c6h6', formula='C6H6')
     c6h6 = Batoms('c6h6')
     c6h6.model_style = 1
     c6h6.bond.bond_order_auto_set()
     assert c6h6.bond.arrays['order'][0] == 2
-
-if __name__ == "__main__":
-    test_pybel_smiles()
-    print("\n Pybel: All pass! \n")

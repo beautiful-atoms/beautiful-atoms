@@ -376,16 +376,24 @@ def get_equivalent_atoms(atoms, tol = 1e-5):
     return symmetry_data['equivalent_atoms']
 
 def local2global(positions, matrix, reversed=False):
+    """Transferm the positions using (4x4) matrix, so
+    one need append one column to the positions.
+    The positions could be a Nx3 arrays, or nframxNx3 arrays.
+    if reversed is True, from global to local.
+    """
     if reversed:
         matrix = np.linalg.inv(matrix)
-    n = len(positions)
-    # positions (natom, 3) to (natom, 4)
-    positions = np.append(positions, np.ones((n, 1)), axis=1)
-    # inverse of transformation matrix
-    positions = matrix.dot(positions.T).T
-    # (natom, 4) back to (natom, 3)
-    positions = positions[:, :3]
-    return positions
+    if len(positions.shape) == 2:
+        positions = np.c_[positions, np.ones(len(positions))]
+        positions = np.dot(positions, matrix.T)
+        positions = positions[:, :3]
+        return positions
+    elif len(positions.shape) == 3:
+        nframe = len(positions)
+        positions = np.c_[positions, np.ones((nframe, len(positions[0]), 1))]
+        positions = np.dot(positions, matrix.T)
+        positions = positions[:, :, :3]
+        return positions
 
 
 def npbool2bool(pbc):

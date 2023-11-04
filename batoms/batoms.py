@@ -45,11 +45,8 @@ subcollections = ['instancer', 'surface', 'ribbon', 'plane']
 
 
 class Batoms(BaseCollection, ObjectGN):
-    """_summary_
-
-    Args:
-        BaseCollection (_type_): _description_
-        ObjectGN (_type_): _description_
+    """Batoms Class
+    The Batoms object is a interface to a batoms object in Blender. It is a subclass of BaseCollection and ObjectGN.
     """
 
     def __init__(self,
@@ -70,7 +67,7 @@ class Batoms(BaseCollection, ObjectGN):
                  from_ase=None,
                  from_pymatgen=None,
                  from_pybel=None,
-                 movie=True,
+                 load_trajectory=False,
                  segments=None,
                  ):
         """Batoms Class
@@ -114,8 +111,8 @@ class Batoms(BaseCollection, ObjectGN):
                 Import structure from pymatgen. Defaults to None.
             metaball (bool, optional):
                 Show atoms as metaball. Defaults to False.
-            movie (bool, optional):
-                Load all frames. Defaults to True.
+            load_trajectory (bool, optional):
+                Load all trajectory. Defaults to True.
             segments (_type_, optional):
                 Resolution of the sphere. Defaults to None.
 
@@ -139,9 +136,10 @@ class Batoms(BaseCollection, ObjectGN):
         self._volumetric_data = None
         #
         if from_ase or from_pymatgen or from_pybel:
-            species, positions, attributes, cell, pbc, info = read_from_others(from_ase,
-                                                                               from_pymatgen,
-                                                                               from_pybel)
+            species, positions, attributes, cell, pbc, info \
+            = read_from_others(from_ase,
+                                from_pymatgen,
+                                from_pybel)
         if species is None and self.check_batoms(label):
             self.from_batoms(label)
         else:
@@ -152,10 +150,10 @@ class Batoms(BaseCollection, ObjectGN):
             self._cell = Bcell(label, cell, batoms=self)
             positions = np.array(positions)
             if len(positions.shape) == 3:
-                self._frames = {"positions": positions}
-                positions = self._frames["positions"][0]
+                self._trajectory = {"positions": positions}
+                positions = positions[0]
             else:
-                self._frames = {"positions": np.array([positions])}
+                self._trajectory = {"positions": []}
             # init attributes
             natom = len(positions)
             self.coll.batoms.scale = scale
@@ -180,8 +178,8 @@ class Batoms(BaseCollection, ObjectGN):
             self._volumetric_data = VolumetricData(label, volume, self)
             self.set_pbc(pbc)
             # self.label = label
-            if movie:
-                self.set_frames()
+            if load_trajectory:
+                self.set_trajectory()
             self.show_unit_cell = show_unit_cell
 
         self.ribbon = Ribbon(self.label, batoms=self, datas=info, update=True)
@@ -237,10 +235,6 @@ class Batoms(BaseCollection, ObjectGN):
         obj.batoms.type = 'BATOMS'
         obj.batoms.label = label
         self.coll.objects.link(obj)
-        # add shape_keys
-        if self.obj.data.shape_keys is None:
-            self.obj.shape_key_add(name="Basis_{}".format(self.label))
-        #
         # add cell object as its child
         self.cell.obj.parent = self.obj
         # add attributes
@@ -393,9 +387,12 @@ class Batoms(BaseCollection, ObjectGN):
             label (str):
                 Name of the Batoms
         """
+        from batoms.boundary import Boundary
+        print("Load batoms {}".format(label))
         self.coll_name = label
         self.obj_name = label
-        self._cell = Bcell(label=label, batoms = self)
+        self._cell = Bcell(label=label, batoms=self)
+        self._boundary = Boundary(label, batoms=self, load=True)
         self._species = Bspecies(label, {}, self)
         self._volumetric_data = VolumetricData(label, None, self)
         self.selects = Selects(label, self)
@@ -441,6 +438,23 @@ class Batoms(BaseCollection, ObjectGN):
                 data[key] = plugin.as_dict()
         return data
 
+    def get_trajectory(self, local=True):
+        """
+        """
+        trajectory = {"positions": self.get_shape_key(self.obj, local=local)}
+        return trajectory
+
+    def set_trajectory(self, trajectory=None, frame_start=0):
+        if trajectory is None:
+            trajectory = self._trajectory
+        nframe = len(trajectory['positions'])
+        if nframe == 0:
+            return
+        name = self.label
+        obj = self.obj
+        self.set_shape_key(name, obj, trajectory['positions'],
+                           frame_start=frame_start)
+
     def set_arrays(self, arrays):
         """
         """
@@ -456,9 +470,10 @@ class Batoms(BaseCollection, ObjectGN):
             # self.udpate_mesh(self.obj)
         elif dnvert < 0:
             self.delete_vertices_bmesh(range(-dnvert))
-        self.set_frames(arrays)
+        self.positions = arrays["positions"]
+        print("positions", self.positions)
         for key, value in arrays.items():
-            if key == "positions": continue
+            if key in ["positions", "position"]: continue
             self.set_attributes({key: value})
         self.update_mesh()
 
@@ -686,7 +701,7 @@ class Batoms(BaseCollection, ObjectGN):
         if not cell:
             cell = self.cell
         cell = Cell.new(cell)
-        scaled_positions = cell.scaled_positions(self.local_positions)
+        scaled_positions = cell.scaled_positions(self.positions)
         return scaled_positions
 
     def get_arrays(self, batoms=None, local=False, X=False, sort=True):
@@ -854,22 +869,6 @@ class Batoms(BaseCollection, ObjectGN):
         """
         pass
 
-    def get_frames(self, local=True):
-        """
-        """
-        frames = self.get_obj_frames(self.obj, local=local)
-        return frames
-
-    def set_frames(self, frames=None, frame_start=0, only_basis=False):
-        if frames is None:
-            frames = self._frames
-        nframe = len(frames['positions'])
-        if nframe == 0:
-            return
-        name = self.label
-        obj = self.obj
-        self.set_obj_frames(name, obj, frames['positions'])
-
     def __getitem__(self, indices):
         """Return a subset of the Batom.
 
@@ -900,6 +899,24 @@ class Batoms(BaseCollection, ObjectGN):
         positions[indices] = value
         self.set_positions(positions)
 
+    def repeat_positions(self, positions, cell, m):
+        """Repeat positions by cell and m.
+        cell: 3x3 matrix
+        m: 3x1 vector
+        """
+        M = np.product(m)
+        n = len(positions)
+        positions = np.tile(
+            positions, (M,) + (1,) * (len(positions.shape) - 1))
+        i0 = 0
+        for m0 in range(m[0]):
+            for m1 in range(m[1]):
+                for m2 in range(m[2]):
+                    i1 = i0 + n
+                    positions[i0:i1] += np.dot((m0, m1, m2), cell)
+                    i0 = i1
+        return positions
+
     def __imul__(self, m):
         """
         In-place repeat of atoms.
@@ -917,30 +934,21 @@ class Batoms(BaseCollection, ObjectGN):
                 raise ValueError('Cannot repeat along undefined lattice '
                                  'vector')
         M = np.product(m)
-        n = len(self)
-        frames = self.frames
-        nframe = len(frames)
         attributes = self.attributes
         for key, data in attributes.items():
             attributes[key] = np.tile(
                 data, (M,) + (1,) * (len(data.shape) - 1))
-        # positions will be updated in frames
-        # repeat frames
-        frames_new = []
+        # repeat positions
+        attributes["positions"] = self.repeat_positions(self.positions, cell, m)
+        # repeat trajectory
+        trajectory = self.get_trajectory()
+        nframe = self.nframe
+        trajectory_new = {"positions": []}
         for i in range(0, nframe):
-            positions = np.tile(
-                frames[i], (M,) + (1,) * (len(frames[i].shape) - 1))
-            i0 = 0
-            for m0 in range(m[0]):
-                for m1 in range(m[1]):
-                    for m2 in range(m[2]):
-                        i1 = i0 + n
-                        positions[i0:i1] += np.dot((m0, m1, m2), cell)
-                        i0 = i1
-            frames_new.append(positions)
-        attributes["positions"] = np.array(frames_new)
+            positions = self.repeat_positions(trajectory["positions"][i], cell, m)
+            trajectory_new["positions"].append(positions)
         self.set_arrays(attributes)
-        # self.set_frames(frames_new)
+        self.set_trajectory(trajectory_new)
         self.cell.repeat(m)
         self.update_gn_cell()
         if self.volumetric_data is not None:
@@ -979,7 +987,7 @@ class Batoms(BaseCollection, ObjectGN):
         batoms = self.__class__(label=label,
                                 location=self.location + np.array(displacement),
                                 species=arrays['species'],
-                                positions=self.local_positions,
+                                positions=self.positions,
                                 pbc=self.pbc,
                                 cell=self.cell.array,
                                 )
@@ -995,6 +1003,8 @@ class Batoms(BaseCollection, ObjectGN):
         # could also use self.add_arrays(other.positions)
         # object_mode()
         # merge bondetting
+        if self.nframe > 0 or other.nframe > 0:
+            raise Exception('Extend is not supported for trajectory!')
         self.bond.settings.extend(other.bond.settings)
         # creat new selections
         n1 = len(self)
@@ -1010,9 +1020,6 @@ class Batoms(BaseCollection, ObjectGN):
         self._species.extend(other._species)
         self.selects.add(self.label, indices1)
         self.selects.add(other.label, indices2)
-        # remove shape key from mol
-        sp = self.obj.data.shape_keys.key_blocks.get('Basis_%s' % other.label)
-        self.obj.shape_key_remove(sp)
         # remove old
         bpy.ops.batoms.delete(label=other.label)
 
@@ -1698,12 +1705,15 @@ class Batoms(BaseCollection, ObjectGN):
             if True, use the origin of uint cell as the origin
         """
         from ase import Atoms
-        frames = self.get_frames()
+        positions = self.positions
+        trajectory = self.get_trajectory()['positions']
         arrays = self.arrays
-        nframe = len(frames)
+        if len(trajectory) == 0:
+            trajectory = [positions]
+        nframe = len(trajectory)
         images = []
         for f in range(nframe):
-            positions = frames[f]
+            positions = trajectory[f]
             if not local:
                 positions += self.cell.origin
             atoms = Atoms(symbols=arrays['elements'],

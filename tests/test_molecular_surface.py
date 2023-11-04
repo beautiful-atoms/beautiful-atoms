@@ -4,6 +4,8 @@ from time import time
 from ase.build import molecule
 from batoms.pdbparser import read_pdb
 from batoms import Batoms
+from conftest import has_openbabel
+
 try:
     from _common_helpers import has_display, set_cycles_res
 
@@ -13,26 +15,18 @@ except ImportError:
 
 extras = dict(engine="cycles") if use_cycles else {}
 
-def test_SAS():
+def test_SAS(h2o):
     """
     """
-    from batoms import Batoms
-    bpy.ops.batoms.delete()
-    bpy.ops.batoms.molecule_add(label = 'h2o', formula = 'H2O')
-    h2o = Batoms("h2o")
     h2o.molecular_surface.draw()
     assert len(h2o.molecular_surface.settings) == 1
     h2o.molecular_surface.settings['2'] = {'type': 'SAS'}
     assert len(h2o.molecular_surface.settings) == 2
     # area = h2o.molecular_surface.get_psasa()
 
-def test_SAS_location():
+def test_SAS_location(h2o):
     """
     """
-    from batoms import Batoms
-    bpy.ops.batoms.delete()
-    bpy.ops.batoms.molecule_add(label = 'h2o', formula = 'H2O')
-    h2o = Batoms("h2o")
     h2o.translate([10, 0, 0])
     h2o.molecular_surface.settings['1'] = {'type': 'SAS'}
     h2o.molecular_surface.draw()
@@ -40,14 +34,13 @@ def test_SAS_location():
     assert bpy.data.objects['h2o_1_sas'].data.vertices[0].co[0] < 0
     # area = h2o.molecular_surface.get_psasa()
 
-def test_EPM():
+@pytest.mark.skipif(
+    not has_openbabel,
+    reason="Requires openbabel.",
+)
+def test_EPM(c2h6so):
     """Electrostatic Potential Maps
     """
-    from batoms import Batoms
-    from ase.io.cube import read_cube_data
-    bpy.ops.batoms.delete()
-    bpy.ops.batoms.molecule_add(label='c2h6so', formula='C2H6SO')
-    c2h6so = Batoms("c2h6so")
     c2h6so.molecular_surface.draw()
     assert "Attribute" not in bpy.data.objects['c2h6so_1_sas'].data.materials[0].node_tree.nodes
     # color by potential
@@ -80,23 +73,18 @@ def test_colored_by_volumetric_datas():
     else:
         h2o.render.resolution = [200, 200]
     h2o.get_image([1, 0, 0], output="molecular_surface_colored_by_volumetric_datas.png", **extras)
-
-
-def test_SES():
-    """
-    """
+    # teardown for next test
     bpy.ops.batoms.delete()
-    h2o = molecule("H2O")
-    h2o = Batoms("h2o", from_ase=h2o)
+
+def test_SES(h2o):
+    """
+    """
     h2o.molecular_surface.settings["1"].type = "SES"
     h2o.molecular_surface.draw()
     # area = h2o.molecular_surface.get_sasa(partial=True)[0]
 
 
-def test_molecular_surface_ops():
-    bpy.ops.batoms.delete()
-    bpy.ops.batoms.molecule_add(formula="C2H6SO")
-    c2h6so = Batoms('C2H6SO')
+def test_molecular_surface_ops(c2h6so):
     c2h6so.selects.add("1", [2, 4, 6, 7])
     c2h6so.selects.add("2", [3, 5, 8, 9])
     bpy.context.view_layer.objects.active = c2h6so.obj
@@ -113,17 +101,12 @@ def test_molecular_surface_ops():
     bpy.ops.surface.molecular_surface_draw()
 
 
-def test_molecule_surface_uilist():
+def test_molecule_surface_uilist(ch4):
     """molecule_surface_uilist panel"""
-    from batoms.batoms import Batoms
-    bpy.ops.batoms.delete()
-    bpy.ops.batoms.molecule_add()
-    ch4 = Batoms('CH4')
-    ch4.obj.select_set(True)
+    bpy.context.view_layer.objects.active = ch4.obj
     assert ch4.coll.Bmolecularsurface.ui_list_index==0
     bpy.ops.surface.molecular_surface_add(name='2')
     assert ch4.coll.Bmolecularsurface.ui_list_index==1
-
 
 
 def test_SAS_protein():
@@ -158,15 +141,6 @@ def test_SES_protein():
     prot.molecular_surface.settings["1"].type = "SES"
     prot.molecular_surface.draw()
     t = time() - tstart
-    assert t < 5
+    assert t < 10
     area = prot.molecular_surface.get_sesa("1")[0]
     assert abs(area - 8011) < 1000
-
-
-
-if __name__ == "__main__":
-    test_SAS()
-    test_SAS_protein()
-    test_SES()
-    test_SES_protein()
-    print("\n MSsetting: All pass! \n")

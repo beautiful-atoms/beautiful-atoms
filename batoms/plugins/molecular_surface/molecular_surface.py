@@ -155,7 +155,7 @@ class MolecularSurface(BaseObject):
         if len(indices) == 0:
             return
         radii = np.array(self.batoms.radii_vdw[indices]) + probe
-        positions = self.batoms.local_positions[indices]
+        positions = self.batoms.positions[indices]
         self.get_box(positions, padding=max(radii) + resolution)
         self.build_grid(resolution=resolution)
         logger.debug('Grid Points: %s %s %s' % self.shape)
@@ -185,7 +185,7 @@ class MolecularSurface(BaseObject):
             from batoms.utils import map_volumetric_data
             from batoms.utils.attribute import set_mesh_attribute
             if ms.color_by.upper() == "ELECTROSTATIC_POTENTIAL":
-                if 'charges' not in self.batoms._attributes:
+                if 'charges' not in self.batoms.obj.data.attributes:
                     self.batoms.auto_assign_charge()
                 data = self.batoms.calc_electrostatic_potential(isosurface['vertices'])
             else:
@@ -241,7 +241,7 @@ class MolecularSurface(BaseObject):
             return
         radii_vdw = np.array(self.batoms.radii_vdw[indices])
         radii = radii_vdw + probe
-        positions = self.batoms.local_positions[indices]
+        positions = self.batoms.positions[indices]
         self.get_box(positions, padding=max(radii) + resolution + probe)
         self.build_grid(resolution=resolution)
         # draw_vertices('meshgrid', self.meshgrids)

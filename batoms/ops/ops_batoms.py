@@ -145,7 +145,7 @@ class AddSurface(OperatorBatoms):
         label = batoms.label + ''.join(str(i) for i in self.indices)
         if self.label in bpy.data.collections:
             self.label = "%s.001" % self.label
-        batoms = Batoms(label=label, from_ase=atoms, movie=True)
+        batoms = Batoms(label=label, from_ase=atoms)
         batoms = batoms*self.size
         batoms.translate([2, 2, 2])
         batoms.obj.select_set(True)
@@ -182,7 +182,7 @@ class AddRootSurface(OperatorBatoms):
         atoms = atoms*self.size
         if self.label in bpy.data.collections:
             self.label = "%s.001" % self.label
-        batoms = Batoms(label=label, from_ase=atoms, movie=True)
+        batoms = Batoms(label=label, from_ase=atoms)
         batoms.translate([2, 2, 2])
         batoms.obj.select_set(True)
         bpy.context.view_layer.objects.active = batoms.obj

@@ -100,15 +100,18 @@ class Bond(BaseCollection, ObjectGN):
             self.build_object(bond_datas)
             self.settings = BondSettings(self.label, batoms=batoms, bonds=self)
             self.update_geometry_nodes()
+            self._search_bond = None
         elif self.loadable():
             # load old object
+            print('load bond: %s' % self.label)
             self.settings = BondSettings(self.label, batoms=batoms, bonds=self)
+            self._search_bond = SearchBond(self.label, batoms=batoms, load=True)
         else:
             # create empty new object
             self.build_object(default_bond_datas)
             self.settings = BondSettings(self.label, batoms=batoms, bonds=self)
             self.update_geometry_nodes()
-        self._search_bond = None
+            self._search_bond = None
 
     def loadable(self):
         """Check loadable or not
@@ -130,7 +133,7 @@ class Bond(BaseCollection, ObjectGN):
         """
         tstart = time()
         if len(bond_datas['centers'].shape) == 2:
-            self._frames = {'centers': np.array([bond_datas['centers']]),
+            self._trajectory = {'centers': np.array([bond_datas['centers']]),
                             'offsets1': np.array([bond_datas['offsets1']]),
                             'offsets2': np.array([bond_datas['offsets2']]),
                             'offsets3': np.array([bond_datas['offsets3']]),
@@ -142,7 +145,7 @@ class Bond(BaseCollection, ObjectGN):
             offsets3 = bond_datas['offsets3']
             offsets4 = bond_datas['offsets4']
         elif len(bond_datas['centers'].shape) == 3:
-            self._frames = {'centers': bond_datas['centers'],
+            self._trajectory = {'centers': bond_datas['centers'],
                             'offsets1': bond_datas['offsets1'],
                             'offsets2': bond_datas['offsets2'],
                             'offsets3': bond_datas['offsets3'],
@@ -201,7 +204,7 @@ class Bond(BaseCollection, ObjectGN):
         self.set_attributes(attributes)
         self.init_geometry_node_modifier(default_GroupInput)
         self.build_geometry_node()
-        self.set_frames(self._frames, only_basis=False)
+        self.set_trajectory()
         #
         logger.debug('bonds: build_object: {0:10.2f} s'.format(time() - tstart))
 
@@ -630,26 +633,31 @@ class Bond(BaseCollection, ObjectGN):
     def update(self, bondlists = None, orders = None):
         """
         Draw bonds.
-        calculate bond in all farmes, and merge all bondlists
+        calculate bond in all farmes, and merge all bondlists.
+        Draw bonds in the bondlists, only show the bond if it
+        is smaller than the max bond length.
         """
 
         object_mode()
         # clean_coll_objects(self.coll, 'bond')
-        frames = self.batoms.get_frames()
+        positions = self.batoms.positions
+        trajectory = self.batoms.get_trajectory()['positions']
         arrays = self.batoms.arrays
         boundary_data = self.batoms.boundary.boundary_data
         show = arrays['show'].astype(bool)
         species = arrays['species'][show]
-        # frames_boundary = self.batoms.get_frames(self.batoms.batoms_boundary)
-        # frames_search = self.batoms.get_frames(self.batoms.batoms_search)
-        nframe = len(frames)
+        # trajectory_boundary = self.batoms.get_trajectory(self.batoms.batoms_boundary)
+        # trajectory_search = self.batoms.get_trajectory(self.batoms.batoms_search)
+        if self.batoms.nframe == 0:
+            trajectory = np.array([positions])
+        nframe = len(trajectory)
         bond_datas = {}
         tstart = time()
         setting = self.settings.as_dict()
         if bondlists is None:
             for f in range(nframe):
                 # print('update bond: ', f)
-                positions = frames[f, show, :]
+                positions = trajectory[f, show, :]
                 # build bondlist for unit cell
                 bondlist, bonddatas, peciesBondDatas, molPeciesDatas = \
                     self.build_bondlists(species, positions, self.batoms.cell,
@@ -674,7 +682,7 @@ class Bond(BaseCollection, ObjectGN):
                 else:
                     bondlists = np.append(bondlists, bondlist, axis=0)
             bondlists = np.unique(bondlists, axis=0)
-        bond_datas = self.calc_bond_data(species, frames[:, show, :],
+        bond_datas = self.calc_bond_data(species, trajectory[:, show, :],
                                          self.batoms.cell, bondlists,
                                          self.settings,
                                          arrays['model_style'][show])
@@ -743,7 +751,7 @@ class Bond(BaseCollection, ObjectGN):
             objs = self.obj_o
             for obj in objs:
                 self.delete_vertices_bmesh(range(-dnvert), obj)
-        self.set_frames(arrays)
+        self.set_trajectory(arrays)
         self.offsets = [arrays['offsets1'], arrays['offsets2'],
                         arrays['offsets3'], arrays['offsets4']]
         arrays = {key:value for key, value in arrays.items()
@@ -792,27 +800,27 @@ class Bond(BaseCollection, ObjectGN):
             objs[i].data.vertices.foreach_set('co', vertices)
             objs[i].data.update()
 
-    def get_frames(self):
+    def get_trajectory(self):
         """
         """
-        frames = {}
-        frames['centers'] = self.get_obj_frames(self.obj)
-        # frames['offsets'] = self.get_obj_frames(self.obj_o)
-        return frames
+        trajectory = {}
+        trajectory['centers'] = self.get_obj_trajectory(self.obj)
+        # trajectory['offsets'] = self.get_obj_trajectory(self.obj_o)
+        return trajectory
 
-    def set_frames(self, frames=None, frame_start=0, only_basis=False):
-        if frames is None:
-            frames = self._frames
-        nframe = len(frames['centers'])
+    def set_trajectory(self, trajectory=None, frame_start=0):
+        if trajectory is None:
+            trajectory = self._trajectory
+        nframe = len(trajectory['centers'])
         if nframe == 0:
             return
         name = '%s_bond' % (self.label)
         obj = self.obj
-        self.set_obj_frames(name, obj, frames['centers'])
+        self.set_shape_key(name, obj, trajectory['centers'], frame_start=frame_start)
         #
         # name = '%s_bond_offset'%(self.label)
         # obj = self.obj_o
-        # self.set_obj_frames(name, obj, frames['offsets'])
+        # self.set_shape_key(name, obj, trajectory['offsets'], frame_start=frame_start)
 
     @property
     def bondlists(self):
@@ -1374,8 +1382,8 @@ class Bond(BaseCollection, ObjectGN):
         # bond center
         if len(positions.shape) == 2:
             positions = np.array([positions])
-        # here we use frames directly, thus will set centers
-        # to shape keys frames
+        # here we use trajectory directly, thus will set centers
+        # to shape keys trajectory
         centers = (positions[:, atoms_index1] + offsets1 +
                    positions[:, atoms_index2] + offsets2)/2.0
         # ---------------------------------------------

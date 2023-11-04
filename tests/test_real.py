@@ -20,9 +20,3 @@ def test_force_field_al():
     al = Batoms("al", from_ase=bulk("Al"))
     al = al * [1, 20, 1]
     al.pbc = False
-
-
-if __name__ == "__main__":
-    test_force_field()
-    test_force_field_al()
-    print("\n Bcell: All pass! \n")

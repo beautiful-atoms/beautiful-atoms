@@ -253,7 +253,7 @@ class ObjectGN(BaseObject):
     def build_object(self, arrays, attributes={}):
         self.set_attributes(attributes)
         self.build_geometry_node()
-        self.set_frames(self._frames, only_basis=False)
+        self.set_shape_key(self._trajectory)
 
     def load(self):
         flag = True
@@ -582,63 +582,58 @@ class ObjectGN(BaseObject):
         return self.get_attribute(name)[indices]
 
     @property
-    def local_positions(self):
-        return self.get_local_positions()
+    def positions(self):
+        return self.get_positions()
 
-    def get_local_positions(self):
-        """
-        using foreach_get and foreach_set to improve performance.
-        """
+    def get_positions(self):
+        """Get the local positions of the object."""
         n = len(self)
-        local_positions = np.empty(n*3, dtype=np.float64)
-        self.obj.data.vertices.foreach_get('co', local_positions)
-        local_positions = local_positions.reshape((n, 3))
-        return local_positions
+        positions = np.empty(n*3, dtype=np.float64)
+        self.obj.data.vertices.foreach_get('co', positions)
+        positions = positions.reshape((n, 3))
+        return positions
 
-    @local_positions.setter
-    def local_positions(self, local_positions):
-        self.set_local_positions(local_positions)
+    @positions.setter
+    def positions(self, positions):
+        self.set_positions(positions)
 
-    def set_local_positions(self, local_positions):
+    def set_positions(self, positions):
         """
-        Set local_positions to local vertices
+        Set positions to local vertices
         """
         object_mode()
-        from batoms.utils import local2global
         natom = len(self)
-        n = len(local_positions)
+        n = len(positions)
         if n != natom:
-            raise ValueError('local_positions has wrong shape %s != %s.' %
+            raise ValueError('positions has wrong shape %s != %s.' %
                              (n, natom))
-        # no shape key for empty mesh
         if natom == 0:
             return
-        local_positions = local_positions.reshape((natom*3, 1))
-        self.shape_keys.key_blocks[0].data.foreach_set(
-            'co', local_positions)
+        positions = positions.reshape((natom*3, 1))
+        self.obj.data.vertices.foreach_set('co', positions)
         self.obj.data.update()
         bpy.context.view_layer.objects.active = self.obj
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.object.mode_set(mode='OBJECT')
 
     @property
-    def positions(self):
-        return self.get_positions()
+    def global_positions(self):
+        return self.get_global_positions()
 
-    @positions.setter
-    def positions(self, positions):
-        self.set_positions(positions)
+    @global_positions.setter
+    def global_positions(self, global_positions):
+        self.set_global_positions(global_positions)
 
-    def get_positions(self):
+    def get_global_positions(self):
         """
         Get global positions.
         """
         from batoms.utils import local2global
-        positions = local2global(self.local_positions,
+        global_positions = local2global(self.positions,
                                  np.array(self.obj.matrix_world))
-        return positions
+        return global_positions
 
-    def set_positions(self, positions):
+    def set_global_positions(self, positions):
         """
         Set global positions to local vertices
         """
@@ -649,21 +644,12 @@ class ObjectGN(BaseObject):
         if nposition != natom:
             raise ValueError('positions has wrong shape %s != %s.' %
                              (nposition, natom))
-        # no shape key for empty mesh
         if natom == 0:
             return
-        positions = local2global(positions,
+        local_positions = local2global(positions,
                                  np.array(self.obj.matrix_world),
                                  reversed=True)
-        # rashpe to (natoms*3, 1) and use forseach_set
-        positions = positions.reshape((natom*3, 1))
-        # I don't know why 'Basis' shape keys is not updated when editing mesh,
-        # so we edit the 'Basis' shape keys directly.
-        # self.obj.data.vertices.foreach_set('co', positions)
-        self.shape_keys.key_blocks[0].data.foreach_set(
-            'co', positions)
-        self.obj.data.update()
-        self.update_mesh()
+        self.local_positions = local_positions
 
     @property
     def nframe(self):
@@ -675,59 +661,47 @@ class ObjectGN(BaseObject):
         nframe = len(self.obj.data.shape_keys.key_blocks)
         return nframe
 
-    @property
-    def frames(self):
-        return self.get_frames()
-
-    @frames.setter
-    def frames(self, frames):
-        self.set_frames(frames)
-
-    def get_obj_frames(self, obj, local=True):
+    def get_shape_key(self, obj, local=True):
         """
         read shape key
         """
         from batoms.utils import local2global
         n = len(self)
         nframe = self.nframe
-        frames = np.empty((nframe, n, 3), dtype=np.float64)
+        trajectory = np.empty((nframe, n, 3), dtype=np.float64)
         for i in range(nframe):
             positions = np.empty(n*3, dtype=np.float64)
             sk = obj.data.shape_keys.key_blocks[i]
             sk.data.foreach_get('co', positions)
             local_positions = positions.reshape((n, 3))
             if local:
-                frames[i] = local_positions
+                trajectory[i] = local_positions
             else:
                 global_positions = local2global(local_positions,
                                                 np.array(self.obj.matrix_world))
-                frames[i] = global_positions
-        return frames
+                trajectory[i] = global_positions
+        return trajectory
 
-    def set_frames_positions(self, frames=None, frame_start=0,
-                             only_basis=False):
-        name = ''
-        obj = self.obj
-        self.set_frames(name, obj, frames, frame_start, only_basis)
+    def set_shape_key(self, name, obj, trajectory=None, frame_start=0):
+        """Set shape key for trajectory
 
-    def set_obj_frames(self, name, obj, frames=None,
-                       frame_start=0, only_basis=False):
-        """
-
-        frames: list
+        name: str
+            name of the shape key
+        obj: bpy.data.objects
+            object to set shape key
+        trajectory: list
             list of positions
-
-        use shape_keys (faster)
+        frame_start: int
+            start frame
         """
         from batoms.utils.butils import add_keyframe_to_shape_key
-        if frames is None:
-            frames = self._frames
-        centers = frames
-        nframe = len(centers)
+        if trajectory is None:
+            trajectory = self.trajectory
+        nframe = len(trajectory)
         if nframe == 0:
             return
         # shape key should not be add for empty mesh
-        if len(frames[0]) == 0:
+        if len(trajectory[0]) == 0:
             return
         # name = '%s_bond%s'%(self.label, sp)
         # obj = bpy.data.objects.get(name)
@@ -740,18 +714,15 @@ class ObjectGN(BaseObject):
             sk = obj.data.shape_keys.key_blocks.get(base_name)
         # set basis key
         nvert = len(obj.data.shape_keys.key_blocks[0].data)
-        positions = frames[0]
+        positions = trajectory[0]
         vertices = positions.reshape(nvert*3)
         sk.data.foreach_set('co', vertices)
         # self.obj.data.update()
-        if only_basis:
-            self.update_mesh(obj)
-            return
         for i in range(1, nframe):
             name = str(i)
             if name not in obj.data.shape_keys.key_blocks:
                 sk = obj.shape_key_add(name=name)
-                # Add Keyframes, the last one is different
+                # Add Keytrajectory, the last one is different
                 if i != nframe - 1:
                     add_keyframe_to_shape_key(sk, 'value',
                                               [0, 1, 0],
@@ -766,7 +737,7 @@ class ObjectGN(BaseObject):
             else:
                 sk = obj.data.shape_keys.key_blocks.get(name)
             # Use the local position here
-            positions = frames[i]
+            positions = trajectory[i]
             vertices = positions.reshape((nvert*3, 1))
             sk.data.foreach_set('co', vertices)
         self.update_mesh(obj)
@@ -814,7 +785,10 @@ class childObjectGN():
 
     @property
     def vertice(self):
-        return self.obj.data.shape_keys.key_blocks[0].data[self.indices[0]]
+        if self.obj.data.shape_keys is None:
+            return self.obj.data.vertices[self.indices[0]]
+        else:
+            return self.obj.data.shape_keys.key_blocks[0].data[self.indices[0]]
 
     @property
     def bm(self):

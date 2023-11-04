@@ -1,7 +1,4 @@
 import bpy
-import pytest
-from batoms.batoms import Batoms
-from batoms.bio.bio import read
 import numpy as np
 from time import time
 
@@ -62,6 +59,7 @@ def test_ops_add():
     data, atoms = read_cube_data("../tests/datas/h2o-homo.cube")
     h2o = Batoms("h2o", from_ase=atoms)
     assert len(h2o.volumetric_data) == 0
+    bpy.context.view_layer.objects.active = h2o.obj
     bpy.ops.batoms.volumetric_data_add(
         name="hartree", filepath="../tests/datas/h2o-hartree.cube")
     assert h2o.volumetric_data.find("hartree") is not None
@@ -69,11 +67,10 @@ def test_ops_add():
         name="hartree")
     assert h2o.volumetric_data.find("hartree") is None
 
-def test_ops_create():
+def test_ops_create(h2o_homo):
     from ase.io.cube import read_cube_data
-    from batoms.bio.bio import read
-    bpy.ops.batoms.delete()
-    h2o = read("../tests/datas/h2o-homo.cube")
+    h2o = h2o_homo
+    bpy.context.view_layer.objects.active = h2o.obj
     hartree, atoms = read_cube_data('../tests/datas/h2o-hartree.cube')
     h2o.volumetric_data['hartree'] = -hartree
     bpy.ops.batoms.volumetric_data_create(

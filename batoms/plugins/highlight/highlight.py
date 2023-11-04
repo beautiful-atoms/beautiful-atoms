@@ -150,11 +150,11 @@ class Highlight(ObjectGN, PluginObject):
                 Location of the object. Defaults to [0, 0, 0].
         """
         if len(highlight_datas['centers'].shape) == 2:
-            self._frames = {'centers': np.array([highlight_datas['centers']]),
+            self._trajectory = {'centers': np.array([highlight_datas['centers']]),
                             }
             centers = highlight_datas['centers']
         elif len(highlight_datas['centers'].shape) == 3:
-            self._frames = {'centers': highlight_datas['centers'],
+            self._trajectory = {'centers': highlight_datas['centers'],
                             }
             centers = highlight_datas['centers'][0]
         else:
@@ -305,7 +305,7 @@ class Highlight(ObjectGN, PluginObject):
             self.add_vertices_bmesh(dnvert)
         elif dnvert < 0:
             self.delete_vertices_bmesh(range(-dnvert))
-        self.set_frames(arrays)
+        self.set_trajectory(arrays)
         self.set_attributes({'select_index': arrays['select_index']})
         self.set_attributes({'scale': arrays['scale']})
         self.set_attributes({'show': arrays['show']})
@@ -313,15 +313,15 @@ class Highlight(ObjectGN, PluginObject):
         self.update_mesh()
         self.update_geometry_node_instancer()
 
-    def set_frames(self, frames=None, frame_start=0, only_basis=False):
+    def set_trajectory(self, frames=None, frame_start=0):
         if frames is None:
-            frames = self._frames
+            frames = self._trajectory
         nframe = len(frames['centers'])
         if nframe == 0:
             return
         name = '%s_highlight' % (self.label)
         obj = self.obj
-        self.set_obj_frames(name, obj, frames['centers'])
+        self.set_shape_key(name, obj, frames['centers'], frame_start=frame_start)
 
     @property
     def objs(self):

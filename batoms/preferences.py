@@ -87,6 +87,8 @@ class BatomsDefaultPreference(bpy.types.Operator):
         batoms_asset_dir = os.path.join(pathlib.Path(__file__).parent.resolve(), 'asset')
         batoms_asset_dir = os.path.join(batoms_asset_dir, 'libraries')
 
+        bpy.context.scene.unit_settings.system = "NONE"
+        #
         bpy.context.preferences.view.use_translate_new_dataname = False
         bpy.context.preferences.inputs.use_rotate_around_active = True
         bpy.context.preferences.inputs.use_zoom_to_mouse = True
@@ -124,7 +126,6 @@ class BatomsDefaultStartup(bpy.types.Operator):
         ###################################################
         # Add additional settings to the startup file here
         ###################################################
-        bpy.context.scene.unit_settings.system = "NONE"
         # viewport overlayrs
         for area in bpy.context.screen.areas:
             if area.type == 'VIEW_3D':
