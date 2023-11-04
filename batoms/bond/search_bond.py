@@ -45,6 +45,7 @@ class SearchBond(ObjectGN):
                  label=None,
                  search_bond_datas=None,
                  batoms=None,
+                 load=False,
                  ):
         """SearchBond Class
 
@@ -58,10 +59,11 @@ class SearchBond(ObjectGN):
         self.label = label
         name = 'search_bond'
         ObjectGN.__init__(self, label, name)
-        if search_bond_datas is not None:
-            self.build_object(search_bond_datas)
-        else:
-            self.build_object(default_search_bond_datas)
+        if not load:
+            if search_bond_datas is not None:
+                self.build_object(search_bond_datas)
+            else:
+                self.build_object(default_search_bond_datas)
 
     def loadable(self):
         """Check loadable or not

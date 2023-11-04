@@ -100,15 +100,18 @@ class Bond(BaseCollection, ObjectGN):
             self.build_object(bond_datas)
             self.settings = BondSettings(self.label, batoms=batoms, bonds=self)
             self.update_geometry_nodes()
+            self._search_bond = None
         elif self.loadable():
             # load old object
+            print('load bond: %s' % self.label)
             self.settings = BondSettings(self.label, batoms=batoms, bonds=self)
+            self._search_bond = SearchBond(self.label, batoms=batoms, load=True)
         else:
             # create empty new object
             self.build_object(default_bond_datas)
             self.settings = BondSettings(self.label, batoms=batoms, bonds=self)
             self.update_geometry_nodes()
-        self._search_bond = None
+            self._search_bond = None
 
     def loadable(self):
         """Check loadable or not
