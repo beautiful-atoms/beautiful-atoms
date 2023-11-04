@@ -4,19 +4,14 @@ from time import time
 from ase.build import molecule
 from batoms.pdbparser import read_pdb
 from batoms import Batoms
+from conftest import has_openbabel
+
 try:
     from _common_helpers import has_display, set_cycles_res
 
     use_cycles = not has_display()
 except ImportError:
     use_cycles = False
-
-try:
-    from openbabel import pybel
-    has_openbabel = True
-except ImportError:
-    has_openbabel = False
-
 
 extras = dict(engine="cycles") if use_cycles else {}
 

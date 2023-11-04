@@ -67,11 +67,7 @@ def test_bond_high_order():
     c6h6.bond.settings["C-C"].order = 2
 
 
-def test_bond_performance():
-    from ase.build import molecule, bulk
-    from batoms.batoms import Batoms
-    bpy.ops.batoms.delete()
-    h2o = Batoms("h2o", from_ase=molecule("H2O"))
+def test_bond_performance(h2o):
     h2o.cell = [3, 3, 3]
     h2o.pbc = True
     h2o = h2o*[10, 10, 10]
@@ -89,7 +85,6 @@ def test_bond_add():
     assert len(au.bond.settings) == 0
     au.bond.settings.add(("Au", "Au"))
     assert len(au.bond.settings) == 1
-
 
 
 def test_bond_search_bond_0(tio2):
