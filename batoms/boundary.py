@@ -54,7 +54,8 @@ class Boundary(ObjectGN):
                  batoms=None,
                  boundary = None,
                  boundary_datas=None,
-                 location=(0, 0, 0)
+                 location=(0, 0, 0),
+                 load=False,
                  ):
         """_summary_
 
@@ -74,12 +75,13 @@ class Boundary(ObjectGN):
         self.label = label
         name = 'boundary'
         ObjectGN.__init__(self, label, name)
-        if boundary_datas is not None:
-            self.build_object(boundary_datas)  # , location=location)
-        else:
-            self.build_object(default_boundary_datas)  # , location=location)
-        if boundary is not None:
-            self.boundary = boundary
+        if not load:
+            if boundary_datas is not None:
+                self.build_object(boundary_datas)  # , location=location)
+            else:
+                self.build_object(default_boundary_datas)  # , location=location)
+            if boundary is not None:
+                self.boundary = boundary
 
     def loadable(self):
         """Check loadable or not

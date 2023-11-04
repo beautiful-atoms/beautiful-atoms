@@ -387,9 +387,12 @@ class Batoms(BaseCollection, ObjectGN):
             label (str):
                 Name of the Batoms
         """
+        from batoms.boundary import Boundary
+        print("Load batoms {}".format(label))
         self.coll_name = label
         self.obj_name = label
-        self._cell = Bcell(label=label, batoms = self)
+        self._cell = Bcell(label=label, batoms=self)
+        self._boundary = Boundary(label, batoms=self, load=True)
         self._species = Bspecies(label, {}, self)
         self._volumetric_data = VolumetricData(label, None, self)
         self.selects = Selects(label, self)
