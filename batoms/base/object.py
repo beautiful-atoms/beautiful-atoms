@@ -1,6 +1,6 @@
 import bpy
 import numpy as np
-from batoms.utils.butils import (get_nodes_by_name, object_mode, set_look_at,
+from batoms.utils.butils import (get_node_by_name, object_mode, set_look_at,
                                  update_object)
 
 from time import time
@@ -225,6 +225,31 @@ class BaseObject():
         bm.to_mesh(obj.data)
         bm.clear()
 
+    def add_edges(self, edges=None, obj=None):
+        object_mode()
+        if obj is None:
+            obj = self.obj
+        obj.data.edges.add(len(edges))
+        edges = edges.reshape(len(edges)*2)
+        obj.data.edges.foreach_set('vertices', edges)
+        self.update_mesh(obj)
+
+    def delete_edges_bmesh(self, index=[], obj=None,):
+        """
+        delete edges
+        """
+        import bmesh
+        object_mode()
+        if obj is None:
+            obj = self.obj
+        bm = bmesh.new()
+        bm.from_mesh(obj.data)
+        bm.edges.ensure_lookup_table()
+        edges_select = [bm.edges[i] for i in index]
+        bmesh.ops.delete(bm, geom=edges_select, context='EDGES_FACES')
+        bm.to_mesh(obj.data)
+        bm.clear()
+
     @property
     def shape_keys(self):
         base_name = "Basis_%s"%self.obj_name
@@ -253,7 +278,7 @@ class ObjectGN(BaseObject):
     def build_object(self, arrays, attributes={}):
         self.set_attributes(attributes)
         self.build_geometry_node()
-        self.set_frames(self._frames, only_basis=False)
+        self.set_shape_key(self._trajectory)
 
     def load(self):
         flag = True
@@ -263,10 +288,16 @@ class ObjectGN(BaseObject):
         return flag
 
     @property
-    def gnodes(self):
-        return self.get_gnodes()
+    def gn_modifier(self):
+        return self.get_gn_modifier()
 
-    def get_gnodes(self):
+    @property
+    def gn_node_group(self):
+        """Get the geometry node group of the object."""
+        return self.gn_modifier.node_group
+
+    def get_gn_modifier(self):
+        """Get the geometry node modifier of the object."""
         name = 'GeometryNodes_%s' % self.obj_name
         modifier = self.obj.modifiers.get(name)
         if modifier is None:
@@ -274,10 +305,11 @@ class ObjectGN(BaseObject):
         return modifier
 
     def init_geometry_node_modifier(self, inputs=[]):
+        """Init geometry node modifier"""
         # blender 4.0 use a interface to add sockets, both input and output
-        from batoms.utils.butils import build_modifier
+        from batoms.utils.butils import build_gn_modifier
         name = 'GeometryNodes_%s' % self.obj_name
-        modifier = build_modifier(self.obj, name)
+        modifier = build_gn_modifier(self.obj, name)
         interface = modifier.node_group.interface
         for input in inputs:
             socket = interface.new_socket(name=input[0], socket_type=input[1], in_out='INPUT')
@@ -289,35 +321,36 @@ class ObjectGN(BaseObject):
         """
         Geometry node for everything!
         """
-        from batoms.utils.butils import build_modifier
+        from batoms.utils.butils import build_gn_modifier
         name = 'GeometryNodes_%s' % self.obj_name
-        modifier = build_modifier(self.obj, name)
+        modifier = build_gn_modifier(self.obj, name)
+        return modifier
 
-    def vectorDotMatrix(self, gn, vector_output, matrix, name):
+    def vectorDotMatrix(self, gn_node_group, vector_output, matrix, name):
         """
         """
-        CombineXYZ = get_nodes_by_name(gn.node_group.nodes,
+        CombineXYZ = get_node_by_name(gn_node_group.nodes,
                                        '%s_CombineXYZ_%s' % (self.label, name),
                                        'ShaderNodeCombineXYZ')
         #
         VectorDot = []
         for i in range(3):
-            tmp = get_nodes_by_name(gn.node_group.nodes,
+            tmp = get_node_by_name(gn_node_group.nodes,
                                     '%s_VectorDot%s_%s' % (
                                         self.label, i, name),
                                     'ShaderNodeVectorMath')
             tmp.operation = 'DOT_PRODUCT'
             VectorDot.append(tmp)
             tmp.inputs[1].default_value = matrix[:, i]
-            gn.node_group.links.new(vector_output, tmp.inputs[0])
-            gn.node_group.links.new(tmp.outputs['Value'], CombineXYZ.inputs[i])
+            gn_node_group.links.new(vector_output, tmp.inputs[0])
+            gn_node_group.links.new(tmp.outputs['Value'], CombineXYZ.inputs[i])
         return CombineXYZ
 
-    def add_geometry_node(self, sp):
+    def add_geometry_node(self):
         """
-        add geometry node for each bond pair
+        add geometry node for species
         """
-        pass
+        return NotImplementedError("add_geometry_node is not implemented.")
 
     @property
     def realize_instances(self):
@@ -335,26 +368,26 @@ class ObjectGN(BaseObject):
         # TODO: add make real to geometry node
         """
         #
-        nodes = self.gnodes.node_group.nodes
-        RealizeInstances = get_nodes_by_name(self.gnodes.node_group.nodes,
+        nodes = self.gn_node_group.nodes
+        RealizeInstances = get_node_by_name(self.gn_node_group.nodes,
                                              '%s_RealizeInstances' % self.label,
                                              'GeometryNodeRealizeInstances')
         if not realize_instances:
             # switch off
             if len(RealizeInstances.outputs[0].links) > 0:
                 link = RealizeInstances.outputs[0].links[0]
-                self.gnodes.node_group.links.remove(link)
-            self.gnodes.node_group.links.new(
+                self.gn_node_group.links.remove(link)
+            self.gn_node_group.links.new(
                 nodes['%s_JoinGeometry' % self.label].outputs[0],
                 nodes[1].inputs[0])
         else:
-            self.gnodes.node_group.links.new(
+            self.gn_node_group.links.new(
                 nodes['%s_JoinGeometry' % self.label].outputs[0],
                 RealizeInstances.inputs[0])
-            self.gnodes.node_group.links.new(
+            self.gn_node_group.links.new(
                 RealizeInstances.outputs[0],
                 nodes[1].inputs[0])
-        self.gnodes.node_group.update_tag()
+        self.gn_node_group.update_tag()
 
     def update(self, ):
         """
@@ -408,7 +441,7 @@ class ObjectGN(BaseObject):
     def attributes(self, attributes):
         self.set_attributes(attributes)
 
-    def get_attributes(self):
+    def get_attributes(self, domains=['POINT']):
         """Get all attributes of the Batoms object.
 
 
@@ -417,7 +450,7 @@ class ObjectGN(BaseObject):
         """
         attributes = {}
         for att in self.obj.data.attributes:
-            if att.name.startswith('.'):
+            if att.name.startswith('.') or att.domain not in domains:
                 continue
             attributes[att.name] = self.get_attribute(att.name)
         return attributes
@@ -443,14 +476,14 @@ class ObjectGN(BaseObject):
         # get the mesh
         obj = self.obj
         att = obj.data.attributes[key]
-        if obj.mode == 'EDIT' and att.data_type in ['STRING', 'INT', 'FLOAT']:
+        if obj.mode == 'EDIT' and att.data_type in ['STRING', 'INT', 'FLOAT', 'FLOAT_VECTOR', 'FLOAT_COLOR']:
             attribute = get_mesh_attribute_bmesh(obj, att.name, index)
         else:
             attribute = get_mesh_attribute(obj, att.name, index)
 
         return attribute
 
-    def add_attribute_from_array(self, name, data):
+    def add_attribute_from_array(self, name, data, domain="POINT"):
         """Add an attribute from array
         """
         from batoms.utils import type_py_to_blender
@@ -466,14 +499,14 @@ class ObjectGN(BaseObject):
                 if dtype_bl is False:
                     print(f'Attribute: {name} is not added. The type of the array: {type_py} is not supported.')
                     return False
-                self.add_attribute(name=name, data_type=dtype_bl, domain="POINT")
+                self.add_attribute(name=name, data_type=dtype_bl, domain=domain)
             elif len(data.shape) == 2:
                 if data.shape[1] == 2:
-                    self.add_attribute(name=name, data_type="FLOAT2", domain="POINT")
+                    self.add_attribute(name=name, data_type="FLOAT2", domain=domain)
                 elif data.shape[1] == 3:
-                    self.add_attribute(name=name, data_type="FLOAT_VECTOR", domain="POINT")
+                    self.add_attribute(name=name, data_type="FLOAT_VECTOR", domain=domain)
                 elif data.shape[1] == 4:
-                    self.add_attribute(name=name, data_type="QUATERNION", domain="POINT")
+                    self.add_attribute(name=name, data_type="QUATERNION", domain=domain)
                 else:
                     print(f'Attribute: {name} is not added. The shape of the array: {data.shape} is not supported.')
                     return False
@@ -542,7 +575,6 @@ class ObjectGN(BaseObject):
             array (np.array): value of the attribute
         """
         from batoms.utils.attribute import set_mesh_attribute, set_mesh_attribute_bmesh
-        logger.debug('Set attribute: {}'.format(key))
         obj = self.obj
         me = obj.data
         if key not in me.attributes:
@@ -582,63 +614,58 @@ class ObjectGN(BaseObject):
         return self.get_attribute(name)[indices]
 
     @property
-    def local_positions(self):
-        return self.get_local_positions()
+    def positions(self):
+        return self.get_positions()
 
-    def get_local_positions(self):
-        """
-        using foreach_get and foreach_set to improve performance.
-        """
+    def get_positions(self):
+        """Get the local positions of the object."""
         n = len(self)
-        local_positions = np.empty(n*3, dtype=np.float64)
-        self.obj.data.vertices.foreach_get('co', local_positions)
-        local_positions = local_positions.reshape((n, 3))
-        return local_positions
+        positions = np.empty(n*3, dtype=np.float64)
+        self.obj.data.vertices.foreach_get('co', positions)
+        positions = positions.reshape((n, 3))
+        return positions
 
-    @local_positions.setter
-    def local_positions(self, local_positions):
-        self.set_local_positions(local_positions)
+    @positions.setter
+    def positions(self, positions):
+        self.set_positions(positions)
 
-    def set_local_positions(self, local_positions):
+    def set_positions(self, positions):
         """
-        Set local_positions to local vertices
+        Set positions to local vertices
         """
         object_mode()
-        from batoms.utils import local2global
         natom = len(self)
-        n = len(local_positions)
+        n = len(positions)
         if n != natom:
-            raise ValueError('local_positions has wrong shape %s != %s.' %
+            raise ValueError('positions has wrong shape %s != %s.' %
                              (n, natom))
-        # no shape key for empty mesh
         if natom == 0:
             return
-        local_positions = local_positions.reshape((natom*3, 1))
-        self.shape_keys.key_blocks[0].data.foreach_set(
-            'co', local_positions)
+        positions = positions.reshape((natom*3, 1))
+        self.obj.data.vertices.foreach_set('co', positions)
         self.obj.data.update()
         bpy.context.view_layer.objects.active = self.obj
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.object.mode_set(mode='OBJECT')
 
     @property
-    def positions(self):
-        return self.get_positions()
+    def global_positions(self):
+        return self.get_global_positions()
 
-    @positions.setter
-    def positions(self, positions):
-        self.set_positions(positions)
+    @global_positions.setter
+    def global_positions(self, global_positions):
+        self.set_global_positions(global_positions)
 
-    def get_positions(self):
+    def get_global_positions(self):
         """
         Get global positions.
         """
         from batoms.utils import local2global
-        positions = local2global(self.local_positions,
+        global_positions = local2global(self.positions,
                                  np.array(self.obj.matrix_world))
-        return positions
+        return global_positions
 
-    def set_positions(self, positions):
+    def set_global_positions(self, positions):
         """
         Set global positions to local vertices
         """
@@ -649,21 +676,12 @@ class ObjectGN(BaseObject):
         if nposition != natom:
             raise ValueError('positions has wrong shape %s != %s.' %
                              (nposition, natom))
-        # no shape key for empty mesh
         if natom == 0:
             return
-        positions = local2global(positions,
+        local_positions = local2global(positions,
                                  np.array(self.obj.matrix_world),
                                  reversed=True)
-        # rashpe to (natoms*3, 1) and use forseach_set
-        positions = positions.reshape((natom*3, 1))
-        # I don't know why 'Basis' shape keys is not updated when editing mesh,
-        # so we edit the 'Basis' shape keys directly.
-        # self.obj.data.vertices.foreach_set('co', positions)
-        self.shape_keys.key_blocks[0].data.foreach_set(
-            'co', positions)
-        self.obj.data.update()
-        self.update_mesh()
+        self.local_positions = local_positions
 
     @property
     def nframe(self):
@@ -675,59 +693,47 @@ class ObjectGN(BaseObject):
         nframe = len(self.obj.data.shape_keys.key_blocks)
         return nframe
 
-    @property
-    def frames(self):
-        return self.get_frames()
-
-    @frames.setter
-    def frames(self, frames):
-        self.set_frames(frames)
-
-    def get_obj_frames(self, obj, local=True):
+    def get_shape_key(self, obj, local=True):
         """
         read shape key
         """
         from batoms.utils import local2global
         n = len(self)
         nframe = self.nframe
-        frames = np.empty((nframe, n, 3), dtype=np.float64)
+        trajectory = np.empty((nframe, n, 3), dtype=np.float64)
         for i in range(nframe):
             positions = np.empty(n*3, dtype=np.float64)
             sk = obj.data.shape_keys.key_blocks[i]
             sk.data.foreach_get('co', positions)
             local_positions = positions.reshape((n, 3))
             if local:
-                frames[i] = local_positions
+                trajectory[i] = local_positions
             else:
                 global_positions = local2global(local_positions,
                                                 np.array(self.obj.matrix_world))
-                frames[i] = global_positions
-        return frames
+                trajectory[i] = global_positions
+        return trajectory
 
-    def set_frames_positions(self, frames=None, frame_start=0,
-                             only_basis=False):
-        name = ''
-        obj = self.obj
-        self.set_frames(name, obj, frames, frame_start, only_basis)
+    def set_shape_key(self, name, obj, trajectory=None, frame_start=0):
+        """Set shape key for trajectory
 
-    def set_obj_frames(self, name, obj, frames=None,
-                       frame_start=0, only_basis=False):
-        """
-
-        frames: list
+        name: str
+            name of the shape key
+        obj: bpy.data.objects
+            object to set shape key
+        trajectory: list
             list of positions
-
-        use shape_keys (faster)
+        frame_start: int
+            start frame
         """
         from batoms.utils.butils import add_keyframe_to_shape_key
-        if frames is None:
-            frames = self._frames
-        centers = frames
-        nframe = len(centers)
+        if trajectory is None:
+            trajectory = self.trajectory
+        nframe = len(trajectory)
         if nframe == 0:
             return
         # shape key should not be add for empty mesh
-        if len(frames[0]) == 0:
+        if len(trajectory[0]) == 0:
             return
         # name = '%s_bond%s'%(self.label, sp)
         # obj = bpy.data.objects.get(name)
@@ -740,18 +746,15 @@ class ObjectGN(BaseObject):
             sk = obj.data.shape_keys.key_blocks.get(base_name)
         # set basis key
         nvert = len(obj.data.shape_keys.key_blocks[0].data)
-        positions = frames[0]
+        positions = trajectory[0]
         vertices = positions.reshape(nvert*3)
         sk.data.foreach_set('co', vertices)
         # self.obj.data.update()
-        if only_basis:
-            self.update_mesh(obj)
-            return
         for i in range(1, nframe):
             name = str(i)
             if name not in obj.data.shape_keys.key_blocks:
                 sk = obj.shape_key_add(name=name)
-                # Add Keyframes, the last one is different
+                # Add Keytrajectory, the last one is different
                 if i != nframe - 1:
                     add_keyframe_to_shape_key(sk, 'value',
                                               [0, 1, 0],
@@ -766,7 +769,7 @@ class ObjectGN(BaseObject):
             else:
                 sk = obj.data.shape_keys.key_blocks.get(name)
             # Use the local position here
-            positions = frames[i]
+            positions = trajectory[i]
             vertices = positions.reshape((nvert*3, 1))
             sk.data.foreach_set('co', vertices)
         self.update_mesh(obj)
@@ -814,7 +817,10 @@ class childObjectGN():
 
     @property
     def vertice(self):
-        return self.obj.data.shape_keys.key_blocks[0].data[self.indices[0]]
+        if self.obj.data.shape_keys is None:
+            return self.obj.data.vertices[self.indices[0]]
+        else:
+            return self.obj.data.shape_keys.key_blocks[0].data[self.indices[0]]
 
     @property
     def bm(self):

@@ -106,6 +106,24 @@ def get_selected_vertices(obj):
     bpy.ops.object.mode_set(mode=mode)
     return selected_vertices.tolist()
 
+def get_selected_edges(obj):
+    """
+    """
+    import numpy as np
+    selected_edges = []
+    # if obj.mode != "EDIT":
+        # logger.warning('Warning: Please switch to Edit mode.')
+        # return selected_edges
+    mode = obj.mode
+    bpy.ops.object.mode_set(mode='OBJECT')
+    count = len(obj.data.edges)
+    sel = np.zeros(count, dtype=np.bool)
+    obj.data.edges.foreach_get('select', sel)
+    selected_edges = np.where(sel)[0]
+    # back to whatever mode we were in
+    bpy.ops.object.mode_set(mode=mode)
+    return selected_edges.tolist()
+
 def get_selected_vertices_all():
     """
     change to 'Object' mode
@@ -308,13 +326,45 @@ def set_world(color=[0.2, 0.2, 0.2, 1.0]):
     node_tree.nodes["Background"].inputs["Color"].default_value = color
 
 
-def get_nodes_by_name(nodes, name, type=None):
+def get_node_by_name(nodes, name, type=None):
     node = nodes.get(name)
     if node is None:
         node = nodes.new(type)
         node.name = name
     return node
 
+
+def create_node_tree(name, node_group_type="GeometryNodeTree", interface=[]):
+    """Create a node_tree by name and type.
+    Add default interface"""
+    # create a new node_tree if node_tree is None
+    node_tree = bpy.data.node_groups.get(name)
+    if node_tree is None:
+        node_tree = bpy.data.node_groups.new(name, type=node_group_type)
+        # add default interface if not exist
+        for i in interface:
+            node_tree.interface.new_socket(name=i[0], socket_type=i[1], in_out=i[2])
+        # create input and output node
+        node_tree.nodes.new('NodeGroupInput')
+        node_tree.nodes.new('NodeGroupOutput')
+    return node_tree
+
+def get_node_with_node_tree_by_name(nodes, name, node_type="GeometryNodeGroup",
+                           node_group_type="GeometryNodeTree",
+                           interface=[]):
+    """Get the node with a node_tree by name.
+    If None, Create a new one based on type.
+    Return:
+        node (bpy.types.Node): A node with a node_tree
+    """
+    node = nodes.get(name)
+    # create a new node if node is None
+    if node is None:
+        node = nodes.new(type=node_type)
+        node.name = name
+    node_tree = create_node_tree(name, node_group_type, interface)
+    node.node_tree = node_tree
+    return node
 
 def clean_default(camera=False, light=True):
     if 'Cube' in bpy.data.objects:
@@ -370,15 +420,11 @@ def hideOneLevel():
         bpy.ops.outliner.show_one_level(c, open=False)
         ol.tag_redraw()
 
-def build_modifier(obj, name):
+def build_gn_modifier(obj, name):
     from bl_operators.geometry_nodes import geometry_node_group_empty_new
     modifier = obj.modifiers.new(name=name, type='NODES')
-    if bpy.app.version_string >= '3.2.0':
-        # bpy.context.view_layer.objects.active = obj
-        # bpy.context.object.modifiers.active = modifier
-        # bpy.ops.node.new_geometry_node_group_assign()
-        group = geometry_node_group_empty_new(name)
-        modifier.node_group = group
+    group = geometry_node_group_empty_new(name)
+    modifier.node_group = group
     return modifier
 
 def get_att_length(mesh, att):
@@ -427,6 +473,10 @@ def get_bmesh_layer(domain, key, dtype):
         layer = domain.layers.int.get(key)
     elif dtype == 'FLOAT':
         layer = domain.layers.float.get(key)
+    elif dtype == 'FLOAT_VECTOR':
+        layer = domain.layers.float_vector.get(key)
+    elif dtype == 'FLOAT_COLOR':
+        layer = domain.layers.float_color.get(key)
 
     return layer
 
@@ -464,9 +514,9 @@ def set_vertex_color(obj, name, color):
             bm.to_mesh(obj.data)
             bm.free()
 
-def get_socket_by_identifier(node, identifier):
+def get_socket_by_identifier(node, identifier, type="inputs"):
     """Get sockets by identifier"""
-    for inp in node.inputs:
+    for inp in getattr(node, type):
         if inp.identifier == identifier:
             return inp
     return None

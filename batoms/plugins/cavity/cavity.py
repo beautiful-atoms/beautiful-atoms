@@ -11,7 +11,7 @@ from batoms.base.object import ObjectGN
 from batoms.plugins.base import PluginObject
 from .setting import CavitySettings
 from scipy import spatial
-from batoms.utils.butils import object_mode, get_nodes_by_name
+from batoms.utils.butils import object_mode, get_node_by_name
 from batoms.utils import string2Number
 import logging
 # logger = logging.getLogger('batoms')
@@ -320,11 +320,11 @@ class Cavity(ObjectGN, PluginObject):
                 Location of the object. Defaults to [0, 0, 0].
         """
         if len(cavity_datas['centers'].shape) == 2:
-            self._frames = {'centers': np.array([cavity_datas['centers']]),
+            self._trajectory = {'centers': np.array([cavity_datas['centers']]),
                             }
             centers = cavity_datas['centers']
         elif len(cavity_datas['centers'].shape) == 3:
-            self._frames = {'centers': cavity_datas['centers'],
+            self._trajectory = {'centers': cavity_datas['centers'],
                             }
             centers = cavity_datas['centers'][0]
         else:
@@ -354,24 +354,25 @@ class Cavity(ObjectGN, PluginObject):
     def build_geometry_node(self):
         """Geometry node for instancing sphere on vertices!
         """
-        gn = self.gnodes
-        GroupInput = gn.node_group.nodes[0]
-        GroupOutput = gn.node_group.nodes[1]
+        nodes = self.gn_node_group.nodes
+        links = self.gn_node_group.links
+        GroupInput = nodes[0]
+        GroupOutput = nodes[1]
         # print(gn.name)
-        JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
+        JoinGeometry = get_node_by_name(nodes,
                                          '%s_JoinGeometry' % self.label,
                                          'GeometryNodeJoinGeometry')
         SeparateGeometry = \
-            get_nodes_by_name(gn.node_group.nodes,
+            get_node_by_name(nodes,
                               '%s_SeparateGeometry' % self.label,
                               'GeometryNodeSeparateGeometry')
-        gn.node_group.links.new(GroupInput.outputs['Geometry'],
+        links.new(GroupInput.outputs['Geometry'],
                                 SeparateGeometry.inputs['Geometry'])
-        gn.node_group.links.new(GroupInput.outputs[2],
+        links.new(GroupInput.outputs[2],
                                 SeparateGeometry.inputs['Selection'])
-        gn.node_group.links.new(SeparateGeometry.outputs[0],
+        links.new(SeparateGeometry.outputs[0],
                                 JoinGeometry.inputs['Geometry'])
-        gn.node_group.links.new(JoinGeometry.outputs['Geometry'],
+        links.new(JoinGeometry.outputs['Geometry'],
                                 GroupOutput.inputs['Geometry'])
 
     def add_geometry_node(self, spname, instancer):
@@ -384,45 +385,46 @@ class Cavity(ObjectGN, PluginObject):
                 Object to be instanced
         """
         from batoms.utils.butils import compareNodeType
-        gn = self.gnodes
-        GroupInput = gn.node_group.nodes[0]
-        JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
+        nodes = self.gn_node_group.nodes
+        links = self.gn_node_group.links
+        GroupInput = nodes[0]
+        JoinGeometry = get_node_by_name(nodes,
                                          '%s_JoinGeometry' % self.label,
                                          'GeometryNodeJoinGeometry')
-        CompareSpecies = get_nodes_by_name(gn.node_group.nodes,
+        CompareSpecies = get_node_by_name(nodes,
                                            'CompareFloats_%s_%s' % (
                                                self.label, spname),
                                            compareNodeType)
         CompareSpecies.operation = 'EQUAL'
         # CompareSpecies.data_type = 'INT'
         CompareSpecies.inputs[1].default_value = string2Number(spname)
-        InstanceOnPoint = get_nodes_by_name(gn.node_group.nodes,
+        InstanceOnPoint = get_node_by_name(nodes,
                                             'InstanceOnPoint_%s_%s' % (
                                                 self.label, spname),
                                             'GeometryNodeInstanceOnPoints')
-        ObjectInfo = get_nodes_by_name(gn.node_group.nodes,
+        ObjectInfo = get_node_by_name(nodes,
                                        'ObjectInfo_%s_%s' % (
                                            self.label, spname),
                                        'GeometryNodeObjectInfo')
         ObjectInfo.inputs['Object'].default_value = instancer
-        BoolShow = get_nodes_by_name(gn.node_group.nodes,
+        BoolShow = get_node_by_name(nodes,
                                      'BooleanMath_%s_%s_1' % (
                                          self.label, spname),
                                      'FunctionNodeBooleanMath')
         #
-        gn.node_group.links.new(GroupInput.outputs['Geometry'],
+        links.new(GroupInput.outputs['Geometry'],
                                 InstanceOnPoint.inputs['Points'])
-        gn.node_group.links.new(GroupInput.outputs[1],
+        links.new(GroupInput.outputs[1],
                                 CompareSpecies.inputs[0])
-        gn.node_group.links.new(GroupInput.outputs[2], BoolShow.inputs[0])
-        gn.node_group.links.new(GroupInput.outputs[3],
+        links.new(GroupInput.outputs[2], BoolShow.inputs[0])
+        links.new(GroupInput.outputs[3],
                                 InstanceOnPoint.inputs['Scale'])
-        gn.node_group.links.new(CompareSpecies.outputs[0], BoolShow.inputs[1])
-        gn.node_group.links.new(BoolShow.outputs['Boolean'],
+        links.new(CompareSpecies.outputs[0], BoolShow.inputs[1])
+        links.new(BoolShow.outputs['Boolean'],
                                 InstanceOnPoint.inputs['Selection'])
-        gn.node_group.links.new(ObjectInfo.outputs['Geometry'],
+        links.new(ObjectInfo.outputs['Geometry'],
                                 InstanceOnPoint.inputs['Instance'])
-        gn.node_group.links.new(InstanceOnPoint.outputs['Instances'],
+        links.new(InstanceOnPoint.outputs['Instances'],
                                 JoinGeometry.inputs['Geometry'])
 
     def update_geometry_node_instancer(self):
@@ -444,22 +446,22 @@ class Cavity(ObjectGN, PluginObject):
             self.add_vertices_bmesh(dnvert)
         elif dnvert < 0:
             self.delete_vertices_bmesh(range(-dnvert))
-        self.set_frames(arrays)
+        self.set_trajectory(arrays)
         self.set_attributes({'species_index': arrays['species_index']})
         self.set_attributes({'scale': arrays['scale']})
         self.set_attributes({'show': arrays['show']})
         self.update_mesh()
         self.update_geometry_node_instancer()
 
-    def set_frames(self, frames=None, frame_start=0, only_basis=False):
-        if frames is None:
-            frames = self._frames
-        nframe = len(frames['centers'])
+    def set_trajectory(self, trajectory=None, frame_start=0):
+        if trajectory is None:
+            trajectory = self._trajectory
+        nframe = len(trajectory['centers'])
         if nframe == 0:
             return
         name = '%s_cavity' % (self.label)
         obj = self.obj
-        self.set_obj_frames(name, obj, frames['centers'])
+        self.set_shape_key(name, obj, trajectory['centers'], frame_start=frame_start)
 
     @property
     def objs(self):

@@ -38,6 +38,8 @@ def set_logger(version):
 
 
 def update_logging_level():
+    if "batoms" not in bpy.context.preferences.addons:
+        return
     prefs = bpy.context.preferences.addons['batoms'].preferences
     root_logger.setLevel(prefs.logging_level)
 

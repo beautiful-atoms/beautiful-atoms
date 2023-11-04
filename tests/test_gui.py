@@ -1,16 +1,11 @@
 import bpy
-from batoms import Batoms
 import numpy as np
-import pytest
 
-def test_render():
+
+def test_render(ch4):
     """Render panel"""
-    from batoms.batoms import Batoms
-    bpy.ops.batoms.delete()
-    bpy.ops.batoms.molecule_add()
-    ch4 = Batoms('CH4')
     ch4.cell = [1, 2, 3]
-    ch4.obj.select_set(True)
+    bpy.context.view_layer.objects.active = ch4.obj
     # bpy.ops.batoms.render_add()
     ch4.render.init()
     assert ch4._render is not None
@@ -37,20 +32,11 @@ def test_render():
     # bpy.context.scene.batoms.render.energy = 5
     # assert np.isclose(ch4.render.lights["Default"].energy, 5)
 
-def test_batom():
+
+def test_batom(ch4):
     """Batom panel"""
-    from batoms.batoms import Batoms
-    bpy.ops.batoms.delete()
-    bpy.ops.batoms.molecule_add()
-    ch4 = Batoms('CH4')
-    ch4.obj.select_set(True)
+    bpy.context.view_layer.objects.active = ch4.obj
     # scale
-    assert np.isclose(bpy.context.scene.batoms.batom.scale, ch4[0].scale)
+    assert np.isclose(bpy.context.scene.batoms.batoms.scale, ch4[0].scale)
     bpy.context.scene.batoms.batom.scale = 1
-    assert np.isclose(ch4[0].scale, bpy.context.scene.batoms.batom.scale)
-
-
-if __name__ == "__main__":
-    test_render()
-    test_batom()
-    print("\n GUI: All pass! \n")
+    assert np.isclose(ch4[0].scale, bpy.context.scene.batoms.batoms.scale)

@@ -10,7 +10,7 @@ def test_magres():
     from batoms import Batoms
     from ase.io import read
     bpy.ops.batoms.delete()
-    atoms = read('/home/wang_x3/repos/beautiful-atoms/beautiful-atoms/tests/datas/ethanol.magres')
+    atoms = read('../tests/datas/ethanol.magres')
     ms_array = atoms.arrays.pop('ms')
     print(ms_array.shape)
     for i in range(3):
@@ -34,6 +34,7 @@ def test_magres_uilist():
     bpy.ops.batoms.delete()
     atoms = read('../tests/datas/ethanol.magres')
     ethanol = Batoms("ethanol", from_ase=atoms)
+    bpy.context.view_layer.objects.active = ethanol.obj
     assert ethanol.coll.Bmagres.ui_list_index==0
     bpy.ops.surface.magres_add(name="2")
     assert ethanol.coll.Bmagres.ui_list_index==1

@@ -11,6 +11,8 @@ def test_pref_load():
     """Test several preference settings that are significantly
     from factory Blender
     """
+    bpy.ops.batoms.use_batoms_startup()
+    bpy.ops.batoms.use_batoms_preference()
     # Default gradiant for theme
     DEFAULT_GRAD = 0.18823
     DEFAULT_HI_GRAD = 0.2392
@@ -34,6 +36,8 @@ def test_pref_load():
 def test_startup_load():
     # Check Layout
     # Check Scene unit system
+    bpy.ops.batoms.use_batoms_startup()
+    bpy.ops.batoms.use_batoms_preference()
     scene = bpy.context.scene
     assert scene.unit_settings.system == "NONE"
     assert scene.unit_settings.scale_length == 1.0
@@ -41,9 +45,3 @@ def test_startup_load():
     assert len(bpy.data.objects) == 0
     assert len(bpy.data.collections) == 1
     return
-
-
-if __name__ == "__main__":
-    test_pref_load()
-    test_startup_load()
-    print("\n Batoms: All pass! \n")

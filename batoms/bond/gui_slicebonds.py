@@ -6,7 +6,7 @@ from bpy.props import (BoolProperty,
                        EnumProperty,
                        )
 
-from batoms.utils.butils import get_selected_vertices
+from batoms.utils.butils import get_selected_edges
 from batoms.batoms import Batoms
 from batoms.bond import Bond
 from batoms.bond.slicebonds import SliceBonds
@@ -44,8 +44,8 @@ class Bond_PT_prepare(Panel):
 # ---------------------------------------------------
 def get_active_bond():
     context = bpy.context
-    if context.object and context.object.batoms.type == 'BOND':
-        indices = get_selected_vertices(context.object)
+    if context.object and context.object.batoms.type == 'BATOMS':
+        indices = get_selected_edges(context.object)
         if len(indices) > 0:
             batoms = Batoms(label=context.object.batoms.label)
             slicebonds = batoms.bond[indices]

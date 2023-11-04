@@ -6,7 +6,7 @@ This module defines the polyhedras object in the Batoms package.
 
 import bpy
 from time import time
-from batoms.utils.butils import object_mode, compareNodeType, get_nodes_by_name
+from batoms.utils.butils import object_mode, compareNodeType, get_node_by_name
 from batoms.utils import string2Number
 import numpy as np
 from batoms.base.object import ObjectGN
@@ -110,13 +110,13 @@ class Polyhedra(ObjectGN):
         """
         tstart = time()
         if len(datas['vertices'].shape) == 2:
-            self._frames = {'vertices': np.array([datas['vertices']]),
+            self._trajectory = {'vertices': np.array([datas['vertices']]),
                             'offsets': np.array([datas['offsets']]),
                             }
             vertices = datas['vertices']
             offsets = datas['offsets']
         elif len(datas['vertices'].shape) == 3:
-            self._frames = {'vertices': datas['vertices'],
+            self._trajectory = {'vertices': datas['vertices'],
                             'offsets': datas['offsets'],
                             }
             vertices = datas['vertices'][0]
@@ -159,7 +159,7 @@ class Polyhedra(ObjectGN):
         self.set_attributes(attributes)
         self.init_geometry_node_modifier(default_GroupInput)
         self.build_geometry_node()
-        self.set_frames(self._frames, only_basis=True)
+        self.set_trajectory()
         # self.assign_materials()
         self.update_geometry_node_material()
         obj.parent = self.obj
@@ -176,75 +176,76 @@ class Polyhedra(ObjectGN):
         """
         Geometry node for everything!
         """
-        from batoms.utils.butils import get_nodes_by_name
+        from batoms.utils.butils import get_node_by_name
         tstart = time()
-        gn = self.gnodes
-        GroupInput = gn.node_group.nodes[0]
-        GroupOutput = gn.node_group.nodes[1]
+        links = self.gn_node_group.links
+        nodes = self.gn_node_group.nodes
+        GroupInput = nodes[0]
+        GroupOutput = nodes[1]
         # ------------------------------------------------------------------
         # ------------------------------------------------------------------
         # calculate bond vector, length, rotation based on the index
         # Get four positions from batoms, bond and the second bond
         #  for high order bond plane
-        ObjectBatoms = get_nodes_by_name(gn.node_group.nodes,
+        ObjectBatoms = get_node_by_name(nodes,
                                          '%s_ObjectBatoms' % self.label,
                                          'GeometryNodeObjectInfo')
         ObjectBatoms.inputs['Object'].default_value = self.batoms.obj
-        PositionBatoms = get_nodes_by_name(gn.node_group.nodes,
+        PositionBatoms = get_node_by_name(nodes,
                                            '%s_PositionBatoms' % (self.label),
                                            'GeometryNodeInputPosition')
-        TransferBatoms = get_nodes_by_name(gn.node_group.nodes,
+        TransferBatoms = get_node_by_name(nodes,
                                         '%s_TransferBatoms' % (self.label),
                                         'GeometryNodeSampleIndex')
         TransferBatoms.data_type = 'FLOAT_VECTOR'
-        gn.node_group.links.new(ObjectBatoms.outputs['Geometry'],
+        links.new(ObjectBatoms.outputs['Geometry'],
                                 TransferBatoms.inputs[0])
-        gn.node_group.links.new(PositionBatoms.outputs['Position'],
+        links.new(PositionBatoms.outputs['Position'],
                                 TransferBatoms.inputs[3])
-        gn.node_group.links.new(GroupInput.outputs[2],
+        links.new(GroupInput.outputs[2],
                                 TransferBatoms.inputs['Index'])
         # ------------------------------------------------------------------
         # add positions with offsets
         # transfer offsets from object self.obj_o
-        ObjectOffsets = get_nodes_by_name(gn.node_group.nodes,
+        ObjectOffsets = get_node_by_name(nodes,
                                           '%s_ObjectOffsets' % (self.label),
                                           'GeometryNodeObjectInfo')
         ObjectOffsets.inputs['Object'].default_value = self.obj_o
-        PositionOffsets = get_nodes_by_name(gn.node_group.nodes,
+        PositionOffsets = get_node_by_name(nodes,
                                             '%s_PositionOffsets' % (
                                                 self.label),
                                             'GeometryNodeInputPosition')
-        TransferOffsets = get_nodes_by_name(gn.node_group.nodes,
+        TransferOffsets = get_node_by_name(nodes,
                                         '%s_TransferOffsets' % self.label,
                                         'GeometryNodeSampleIndex')
         TransferOffsets.data_type = 'FLOAT_VECTOR'
-        InputIndex = get_nodes_by_name(gn.node_group.nodes,
+        InputIndex = get_node_by_name(nodes,
                                         '%s_InputIndex' % self.label,
                                         'GeometryNodeInputIndex')
-        gn.node_group.links.new(ObjectOffsets.outputs['Geometry'],
+        links.new(ObjectOffsets.outputs['Geometry'],
                                 TransferOffsets.inputs[0])
-        gn.node_group.links.new(PositionOffsets.outputs['Position'],
+        links.new(PositionOffsets.outputs['Position'],
                                 TransferOffsets.inputs[3])
-        gn.node_group.links.new(InputIndex.outputs[0],
+        links.new(InputIndex.outputs[0],
                                 TransferOffsets.inputs["Index"])
         # we need one add operation to get the positions with offset
-        VectorAdd = get_nodes_by_name(gn.node_group.nodes,
+        VectorAdd = get_node_by_name(nodes,
                                       '%s_VectorAdd' % (self.label),
                                       'ShaderNodeVectorMath')
         VectorAdd.operation = 'ADD'
-        gn.node_group.links.new(TransferBatoms.outputs[2],
+        links.new(TransferBatoms.outputs[2],
                                 VectorAdd.inputs[0])
-        gn.node_group.links.new(TransferOffsets.outputs[2],
+        links.new(TransferOffsets.outputs[2],
                                 VectorAdd.inputs[1])
         # set positions
-        SetPosition = get_nodes_by_name(gn.node_group.nodes,
+        SetPosition = get_node_by_name(nodes,
                                         '%s_SetPosition' % self.label,
                                         'GeometryNodeSetPosition')
-        gn.node_group.links.new(GroupInput.outputs['Geometry'],
+        links.new(GroupInput.outputs['Geometry'],
                                 SetPosition.inputs['Geometry'])
-        gn.node_group.links.new(VectorAdd.outputs[0],
+        links.new(VectorAdd.outputs[0],
                                 SetPosition.inputs['Position'])
-        gn.node_group.links.new(SetPosition.outputs['Geometry'],
+        links.new(SetPosition.outputs['Geometry'],
                                 GroupOutput.inputs['Geometry'])
 
         # find kinds by the names of species
@@ -253,44 +254,45 @@ class Polyhedra(ObjectGN):
         logger.debug('Build geometry nodes for polyhedras: %s' % (time() - tstart))
 
     def add_geometry_node(self, sp):
-        from batoms.utils.butils import get_nodes_by_name
-        gn = self.gnodes
-        GroupInput = gn.node_group.nodes[0]
-        GroupOutput = gn.node_group.nodes[1]
+        from batoms.utils.butils import get_node_by_name
+        links = self.gn_node_group.links
+        nodes = self.gn_node_group.nodes
+        GroupInput = nodes[0]
+        GroupOutput = nodes[1]
         previousNode = GroupOutput.inputs['Geometry'].links[0].from_socket
         # print(previousNode)
         # we need two compares for one species,
         # vertices
-        CompareSpecies = get_nodes_by_name(gn.node_group.nodes,
+        CompareSpecies = get_node_by_name(nodes,
                                            '%s_CompareSpecies_%s_vertex' % (
                                                self.label, sp["species"]),
                                            compareNodeType)
         CompareSpecies.operation = 'EQUAL'
         CompareSpecies.inputs[1].default_value = string2Number(sp["species"])
-        gn.node_group.links.new(
+        links.new(
             GroupInput.outputs[3], CompareSpecies.inputs[0])
         # face
-        CompareSpeciesFace = get_nodes_by_name(gn.node_group.nodes,
+        CompareSpeciesFace = get_node_by_name(nodes,
                                                '%s_CompareSpecies_%s_face' % (
                                                    self.label, sp["species"]),
                                                compareNodeType)
         CompareSpeciesFace.operation = 'EQUAL'
         CompareSpeciesFace.inputs[1].default_value = string2Number(
             sp["species"])
-        gn.node_group.links.new(
+        links.new(
             GroupInput.outputs[4], CompareSpeciesFace.inputs[0])
         #
-        setMaterialIndex = get_nodes_by_name(gn.node_group.nodes,
+        setMaterialIndex = get_node_by_name(nodes,
                                              '%s_setMaterialIndex_%s' % (
                                                  self.label, sp["species"]),
                                              'GeometryNodeSetMaterialIndex')
         setMaterialIndex.inputs[2].default_value = \
             self.settings.materials[sp["species"]][1]
-        gn.node_group.links.new(previousNode,
+        links.new(previousNode,
                                 setMaterialIndex.inputs['Geometry'])
-        gn.node_group.links.new(CompareSpeciesFace.outputs[0],
+        links.new(CompareSpeciesFace.outputs[0],
                                 setMaterialIndex.inputs['Selection'])
-        gn.node_group.links.new(setMaterialIndex.outputs['Geometry'],
+        links.new(setMaterialIndex.outputs['Geometry'],
                                 GroupOutput.inputs['Geometry'])
 
     def set_realize_instances(self, realize_instances):
@@ -298,31 +300,31 @@ class Polyhedra(ObjectGN):
         # TODO: add make real to geometry node
         """
         #
+        nodes = self.gn_node_group.nodes
         i = len(self.settings.bpy_setting) - 1
         sp = self.settings.bpy_setting[i]
-        setMaterialIndex = get_nodes_by_name(self.gnodes.node_group.nodes,
+        setMaterialIndex = get_node_by_name(nodes,
                                             '%s_setMaterialIndex_%s' % (
                                                 self.label, sp["species"]),
                                             'GeometryNodeSetMaterialIndex')
 
-        nodes = self.gnodes.node_group.nodes
-        RealizeInstances = get_nodes_by_name(self.gnodes.node_group.nodes,
+        RealizeInstances = get_node_by_name(nodes,
                                              '%s_RealizeInstances' % self.label,
                                              'GeometryNodeRealizeInstances')
         if not realize_instances:
             # switch off
             if len(RealizeInstances.outputs[0].links) > 0:
                 link = RealizeInstances.outputs[0].links[0]
-                self.gnodes.node_group.links.remove(link)
-            self.gnodes.node_group.links.new(setMaterialIndex.outputs[0],
+                self.gn_node_group.links.remove(link)
+            self.gn_node_group.links.new(setMaterialIndex.outputs[0],
                 nodes[1].inputs[0])
         else:
-            self.gnodes.node_group.links.new(setMaterialIndex.outputs[0],
+            self.gn_node_group.links.new(setMaterialIndex.outputs[0],
                 RealizeInstances.inputs[0])
-            self.gnodes.node_group.links.new(
+            self.gn_node_group.links.new(
                 RealizeInstances.outputs[0],
                 nodes[1].inputs[0])
-        self.gnodes.node_group.update_tag()
+        self.gn_node_group.update_tag()
 
     def update(self, ):
         """Draw polyhedras.
@@ -335,18 +337,21 @@ class Polyhedra(ObjectGN):
         # if not self.bondlist:
         object_mode()
         # clean_coll_objects(self.coll, 'bond')
-        frames = self.batoms.get_frames()
+        positions = self.batoms.positions
+        trajectory = self.batoms.get_trajectory()['positions']
         arrays = self.batoms.arrays
         show = arrays['show'].astype(bool)
         species = arrays['species']
-        # frames_boundary = self.batoms.get_frames(self.batoms.batoms_boundary)
-        # frames_search = self.batoms.get_frames(self.batoms.batoms_search)
-        nframe = len(frames)
+        # trajectory_boundary = self.batoms.get_trajectory(self.batoms.batoms_boundary)
+        # trajectory_search = self.batoms.get_trajectory(self.batoms.batoms_search)
+        if self.batoms.nframe == 0:
+            trajectory = np.array([positions])
+        nframe = len(trajectory)
         polyhedra_datas = {}
         tstart = time()
         for f in range(nframe):
             logger.debug('update polyhedra: {}'.format(f))
-            positions = frames[f, show, :]
+            positions = trajectory[f, show, :]
             bondlists = self.bondlists
             if len(bondlists) == 0:
                 self.batoms.bond.update()
@@ -364,7 +369,7 @@ class Polyhedra(ObjectGN):
         self.set_arrays(polyhedra_datas)
         # self.coll.objects.link(bb.obj)
         # bpy.data.collections['Collection'].objects.unlink(bb.obj)
-        # bb.set_frames()
+        # bb.set_trajectory()
         # bpy.context.scene.frame_set(self.batoms.nframe)
         logger.debug('draw polyhedra: {0:10.2f} s'.format(time() - tstart))
 
@@ -381,7 +386,7 @@ class Polyhedra(ObjectGN):
         self.assign_materials()
         for i in range(len(self.settings.bpy_setting)):
             sp = self.settings.bpy_setting[i]
-            setMaterialIndex = get_nodes_by_name(self.gnodes.node_group.nodes,
+            setMaterialIndex = get_node_by_name(self.gn_node_group.nodes,
                                                 '%s_setMaterialIndex_%s' % (
                                                     self.label, sp["species"]),
                                                 'GeometryNodeSetMaterialIndex')
@@ -481,27 +486,27 @@ class Polyhedra(ObjectGN):
             'co', offsets)
         self.obj_o.data.update()
 
-    def get_frames(self):
+    def get_trajectory(self):
         """
         """
-        frames = {}
-        frames['vertices'] = self.get_obj_frames(self.obj)
-        frames['offsets'] = self.get_obj_frames(self.obj_o)
-        return frames
+        trajectory = {}
+        trajectory['vertices'] = self.get_obj_trajectory(self.obj)
+        trajectory['offsets'] = self.get_obj_trajectory(self.obj_o)
+        return trajectory
 
-    def set_frames(self, frames=None, frame_start=0, only_basis=False):
-        if frames is None:
-            frames = self._frames
-        nframe = len(frames)
+    def set_trajectory(self, trajectory=None, frame_start=0):
+        if trajectory is None:
+            trajectory = self._trajectory
+        nframe = len(trajectory)
         if nframe == 0:
             return
         name = '%s_polyhedra' % (self.label)
         obj = self.obj
-        self.set_obj_frames(name, obj, frames['vertices'])
+        self.set_shape_key(name, obj, trajectory['vertices'], frame_start=frame_start)
         #
         name = '%s_polyhedra_offset' % (self.label)
         obj = self.obj_o
-        self.set_obj_frames(name, obj, frames['offsets'])
+        self.set_shape_key(name, obj, trajectory['offsets'], frame_start=frame_start)
 
     def __getitem__(self, index):
         """Return a subset of the polyhedras.

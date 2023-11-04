@@ -119,7 +119,7 @@ class Species(BaseObject):
         self.assign_materials()
         # self.color = sp.color
         bpy.context.view_layer.update()
-        self.parent.batoms.add_geometry_node(sp.name, obj)
+        self.parent.batoms.add_species_node(sp.name, obj)
         # update boundary and search_bond
         if hasattr(self.parent.batoms, '_species'):
             # ignore for when init species
@@ -545,7 +545,7 @@ class Bspecies(Setting):
     def update_geometry_node(self):
         instancers = self.instancers
         for sp, obj in instancers.items():
-            self.batoms.add_geometry_node(sp, obj)
+            self.batoms.add_species_node(sp, obj)
 
     def keys(self):
         return self.species.keys()

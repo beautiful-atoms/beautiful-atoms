@@ -25,6 +25,19 @@ def test_bond(c2h6so):
     c2h6so.model_style = 1
     c2h6so.bond[0].order = 2
 
+def test_new_species(ch4):
+    """Add a new species.
+    Should create a new bond pair correctly."""
+    ch4.model_style = 1
+    ch4.replace([1], 'O')
+    ch4.model_style = 1
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    # Get Geometry Node Instances
+    eval_obj = ch4.obj.evaluated_get(depsgraph)
+    insts = [inst for inst in depsgraph.object_instances if inst.is_instance and inst.parent == eval_obj]
+    # there are 5 atoms and 4 bonds
+    assert len(insts) == 9
+
 def test_settings(c2h6so):
     """key search"""
     # species tuple
@@ -67,11 +80,7 @@ def test_bond_high_order():
     c6h6.bond.settings["C-C"].order = 2
 
 
-def test_bond_performance():
-    from ase.build import molecule, bulk
-    from batoms.batoms import Batoms
-    bpy.ops.batoms.delete()
-    h2o = Batoms("h2o", from_ase=molecule("H2O"))
+def test_bond_performance(h2o):
     h2o.cell = [3, 3, 3]
     h2o.pbc = True
     h2o = h2o*[10, 10, 10]
@@ -91,13 +100,24 @@ def test_bond_add():
     assert len(au.bond.settings) == 1
 
 
-
 def test_bond_search_bond_0(tio2):
+    tio2.boundary = 0.01
+    tio2.model_style = 1
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    # Get Geometry Node Instances
+    eval_obj = tio2.obj.evaluated_get(depsgraph)
+    insts = [inst for inst in depsgraph.object_instances if inst.is_instance and inst.parent == eval_obj]
+    # there are 6 atoms and 54 bonds
+    assert len(insts) == 60
+    # change search bond settings
     tio2.bond.settings[("Ti", "O")].search = 0
     tio2.model_style = 1
     tio2.boundary = 0.01
     tio2.model_style = 1
-    assert len(tio2.bond) == 14
+    assert len(tio2.bond.bondlists) == 14
+    eval_obj = tio2.obj.evaluated_get(depsgraph)
+    insts = [inst for inst in depsgraph.object_instances if inst.is_instance and inst.parent == eval_obj]
+    assert len(insts) == 20
     tio2.bond.show_search = True
     if use_cycles:
         set_cycles_res(tio2)
