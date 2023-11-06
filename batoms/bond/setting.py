@@ -93,7 +93,7 @@ class BondSetting():
     @order.setter
     def order(self, order):
         self.bpy_setting[self.name].order = order
-        self.bonds.set_attribute_with_indices('order', self.indices, order)
+        self.bonds.set_attribute_with_indices('bond_order', self.indices, order)
         # if instancer with this order not exist, add one
         sp = self.as_dict()
         self.bonds.settings.build_instancer(sp)
@@ -106,7 +106,7 @@ class BondSetting():
     @style.setter
     def style(self, style):
         self.bpy_setting[self.name].style = str(style)
-        self.bonds.set_attribute_with_indices('style', self.indices, style)
+        self.bonds.set_attribute_with_indices('bond_style', self.indices, style)
         # if instancer with this style not exist, add one
         sp = self.as_dict()
         self.bonds.settings.build_instancer(sp)
@@ -139,8 +139,8 @@ class BondSetting():
         return self.get_indices()
 
     def get_indices(self):
-        sp1 = self.bonds.arrays['species_index1']
-        sp2 = self.bonds.arrays['species_index2']
+        sp1 = self.bonds.arrays['species_index0']
+        sp2 = self.bonds.arrays['species_index1']
         indices = np.where((sp1 == string2Number(self.species1)) &
                            (sp2 == string2Number(self.species2)))[0]
         return indices
@@ -265,7 +265,7 @@ class BondSettings(Setting):
         self.build_materials(sp, order, style, material_style=sp['material_style'])
         self.assign_materials(sp, order, style)
         # update geometry nodes
-        ObjectInstancer = get_nodes_by_name(self.bonds.gnodes.node_group.nodes,
+        ObjectInstancer = get_nodes_by_name(self.bonds.batoms.gnodes.node_group.nodes,
                                             'ObjectInfo_%s' % name,
                                             'GeometryNodeObjectInfo')
         if ObjectInstancer is not None:
@@ -693,9 +693,9 @@ class BondSettings(Setting):
             'polyhedra': polyhedra,
             'color1': props[sp1]['color'],
             'color2': props[sp2]['color'],
-            'order': 1,
+            'bond_order': 1,
             'order_offset': 0.15,
-            'style': '1',
+            'bond_style': '1',
             'type': bondtype,
         }
         # special for hydrogen bond
@@ -704,7 +704,7 @@ class BondSettings(Setting):
             bond['max'] = 2.5
             bond['search'] = 0
             bond['color1'] = [0.1, 0.1, 0.1, 1.0]
-            bond['style'] = '2'
+            bond['bond_style'] = '2'
         return bond
 
 

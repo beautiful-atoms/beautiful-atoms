@@ -19,55 +19,28 @@ import logging
 # logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 
-default_attributes = [
-    {"name": 'atoms_index1', "data_type": 'INT'},
-    {"name": 'atoms_index2', "data_type": 'INT'},
-    {"name": 'atoms_index3', "data_type": 'INT'},
-    {"name": 'atoms_index4', "data_type": 'INT'},
-    {"name": 'species_index1', "data_type": 'INT'},
-    {"name": 'species_index2', "data_type": 'INT'},
-    {"name": 'order', "data_type": 'INT'},
-    {"name": 'style', "data_type": 'INT'},
-    {"name": 'show', "data_type": 'INT'},
-    {"name": 'model_style', "data_type": 'INT'},
-    {"name": 'polyhedra', "data_type": 'INT'},
-    {"name": 'second_bond', "data_type": 'INT'},
-]
 
-default_GroupInput = [
-    ['atoms_index1', 'NodeSocketInt'],
-    ['atoms_index2', 'NodeSocketInt'],
-    ['atoms_index3', 'NodeSocketInt'],
-    ['atoms_index4', 'NodeSocketInt'],
-    ['species_index1', 'NodeSocketInt'],
-    ['species_index2', 'NodeSocketInt'],
-    ['order', 'NodeSocketInt'],
-    ['style', 'NodeSocketInt'],
-    ['show', 'NodeSocketBool'],
-    ['model_style', 'NodeSocketInt'],
-    ['second_bond', 'NodeSocketInt'],
-]
 
 default_bond_datas = {
+    'atoms_index0': np.ones(0, dtype=int),
     'atoms_index1': np.ones(0, dtype=int),
     'atoms_index2': np.ones(0, dtype=int),
     'atoms_index3': np.ones(0, dtype=int),
-    'atoms_index4': np.ones(0, dtype=int),
-    'species_index1': np.ones(0, dtype=int),
-    'species_index2': np.ones(0, dtype=int),
+    'species_index0': np.ones(0, dtype=int),
+    'species_index0': np.ones(0, dtype=int),
     'centers': np.zeros((1, 0, 3)),
     # 'vectors':np.zeros((0, 3)),
+    'offsets0': np.zeros((0, 3)),
     'offsets1': np.zeros((0, 3)),
     'offsets2': np.zeros((0, 3)),
     'offsets3': np.zeros((0, 3)),
-    'offsets4': np.zeros((0, 3)),
     # 'eulers':np.eye(3),
     # 'lengths':np.zeros((0, 3)),
     # 'widths': np.ones(0, dtype=float),
-    'show': np.zeros(0, dtype=int),
-    'order': np.zeros(0, dtype=int),
-    'style': np.zeros(0, dtype=int),
-    'model_style': np.ones(0, dtype=int),
+    'bond_show': np.zeros(0, dtype=int),
+    'bond_order': np.zeros(0, dtype=int),
+    'bond_style': np.zeros(0, dtype=int),
+    'bond_model_style': np.ones(0, dtype=int),
     'polyhedra': np.ones(0, dtype=float),
     'second_bond': np.ones(0, dtype=int),
 }
@@ -92,194 +65,72 @@ class Bond(BaseCollection, ObjectGN):
         #
         self.batoms = batoms
         self.label = label
-        name = 'bond'
-        ObjectGN.__init__(self, label, name)
+        ObjectGN.__init__(self, label)
         BaseCollection.__init__(self, coll_name=label)
-        if bond_datas is not None:
-            # overwrite old object
-            self.build_object(bond_datas)
-            self.settings = BondSettings(self.label, batoms=batoms, bonds=self)
-            self.update_geometry_nodes()
-            self._search_bond = None
-        elif self.loadable():
-            # load old object
-            print('load bond: %s' % self.label)
-            self.settings = BondSettings(self.label, batoms=batoms, bonds=self)
-            self._search_bond = SearchBond(self.label, batoms=batoms, load=True)
-        else:
-            # create empty new object
-            self.build_object(default_bond_datas)
-            self.settings = BondSettings(self.label, batoms=batoms, bonds=self)
-            self.update_geometry_nodes()
-            self._search_bond = None
-
-    def loadable(self):
-        """Check loadable or not
-        """
-        # object exist
-        obj = bpy.data.objects.get(self.obj_name)
-        if obj is None:
-            return False
-        # batoms exist, and flag is True
-        coll = bpy.data.collections.get(self.label)
-        if coll is None:
-            return False
-        return coll.Bbond.flag
-
-    def build_object(self, bond_datas, attributes={}):
-        object_mode()
-        """
-        build child object and add it to main objects.
-        """
-        tstart = time()
-        if len(bond_datas['centers'].shape) == 2:
-            self._trajectory = {'centers': np.array([bond_datas['centers']]),
-                            'offsets1': np.array([bond_datas['offsets1']]),
-                            'offsets2': np.array([bond_datas['offsets2']]),
-                            'offsets3': np.array([bond_datas['offsets3']]),
-                            'offsets4': np.array([bond_datas['offsets4']]),
-                            }
-            centers = bond_datas['centers']
-            offsets1 = bond_datas['offsets1']
-            offsets2 = bond_datas['offsets2']
-            offsets3 = bond_datas['offsets3']
-            offsets4 = bond_datas['offsets4']
-        elif len(bond_datas['centers'].shape) == 3:
-            self._trajectory = {'centers': bond_datas['centers'],
-                            'offsets1': bond_datas['offsets1'],
-                            'offsets2': bond_datas['offsets2'],
-                            'offsets3': bond_datas['offsets3'],
-                            'offsets4': bond_datas['offsets4'],
-                            }
-            centers = bond_datas['centers'][0]
-        else:
-            raise Exception('Shape of centers is wrong!')
-        offsets1 = bond_datas['offsets1']
-        offsets2 = bond_datas['offsets2']
-        offsets3 = bond_datas['offsets3']
-        offsets4 = bond_datas['offsets4']
-        attributes.update({
-            'atoms_index1': bond_datas['atoms_index1'],
-            'atoms_index2': bond_datas['atoms_index2'],
-            'atoms_index3': bond_datas['atoms_index3'],
-            'atoms_index4': bond_datas['atoms_index4'],
-            'species_index1': bond_datas['species_index1'],
-            'species_index2': bond_datas['species_index2'],
-            'show': bond_datas['show'],
-            'model_style': bond_datas['model_style'],
-            'style': bond_datas['style'],
-            'order': bond_datas['order'],
-            'second_bond': bond_datas['second_bond'],
-        })
-        name = self.obj_name
-        self.delete_obj(name)
-        mesh = bpy.data.meshes.new(name)
-        mesh.from_pydata(centers, [], [])
-        mesh.update()
-        obj = bpy.data.objects.new(name, mesh)
-        # Add attributes
-        for att in default_attributes:
-            self.add_attribute(**att)
-        self.coll.objects.link(obj)
-        obj.parent = self.batoms.obj
-        obj.batoms.type = 'BOND'
-        obj.batoms.label = self.batoms.label
-        obj.Bbond.label = self.batoms.label
-        self.batoms.coll.Bbond.flag = True
-        # The reason we use object to store offset instead of using vector attribute
-        # of the mesh, is that we need shape key for offsets too.
-        offsets = [offsets1, offsets2, offsets3, offsets4]
-        for i in range(4):
-            name = '%s_bond_offset%s' % (self.label, i)
-            self.delete_obj(name)
-            mesh = bpy.data.meshes.new(name)
-            mesh.from_pydata(offsets[i], [], [])
-            mesh.update()
-            obj = bpy.data.objects.new(name, mesh)
-            self.coll.objects.link(obj)
-            obj.hide_set(True)
-            obj.parent = self.obj
-        #
-        bpy.context.view_layer.update()
-        self.set_attributes(attributes)
-        self.init_geometry_node_modifier(default_GroupInput)
+        self.settings = BondSettings(self.label, batoms=batoms, bonds=self)
         self.build_geometry_node()
-        self.set_trajectory()
-        #
-        logger.debug('bonds: build_object: {0:10.2f} s'.format(time() - tstart))
 
     def build_geometry_node(self):
         """
-        todo: add width to nodes
+        v = (p1 + o1) - (p2 + o2)
+        len(v) < max_length
+        v align euler
         """
-        from batoms.utils.butils import get_nodes_by_name, compareNodeType
+        from batoms.utils.butils import get_nodes_by_name, \
+            compareNodeType, get_socket_by_identifier
         from batoms.utils import string2Number
         tstart = time()
         gn = self.gnodes
         GroupInput = gn.node_group.nodes[0]
-        GroupOutput = gn.node_group.nodes[1]
         # ------------------------------------------------------------------
-        JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
-                                         '%s_JoinGeometry' % self.label,
-                                         'GeometryNodeJoinGeometry')
-        gn.node_group.links.new(JoinGeometry.outputs['Geometry'],
-                                GroupOutput.inputs['Geometry'])
+        MeshToPoints = get_nodes_by_name(gn.node_group.nodes,
+                                           '%s_MeshToPoints_edge' % (self.label),
+                                           'GeometryNodeMeshToPoints')
+        MeshToPoints.mode = "EDGES"
+        gn.node_group.links.new(GroupInput.outputs["Geometry"], MeshToPoints.inputs["Mesh"])
         # ------------------------------------------------------------------
         # calculate bond vector, length, rotation based on the index
-        # Get four positions from batoms, bond and the second bond
-        # for high order bond plane
-        ObjectBatoms = get_nodes_by_name(gn.node_group.nodes,
-                                         '%s_ObjectBatoms' % self.label,
-                                         'GeometryNodeObjectInfo')
-        ObjectBatoms.inputs['Object'].default_value = self.batoms.obj
+        # Get four positions from batoms
+        # atoms_index0, atoms_index1 of bond
+        # atoms_index2, atoms_index3 of the second bond, for high order bond plane
         PositionBatoms = get_nodes_by_name(gn.node_group.nodes,
                                            '%s_PositionBatoms' % (self.label),
                                            'GeometryNodeInputPosition')
-        TransferBatoms = []
+        PositionsAtIndexs = []
+        AtomsIndexAttributes = []
         for i in range(4):
             tmp = get_nodes_by_name(gn.node_group.nodes,
-                                '%s_TransferBatoms%s' % (self.label, i),
+                                '%s_PositionsAtIndex%s' % (self.label, i),
                                 'GeometryNodeSampleIndex')
             tmp.data_type = 'FLOAT_VECTOR'
-            TransferBatoms.append(tmp)
+            gn.node_group.links.new(GroupInput.outputs["Geometry"],
+                                    tmp.inputs['Geometry'])
+            PositionsAtIndexs.append(tmp)
+            tmp = get_nodes_by_name(gn.node_group.nodes,
+                                '%s_NamedAttribute_atoms_index%s' % (self.label, i),
+                                'GeometryNodeInputNamedAttribute')
+            tmp.inputs['Name'].default_value = f"atoms_index{i}"
+            tmp.data_type = 'INT'
+            AtomsIndexAttributes.append(tmp)
         for i in range(4):
-            gn.node_group.links.new(ObjectBatoms.outputs['Geometry'],
-                                    TransferBatoms[i].inputs[0])
-            gn.node_group.links.new(PositionBatoms.outputs['Position'],
-                                    TransferBatoms[i].inputs[3])
-            gn.node_group.links.new(GroupInput.outputs[i + 1],
-                                    TransferBatoms[i].inputs['Index'])
+            socket = get_socket_by_identifier(PositionsAtIndexs[i], "Value_Vector")
+            gn.node_group.links.new(PositionBatoms.outputs[0],
+                                    socket)
+            socket = get_socket_by_identifier(AtomsIndexAttributes[i], "Attribute_Int", type="outputs")
+            gn.node_group.links.new(socket,
+                                    PositionsAtIndexs[i].inputs['Index'])
         # ------------------------------------------------------------------
         # add positions with offsets
-        # transfer offsets from object self.obj_o
-        ObjectOffsets = []
-        PositionOffsets = []
-        TransferOffsets = []
-        InputIndex = get_nodes_by_name(gn.node_group.nodes,
-                                        '%s_InputIndex' % self.label,
-                                        'GeometryNodeInputIndex')
+        # first step: get offsets from named attribute
+        OffsetsAttributes = []
         for i in range(4):
             tmp = get_nodes_by_name(gn.node_group.nodes,
-                                    '%s_ObjectOffsets%s' % (self.label, i),
-                                    'GeometryNodeObjectInfo')
-            tmp.inputs['Object'].default_value = self.obj_o[i]
-            ObjectOffsets.append(tmp)
-            tmp = get_nodes_by_name(gn.node_group.nodes,
-                                    '%s_PositionOffsets%s' % (self.label, i),
-                                    'GeometryNodeInputPosition')
-            PositionOffsets.append(tmp)
-            tmp = get_nodes_by_name(gn.node_group.nodes,
-                                '%s_TransferOffsets%i' % (self.label, i),
-                                'GeometryNodeSampleIndex')
-            tmp.data_type = 'FLOAT_VECTOR'
-            TransferOffsets.append(tmp)
-            gn.node_group.links.new(ObjectOffsets[i].outputs['Geometry'],
-                                    TransferOffsets[i].inputs[0])
-            gn.node_group.links.new(PositionOffsets[i].outputs['Position'],
-                                    TransferOffsets[i].inputs[3])
-            gn.node_group.links.new(InputIndex.outputs[0],
-                                    TransferOffsets[i].inputs["Index"])
-        # we need five add operations
+                                '%s_NamedAttribute_offsets%s' % (self.label, i),
+                                'GeometryNodeInputNamedAttribute')
+            tmp.inputs['Name'].default_value = f"offsets{i}"
+            tmp.data_type = "FLOAT_VECTOR"
+            OffsetsAttributes.append(tmp)
+        # second step: we need five add operations
         # four: Get the positions with offset for four atoms
         # one: Get center = (positions1 + positions2)/2
         VectorAdd = []
@@ -290,9 +141,10 @@ class Bond(BaseCollection, ObjectGN):
             tmp.operation = 'ADD'
             VectorAdd.append(tmp)
         for i in range(4):
-            gn.node_group.links.new(TransferBatoms[i].outputs[2],
+            socket = get_socket_by_identifier(PositionsAtIndexs[i], "Value_Vector", type="outputs")
+            gn.node_group.links.new(socket,
                                     VectorAdd[i].inputs[0])
-            gn.node_group.links.new(TransferOffsets[i].outputs[2],
+            gn.node_group.links.new(OffsetsAttributes[i].outputs[0],
                                     VectorAdd[i].inputs[1])
         #
         # divide by 2 to get the center
@@ -308,13 +160,7 @@ class Bond(BaseCollection, ObjectGN):
         gn.node_group.links.new(
             VectorAdd[4].outputs[0], VectorDivide.inputs[0])
         # set center of the bond
-        SetPosition = get_nodes_by_name(gn.node_group.nodes,
-                                        '%s_SetPosition' % self.label,
-                                        'GeometryNodeSetPosition')
-        gn.node_group.links.new(
-            GroupInput.outputs['Geometry'], SetPosition.inputs['Geometry'])
-        gn.node_group.links.new(
-            VectorDivide.outputs[0], SetPosition.inputs['Position'])
+
         # get the vector for the bond and the length
         # also the vector for the second bond
         VectorSubtract = []
@@ -377,10 +223,23 @@ class Bond(BaseCollection, ObjectGN):
             AlignEuler[0].outputs[0], AlignEuler[1].inputs['Rotation'])
         gn.node_group.links.new(
             VectorCross0.outputs[0], AlignEuler[1].inputs['Vector'])
+        # get the species by atoms_index
+        SpeciesAtIndexs = []
+        for i in range(2):
+            SpeciesAtIndex = get_nodes_by_name(gn.node_group.nodes,
+                                    '%s_SpeciesAtIndex%s' % (self.label, i),
+                                    'GeometryNodeSampleIndex')
+            SpeciesAtIndex.data_type = 'INT'
+            SpeciesAtIndexs.append(SpeciesAtIndex)
+            gn.node_group.links.new(GroupInput.outputs["Geometry"], SpeciesAtIndex.inputs['Geometry'])
+            output_socket = get_socket_by_identifier(AtomsIndexAttributes[i], "Attribute_Int", type="outputs")
+            gn.node_group.links.new(output_socket, SpeciesAtIndex.inputs['Index'])
+            input_socket = get_socket_by_identifier(SpeciesAtIndex, "Value_Int")
+            gn.node_group.links.new(GroupInput.outputs["species_index"], input_socket)
         # find bond kinds by the names of species
         for sp in self.batoms.species:
             # we need two compares for one species,
-            # because we have two sockets: species_index1 and species_index2
+            # because we have two sockets: species_index0 and species_index1
             CompareSpecies = []
             for i in range(2):
                 tmp = get_nodes_by_name(gn.node_group.nodes,
@@ -388,13 +247,23 @@ class Bond(BaseCollection, ObjectGN):
                                             self.label, sp.name, i),
                                         compareNodeType)
                 tmp.operation = 'EQUAL'
-                tmp.inputs[1].default_value = string2Number(sp.name)
+                tmp.data_type = 'INT'
+                socket = get_socket_by_identifier(tmp, "B_INT")
+                socket.default_value = string2Number(sp.name)
                 CompareSpecies.append(tmp)
-            gn.node_group.links.new(
-                GroupInput.outputs[5], CompareSpecies[0].inputs[0])
-            gn.node_group.links.new(
-                GroupInput.outputs[6], CompareSpecies[1].inputs[0])
+            output_socket = get_socket_by_identifier(SpeciesAtIndexs[0], "Value_Int", type="outputs")
+            input_socket = get_socket_by_identifier(CompareSpecies[0], "A_INT")
+            gn.node_group.links.new(output_socket, input_socket)
+            output_socket = get_socket_by_identifier(SpeciesAtIndexs[1], "Value_Int", type="outputs")
+            input_socket = get_socket_by_identifier(CompareSpecies[1], "A_INT")
+            gn.node_group.links.new(output_socket, input_socket)
         # order
+        BondOrderAttribute = get_nodes_by_name(gn.node_group.nodes,
+                                '%s_NamedAttribute_bond_order' % (self.label),
+                                'GeometryNodeInputNamedAttribute')
+        BondOrderAttribute.inputs['Name'].default_value = f"bond_order"
+        BondOrderAttribute.data_type = "INT"
+        socket = get_socket_by_identifier(BondOrderAttribute, "Attribute_Int", type="outputs")
         for order in [1, 2, 3]:
             CompareOrder = get_nodes_by_name(gn.node_group.nodes,
                                              'CompareFloats_%s_%s_order' % (
@@ -403,8 +272,14 @@ class Bond(BaseCollection, ObjectGN):
             CompareOrder.operation = 'EQUAL'
             CompareOrder.inputs[1].default_value = order
             gn.node_group.links.new(
-                GroupInput.outputs[7], CompareOrder.inputs[0])
+                socket, CompareOrder.inputs[0])
         # style
+        BondStyleAttribute = get_nodes_by_name(gn.node_group.nodes,
+                                '%s_NamedAttribute_bond_style' % (self.label),
+                                'GeometryNodeInputNamedAttribute')
+        BondStyleAttribute.inputs['Name'].default_value = f"bond_style"
+        BondStyleAttribute.data_type = "INT"
+        socket = get_socket_by_identifier(BondStyleAttribute, "Attribute_Int", type="outputs")
         for style in [0, 1, 2, 3]:
             CompareStyle = get_nodes_by_name(gn.node_group.nodes,
                                              'CompareFloats_%s_%s_style' % (
@@ -413,7 +288,7 @@ class Bond(BaseCollection, ObjectGN):
             CompareStyle.operation = 'EQUAL'
             CompareStyle.inputs[1].default_value = style
             gn.node_group.links.new(
-                GroupInput.outputs[8], CompareStyle.inputs[0])
+                socket, CompareStyle.inputs[0])
         logger.debug('Build geometry nodes for bonds: %s' % (time() - tstart))
         #
 
@@ -426,10 +301,10 @@ class Bond(BaseCollection, ObjectGN):
         if len(bondlists['atoms_index1']) == 0:
             return
         pairs = np.concatenate((
+            bondlists['species_index0'].reshape(-1, 1),
             bondlists['species_index1'].reshape(-1, 1),
-            bondlists['species_index2'].reshape(-1, 1),
-            bondlists['order'].reshape(-1, 1),
-            bondlists['style'].reshape(-1, 1)), axis=1)
+            bondlists['bond_order'].reshape(-1, 1),
+            bondlists['bond_style'].reshape(-1, 1)), axis=1)
         pairs = np.unique(pairs, axis=0)
         pairs = pairs.reshape(-1, 4)
         for pair in pairs:
@@ -446,7 +321,7 @@ class Bond(BaseCollection, ObjectGN):
         """
         add geometry node for each bond pair
         """
-        from batoms.utils.butils import get_nodes_by_name
+        from batoms.utils.butils import get_nodes_by_name, get_socket_by_identifier
         # tstart = time()
         if not order:
             order = sp["order"]
@@ -460,6 +335,9 @@ class Bond(BaseCollection, ObjectGN):
                                          '%s_JoinGeometry' % self.label)
         #
         name = 'bond_%s_%s_%s_%s' % (self.label, sp["name"], order, style)
+        MeshToPoints = get_nodes_by_name(gn.node_group.nodes,
+                                           '%s_MeshToPoints_edge' % (self.label),
+                                           'GeometryNodeMeshToPoints')
         InstanceOnPoint = get_nodes_by_name(gn.node_group.nodes,
                                             'InstanceOnPoint_%s' % name,
                                             'GeometryNodeInstanceOnPoints')
@@ -524,11 +402,25 @@ class Bond(BaseCollection, ObjectGN):
         AlignEuler1 = get_nodes_by_name(gn.node_group.nodes,
                                         '%s_AlignEuler1' % self.label,
                                         'FunctionNodeAlignEulerToVector')
+        gn.node_group.links.new(MeshToPoints.outputs['Points'],
+                                InstanceOnPoint.inputs['Points'])
+        # show
+        BondShowAttribute = get_nodes_by_name(gn.node_group.nodes,
+                                '%s_NamedAttribute_bond_show' % (self.label),
+                                'GeometryNodeInputNamedAttribute')
+        BondShowAttribute.inputs['Name'].default_value = f"bond_show"
+        BondShowAttribute.data_type = "BOOLEAN"
+        socket = get_socket_by_identifier(BondShowAttribute, "Attribute_Bool", type="outputs")
+        gn.node_group.links.new(socket, BoolShow.inputs[0])
+        # model style
+        BondModelStyleAttribute = get_nodes_by_name(gn.node_group.nodes,
+                                '%s_NamedAttribute_bond_model_style' % (self.label),
+                                'GeometryNodeInputNamedAttribute')
+        BondModelStyleAttribute.inputs['Name'].default_value = f"bond_model_style"
+        BondModelStyleAttribute.data_type = "INT"
+        socket = get_socket_by_identifier(BondModelStyleAttribute, "Attribute_Int", type="outputs")
         gn.node_group.links.new(
-            SetPosition.outputs['Geometry'], InstanceOnPoint.inputs['Points'])
-        gn.node_group.links.new(GroupInput.outputs[9], BoolShow.inputs[0])
-        gn.node_group.links.new(
-            GroupInput.outputs[10], BoolModelStyle.inputs[0])
+            socket, BoolModelStyle.inputs[0])
         gn.node_group.links.new(
             CompareSpecies0.outputs[0], BoolSpecies.inputs[0])
         gn.node_group.links.new(
@@ -562,12 +454,19 @@ class Bond(BaseCollection, ObjectGN):
 
     def update_geometry_node_species(self):
         # find bond kinds by the names of species
+        from batoms.utils.butils import get_socket_by_identifier
         tstart = time()
         gn = self.gnodes
         GroupInput = gn.node_group.nodes[0]
+        SpeciesAtIndexs = []
+        for i in range(2):
+            SpeciesAtIndex = get_nodes_by_name(gn.node_group.nodes,
+                                    '%s_SpeciesAtIndex%s' % (self.label, i),
+                                    'GeometryNodeSampleIndex')
+            SpeciesAtIndexs.append(SpeciesAtIndex)
         for sp in self.batoms.species:
             # we need two compares for one species,
-            # because we have two sockets: species_index1 and species_index2
+            # because we have two sockets: species_index0 and species_index1
             CompareSpecies = []
             for i in range(2):
                 tmp = get_nodes_by_name(gn.node_group.nodes,
@@ -577,10 +476,10 @@ class Bond(BaseCollection, ObjectGN):
                 tmp.operation = 'EQUAL'
                 tmp.inputs[1].default_value = string2Number(sp.name)
                 CompareSpecies.append(tmp)
-            gn.node_group.links.new(
-                GroupInput.outputs[5], CompareSpecies[0].inputs[0])
-            gn.node_group.links.new(
-                GroupInput.outputs[6], CompareSpecies[1].inputs[0])
+            for i in range(2):
+                output_socket = get_socket_by_identifier(SpeciesAtIndexs[i], "Value_Int", type="outputs")
+                gn.node_group.links.new(
+                    output_socket, CompareSpecies[i].inputs[0])
         logger.debug('UPdate geometry nodes species for bonds: %s'%(time() - tstart))
 
     def update_geometry_node_instancer(self):
@@ -594,10 +493,10 @@ class Bond(BaseCollection, ObjectGN):
         if len(bondlists['atoms_index1']) == 0:
             return
         pairs = np.concatenate((
+            bondlists['species_index0'].reshape(-1, 1),
             bondlists['species_index1'].reshape(-1, 1),
-            bondlists['species_index2'].reshape(-1, 1),
-            bondlists['order'].reshape(-1, 1),
-            bondlists['style'].reshape(-1, 1)), axis=1)
+            bondlists['bond_order'].reshape(-1, 1),
+            bondlists['bond_style'].reshape(-1, 1)), axis=1)
         pairs = np.unique(pairs, axis=0)
         pairs = pairs.reshape(-1, 4)
         for pair in pairs:
@@ -693,32 +592,6 @@ class Bond(BaseCollection, ObjectGN):
         self.set_arrays(bond_datas)
         logger.debug('draw bond: {0:10.2f} s'.format(time() - tstart))
 
-    @property
-    def obj(self):
-        return self.get_obj()
-
-    def get_obj(self):
-        obj = bpy.data.objects.get(self.obj_name)
-        if obj is None:
-            self.build_object(default_bond_datas)
-            obj = bpy.data.objects.get(self.obj_name)
-        return obj
-
-    @property
-    def obj_o(self):
-        return self.get_obj_o()
-
-    def get_obj_o(self):
-        objs = []
-        for i in range(4):
-            name = '%s_bond_offset%s' % (self.label, i)
-            obj_o = bpy.data.objects.get(name)
-            if obj_o is None:
-                raise KeyError('%s object is not exist.' % name)
-            else:
-                objs.append(obj_o)
-        return objs
-
     def get_arrays(self):
         """
         """
@@ -726,38 +599,21 @@ class Bond(BaseCollection, ObjectGN):
         # tstart = time()
         arrays = self.attributes
         arrays.update({'positions': self.positions,
-                       'offsets1': self.offsets[0],
-                       'offsets2': self.offsets[1],
-                       'offsets3': self.offsets[2],
-                       'offsets4': self.offsets[3],
                        })
         # print('get_arrays: %s'%(time() - tstart))
         return arrays
 
     def set_arrays(self, arrays):
-        """
-        """
-        attributes = self.attributes
-        # same length
-        dnvert = len(arrays['atoms_index1']) - len(attributes['atoms_index1'])
-        if dnvert > 0:
-            # add
-            objs = self.obj_o
-            for obj in objs:
-                self.add_vertices_bmesh(dnvert, obj)
-            self.add_vertices_bmesh(dnvert)
-        elif dnvert < 0:
-            self.delete_vertices_bmesh(range(-dnvert))
-            objs = self.obj_o
-            for obj in objs:
-                self.delete_vertices_bmesh(range(-dnvert), obj)
-        self.set_trajectory(arrays)
-        self.offsets = [arrays['offsets1'], arrays['offsets2'],
-                        arrays['offsets3'], arrays['offsets4']]
-        arrays = {key:value for key, value in arrays.items()
-                if key not in ["centers", "offsets1", "offsets2",
-                    "offsets3", "offsets4"]}
+        """Add edge for bond.
+        Set the bond properties."""
+        # blender delete all edges
+        dnvert = len(self.obj.data.edges)
+        self.delete_edges_bmesh(range(dnvert))
+        #
+        edges = np.vstack((arrays['atoms_index1'], arrays['atoms_index2'])).T
+        self.add_edges(edges, self.batoms.obj)
         self.set_attributes(arrays)
+        # self.set_trajectory(arrays)
         self.update_geometry_node_species()
         self.update_geometry_node_instancer()
         self.update_geometry_nodes()
@@ -1356,21 +1212,21 @@ class Bond(BaseCollection, ObjectGN):
         if not self.show_hydrogen_bond:
             bondlists = bondlists[bondlists[:, 10] != 1]
         # properties
-        atoms_index1 = np.array(bondlists[:, 0], dtype=int)
-        atoms_index2 = np.array(bondlists[:, 1], dtype=int)
+        atoms_index0 = np.array(bondlists[:, 0], dtype=int)
+        atoms_index1 = np.array(bondlists[:, 1], dtype=int)
         # second bond for high order bond
-        nb = len(atoms_index1)
+        nb = len(atoms_index0)
         second_bond = np.roll(np.arange(nb), 1)
-        # atoms_index3 and atoms_index4 will be removed for Blender 3.1
+        # atoms_index2 and atoms_index3 will be removed for Blender 3.1
+        atoms_index2 = np.roll(atoms_index0, 1)
         atoms_index3 = np.roll(atoms_index1, 1)
-        atoms_index4 = np.roll(atoms_index2, 1)
         shows = np.ones(nb, dtype=int)
         orders = np.zeros(nb, dtype=int)  # 1, 2, 3
         styles = np.zeros(nb, dtype=int)  # 0, 1, 2
         widths = np.ones(nb, dtype=float)
+        species_index0 = np.zeros(nb, dtype=int)
         species_index1 = np.zeros(nb, dtype=int)
-        species_index2 = np.zeros(nb, dtype=int)
-        model_styles = model_styles[atoms_index1]
+        bond_model_styles = model_styles[atoms_index0]
         if nb == 0:
             return default_bond_datas
         # ------------------------------------
@@ -1382,49 +1238,44 @@ class Bond(BaseCollection, ObjectGN):
         # bond center
         if len(positions.shape) == 2:
             positions = np.array([positions])
-        # here we use trajectory directly, thus will set centers
-        # to shape keys trajectory
-        centers = (positions[:, atoms_index1] + offsets1 +
-                   positions[:, atoms_index2] + offsets2)/2.0
         # ---------------------------------------------
         for b in bondsetting:
             spi = b.species1
             spj = b.species2
-            indi = (speciesarray[atoms_index1] == spi)
-            indj = (speciesarray[atoms_index2] == spj)
+            indi = (speciesarray[atoms_index0] == spi)
+            indj = (speciesarray[atoms_index1] == spj)
             ind = indi & indj
             orders[ind] = b.order
             styles[ind] = int(b.style)
             widths[ind] = b.width
             polyhedras[ind] = b.polyhedra
-            species_index1[ind] = string2Number(spi)
-            species_index2[ind] = string2Number(spj)
+            species_index0[ind] = string2Number(spi)
+            species_index1[ind] = string2Number(spj)
             if b.order > 1:
-                second_bond, atoms_index3, atoms_index4 = self.secondBond(
+                second_bond, atoms_index2, atoms_index3 = self.secondBond(
                     b, speciesarray, second_bond,
-                    atoms_index3, atoms_index4, bondlists)
+                    atoms_index2, atoms_index3, bondlists)
         # offsets for second bond
         # this will be remove for Blender 3.1
         offsets3 = np.dot(bondlists[:, 2:5][second_bond], cell)
-        offsets4 = np.dot(bondlists[:, 5:8][second_bond], cell)
+        offsets0 = np.dot(bondlists[:, 5:8][second_bond], cell)
         datas = {
+            'atoms_index0': atoms_index0,
             'atoms_index1': atoms_index1,
             'atoms_index2': atoms_index2,
             'atoms_index3': atoms_index3,
-            'atoms_index4': atoms_index4,
             'second_bond': second_bond,
+            'species_index0': species_index0,
             'species_index1': species_index1,
-            'species_index2': species_index2,
-            'centers': centers,
             'offsets1': offsets1,
             'offsets2': offsets2,
             'offsets3': offsets3,
-            'offsets4': offsets4,
+            'offsets0': offsets0,
             # 'widths': widths,
-            'show': shows,
-            'order': orders,
-            'style': styles,
-            'model_style': model_styles,
+            'bond_show': shows,
+            'bond_order': orders,
+            'bond_style': styles,
+            'bond_model_style': bond_model_styles,
             'polyhedra': polyhedras,
         }
         # print('datas: ', datas)
@@ -1432,7 +1283,7 @@ class Bond(BaseCollection, ObjectGN):
         return datas
 
     def secondBond(self, b, speciesarray, second_bond,
-                   atoms_index3, atoms_index4, bondlists):
+                   atoms_index2, atoms_index3, bondlists):
         """
         determine the plane of high order bond.
         v1 = atoms2 - atoms1
@@ -1462,9 +1313,9 @@ class Bond(BaseCollection, ObjectGN):
             if len(indices3) > 1:
                 indices4 = np.where(indices3 != i)[0]
                 second_bond[i] = indices3[indices4[0]]
-                atoms_index3[i] = bondlists[second_bond[i], 0]
-                atoms_index4[i] = bondlists[second_bond[i], 1]
-        return second_bond, atoms_index3, atoms_index4
+                atoms_index2[i] = bondlists[second_bond[i], 0]
+                atoms_index3[i] = bondlists[second_bond[i], 1]
+        return second_bond, atoms_index2, atoms_index3
 
     def high_order_bond_plane(self, b, speciesarray,
                               positions, nvec, offsets, bondlists):

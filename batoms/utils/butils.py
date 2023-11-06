@@ -464,9 +464,9 @@ def set_vertex_color(obj, name, color):
             bm.to_mesh(obj.data)
             bm.free()
 
-def get_socket_by_identifier(node, identifier):
+def get_socket_by_identifier(node, identifier, type="inputs"):
     """Get sockets by identifier"""
-    for inp in node.inputs:
+    for inp in getattr(node, type):
         if inp.identifier == identifier:
             return inp
     return None

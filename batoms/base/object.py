@@ -225,6 +225,31 @@ class BaseObject():
         bm.to_mesh(obj.data)
         bm.clear()
 
+    def add_edges(self, edges=None, obj=None):
+        object_mode()
+        if obj is None:
+            obj = self.obj
+        obj.data.edges.add(len(edges))
+        edges = edges.reshape(len(edges)*2)
+        obj.data.edges.foreach_set('vertices', edges)
+        self.update_mesh(obj)
+
+    def delete_edges_bmesh(self, index=[], obj=None,):
+        """
+        delete edges
+        """
+        import bmesh
+        object_mode()
+        if obj is None:
+            obj = self.obj
+        bm = bmesh.new()
+        bm.from_mesh(obj.data)
+        bm.edges.ensure_lookup_table()
+        edges_select = [bm.edges[i] for i in index]
+        bmesh.ops.delete(bm, geom=edges_select, context='EDGES_FACES')
+        bm.to_mesh(obj.data)
+        bm.clear()
+
     @property
     def shape_keys(self):
         base_name = "Basis_%s"%self.obj_name
@@ -450,7 +475,7 @@ class ObjectGN(BaseObject):
 
         return attribute
 
-    def add_attribute_from_array(self, name, data):
+    def add_attribute_from_array(self, name, data, domain="POINT"):
         """Add an attribute from array
         """
         from batoms.utils import type_py_to_blender
@@ -466,14 +491,14 @@ class ObjectGN(BaseObject):
                 if dtype_bl is False:
                     print(f'Attribute: {name} is not added. The type of the array: {type_py} is not supported.')
                     return False
-                self.add_attribute(name=name, data_type=dtype_bl, domain="POINT")
+                self.add_attribute(name=name, data_type=dtype_bl, domain=domain)
             elif len(data.shape) == 2:
                 if data.shape[1] == 2:
-                    self.add_attribute(name=name, data_type="FLOAT2", domain="POINT")
+                    self.add_attribute(name=name, data_type="FLOAT2", domain=domain)
                 elif data.shape[1] == 3:
-                    self.add_attribute(name=name, data_type="FLOAT_VECTOR", domain="POINT")
+                    self.add_attribute(name=name, data_type="FLOAT_VECTOR", domain=domain)
                 elif data.shape[1] == 4:
-                    self.add_attribute(name=name, data_type="QUATERNION", domain="POINT")
+                    self.add_attribute(name=name, data_type="QUATERNION", domain=domain)
                 else:
                     print(f'Attribute: {name} is not added. The shape of the array: {data.shape} is not supported.')
                     return False
@@ -542,7 +567,6 @@ class ObjectGN(BaseObject):
             array (np.array): value of the attribute
         """
         from batoms.utils.attribute import set_mesh_attribute, set_mesh_attribute_bmesh
-        logger.debug('Set attribute: {}'.format(key))
         obj = self.obj
         me = obj.data
         if key not in me.attributes:
