@@ -87,6 +87,7 @@ def get_mesh_attribute(obj, key, index=None):
     me = obj.data
     # get attribute data type for the attribute
     att = me.attributes.get(key)
+    # print(f"Attribute: {att.data_type} {att.domain}")
     if att is None:
         raise KeyError('{} is not exist.'.format(key))
     dtype = att.data_type
@@ -181,10 +182,10 @@ def set_mesh_attribute(obj, key, value, index=None):
         index (bool, int): index of the data, used to set singe attribute value
     """
     from batoms.utils.butils import get_att_length
-    logger.debug("Key: {}".format(key))
     me = obj.data
     # get attribute
     att = me.attributes.get(key)
+    # print(f"Attribute: {att.data_type} {att.domain}")
     if index is not None:
         att.data[index].value = value[0]
     else:

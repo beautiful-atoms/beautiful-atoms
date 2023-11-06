@@ -33,6 +33,24 @@ default_attributes = [
     {"name": 'model_style', "data_type": 'INT'},
 ]
 
+default_bond_attributes = [
+    {"name": 'atoms_index0', "data_type": 'INT', "domain": "EDGE"},
+    {"name": 'atoms_index1', "data_type": 'INT', "domain": "EDGE"},
+    {"name": 'atoms_index2', "data_type": 'INT', "domain": "EDGE"},
+    {"name": 'atoms_index3', "data_type": 'INT', "domain": "EDGE"},
+    {"name": 'species_index0', "data_type": 'INT', "domain": "EDGE"},
+    {"name": 'species_index1', "data_type": 'INT', "domain": "EDGE"},
+    {"name": 'offsets0', "data_type": 'FLOAT_VECTOR', "domain": "EDGE"},
+    {"name": 'offsets1', "data_type": 'FLOAT_VECTOR', "domain": "EDGE"},
+    {"name": 'offsets2', "data_type": 'FLOAT_VECTOR', "domain": "EDGE"},
+    {"name": 'offsets3', "data_type": 'FLOAT_VECTOR', "domain": "EDGE"},
+    {"name": 'bond_order', "data_type": 'INT', "domain": "EDGE"},
+    {"name": 'bond_style', "data_type": 'INT', "domain": "EDGE"},
+    {"name": 'bond_show', "data_type": 'BOOLEAN', "domain": "EDGE"},
+    {"name": 'bond_model_style', "data_type": 'INT', "domain": "EDGE"},
+    {"name": 'polyhedra', "data_type": 'INT', "domain": "EDGE"},
+    {"name": 'second_bond', "data_type": 'INT', "domain": "EDGE"},
+]
 
 default_GroupInput = [
     ['select', 'NodeSocketInt'],
@@ -239,6 +257,8 @@ class Batoms(BaseCollection, ObjectGN):
         self.cell.obj.parent = self.obj
         # add attributes
         for att in default_attributes:
+            self.add_attribute(**att)
+        for att in default_bond_attributes:
             self.add_attribute(**att)
         self.set_attributes(arrays)
         self.init_geometry_node_modifier(default_GroupInput)
