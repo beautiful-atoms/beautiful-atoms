@@ -618,44 +618,6 @@ class Bond(BaseCollection, ObjectGN):
         self.update_geometry_node_instancer()
         self.update_geometry_nodes()
 
-    @property
-    def offsets(self):
-        return self.get_offsets()
-
-    def get_offsets(self):
-        """
-        using foreach_get and foreach_set to improve performance.
-        """
-        n = len(self)
-        offsets = []
-        objs = self.obj_o
-        for obj in objs:
-            positions = np.empty(n*3, dtype=np.float64)
-            obj.data.vertices.foreach_get('co', positions)
-            offsets.append(positions.reshape((n, 3)))
-        return offsets
-
-    @offsets.setter
-    def offsets(self, offsets):
-        self.set_offsets(offsets)
-
-    def set_offsets(self, offsets):
-        """
-        Set global offsets to local vertices
-        """
-        object_mode()
-        objs = self.obj_o
-        n = len(objs[0].data.vertices)
-        if len(offsets[0]) != n:
-            raise ValueError('offsets has wrong shape %s != %s.' %
-                             (len(offsets[0]), n))
-        if n == 0:
-            return
-        for i in range(4):
-            vertices = offsets[i].reshape((n*3, 1))
-            objs[i].data.vertices.foreach_set('co', vertices)
-            objs[i].data.update()
-
     def get_trajectory(self):
         """
         """
