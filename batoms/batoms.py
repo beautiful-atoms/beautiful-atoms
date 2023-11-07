@@ -268,23 +268,49 @@ class Batoms(BaseCollection, ObjectGN):
     def build_geometry_node(self):
         """Geometry node for instancing sphere on vertices!
         """
-        links = self.gn_node_group.links
-        nodes = self.gn_node_group.nodes
+        from batoms.utils.butils import get_node_with_node_tree_by_name
+        default_interface = [
+            ['Geometry', 'NodeSocketGeometry', 'INPUT'],
+            ['Geometry', 'NodeSocketGeometry', 'OUTPUT'],
+        ]
+        # first create the nodes for the top level
+        parent = self.gn_node_group
+        nodes = parent.nodes
+        links = parent.links
         GroupInput = nodes[0]
         GroupOutput = nodes[1]
-        JoinGeometry = get_node_by_name(nodes,
+        JoinGeometry = get_node_by_name(parent.nodes,
                                          '%s_JoinGeometry' % self.label,
                                          'GeometryNodeJoinGeometry')
-        SeparateGeometry = \
-            get_node_by_name(nodes,
+        SeparateGeometry = get_node_by_name(parent.nodes,
                               '%s_SeparateGeometry' % self.label,
                               'GeometryNodeSeparateGeometry')
         links.new(GroupInput.outputs['Geometry'],
                                 SeparateGeometry.inputs['Geometry'])
-        links.new(GroupInput.outputs[3],
+        links.new(GroupInput.outputs["select"],
                                 SeparateGeometry.inputs['Selection'])
         links.new(SeparateGeometry.outputs[0],
                                 JoinGeometry.inputs['Geometry'])
+        links.new(JoinGeometry.outputs['Geometry'],
+                                GroupOutput.inputs['Geometry'])
+        #-------------------------------------------------------------
+        # then create the nodes for the Ball level
+        name = f'Ball_{self.label}'
+        node = get_node_with_node_tree_by_name(self.gn_node_group.nodes,
+                                               name=name,
+                                               interface=default_interface)
+        nodes = node.node_tree.nodes
+        links = node.node_tree.links
+        GroupInput = nodes[0]
+        GroupOutput = nodes[1]
+        # link the input to parent node
+        parent.links.new(parent.nodes["Group Input"].outputs['Geometry'], node.inputs['Geometry'])
+        # link the outputs to parent node
+        parent.links.new(node.outputs['Geometry'], JoinGeometry.inputs['Geometry'])
+        #-------------------------------------------------------------
+        JoinGeometry = get_node_by_name(nodes,
+                                         '%s_JoinGeometry' % self.label,
+                                         'GeometryNodeJoinGeometry')
         links.new(JoinGeometry.outputs['Geometry'],
                                 GroupOutput.inputs['Geometry'])
         # set positions
@@ -325,23 +351,47 @@ class Batoms(BaseCollection, ObjectGN):
             instancer (bpy.data.object):
                 Object to be instanced
         """
-        from batoms.utils.butils import compareNodeType, get_socket_by_identifier
-        links = self.gn_node_group.links
-        nodes = self.gn_node_group.nodes
+        from batoms.utils.butils import get_socket_by_identifier, get_node_with_node_tree_by_name
+        default_interface = [
+            ["Geometry", "NodeSocketGeometry", 'INPUT'],
+            ["Geometry", "NodeSocketGeometry", 'OUTPUT'],
+        ]
+        # Create Node Group if not exit
+        parent_tree = bpy.data.node_groups[f'Ball_{self.label}']
+        name = 'Ball_%s_%s' % (self.label, spname)
+        node = get_node_with_node_tree_by_name(parent_tree.nodes,
+                                               name=name,
+                                               interface=default_interface)
+        nodes = node.node_tree.nodes
+        links = node.node_tree.links
         GroupInput = nodes[0]
-        JoinGeometry = get_node_by_name(nodes,
+        GroupOutput = nodes[1]
+        # link the input to parent node
+        parent_tree.links.new(parent_tree.nodes[0].outputs['Geometry'], node.inputs['Geometry'])
+        # link the outputs to parent node
+        JoinGeometry = get_node_by_name(parent_tree.nodes,
                                          '%s_JoinGeometry' % self.label,
                                          'GeometryNodeJoinGeometry')
-        SetPosition = get_node_by_name(nodes,
-                                        '%s_SetPosition' % self.label)
+        parent_tree.links.new(node.outputs['Geometry'], JoinGeometry.inputs['Geometry'])
+        # compare to species,
+        SpeciesIndexAttribute = get_node_by_name(nodes,
+                                '%s_Attribute_species_index' % (self.label),
+                                'GeometryNodeInputNamedAttribute')
+        SpeciesIndexAttribute.inputs['Name'].default_value = f"species_index"
+        SpeciesIndexAttribute.data_type = "INT"
         CompareSpecies = get_node_by_name(nodes,
-                                           'CompareFloats_%s_%s' % (
+                                           'CompareSpecies_%s_%s' % (
                                                self.label, spname),
-                                           compareNodeType)
+                                           "FunctionNodeCompare")
         CompareSpecies.operation = 'EQUAL'
         CompareSpecies.data_type = 'INT'
+        output_socket = get_socket_by_identifier(SpeciesIndexAttribute, "Attribute_Int", type="outputs")
         socket = get_socket_by_identifier(CompareSpecies, "B_INT")
         socket.default_value = int(string2Number(spname))
+        compare_species_socket = get_socket_by_identifier(CompareSpecies, "A_INT")
+        links.new(output_socket, compare_species_socket)
+        # SetPosition = get_node_by_name(nodes,
+                                        # '%s_SetPosition' % self.label)
         InstanceOnPoint = get_node_by_name(nodes,
                                             'InstanceOnPoint_%s_%s' % (
                                                 self.label, spname),
@@ -361,15 +411,29 @@ class Batoms(BaseCollection, ObjectGN):
                                                 self.label, spname),
                                             'GeometryNodeSetMaterial')
         SetMaterial.inputs[2].default_value = instancer.data.materials[0]
+        # get attribute
+        ScaleAttribute = get_node_by_name(nodes,
+                                '%s_NamedAttribute_scale' % (self.label),
+                                'GeometryNodeInputNamedAttribute')
+        ScaleAttribute.inputs['Name'].default_value = f"scale"
+        ScaleAttribute.data_type = "FLOAT"
+        scale_socket = get_socket_by_identifier(ScaleAttribute, "Attribute_Float", type="outputs")
+        ShowAttribute = get_node_by_name(nodes,
+                                '%s_NamedAttribute_show' % (self.label),
+                                'GeometryNodeInputNamedAttribute')
+        ShowAttribute.inputs['Name'].default_value = f"show"
+        ShowAttribute.data_type = "BOOLEAN"
+        show_socket = get_socket_by_identifier(ShowAttribute, "Attribute_Bool", type="outputs")
+        SelectAttribute = get_node_by_name(nodes,
+                                '%s_NamedAttribute_select' % (self.label),
+                                'GeometryNodeInputNamedAttribute')
+        SelectAttribute.inputs['Name'].default_value = f"select"
+        SelectAttribute.data_type = "INT"
+        select_socket = get_socket_by_identifier(SelectAttribute, "Attribute_Int", type="outputs")
         #
-        links.new(SetPosition.outputs['Geometry'],
-                                InstanceOnPoint.inputs['Points'])
-        socket = get_socket_by_identifier(CompareSpecies, "A_INT")
-        links.new(GroupInput.outputs[2],
-                                socket)
-        links.new(GroupInput.outputs[3], BoolShow.inputs[0])
-        links.new(GroupInput.outputs[4],
-                                InstanceOnPoint.inputs['Scale'])
+        links.new(show_socket, BoolShow.inputs[0])
+        links.new(GroupInput.outputs["Geometry"], InstanceOnPoint.inputs['Points'])
+        links.new(scale_socket, InstanceOnPoint.inputs['Scale'])
         links.new(CompareSpecies.outputs[0], BoolShow.inputs[1])
         links.new(BoolShow.outputs['Boolean'],
                                 InstanceOnPoint.inputs['Selection'])
@@ -378,7 +442,7 @@ class Batoms(BaseCollection, ObjectGN):
         links.new(InstanceOnPoint.outputs['Instances'],
                                 SetMaterial.inputs['Geometry'])
         links.new(SetMaterial.outputs['Geometry'],
-                                JoinGeometry.inputs['Geometry'])
+                                GroupOutput.inputs['Geometry'])
 
     def check_batoms(self, label):
         """Check batoms exist or not
