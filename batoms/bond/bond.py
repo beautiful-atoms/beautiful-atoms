@@ -340,8 +340,8 @@ class Bond(BaseCollection, ObjectGN):
         # create group input and output sockets
         default_interface = [
             ["Geometry", "NodeSocketGeometry", 'INPUT'],
-            ["Species0", "NodeSocketFloat", 'INPUT'],
-            ["Species1", "NodeSocketFloat", 'INPUT'],
+            ["Species0", "NodeSocketBool", 'INPUT'],
+            ["Species1", "NodeSocketBool", 'INPUT'],
             ["Order", "NodeSocketInt", 'INPUT'],
             ["Style", "NodeSocketInt", 'INPUT'],
             ["Length", "NodeSocketFloat", 'INPUT'],
