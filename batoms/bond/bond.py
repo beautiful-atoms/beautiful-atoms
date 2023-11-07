@@ -7,7 +7,7 @@ This module defines the Bond object in the Batoms package.
 import bpy
 import bmesh
 from time import time
-from batoms.utils.butils import object_mode, compareNodeType, get_nodes_by_name
+from batoms.utils.butils import object_mode, get_node_by_name
 from batoms.utils import string2Number, number2String
 import numpy as np
 from batoms.base.object import ObjectGN
@@ -76,37 +76,60 @@ class Bond(BaseCollection, ObjectGN):
         len(v) < max_length
         v align euler
         """
-        from batoms.utils.butils import get_nodes_by_name, \
-            compareNodeType, get_socket_by_identifier
+        from batoms.utils.butils import get_node_by_name, \
+            get_socket_by_identifier, get_node_with_node_tree_by_name
         from batoms.utils import string2Number
+        default_interface = [
+            ['Geometry', 'NodeSocketGeometry', 'INPUT'],
+            ['Geometry', 'NodeSocketGeometry', 'OUTPUT'],
+        ]
         tstart = time()
-        gn = self.gnodes
-        GroupInput = gn.node_group.nodes[0]
+        parent = self.gn_node_group
+        name = f'Bond_{self.label}'
+        node = get_node_with_node_tree_by_name(self.gn_node_group.nodes,
+                                               name=name,
+                                               interface=default_interface)
+        nodes = node.node_tree.nodes
+        links = node.node_tree.links
+        GroupInput = nodes[0]
+        GroupOutput = nodes[1]
+        # link the input to parent node
+        JoinGeometry = get_node_by_name(parent.nodes,
+                                         '%s_JoinGeometry' % self.batoms.label,
+                                         'GeometryNodeJoinGeometry')
+        parent.links.new(parent.nodes["Group Input"].outputs['Geometry'], node.inputs['Geometry'])
+        # link the outputs to parent node
+        parent.links.new(node.outputs['Geometry'], JoinGeometry.inputs['Geometry'])
         # ------------------------------------------------------------------
-        MeshToPoints = get_nodes_by_name(gn.node_group.nodes,
+        # this join geometry is belong to this node group
+        JoinGeometry = get_node_by_name(nodes,
+                                         '%s_JoinGeometry' % self.label,
+                                         'GeometryNodeJoinGeometry')
+        MeshToPoints = get_node_by_name(nodes,
                                            '%s_MeshToPoints_edge' % (self.label),
                                            'GeometryNodeMeshToPoints')
         MeshToPoints.mode = "EDGES"
-        gn.node_group.links.new(GroupInput.outputs["Geometry"], MeshToPoints.inputs["Mesh"])
+        links.new(GroupInput.outputs["Geometry"], MeshToPoints.inputs["Mesh"])
+        links.new(JoinGeometry.outputs["Geometry"], GroupOutput.inputs["Geometry"])
         # ------------------------------------------------------------------
         # calculate bond vector, length, rotation based on the index
         # Get four positions from batoms
         # atoms_index0, atoms_index1 of bond
         # atoms_index2, atoms_index3 of the second bond, for high order bond plane
-        PositionBatoms = get_nodes_by_name(gn.node_group.nodes,
+        PositionBatoms = get_node_by_name(nodes,
                                            '%s_PositionBatoms' % (self.label),
                                            'GeometryNodeInputPosition')
         PositionsAtIndexs = []
         AtomsIndexAttributes = []
         for i in range(4):
-            tmp = get_nodes_by_name(gn.node_group.nodes,
+            tmp = get_node_by_name(nodes,
                                 '%s_PositionsAtIndex%s' % (self.label, i),
                                 'GeometryNodeSampleIndex')
             tmp.data_type = 'FLOAT_VECTOR'
-            gn.node_group.links.new(GroupInput.outputs["Geometry"],
+            links.new(GroupInput.outputs["Geometry"],
                                     tmp.inputs['Geometry'])
             PositionsAtIndexs.append(tmp)
-            tmp = get_nodes_by_name(gn.node_group.nodes,
+            tmp = get_node_by_name(nodes,
                                 '%s_NamedAttribute_atoms_index%s' % (self.label, i),
                                 'GeometryNodeInputNamedAttribute')
             tmp.inputs['Name'].default_value = f"atoms_index{i}"
@@ -114,93 +137,77 @@ class Bond(BaseCollection, ObjectGN):
             AtomsIndexAttributes.append(tmp)
         for i in range(4):
             socket = get_socket_by_identifier(PositionsAtIndexs[i], "Value_Vector")
-            gn.node_group.links.new(PositionBatoms.outputs[0],
+            links.new(PositionBatoms.outputs[0],
                                     socket)
             socket = get_socket_by_identifier(AtomsIndexAttributes[i], "Attribute_Int", type="outputs")
-            gn.node_group.links.new(socket,
+            links.new(socket,
                                     PositionsAtIndexs[i].inputs['Index'])
         # ------------------------------------------------------------------
         # add positions with offsets
         # first step: get offsets from named attribute
         OffsetsAttributes = []
         for i in range(4):
-            tmp = get_nodes_by_name(gn.node_group.nodes,
+            tmp = get_node_by_name(nodes,
                                 '%s_NamedAttribute_offsets%s' % (self.label, i),
                                 'GeometryNodeInputNamedAttribute')
             tmp.inputs['Name'].default_value = f"offsets{i}"
             tmp.data_type = "FLOAT_VECTOR"
             OffsetsAttributes.append(tmp)
-        # second step: we need five add operations
+        # second step: we need four add operations
         # four: Get the positions with offset for four atoms
-        # one: Get center = (positions1 + positions2)/2
         VectorAdd = []
-        for i in range(5):
-            tmp = get_nodes_by_name(gn.node_group.nodes,
+        for i in range(4):
+            tmp = get_node_by_name(nodes,
                                     '%s_VectorAdd%s' % (self.label, i),
                                     'ShaderNodeVectorMath')
             tmp.operation = 'ADD'
             VectorAdd.append(tmp)
         for i in range(4):
             socket = get_socket_by_identifier(PositionsAtIndexs[i], "Value_Vector", type="outputs")
-            gn.node_group.links.new(socket,
+            links.new(socket,
                                     VectorAdd[i].inputs[0])
-            gn.node_group.links.new(OffsetsAttributes[i].outputs[0],
+            links.new(OffsetsAttributes[i].outputs[0],
                                     VectorAdd[i].inputs[1])
-        #
-        # divide by 2 to get the center
-        VectorDivide = get_nodes_by_name(gn.node_group.nodes,
-                                         'VectorDivide_%s' % self.label,
-                                         'ShaderNodeVectorMath')
-        VectorDivide.operation = 'DIVIDE'
-        VectorDivide.inputs[1].default_value = (2, 2, 2)
-        gn.node_group.links.new(
-            VectorAdd[0].outputs[0], VectorAdd[4].inputs[0])
-        gn.node_group.links.new(
-            VectorAdd[1].outputs[0], VectorAdd[4].inputs[1])
-        gn.node_group.links.new(
-            VectorAdd[4].outputs[0], VectorDivide.inputs[0])
-        # set center of the bond
-
         # get the vector for the bond and the length
         # also the vector for the second bond
         VectorSubtract = []
         for i in range(2):
-            tmp = get_nodes_by_name(gn.node_group.nodes,
+            tmp = get_node_by_name(nodes,
                                     '%s_VectorSubtract%s' % (self.label, i),
                                     'ShaderNodeVectorMath')
             tmp.operation = 'SUBTRACT'
             VectorSubtract.append(tmp)
-        VectorLength = get_nodes_by_name(gn.node_group.nodes,
+        VectorLength = get_node_by_name(nodes,
                                          '%s_VectorLength' % self.label,
                                          'ShaderNodeVectorMath')
         VectorLength.operation = 'LENGTH'
-        VectorCross0 = get_nodes_by_name(gn.node_group.nodes,
+        VectorCross0 = get_node_by_name(nodes,
                                          '%s_VectorCross0' % self.label,
                                          'ShaderNodeVectorMath')
         VectorCross0.operation = 'CROSS_PRODUCT'
-        gn.node_group.links.new(
+        links.new(
             VectorAdd[0].outputs[0], VectorSubtract[0].inputs[0])
-        gn.node_group.links.new(
+        links.new(
             VectorAdd[1].outputs[0], VectorSubtract[0].inputs[1])
-        gn.node_group.links.new(
+        links.new(
             VectorAdd[2].outputs[0], VectorSubtract[1].inputs[0])
-        gn.node_group.links.new(
+        links.new(
             VectorAdd[3].outputs[0], VectorSubtract[1].inputs[1])
         # calc the bond length, use it to build scale
-        gn.node_group.links.new(
+        links.new(
             VectorSubtract[0].outputs[0], VectorLength.inputs[0])
         #
-        CombineXYZ = get_nodes_by_name(gn.node_group.nodes,
+        CombineXYZ = get_node_by_name(nodes,
                                        '%s_CombineXYZ' % self.label,
                                        'ShaderNodeCombineXYZ')
         CombineXYZ.inputs[0].default_value = 1
         CombineXYZ.inputs[1].default_value = 1
-        gn.node_group.links.new(
+        links.new(
             VectorLength.outputs['Value'], CombineXYZ.inputs['Z'])
         # cross for rotation, for high order bond
-        gn.node_group.links.new(
+        links.new(
             VectorSubtract[0].outputs[0], VectorCross0.inputs[0])
-        gn.node_group.links.new(
+        links.new(
             VectorSubtract[1].outputs[0], VectorCross0.inputs[1])
         # get Euler for rotation
         # we need align two vectors to fix a plane
@@ -209,7 +216,7 @@ class Bond(BaseCollection, ObjectGN):
         # thus the the normal of high order bond plane is Y
         AlignEuler = []
         for i in range(2):
-            tmp = get_nodes_by_name(gn.node_group.nodes,
+            tmp = get_node_by_name(nodes,
                                     '%s_AlignEuler%s' % (self.label, i),
                                     'FunctionNodeAlignEulerToVector')
             AlignEuler.append(tmp)
@@ -217,35 +224,42 @@ class Bond(BaseCollection, ObjectGN):
         AlignEuler[1].axis = 'Y'
         # We should fix Z when align Y
         AlignEuler[1].pivot_axis = 'Z'
-        gn.node_group.links.new(
+        links.new(
             VectorSubtract[0].outputs[0], AlignEuler[0].inputs['Vector'])
-        gn.node_group.links.new(
+        links.new(
             AlignEuler[0].outputs[0], AlignEuler[1].inputs['Rotation'])
-        gn.node_group.links.new(
+        links.new(
             VectorCross0.outputs[0], AlignEuler[1].inputs['Vector'])
         # get the species by atoms_index
+        # order
+        SpeciesIndexAttribute = get_node_by_name(nodes,
+                                '%s_NamedAttribute_species_index' % (self.label),
+                                'GeometryNodeInputNamedAttribute')
+        SpeciesIndexAttribute.inputs['Name'].default_value = f"species_index"
+        SpeciesIndexAttribute.data_type = "INT"
         SpeciesAtIndexs = []
         for i in range(2):
-            SpeciesAtIndex = get_nodes_by_name(gn.node_group.nodes,
+            SpeciesAtIndex = get_node_by_name(nodes,
                                     '%s_SpeciesAtIndex%s' % (self.label, i),
                                     'GeometryNodeSampleIndex')
             SpeciesAtIndex.data_type = 'INT'
             SpeciesAtIndexs.append(SpeciesAtIndex)
-            gn.node_group.links.new(GroupInput.outputs["Geometry"], SpeciesAtIndex.inputs['Geometry'])
+            links.new(GroupInput.outputs["Geometry"], SpeciesAtIndex.inputs['Geometry'])
             output_socket = get_socket_by_identifier(AtomsIndexAttributes[i], "Attribute_Int", type="outputs")
-            gn.node_group.links.new(output_socket, SpeciesAtIndex.inputs['Index'])
+            links.new(output_socket, SpeciesAtIndex.inputs['Index'])
             input_socket = get_socket_by_identifier(SpeciesAtIndex, "Value_Int")
-            gn.node_group.links.new(GroupInput.outputs["species_index"], input_socket)
+            output_socket = get_socket_by_identifier(SpeciesIndexAttribute, "Attribute_Int", type="outputs")
+            links.new(output_socket, input_socket)
         # find bond kinds by the names of species
         for sp in self.batoms.species:
             # we need two compares for one species,
             # because we have two sockets: species_index0 and species_index1
             CompareSpecies = []
             for i in range(2):
-                tmp = get_nodes_by_name(gn.node_group.nodes,
+                tmp = get_node_by_name(nodes,
                                         '%s_CompareSpecies_%s_%s' % (
                                             self.label, sp.name, i),
-                                        compareNodeType)
+                                        "FunctionNodeCompare")
                 tmp.operation = 'EQUAL'
                 tmp.data_type = 'INT'
                 socket = get_socket_by_identifier(tmp, "B_INT")
@@ -253,41 +267,41 @@ class Bond(BaseCollection, ObjectGN):
                 CompareSpecies.append(tmp)
             output_socket = get_socket_by_identifier(SpeciesAtIndexs[0], "Value_Int", type="outputs")
             input_socket = get_socket_by_identifier(CompareSpecies[0], "A_INT")
-            gn.node_group.links.new(output_socket, input_socket)
+            links.new(output_socket, input_socket)
             output_socket = get_socket_by_identifier(SpeciesAtIndexs[1], "Value_Int", type="outputs")
             input_socket = get_socket_by_identifier(CompareSpecies[1], "A_INT")
-            gn.node_group.links.new(output_socket, input_socket)
+            links.new(output_socket, input_socket)
         # order
-        BondOrderAttribute = get_nodes_by_name(gn.node_group.nodes,
+        BondOrderAttribute = get_node_by_name(nodes,
                                 '%s_NamedAttribute_bond_order' % (self.label),
                                 'GeometryNodeInputNamedAttribute')
         BondOrderAttribute.inputs['Name'].default_value = f"bond_order"
         BondOrderAttribute.data_type = "INT"
         socket = get_socket_by_identifier(BondOrderAttribute, "Attribute_Int", type="outputs")
         for order in [1, 2, 3]:
-            CompareOrder = get_nodes_by_name(gn.node_group.nodes,
-                                             'CompareFloats_%s_%s_order' % (
+            CompareOrder = get_node_by_name(nodes,
+                                             'CompareOrder_%s_%s' % (
                                                  self.label, order),
-                                             compareNodeType)
+                                             "FunctionNodeCompare")
             CompareOrder.operation = 'EQUAL'
             CompareOrder.inputs[1].default_value = order
-            gn.node_group.links.new(
+            links.new(
                 socket, CompareOrder.inputs[0])
         # style
-        BondStyleAttribute = get_nodes_by_name(gn.node_group.nodes,
+        BondStyleAttribute = get_node_by_name(nodes,
                                 '%s_NamedAttribute_bond_style' % (self.label),
                                 'GeometryNodeInputNamedAttribute')
         BondStyleAttribute.inputs['Name'].default_value = f"bond_style"
         BondStyleAttribute.data_type = "INT"
         socket = get_socket_by_identifier(BondStyleAttribute, "Attribute_Int", type="outputs")
         for style in [0, 1, 2, 3]:
-            CompareStyle = get_nodes_by_name(gn.node_group.nodes,
-                                             'CompareFloats_%s_%s_style' % (
+            CompareStyle = get_node_by_name(nodes,
+                                             'CompareStyle_%s_%s' % (
                                                  self.label, style),
-                                             compareNodeType)
+                                             "FunctionNodeCompare")
             CompareStyle.operation = 'EQUAL'
             CompareStyle.inputs[1].default_value = style
-            gn.node_group.links.new(
+            links.new(
                 socket, CompareStyle.inputs[0])
         logger.debug('Build geometry nodes for bonds: %s' % (time() - tstart))
         #
@@ -298,7 +312,7 @@ class Bond(BaseCollection, ObjectGN):
         # self.add_geometry_node(sp.as_dict())
         # only build pair in bondlists
         bondlists = self.arrays
-        if len(bondlists['atoms_index1']) == 0:
+        if len(bondlists['atoms_index0']) == 0:
             return
         pairs = np.concatenate((
             bondlists['species_index0'].reshape(-1, 1),
@@ -321,134 +335,159 @@ class Bond(BaseCollection, ObjectGN):
         """
         add geometry node for each bond pair
         """
-        from batoms.utils.butils import get_nodes_by_name, get_socket_by_identifier
+        from batoms.utils.butils import get_node_by_name, get_socket_by_identifier, \
+            get_node_with_node_tree_by_name
+        # create group input and output sockets
+        default_interface = [
+            ["Geometry", "NodeSocketGeometry", 'INPUT'],
+            ["Species0", "NodeSocketFloat", 'INPUT'],
+            ["Species1", "NodeSocketFloat", 'INPUT'],
+            ["Order", "NodeSocketInt", 'INPUT'],
+            ["Style", "NodeSocketInt", 'INPUT'],
+            ["Length", "NodeSocketFloat", 'INPUT'],
+            ["Rotation", "NodeSocketVector", 'INPUT'],
+            ["Scale", "NodeSocketFloat", 'INPUT'],
+            ["Geometry", "NodeSocketGeometry", 'OUTPUT'],
+        ]
+        # Create Node Group if not exit
+        parent_tree = bpy.data.node_groups[f'Bond_{self.label}']
+        name = 'Bond_%s_%s_%s_%s' % (self.label, sp["name"], order, style)
+        node = get_node_with_node_tree_by_name(parent_tree.nodes,
+                                               name=name,
+                                               interface=default_interface)
         # tstart = time()
         if not order:
             order = sp["order"]
         if not style:
             style = int(sp["style"])
-        gn = self.gnodes
-        GroupInput = gn.node_group.nodes[0]
-        SetPosition = get_nodes_by_name(gn.node_group.nodes,
-                                        '%s_SetPosition' % self.label)
-        JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
-                                         '%s_JoinGeometry' % self.label)
-        #
-        name = 'bond_%s_%s_%s_%s' % (self.label, sp["name"], order, style)
-        MeshToPoints = get_nodes_by_name(gn.node_group.nodes,
+        nodes = node.node_tree.nodes
+        links = node.node_tree.links
+        GroupInput = nodes[0]
+        GroupOutput = nodes[1]
+        # link the input to parent node
+        MeshToPoints = get_node_by_name(parent_tree.nodes,
                                            '%s_MeshToPoints_edge' % (self.label),
                                            'GeometryNodeMeshToPoints')
-        InstanceOnPoint = get_nodes_by_name(gn.node_group.nodes,
+        VectorLength = get_node_by_name(parent_tree.nodes,
+                                         '%s_VectorLength' % self.label,
+                                         "ShaderNodeVectorMath")
+        CombineXYZ = get_node_by_name(parent_tree.nodes,
+                                       '%s_CombineXYZ' % self.label,
+                                       'ShaderNodeCombineXYZ')
+        AlignEuler1 = get_node_by_name(parent_tree.nodes,
+                                        '%s_AlignEuler1' % self.label,
+                                        'FunctionNodeAlignEulerToVector')
+        # e.g C-H bond, species0 is C, species1 is H
+        CompareSpecies0 = get_node_by_name(parent_tree.nodes,
+                                        '%s_CompareSpecies_%s_%s' % (
+                                            self.label, sp["species1"], 0),
+                                        "FunctionNodeCompare")
+        CompareSpecies1 = get_node_by_name(parent_tree.nodes,
+                                        '%s_CompareSpecies_%s_%s' % (
+                                            self.label, sp["species2"], 1),
+                                        "FunctionNodeCompare")
+        CompareOrder = get_node_by_name(
+            parent_tree.nodes,
+            'CompareOrder_%s_%s' % (self.label,
+                                           order),
+            "FunctionNodeCompare")
+        CompareStyle = get_node_by_name(
+            parent_tree.nodes,
+            'CompareStyle_%s_%s' % (self.label,
+                                           style),
+            "FunctionNodeCompare")
+        parent_tree.links.new(MeshToPoints.outputs['Points'], node.inputs['Geometry'])
+        parent_tree.links.new(VectorLength.outputs['Value'], node.inputs['Length'])
+        parent_tree.links.new(CombineXYZ.outputs[0], node.inputs['Scale'])
+        parent_tree.links.new(AlignEuler1.outputs[0], node.inputs['Rotation'])
+        parent_tree.links.new(CompareSpecies0.outputs[0], node.inputs['Species0'])
+        parent_tree.links.new(CompareSpecies1.outputs[0], node.inputs['Species1'])
+        parent_tree.links.new(CompareOrder.outputs[0], node.inputs['Order'])
+        parent_tree.links.new(CompareStyle.outputs[0], node.inputs['Style'])
+        # link the outputs to parent node
+        JoinGeometry = get_node_by_name(parent_tree.nodes,
+                                         '%s_JoinGeometry' % self.label,
+                                         'GeometryNodeJoinGeometry')
+        parent_tree.links.new(node.outputs['Geometry'], JoinGeometry.inputs['Geometry'])
+        #
+        InstanceOnPoint = get_node_by_name(nodes,
                                             'InstanceOnPoint_%s' % name,
                                             'GeometryNodeInstanceOnPoints')
-        ObjectInstancer = get_nodes_by_name(gn.node_group.nodes,
+        ObjectInstancer = get_node_by_name(nodes,
                                             'ObjectInfo_%s' % name,
                                             'GeometryNodeObjectInfo')
         ObjectInstancer.inputs['Object'].default_value = \
             self.settings.instancers[sp["name"]]['%s_%s' % (order, style)]
         #
-        BoolSpecies = get_nodes_by_name(gn.node_group.nodes,
+        BoolSpecies = get_node_by_name(nodes,
                                         '%s_BooleanMath_species' % name,
                                         'FunctionNodeBooleanMath')
-        BoolOrder = get_nodes_by_name(gn.node_group.nodes,
+        BoolOrder = get_node_by_name(nodes,
                                       '%s_BooleanMath_order' % name,
                                       'FunctionNodeBooleanMath')
-        BoolStyle = get_nodes_by_name(gn.node_group.nodes,
+        BoolStyle = get_node_by_name(nodes,
                                       '%s_BooleanMath_style' % name,
                                       'FunctionNodeBooleanMath')
-        BoolModelStyle = get_nodes_by_name(gn.node_group.nodes,
+        BoolModelStyle = get_node_by_name(nodes,
                                            '%s_BooleanMath_modelstyle' % name,
                                            'FunctionNodeBooleanMath')
-        BoolShow = get_nodes_by_name(gn.node_group.nodes,
+        BoolShow = get_node_by_name(nodes,
                                      '%s_BooleanMath_show' % name,
                                      'FunctionNodeBooleanMath')
-        BoolBondLength = get_nodes_by_name(gn.node_group.nodes,
+        BoolBondLength = get_node_by_name(nodes,
                                            '%s_BoolBondLength' % name,
                                            'FunctionNodeBooleanMath')
         # bondlength larger than max will not show
-        LessBondLength = get_nodes_by_name(gn.node_group.nodes,
+        LessBondLength = get_node_by_name(nodes,
                                            '%s_LessBondLength' % name,
                                            'ShaderNodeMath')
         LessBondLength.operation = 'LESS_THAN'
         LessBondLength.inputs[1].default_value = sp['max']
-        VectorLength = get_nodes_by_name(gn.node_group.nodes,
-                                         '%s_VectorLength' % self.label)
         #
-        CompareSpecies0 = get_nodes_by_name(
-            gn.node_group.nodes,
-            '%s_CompareSpecies_%s_0' % (self.label,
-                                        sp["species1"]),
-            compareNodeType)
-        CompareSpecies1 = get_nodes_by_name(
-            gn.node_group.nodes,
-            '%s_CompareSpecies_%s_1' % (self.label,
-                                        sp["species2"]),
-            compareNodeType)
-        CompareOrder = get_nodes_by_name(
-            gn.node_group.nodes,
-            'CompareFloats_%s_%s_order' % (self.label,
-                                           order),
-            compareNodeType)
-        CompareStyle = get_nodes_by_name(
-            gn.node_group.nodes,
-            'CompareFloats_%s_%s_style' % (self.label,
-                                           style),
-            compareNodeType)
-        #
-        CombineXYZ = get_nodes_by_name(
-            gn.node_group.nodes,
-            '%s_CombineXYZ' % self.label,
-            'ShaderNodeCombineXYZ')
-        AlignEuler1 = get_nodes_by_name(gn.node_group.nodes,
-                                        '%s_AlignEuler1' % self.label,
-                                        'FunctionNodeAlignEulerToVector')
-        gn.node_group.links.new(MeshToPoints.outputs['Points'],
+        links.new(GroupInput.outputs['Geometry'],
                                 InstanceOnPoint.inputs['Points'])
         # show
-        BondShowAttribute = get_nodes_by_name(gn.node_group.nodes,
+        BondShowAttribute = get_node_by_name(nodes,
                                 '%s_NamedAttribute_bond_show' % (self.label),
                                 'GeometryNodeInputNamedAttribute')
         BondShowAttribute.inputs['Name'].default_value = f"bond_show"
         BondShowAttribute.data_type = "BOOLEAN"
         socket = get_socket_by_identifier(BondShowAttribute, "Attribute_Bool", type="outputs")
-        gn.node_group.links.new(socket, BoolShow.inputs[0])
+        links.new(socket, BoolShow.inputs[0])
         # model style
-        BondModelStyleAttribute = get_nodes_by_name(gn.node_group.nodes,
+        BondModelStyleAttribute = get_node_by_name(nodes,
                                 '%s_NamedAttribute_bond_model_style' % (self.label),
                                 'GeometryNodeInputNamedAttribute')
         BondModelStyleAttribute.inputs['Name'].default_value = f"bond_model_style"
         BondModelStyleAttribute.data_type = "INT"
         socket = get_socket_by_identifier(BondModelStyleAttribute, "Attribute_Int", type="outputs")
-        gn.node_group.links.new(
+        links.new(
             socket, BoolModelStyle.inputs[0])
-        gn.node_group.links.new(
-            CompareSpecies0.outputs[0], BoolSpecies.inputs[0])
-        gn.node_group.links.new(
-            CompareSpecies1.outputs[0], BoolSpecies.inputs[1])
-        gn.node_group.links.new(BoolSpecies.outputs[0], BoolOrder.inputs[0])
-        gn.node_group.links.new(CompareOrder.outputs[0], BoolOrder.inputs[1])
-        gn.node_group.links.new(BoolOrder.outputs[0], BoolStyle.inputs[0])
-        gn.node_group.links.new(CompareStyle.outputs[0], BoolStyle.inputs[1])
-        gn.node_group.links.new(BoolStyle.outputs[0], BoolModelStyle.inputs[1])
-        gn.node_group.links.new(BoolModelStyle.outputs[0], BoolShow.inputs[1])
-        gn.node_group.links.new(VectorLength.outputs['Value'],
-                                LessBondLength.inputs[0])
-        gn.node_group.links.new(BoolShow.outputs['Boolean'],
+        links.new(
+            GroupInput.outputs["Species0"], BoolSpecies.inputs[0])
+        links.new(
+            GroupInput.outputs["Species1"], BoolSpecies.inputs[1])
+        links.new(BoolSpecies.outputs[0], BoolOrder.inputs[0])
+        links.new(GroupInput.outputs["Order"], BoolOrder.inputs[1])
+        links.new(BoolOrder.outputs[0], BoolStyle.inputs[0])
+        links.new(GroupInput.outputs["Style"], BoolStyle.inputs[1])
+        links.new(BoolStyle.outputs[0], BoolModelStyle.inputs[1])
+        links.new(BoolModelStyle.outputs[0], BoolShow.inputs[1])
+        links.new(GroupInput.outputs['Length'], LessBondLength.inputs[0])
+        links.new(BoolShow.outputs['Boolean'],
                                 BoolBondLength.inputs[0])
-        gn.node_group.links.new(LessBondLength.outputs[0],
+        links.new(LessBondLength.outputs[0],
                                 BoolBondLength.inputs[1])
-        gn.node_group.links.new(BoolBondLength.outputs['Boolean'],
+        links.new(BoolBondLength.outputs['Boolean'],
                                 InstanceOnPoint.inputs['Selection'])
-        gn.node_group.links.new(CombineXYZ.outputs[0],
-                                InstanceOnPoint.inputs['Scale'])
+        links.new(GroupInput.outputs['Scale'], InstanceOnPoint.inputs['Scale'])
         #
-        gn.node_group.links.new(AlignEuler1.outputs[0],
-                                InstanceOnPoint.inputs['Rotation'])
+        links.new(GroupInput.outputs['Rotation'], InstanceOnPoint.inputs['Rotation'])
         #
-        gn.node_group.links.new(ObjectInstancer.outputs['Geometry'],
+        links.new(ObjectInstancer.outputs['Geometry'],
                                 InstanceOnPoint.inputs['Instance'])
-        gn.node_group.links.new(InstanceOnPoint.outputs['Instances'],
-                                JoinGeometry.inputs['Geometry'])
+        links.new(InstanceOnPoint.outputs['Instances'],
+                                GroupOutput.inputs['Geometry'])
         # print('Add geometry nodes for bonds: %s'%(time() - tstart))
 
 
@@ -456,11 +495,12 @@ class Bond(BaseCollection, ObjectGN):
         # find bond kinds by the names of species
         from batoms.utils.butils import get_socket_by_identifier
         tstart = time()
-        gn = self.gnodes
-        GroupInput = gn.node_group.nodes[0]
+        nodes = self.gn_node_group.nodes
+        links = self.gn_node_group.links
+        GroupInput = nodes[0]
         SpeciesAtIndexs = []
         for i in range(2):
-            SpeciesAtIndex = get_nodes_by_name(gn.node_group.nodes,
+            SpeciesAtIndex = get_node_by_name(nodes,
                                     '%s_SpeciesAtIndex%s' % (self.label, i),
                                     'GeometryNodeSampleIndex')
             SpeciesAtIndexs.append(SpeciesAtIndex)
@@ -469,16 +509,16 @@ class Bond(BaseCollection, ObjectGN):
             # because we have two sockets: species_index0 and species_index1
             CompareSpecies = []
             for i in range(2):
-                tmp = get_nodes_by_name(gn.node_group.nodes,
+                tmp = get_node_by_name(nodes,
                                         '%s_CompareSpecies_%s_%s' % (
                                             self.label, sp.name, i),
-                                        compareNodeType)
+                                        "FunctionNodeCompare")
                 tmp.operation = 'EQUAL'
                 tmp.inputs[1].default_value = string2Number(sp.name)
                 CompareSpecies.append(tmp)
             for i in range(2):
                 output_socket = get_socket_by_identifier(SpeciesAtIndexs[i], "Value_Int", type="outputs")
-                gn.node_group.links.new(
+                links.new(
                     output_socket, CompareSpecies[i].inputs[0])
         logger.debug('UPdate geometry nodes species for bonds: %s'%(time() - tstart))
 
@@ -522,7 +562,7 @@ class Bond(BaseCollection, ObjectGN):
             # update  instancers
             name = 'bond_%s_%s_%s_%s' % (self.label, sp["name"],
                                          sp["order"], sp["style"])
-            ObjectInstancer = get_nodes_by_name(self.gnodes.node_group.nodes,
+            ObjectInstancer = get_node_by_name(self.gn_node_group.nodes,
                                                 'ObjectInfo_%s' % name,
                                                 'GeometryNodeObjectInfo')
             ObjectInstancer.inputs['Object'].default_value = \
@@ -597,7 +637,7 @@ class Bond(BaseCollection, ObjectGN):
         """
         object_mode()
         # tstart = time()
-        arrays = self.attributes
+        arrays = self.get_attributes(domains=["EDGE"])
         arrays.update({'positions': self.positions,
                        })
         # print('get_arrays: %s'%(time() - tstart))
@@ -610,7 +650,7 @@ class Bond(BaseCollection, ObjectGN):
         dnvert = len(self.obj.data.edges)
         self.delete_edges_bmesh(range(dnvert))
         #
-        edges = np.vstack((arrays['atoms_index1'], arrays['atoms_index2'])).T
+        edges = np.vstack((arrays['atoms_index0'], arrays['atoms_index1'])).T
         self.add_edges(edges, self.batoms.obj)
         self.set_attributes(arrays)
         # self.set_trajectory(arrays)
@@ -650,12 +690,12 @@ class Bond(BaseCollection, ObjectGN):
         object_mode()
         # tstart = time()
         arrays = self.arrays
-        i = arrays['atoms_index1'].reshape(-1, 1)
-        j = arrays['atoms_index2'].reshape(-1, 1)
+        i = arrays['atoms_index0'].reshape(-1, 1)
+        j = arrays['atoms_index1'].reshape(-1, 1)
         p = arrays['polyhedra'].reshape(-1, 1)
+        offsets0 = arrays['offsets0']
         offsets1 = arrays['offsets1']
-        offsets2 = arrays['offsets2']
-        bondlists = np.concatenate((i, j, offsets1, offsets2, p),
+        bondlists = np.concatenate((i, j, offsets0, offsets1, p),
                                    axis=1)
         # bondlists = bondlists.astype(int)
         # print('get_arrays: %s'%(time() - tstart))

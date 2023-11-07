@@ -13,7 +13,7 @@ from batoms.base.collection import BaseCollection
 from batoms.base.object import ObjectGN
 from batoms.ribbon.ribbon import Ribbon
 from batoms.utils.butils import object_mode, show_index, \
-    get_nodes_by_name
+    get_node_by_name
 from batoms.utils import string2Number, read_from_others, deprecated
 from batoms.plugins import plugin_info
 
@@ -268,33 +268,33 @@ class Batoms(BaseCollection, ObjectGN):
     def build_geometry_node(self):
         """Geometry node for instancing sphere on vertices!
         """
-        gn = self.gnodes
-        GroupInput = gn.node_group.nodes[0]
-        GroupOutput = gn.node_group.nodes[1]
-        # print(gn.name)
-        JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
+        links = self.gn_node_group.links
+        nodes = self.gn_node_group.nodes
+        GroupInput = nodes[0]
+        GroupOutput = nodes[1]
+        JoinGeometry = get_node_by_name(nodes,
                                          '%s_JoinGeometry' % self.label,
                                          'GeometryNodeJoinGeometry')
         SeparateGeometry = \
-            get_nodes_by_name(gn.node_group.nodes,
+            get_node_by_name(nodes,
                               '%s_SeparateGeometry' % self.label,
                               'GeometryNodeSeparateGeometry')
-        gn.node_group.links.new(GroupInput.outputs['Geometry'],
+        links.new(GroupInput.outputs['Geometry'],
                                 SeparateGeometry.inputs['Geometry'])
-        gn.node_group.links.new(GroupInput.outputs[3],
+        links.new(GroupInput.outputs[3],
                                 SeparateGeometry.inputs['Selection'])
-        gn.node_group.links.new(SeparateGeometry.outputs[0],
+        links.new(SeparateGeometry.outputs[0],
                                 JoinGeometry.inputs['Geometry'])
-        gn.node_group.links.new(JoinGeometry.outputs['Geometry'],
+        links.new(JoinGeometry.outputs['Geometry'],
                                 GroupOutput.inputs['Geometry'])
         # set positions
-        PositionBatoms = get_nodes_by_name(gn.node_group.nodes,
+        PositionBatoms = get_node_by_name(nodes,
                                            '%s_PositionBatoms' % (self.label),
                                            'GeometryNodeInputPosition')
-        SetPosition = get_nodes_by_name(gn.node_group.nodes,
+        SetPosition = get_node_by_name(nodes,
                                         '%s_SetPosition' % self.label,
                                         'GeometryNodeSetPosition')
-        gn.node_group.links.new(GroupInput.outputs['Geometry'],
+        links.new(GroupInput.outputs['Geometry'],
                                 SetPosition.inputs['Geometry'])
         # TODO: use cell object directly.
         cell = self.cell.array
@@ -302,17 +302,17 @@ class Batoms(BaseCollection, ObjectGN):
             cell = np.eye(3)
         icell = np.linalg.inv(cell)
         scaledPositionsNode = self.vectorDotMatrix(
-            gn, PositionBatoms.outputs[0], icell, 'scaled')
-        VectorWrap = get_nodes_by_name(gn.node_group.nodes,
+            self.gn_node_group, PositionBatoms.outputs[0], icell, 'scaled')
+        VectorWrap = get_node_by_name(nodes,
                                        '%s_VectorWrap' % (self.label),
                                        'ShaderNodeVectorMath')
         VectorWrap.operation = 'WRAP'
         VectorWrap.inputs[1].default_value = [1, 1, 1]
         VectorWrap.inputs[2].default_value = [0, 0, 0]
-        gn.node_group.links.new(
+        links.new(
             scaledPositionsNode.outputs[0], VectorWrap.inputs['Vector'])
-        PositionsNode = self.vectorDotMatrix(gn, VectorWrap.outputs[0], cell, '')
-        gn.node_group.links.new(
+        PositionsNode = self.vectorDotMatrix(self.gn_node_group, VectorWrap.outputs[0], cell, '')
+        links.new(
             PositionsNode.outputs[0], SetPosition.inputs['Position'])
         self.wrap = self.pbc
 
@@ -326,14 +326,15 @@ class Batoms(BaseCollection, ObjectGN):
                 Object to be instanced
         """
         from batoms.utils.butils import compareNodeType, get_socket_by_identifier
-        gn = self.gnodes
-        GroupInput = gn.node_group.nodes[0]
-        JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
+        links = self.gn_node_group.links
+        nodes = self.gn_node_group.nodes
+        GroupInput = nodes[0]
+        JoinGeometry = get_node_by_name(nodes,
                                          '%s_JoinGeometry' % self.label,
                                          'GeometryNodeJoinGeometry')
-        SetPosition = get_nodes_by_name(gn.node_group.nodes,
+        SetPosition = get_node_by_name(nodes,
                                         '%s_SetPosition' % self.label)
-        CompareSpecies = get_nodes_by_name(gn.node_group.nodes,
+        CompareSpecies = get_node_by_name(nodes,
                                            'CompareFloats_%s_%s' % (
                                                self.label, spname),
                                            compareNodeType)
@@ -341,42 +342,42 @@ class Batoms(BaseCollection, ObjectGN):
         CompareSpecies.data_type = 'INT'
         socket = get_socket_by_identifier(CompareSpecies, "B_INT")
         socket.default_value = int(string2Number(spname))
-        InstanceOnPoint = get_nodes_by_name(gn.node_group.nodes,
+        InstanceOnPoint = get_node_by_name(nodes,
                                             'InstanceOnPoint_%s_%s' % (
                                                 self.label, spname),
                                             'GeometryNodeInstanceOnPoints')
-        ObjectInfo = get_nodes_by_name(gn.node_group.nodes,
+        ObjectInfo = get_node_by_name(nodes,
                                        'ObjectInfo_%s_%s' % (
                                            self.label, spname),
                                        'GeometryNodeObjectInfo')
         ObjectInfo.inputs['Object'].default_value = instancer
-        BoolShow = get_nodes_by_name(gn.node_group.nodes,
+        BoolShow = get_node_by_name(nodes,
                                      'BooleanMath_%s_%s_1' % (
                                          self.label, spname),
                                      'FunctionNodeBooleanMath')
         # set materials
-        SetMaterial = get_nodes_by_name(gn.node_group.nodes,
+        SetMaterial = get_node_by_name(nodes,
                                             'SetMaterial_%s_%s' % (
                                                 self.label, spname),
                                             'GeometryNodeSetMaterial')
         SetMaterial.inputs[2].default_value = instancer.data.materials[0]
         #
-        gn.node_group.links.new(SetPosition.outputs['Geometry'],
+        links.new(SetPosition.outputs['Geometry'],
                                 InstanceOnPoint.inputs['Points'])
         socket = get_socket_by_identifier(CompareSpecies, "A_INT")
-        gn.node_group.links.new(GroupInput.outputs[2],
+        links.new(GroupInput.outputs[2],
                                 socket)
-        gn.node_group.links.new(GroupInput.outputs[3], BoolShow.inputs[0])
-        gn.node_group.links.new(GroupInput.outputs[4],
+        links.new(GroupInput.outputs[3], BoolShow.inputs[0])
+        links.new(GroupInput.outputs[4],
                                 InstanceOnPoint.inputs['Scale'])
-        gn.node_group.links.new(CompareSpecies.outputs[0], BoolShow.inputs[1])
-        gn.node_group.links.new(BoolShow.outputs['Boolean'],
+        links.new(CompareSpecies.outputs[0], BoolShow.inputs[1])
+        links.new(BoolShow.outputs['Boolean'],
                                 InstanceOnPoint.inputs['Selection'])
-        gn.node_group.links.new(ObjectInfo.outputs['Geometry'],
+        links.new(ObjectInfo.outputs['Geometry'],
                                 InstanceOnPoint.inputs['Instance'])
-        gn.node_group.links.new(InstanceOnPoint.outputs['Instances'],
+        links.new(InstanceOnPoint.outputs['Instances'],
                                 SetMaterial.inputs['Geometry'])
-        gn.node_group.links.new(SetMaterial.outputs['Geometry'],
+        links.new(SetMaterial.outputs['Geometry'],
                                 JoinGeometry.inputs['Geometry'])
 
     def check_batoms(self, label):
@@ -1380,7 +1381,7 @@ class Batoms(BaseCollection, ObjectGN):
 
     def set_wrap(self, wrap):
         #
-        nodes = self.gnodes.node_group.nodes
+        nodes = self.gn_node_group.nodes
         self.update_gn_cell()
         if isinstance(wrap, bool):
             wrap = [wrap]*3
@@ -1393,30 +1394,30 @@ class Batoms(BaseCollection, ObjectGN):
             if n > 0:
                 link = nodes['%s_CombineXYZ_' %
                              self.label].outputs['Vector'].links[0]
-                self.gnodes.node_group.links.remove(link)
+                self.gn_node_group.links.remove(link)
         else:
-            self.gnodes.node_group.links.new(
+            self.gn_node_group.links.new(
                 nodes['%s_CombineXYZ_' % self.label].outputs[0],
                 nodes['%s_SetPosition' % self.label].inputs['Position'])
-        self.gnodes.node_group.update_tag()
+        self.gn_node_group.update_tag()
         # TODO: support selection
 
     def update_gn_cell(self):
         # update cell
+        nodes = self.gn_node_group.nodes
         cell = self.cell.array
         if np.isclose(np.linalg.det(self.cell.array), 0):
             cell = np.eye(3)
         icell = np.linalg.inv(cell)
         # set positions
-        gn = self.gnodes
         for i in range(3):
-            tmp = get_nodes_by_name(gn.node_group.nodes,
+            tmp = get_node_by_name(nodes,
                                     '%s_VectorDot%s_%s' % (self.label, i, ''),
                                     'ShaderNodeVectorMath')
             tmp.operation = 'DOT_PRODUCT'
             tmp.inputs[1].default_value = cell[:, i]
             # icell
-            tmp = get_nodes_by_name(gn.node_group.nodes,
+            tmp = get_node_by_name(nodes,
                                     '%s_VectorDot%s_%s' % (
                                         self.label, i, 'scaled'),
                                     'ShaderNodeVectorMath')
