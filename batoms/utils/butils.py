@@ -308,13 +308,38 @@ def set_world(color=[0.2, 0.2, 0.2, 1.0]):
     node_tree.nodes["Background"].inputs["Color"].default_value = color
 
 
-def get_nodes_by_name(nodes, name, type=None):
+def get_node_by_name(nodes, name, type=None):
     node = nodes.get(name)
     if node is None:
         node = nodes.new(type)
         node.name = name
     return node
 
+def get_node_with_node_tree_by_name(nodes, name, node_type="GeometryNodeGroup",
+                           node_group_type="GeometryNodeTree",
+                           interface=[]):
+    """Get the node with a node_tree by name.
+    If None, Create a new one based on type.
+    Return:
+        node (bpy.types.Node): A node with a node_tree
+    """
+    node = nodes.get(name)
+    # create a new node if node is None
+    if node is None:
+        node = nodes.new(type=node_type)
+        node.name = name
+    # create a new node_tree if node_tree is None
+    ng = bpy.data.node_groups.get(name)
+    if ng is None:
+        ng = bpy.data.node_groups.new(name, type=node_group_type)
+        # add default interface if not exist
+        for i in interface:
+            ng.interface.new_socket(name=i[0], socket_type=i[1], in_out=i[2])
+        # create input and output node
+        ng.nodes.new('NodeGroupInput')
+        ng.nodes.new('NodeGroupOutput')
+    node.node_tree = ng
+    return node
 
 def clean_default(camera=False, light=True):
     if 'Cube' in bpy.data.objects:
@@ -370,15 +395,11 @@ def hideOneLevel():
         bpy.ops.outliner.show_one_level(c, open=False)
         ol.tag_redraw()
 
-def build_modifier(obj, name):
+def build_gn_modifier(obj, name):
     from bl_operators.geometry_nodes import geometry_node_group_empty_new
     modifier = obj.modifiers.new(name=name, type='NODES')
-    if bpy.app.version_string >= '3.2.0':
-        # bpy.context.view_layer.objects.active = obj
-        # bpy.context.object.modifiers.active = modifier
-        # bpy.ops.node.new_geometry_node_group_assign()
-        group = geometry_node_group_empty_new(name)
-        modifier.node_group = group
+    group = geometry_node_group_empty_new(name)
+    modifier.node_group = group
     return modifier
 
 def get_att_length(mesh, att):

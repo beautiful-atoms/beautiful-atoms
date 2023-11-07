@@ -1,6 +1,6 @@
 import bpy
 import numpy as np
-from batoms.utils.butils import object_mode, set_look_at, get_nodes_by_name
+from batoms.utils.butils import object_mode
 # from time import time
 
 class BaseCollection():

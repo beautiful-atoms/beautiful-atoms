@@ -73,61 +73,62 @@ class Bcell(ObjectGN):
     def build_geometry_node(self):
         """
         """
-        from batoms.utils.butils import get_nodes_by_name
-        gn = self.gnodes
-        GroupInput = gn.node_group.nodes[0]
-        GroupOutput = gn.node_group.nodes[1]
-        JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
+        from batoms.utils.butils import get_node_by_name
+        links = self.gn_node_group.links
+        nodes = self.gn_node_group.nodes
+        GroupInput = nodes[0]
+        GroupOutput = nodes[1]
+        JoinGeometry = get_node_by_name(nodes,
                                          '%s_JoinGeometry' % self.label,
                                          'GeometryNodeJoinGeometry')
-        gn.node_group.links.new(
+        links.new(
             GroupInput.outputs['Geometry'], JoinGeometry.inputs['Geometry'])
         # ------------------------------------------------------------------
         # transfer first 4 positions of cell
-        PositionCell = get_nodes_by_name(gn.node_group.nodes,
+        PositionCell = get_node_by_name(nodes,
                                          '%s_PositionCell' % (self.label),
                                          'GeometryNodeInputPosition')
         TransferCells = []
         for i in range(4):
-            TransferCell = get_nodes_by_name(gn.node_group.nodes,
+            TransferCell = get_node_by_name(nodes,
                                             '%s_TransferCell_%s' % (
                                                 self.label, i),
                                             'GeometryNodeSampleIndex')
             TransferCell.data_type = 'FLOAT_VECTOR'
-            InputInt = get_nodes_by_name(gn.node_group.nodes,
+            InputInt = get_node_by_name(nodes,
                                          '%s_InputInt_%s' % (self.label, i),
                                          'FunctionNodeInputInt')
             InputInt.integer = i
-            gn.node_group.links.new(GroupInput.outputs['Geometry'],
+            links.new(GroupInput.outputs['Geometry'],
                                     TransferCell.inputs[0])
-            gn.node_group.links.new(PositionCell.outputs['Position'],
+            links.new(PositionCell.outputs['Position'],
                                     TransferCell.inputs[3])
-            gn.node_group.links.new(InputInt.outputs[0],
+            links.new(InputInt.outputs[0],
                                     TransferCell.inputs['Index'])
             TransferCells.append(TransferCell)
         # ------------------------------------------------------------------
         VectorAdds = []
         for i in range(4):
-            VectorAdd = get_nodes_by_name(gn.node_group.nodes,
+            VectorAdd = get_node_by_name(nodes,
                                           '%s_VectorAdd_%s' % (self.label, i),
                                           'ShaderNodeVectorMath')
             VectorAdd.operation = 'ADD'
             VectorAdds.append(VectorAdd)
-        gn.node_group.links.new(
+        links.new(
             TransferCells[1].outputs[2], VectorAdds[0].inputs[0])
-        gn.node_group.links.new(
+        links.new(
             TransferCells[2].outputs[2], VectorAdds[0].inputs[1])
-        gn.node_group.links.new(
+        links.new(
             TransferCells[1].outputs[2], VectorAdds[1].inputs[0])
-        gn.node_group.links.new(
+        links.new(
             TransferCells[3].outputs[2], VectorAdds[1].inputs[1])
-        gn.node_group.links.new(
+        links.new(
             TransferCells[2].outputs[2], VectorAdds[2].inputs[0])
-        gn.node_group.links.new(
+        links.new(
             TransferCells[3].outputs[2], VectorAdds[2].inputs[1])
-        gn.node_group.links.new(
+        links.new(
             TransferCells[3].outputs[2], VectorAdds[3].inputs[0])
-        gn.node_group.links.new(
+        links.new(
             VectorAdds[0].outputs[0], VectorAdds[3].inputs[1])
         #============================================================
         # In this implementation.
@@ -135,7 +136,7 @@ class Bcell(ObjectGN):
         # We use curve to mesh methods to draw the edges (cylinder)
         # One does not need to call cell.draw() anymore.
         # circle for profle of curve
-        Circle = get_nodes_by_name(gn.node_group.nodes,
+        Circle = get_node_by_name(nodes,
                                             '%s_Circle' % self.label,
                                             'GeometryNodeCurvePrimitiveCircle')
         Circle.inputs[4].default_value = self.width
@@ -151,32 +152,32 @@ class Bcell(ObjectGN):
         for i in range(6):
             # set quadrilaterial
             # maybe in the future, we have curve primitive: cube
-            Quadrilateral = get_nodes_by_name(gn.node_group.nodes,
+            Quadrilateral = get_node_by_name(nodes,
                                             '%s_Quadrilateral_%s' % (
                                                 self.label, i),
                                             'GeometryNodeCurvePrimitiveQuadrilateral')
             Quadrilateral.mode = "POINTS"
-            CurveToMesh = get_nodes_by_name(gn.node_group.nodes,
+            CurveToMesh = get_node_by_name(nodes,
                                             '%s_CurveToMesh_%s' % (
                                                 self.label, i),
                                             'GeometryNodeCurveToMesh')
-            gn.node_group.links.new(Quadrilateral.outputs[0],
+            links.new(Quadrilateral.outputs[0],
                                 CurveToMesh.inputs[0])
-            gn.node_group.links.new(Circle.outputs[0],
+            links.new(Circle.outputs[0],
                                 CurveToMesh.inputs[1])
-            gn.node_group.links.new(CurveToMesh.outputs[0],
+            links.new(CurveToMesh.outputs[0],
                                 JoinGeometry.inputs[0])
             for j in range(4):
                 k = 2 if faces[i][j] < 4 else 0
-                gn.node_group.links.new(input_nodes[faces[i][j]].outputs[k],
+                links.new(input_nodes[faces[i][j]].outputs[k],
                                 Quadrilateral.inputs[j + 7])
-        setMaterial = get_nodes_by_name(self.gnodes.node_group.nodes,
+        setMaterial = get_node_by_name(self.gn_node_group.nodes,
                                                 '%s_setMaterial' % (self.label),
                                                 'GeometryNodeSetMaterial')
         setMaterial.inputs[2].default_value = self.material
-        gn.node_group.links.new(JoinGeometry.outputs[0],
+        links.new(JoinGeometry.outputs[0],
                                 setMaterial.inputs[0])
-        gn.node_group.links.new(setMaterial.outputs[0],
+        links.new(setMaterial.outputs[0],
                                 GroupOutput.inputs[0])
 
     @property
@@ -222,9 +223,9 @@ class Bcell(ObjectGN):
 
     @width.setter
     def width(self, width):
-        from batoms.utils.butils import get_nodes_by_name
+        from batoms.utils.butils import get_node_by_name
         self.batoms.coll.batoms.cell.width = width
-        Circle = get_nodes_by_name(self.gnodes.node_group.nodes,
+        Circle = get_node_by_name(self.gn_node_group.nodes,
                                             '%s_Circle' % (
                                                 self.label),
                                             'GeometryNodeCurvePrimitiveCircle')
@@ -244,7 +245,7 @@ class Bcell(ObjectGN):
 
     @color.setter
     def color(self, color):
-        from batoms.utils.butils import get_nodes_by_name
+        from batoms.utils.butils import get_node_by_name
         if len(color) == 3:
             color = [color[0], color[1], color[2], 1]
         self.batoms.coll.batoms.cell.color = color
@@ -254,7 +255,7 @@ class Bcell(ObjectGN):
                 node.inputs['Base Color'].default_value = color
             if 'Alpha' in node.inputs:
                 node.inputs['Alpha'].default_value = color[3]
-        setMaterial = get_nodes_by_name(self.gnodes.node_group.nodes,
+        setMaterial = get_node_by_name(self.gn_node_group.nodes,
                                                 '%s_setMaterial' % (self.label),
                                                 'GeometryNodeSetMaterial')
         setMaterial.inputs[2].default_value = self.material

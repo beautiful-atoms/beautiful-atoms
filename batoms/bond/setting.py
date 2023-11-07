@@ -232,7 +232,7 @@ class BondSettings(Setting):
         Returns:
             _type_: _description_
         """
-        from batoms.utils.butils import get_nodes_by_name
+        from batoms.utils.butils import get_node_by_name
 
         # only build the needed one
         if not order:
@@ -265,7 +265,7 @@ class BondSettings(Setting):
         self.build_materials(sp, order, style, material_style=sp['material_style'])
         self.assign_materials(sp, order, style)
         # update geometry nodes
-        ObjectInstancer = get_nodes_by_name(self.bonds.batoms.gnodes.node_group.nodes,
+        ObjectInstancer = get_node_by_name(self.bonds.batoms.gn_node_group.nodes,
                                             'ObjectInfo_%s' % name,
                                             'GeometryNodeObjectInfo')
         if ObjectInstancer is not None:

@@ -1,6 +1,6 @@
 import bpy
 import numpy as np
-from batoms.utils.butils import (get_nodes_by_name, object_mode, set_look_at,
+from batoms.utils.butils import (get_node_by_name, object_mode, set_look_at,
                                  update_object)
 
 from time import time
@@ -288,10 +288,16 @@ class ObjectGN(BaseObject):
         return flag
 
     @property
-    def gnodes(self):
-        return self.get_gnodes()
+    def gn_modifier(self):
+        return self.get_gn_modifier()
 
-    def get_gnodes(self):
+    @property
+    def gn_node_group(self):
+        """Get the geometry node group of the object."""
+        return self.gn_modifier.node_group
+
+    def get_gn_modifier(self):
+        """Get the geometry node modifier of the object."""
         name = 'GeometryNodes_%s' % self.obj_name
         modifier = self.obj.modifiers.get(name)
         if modifier is None:
@@ -299,10 +305,11 @@ class ObjectGN(BaseObject):
         return modifier
 
     def init_geometry_node_modifier(self, inputs=[]):
+        """Init geometry node modifier"""
         # blender 4.0 use a interface to add sockets, both input and output
-        from batoms.utils.butils import build_modifier
+        from batoms.utils.butils import build_gn_modifier
         name = 'GeometryNodes_%s' % self.obj_name
-        modifier = build_modifier(self.obj, name)
+        modifier = build_gn_modifier(self.obj, name)
         interface = modifier.node_group.interface
         for input in inputs:
             socket = interface.new_socket(name=input[0], socket_type=input[1], in_out='INPUT')
@@ -314,28 +321,29 @@ class ObjectGN(BaseObject):
         """
         Geometry node for everything!
         """
-        from batoms.utils.butils import build_modifier
+        from batoms.utils.butils import build_gn_modifier
         name = 'GeometryNodes_%s' % self.obj_name
-        modifier = build_modifier(self.obj, name)
+        modifier = build_gn_modifier(self.obj, name)
+        return modifier
 
-    def vectorDotMatrix(self, gn, vector_output, matrix, name):
+    def vectorDotMatrix(self, gn_node_group, vector_output, matrix, name):
         """
         """
-        CombineXYZ = get_nodes_by_name(gn.node_group.nodes,
+        CombineXYZ = get_node_by_name(gn_node_group.nodes,
                                        '%s_CombineXYZ_%s' % (self.label, name),
                                        'ShaderNodeCombineXYZ')
         #
         VectorDot = []
         for i in range(3):
-            tmp = get_nodes_by_name(gn.node_group.nodes,
+            tmp = get_node_by_name(gn_node_group.nodes,
                                     '%s_VectorDot%s_%s' % (
                                         self.label, i, name),
                                     'ShaderNodeVectorMath')
             tmp.operation = 'DOT_PRODUCT'
             VectorDot.append(tmp)
             tmp.inputs[1].default_value = matrix[:, i]
-            gn.node_group.links.new(vector_output, tmp.inputs[0])
-            gn.node_group.links.new(tmp.outputs['Value'], CombineXYZ.inputs[i])
+            gn_node_group.links.new(vector_output, tmp.inputs[0])
+            gn_node_group.links.new(tmp.outputs['Value'], CombineXYZ.inputs[i])
         return CombineXYZ
 
     def add_geometry_node(self, sp):
@@ -360,26 +368,26 @@ class ObjectGN(BaseObject):
         # TODO: add make real to geometry node
         """
         #
-        nodes = self.gnodes.node_group.nodes
-        RealizeInstances = get_nodes_by_name(self.gnodes.node_group.nodes,
+        nodes = self.gn_node_group.nodes
+        RealizeInstances = get_node_by_name(self.gn_node_group.nodes,
                                              '%s_RealizeInstances' % self.label,
                                              'GeometryNodeRealizeInstances')
         if not realize_instances:
             # switch off
             if len(RealizeInstances.outputs[0].links) > 0:
                 link = RealizeInstances.outputs[0].links[0]
-                self.gnodes.node_group.links.remove(link)
-            self.gnodes.node_group.links.new(
+                self.gn_node_group.links.remove(link)
+            self.gn_node_group.links.new(
                 nodes['%s_JoinGeometry' % self.label].outputs[0],
                 nodes[1].inputs[0])
         else:
-            self.gnodes.node_group.links.new(
+            self.gn_node_group.links.new(
                 nodes['%s_JoinGeometry' % self.label].outputs[0],
                 RealizeInstances.inputs[0])
-            self.gnodes.node_group.links.new(
+            self.gn_node_group.links.new(
                 RealizeInstances.outputs[0],
                 nodes[1].inputs[0])
-        self.gnodes.node_group.update_tag()
+        self.gn_node_group.update_tag()
 
     def update(self, ):
         """
@@ -433,7 +441,7 @@ class ObjectGN(BaseObject):
     def attributes(self, attributes):
         self.set_attributes(attributes)
 
-    def get_attributes(self):
+    def get_attributes(self, domains=['POINT']):
         """Get all attributes of the Batoms object.
 
 
@@ -442,7 +450,7 @@ class ObjectGN(BaseObject):
         """
         attributes = {}
         for att in self.obj.data.attributes:
-            if att.name.startswith('.'):
+            if att.name.startswith('.') or att.domain not in domains:
                 continue
             attributes[att.name] = self.get_attribute(att.name)
         return attributes

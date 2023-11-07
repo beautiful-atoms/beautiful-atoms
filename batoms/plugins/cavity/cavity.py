@@ -11,7 +11,7 @@ from batoms.base.object import ObjectGN
 from batoms.plugins.base import PluginObject
 from .setting import CavitySettings
 from scipy import spatial
-from batoms.utils.butils import object_mode, get_nodes_by_name
+from batoms.utils.butils import object_mode, get_node_by_name
 from batoms.utils import string2Number
 import logging
 # logger = logging.getLogger('batoms')
@@ -358,11 +358,11 @@ class Cavity(ObjectGN, PluginObject):
         GroupInput = gn.node_group.nodes[0]
         GroupOutput = gn.node_group.nodes[1]
         # print(gn.name)
-        JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
+        JoinGeometry = get_node_by_name(gn.node_group.nodes,
                                          '%s_JoinGeometry' % self.label,
                                          'GeometryNodeJoinGeometry')
         SeparateGeometry = \
-            get_nodes_by_name(gn.node_group.nodes,
+            get_node_by_name(gn.node_group.nodes,
                               '%s_SeparateGeometry' % self.label,
                               'GeometryNodeSeparateGeometry')
         gn.node_group.links.new(GroupInput.outputs['Geometry'],
@@ -386,26 +386,26 @@ class Cavity(ObjectGN, PluginObject):
         from batoms.utils.butils import compareNodeType
         gn = self.gnodes
         GroupInput = gn.node_group.nodes[0]
-        JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
+        JoinGeometry = get_node_by_name(gn.node_group.nodes,
                                          '%s_JoinGeometry' % self.label,
                                          'GeometryNodeJoinGeometry')
-        CompareSpecies = get_nodes_by_name(gn.node_group.nodes,
+        CompareSpecies = get_node_by_name(gn.node_group.nodes,
                                            'CompareFloats_%s_%s' % (
                                                self.label, spname),
                                            compareNodeType)
         CompareSpecies.operation = 'EQUAL'
         # CompareSpecies.data_type = 'INT'
         CompareSpecies.inputs[1].default_value = string2Number(spname)
-        InstanceOnPoint = get_nodes_by_name(gn.node_group.nodes,
+        InstanceOnPoint = get_node_by_name(gn.node_group.nodes,
                                             'InstanceOnPoint_%s_%s' % (
                                                 self.label, spname),
                                             'GeometryNodeInstanceOnPoints')
-        ObjectInfo = get_nodes_by_name(gn.node_group.nodes,
+        ObjectInfo = get_node_by_name(gn.node_group.nodes,
                                        'ObjectInfo_%s_%s' % (
                                            self.label, spname),
                                        'GeometryNodeObjectInfo')
         ObjectInfo.inputs['Object'].default_value = instancer
-        BoolShow = get_nodes_by_name(gn.node_group.nodes,
+        BoolShow = get_node_by_name(gn.node_group.nodes,
                                      'BooleanMath_%s_%s_1' % (
                                          self.label, spname),
                                      'FunctionNodeBooleanMath')

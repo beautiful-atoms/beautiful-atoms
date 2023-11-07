@@ -159,151 +159,153 @@ class Boundary(ObjectGN):
     def build_geometry_node(self):
         """
         """
-        from batoms.utils.butils import get_nodes_by_name
-        gn = self.gnodes
-        GroupInput = gn.node_group.nodes[0]
-        GroupOutput = gn.node_group.nodes[1]
+        from batoms.utils.butils import get_node_by_name
+        links = self.gn_node_group.links
+        nodes = self.gn_node_group.nodes
+        GroupInput = nodes[0]
+        GroupOutput = nodes[1]
         # ------------------------------------------------------------------
-        JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
+        JoinGeometry = get_node_by_name(nodes,
                                          '%s_JoinGeometry' % self.label,
                                          'GeometryNodeJoinGeometry')
-        gn.node_group.links.new(
+        links.new(
             GroupInput.outputs['Geometry'], JoinGeometry.inputs['Geometry'])
-        gn.node_group.links.new(
+        links.new(
             JoinGeometry.outputs['Geometry'], GroupOutput.inputs['Geometry'])
         # ------------------------------------------------------------------
         # transform postions of batoms to boundary
-        ObjectBatoms = get_nodes_by_name(gn.node_group.nodes,
+        ObjectBatoms = get_node_by_name(nodes,
                                          '%s_ObjectBatoms' % self.label,
                                          'GeometryNodeObjectInfo')
         ObjectBatoms.inputs['Object'].default_value = self.batoms.obj
-        PositionBatoms = get_nodes_by_name(gn.node_group.nodes,
+        PositionBatoms = get_node_by_name(nodes,
                                            '%s_PositionBatoms' % (self.label),
                                            'GeometryNodeInputPosition')
-        TransferBatoms = get_nodes_by_name(gn.node_group.nodes,
+        TransferBatoms = get_node_by_name(nodes,
                                         '%s_TransferBatoms' % (self.label),
                                         'GeometryNodeSampleIndex')
         TransferBatoms.data_type = 'FLOAT_VECTOR'
-        gn.node_group.links.new(ObjectBatoms.outputs['Geometry'],
+        links.new(ObjectBatoms.outputs['Geometry'],
                                 TransferBatoms.inputs[0])
-        gn.node_group.links.new(PositionBatoms.outputs['Position'],
+        links.new(PositionBatoms.outputs['Position'],
                                 TransferBatoms.inputs[3])
-        gn.node_group.links.new(GroupInput.outputs[1],
+        links.new(GroupInput.outputs[1],
                                 TransferBatoms.inputs['Index'])
         # ------------------------------------------------------------------
         # calculate offset for boundary atoms
         # transfer offsets from object self.obj_o
-        ObjectOffsets = get_nodes_by_name(gn.node_group.nodes,
+        ObjectOffsets = get_node_by_name(nodes,
                                           '%s_ObjectOffsets' % (self.label),
                                           'GeometryNodeObjectInfo')
         ObjectOffsets.inputs['Object'].default_value = self.obj_o
-        PositionOffsets = get_nodes_by_name(gn.node_group.nodes,
+        PositionOffsets = get_node_by_name(nodes,
                                             '%s_PositionOffsets' % (
                                                 self.label),
                                             'GeometryNodeInputPosition')
-        TransferOffsets = get_nodes_by_name(gn.node_group.nodes,
+        TransferOffsets = get_node_by_name(nodes,
                                         '%s_TransferOffsets' % self.label,
                                         'GeometryNodeSampleIndex')
-        InputIndex = get_nodes_by_name(gn.node_group.nodes,
+        InputIndex = get_node_by_name(nodes,
                                         '%s_InputIndex' % self.label,
                                         'GeometryNodeInputIndex')
         TransferOffsets.data_type = 'FLOAT_VECTOR'
-        gn.node_group.links.new(ObjectOffsets.outputs['Geometry'],
+        links.new(ObjectOffsets.outputs['Geometry'],
                                 TransferOffsets.inputs[0])
-        gn.node_group.links.new(PositionOffsets.outputs['Position'],
+        links.new(PositionOffsets.outputs['Position'],
                                 TransferOffsets.inputs[3])
-        gn.node_group.links.new(InputIndex.outputs[0],
+        links.new(InputIndex.outputs[0],
                                 TransferOffsets.inputs["Index"])
-        OffsetNode = self.vectorDotMatrix(gn, TransferOffsets.outputs[2],
+        OffsetNode = self.vectorDotMatrix(self.gn_node_group, TransferOffsets.outputs[2],
                                           self.batoms.cell, '')
         # we need one add operation to get the positions with offset
-        VectorAdd = get_nodes_by_name(gn.node_group.nodes,
+        VectorAdd = get_node_by_name(nodes,
                                       '%s_VectorAdd' % (self.label),
                                       'ShaderNodeVectorMath')
         # ------------------------------------------------------------------
         # add positions with offsets
         VectorAdd.operation = 'ADD'
-        gn.node_group.links.new(TransferBatoms.outputs[2], VectorAdd.inputs[0])
-        gn.node_group.links.new(OffsetNode.outputs[0], VectorAdd.inputs[1])
+        links.new(TransferBatoms.outputs[2], VectorAdd.inputs[0])
+        links.new(OffsetNode.outputs[0], VectorAdd.inputs[1])
         # set positions
-        SetPosition = get_nodes_by_name(gn.node_group.nodes,
+        SetPosition = get_node_by_name(nodes,
                                         '%s_SetPosition' % self.label,
                                         'GeometryNodeSetPosition')
-        gn.node_group.links.new(
+        links.new(
             GroupInput.outputs['Geometry'], SetPosition.inputs['Geometry'])
-        gn.node_group.links.new(
+        links.new(
             VectorAdd.outputs[0], SetPosition.inputs['Position'])
         #
         # ------------------------------------------------------------------
         # transform scale of batoms to boundary
         if bpy.app.version_string >= '3.2.0':
-            ScaleBatoms = get_nodes_by_name(gn.node_group.nodes,
+            ScaleBatoms = get_node_by_name(nodes,
                                             '%s_ScaleBatoms' % (self.label),
                                             'GeometryNodeInputNamedAttribute')
             # need to be "FLOAT_VECTOR", because scale is "FLOAT_VECTOR"
             ScaleBatoms.data_type = "FLOAT_VECTOR"
             ScaleBatoms.inputs[0].default_value = "scale"
-            TransferScale = get_nodes_by_name(gn.node_group.nodes,
+            TransferScale = get_node_by_name(nodes,
                                             '%s_TransferScale' % (self.label),
                                             'GeometryNodeSampleIndex')
             TransferScale.data_type = 'FLOAT_VECTOR'
-            gn.node_group.links.new(ObjectBatoms.outputs['Geometry'],
+            links.new(ObjectBatoms.outputs['Geometry'],
                                     TransferScale.inputs[0])
-            gn.node_group.links.new(ScaleBatoms.outputs['Attribute'],
+            links.new(ScaleBatoms.outputs['Attribute'],
                                     TransferScale.inputs[3])
-            gn.node_group.links.new(GroupInput.outputs[1],
+            links.new(GroupInput.outputs[1],
                                     TransferScale.inputs['Index'])
 
     def add_geometry_node(self, spname):
         """
         """
-        from batoms.utils.butils import get_nodes_by_name
-        gn = self.gnodes
-        GroupInput = gn.node_group.nodes[0]
-        SetPosition = get_nodes_by_name(gn.node_group.nodes,
+        from batoms.utils.butils import get_node_by_name
+        links = self.gn_node_group.links
+        nodes = self.gn_node_group.nodes
+        GroupInput = nodes[0]
+        SetPosition = get_node_by_name(nodes,
                                         '%s_SetPosition' % self.label)
-        JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
+        JoinGeometry = get_node_by_name(nodes,
                                          '%s_JoinGeometry' % self.label,
                                          'GeometryNodeJoinGeometry')
-        CompareSpecies = get_nodes_by_name(gn.node_group.nodes,
+        CompareSpecies = get_node_by_name(nodes,
                                            'CompareFloats_%s_%s' % (
                                                self.label, spname),
                                            compareNodeType)
         CompareSpecies.operation = 'EQUAL'
         # CompareSpecies.data_type = 'INT'
         CompareSpecies.inputs[1].default_value = string2Number(spname)
-        InstanceOnPoint = get_nodes_by_name(gn.node_group.nodes,
+        InstanceOnPoint = get_node_by_name(nodes,
                                             'InstanceOnPoint_%s_%s' % (
                                                 self.label, spname),
                                             'GeometryNodeInstanceOnPoints')
-        ObjectInfo = get_nodes_by_name(gn.node_group.nodes,
+        ObjectInfo = get_node_by_name(nodes,
                                        'ObjectInfo_%s_%s' % (
                                            self.label, spname),
                                        'GeometryNodeObjectInfo')
         ObjectInfo.inputs['Object'].default_value = \
             self.batoms.species.instancers[spname]
-        BoolShow = get_nodes_by_name(gn.node_group.nodes,
+        BoolShow = get_node_by_name(nodes,
                                      'BooleanMath_%s_%s_1' % (
                                          self.label, spname),
                                      'FunctionNodeBooleanMath')
         #
-        gn.node_group.links.new(
+        links.new(
             SetPosition.outputs['Geometry'], InstanceOnPoint.inputs['Points'])
-        gn.node_group.links.new(
+        links.new(
             GroupInput.outputs[2], CompareSpecies.inputs[0])
-        gn.node_group.links.new(GroupInput.outputs[3], BoolShow.inputs[0])
+        links.new(GroupInput.outputs[3], BoolShow.inputs[0])
         # transfer scale
-        TransferScale = get_nodes_by_name(gn.node_group.nodes,
+        TransferScale = get_node_by_name(nodes,
                                         '%s_TransferScale' % (self.label),
                                         'GeometryNodeSampleIndex')
-        gn.node_group.links.new(
+        links.new(
             TransferScale.outputs[2], InstanceOnPoint.inputs['Scale'])
-        gn.node_group.links.new(CompareSpecies.outputs[0], BoolShow.inputs[1])
-        gn.node_group.links.new(
+        links.new(CompareSpecies.outputs[0], BoolShow.inputs[1])
+        links.new(
             BoolShow.outputs['Boolean'], InstanceOnPoint.inputs['Selection'])
-        gn.node_group.links.new(
+        links.new(
             ObjectInfo.outputs['Geometry'], InstanceOnPoint.inputs['Instance'])
-        gn.node_group.links.new(InstanceOnPoint.outputs['Instances'],
+        links.new(InstanceOnPoint.outputs['Instances'],
                                 JoinGeometry.inputs['Geometry'])
 
     def update(self):
@@ -355,9 +357,9 @@ class Boundary(ObjectGN):
         Args:
             spname (str): name of the species
         """
-        from batoms.utils.butils import get_nodes_by_name
+        from batoms.utils.butils import get_node_by_name
         # update  instancers
-        ObjectInfo = get_nodes_by_name(self.gnodes.node_group.nodes,
+        ObjectInfo = get_node_by_name(self.gn_node_group.nodes,
                                        'ObjectInfo_%s_%s' % (
                                            self.label, spname),
                                        'GeometryNodeObjectInfo')
@@ -365,13 +367,13 @@ class Boundary(ObjectGN):
         logger.debug('update boundary instancer: {}'.format(spname))
 
     def update_gn_cell(self):
-        from batoms.utils.butils import get_nodes_by_name
+        from batoms.utils.butils import get_node_by_name
         # update cell
         cell = self.batoms.cell.array
         # set positions
-        gn = self.gnodes
+        nodes = self.gn_node_group.nodes
         for i in range(3):
-            tmp = get_nodes_by_name(gn.node_group.nodes,
+            tmp = get_node_by_name(nodes,
                                     '%s_VectorDot%s_%s' % (self.label, i, ''),
                                     'ShaderNodeVectorMath')
             tmp.operation = 'DOT_PRODUCT'

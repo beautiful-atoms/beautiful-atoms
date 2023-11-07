@@ -1,7 +1,7 @@
 import bpy
 import numpy as np
 from batoms.base.object import ObjectGN
-from batoms.utils.butils import object_mode, compareNodeType, get_nodes_by_name
+from batoms.utils.butils import object_mode, compareNodeType, get_node_by_name
 from batoms.utils import number2String, string2Number
 import logging
 # logger = logging.getLogger('batoms')
@@ -151,7 +151,7 @@ class SearchBond(ObjectGN):
         GroupInput = gn.node_group.nodes[0]
         GroupOutput = gn.node_group.nodes[1]
         # ------------------------------------------------------------------
-        JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
+        JoinGeometry = get_node_by_name(gn.node_group.nodes,
                                          '%s_JoinGeometry' % self.label,
                                          'GeometryNodeJoinGeometry')
         gn.node_group.links.new(
@@ -160,14 +160,14 @@ class SearchBond(ObjectGN):
             JoinGeometry.outputs['Geometry'], GroupOutput.inputs['Geometry'])
         # ------------------------------------------------------------------
         # transform postions of batoms to boundary
-        ObjectBatoms = get_nodes_by_name(gn.node_group.nodes,
+        ObjectBatoms = get_node_by_name(gn.node_group.nodes,
                                          '%s_ObjectBatoms' % self.label,
                                          'GeometryNodeObjectInfo')
         ObjectBatoms.inputs['Object'].default_value = self.batoms.obj
-        PositionBatoms = get_nodes_by_name(gn.node_group.nodes,
+        PositionBatoms = get_node_by_name(gn.node_group.nodes,
                                            '%s_PositionBatoms' % (self.label),
                                            'GeometryNodeInputPosition')
-        TransferBatoms = get_nodes_by_name(gn.node_group.nodes,
+        TransferBatoms = get_node_by_name(gn.node_group.nodes,
                                            '%s_TransferBatoms' % (self.label),
                                            'GeometryNodeSampleIndex')
         TransferBatoms.data_type = 'FLOAT_VECTOR'
@@ -180,15 +180,15 @@ class SearchBond(ObjectGN):
         # ------------------------------------------------------------------
         # add positions with offsets
         # transfer offsets from object self.obj_o
-        ObjectOffsets = get_nodes_by_name(gn.node_group.nodes,
+        ObjectOffsets = get_node_by_name(gn.node_group.nodes,
                                           '%s_ObjectOffsets' % (self.label),
                                           'GeometryNodeObjectInfo')
         ObjectOffsets.inputs['Object'].default_value = self.obj_o
-        PositionOffsets = get_nodes_by_name(gn.node_group.nodes,
+        PositionOffsets = get_node_by_name(gn.node_group.nodes,
                                             '%s_PositionOffsets' % (
                                                 self.label),
                                             'GeometryNodeInputPosition')
-        TransferOffsets = get_nodes_by_name(gn.node_group.nodes,
+        TransferOffsets = get_node_by_name(gn.node_group.nodes,
                                             '%s_TransferOffsets' % self.label,
                                             'GeometryNodeSampleIndex')
         TransferOffsets.data_type = 'FLOAT_VECTOR'
@@ -199,14 +199,14 @@ class SearchBond(ObjectGN):
         OffsetNode = self.vectorDotMatrix(
             gn, TransferOffsets.outputs[2], self.batoms.cell, '')
         # we need one add operation to get the positions with offset
-        VectorAdd = get_nodes_by_name(gn.node_group.nodes,
+        VectorAdd = get_node_by_name(gn.node_group.nodes,
                                       '%s_VectorAdd' % (self.label),
                                       'ShaderNodeVectorMath')
         VectorAdd.operation = 'ADD'
         gn.node_group.links.new(TransferBatoms.outputs[2], VectorAdd.inputs[0])
         gn.node_group.links.new(OffsetNode.outputs[0], VectorAdd.inputs[1])
         # set positions
-        SetPosition = get_nodes_by_name(gn.node_group.nodes,
+        SetPosition = get_node_by_name(gn.node_group.nodes,
                                         '%s_SetPosition' % self.label,
                                         'GeometryNodeSetPosition')
         gn.node_group.links.new(
@@ -217,13 +217,13 @@ class SearchBond(ObjectGN):
         # ------------------------------------------------------------------
         # transform scale of batoms to boundary
         if bpy.app.version_string >= '3.2.0':
-            ScaleBatoms = get_nodes_by_name(gn.node_group.nodes,
+            ScaleBatoms = get_node_by_name(gn.node_group.nodes,
                                             '%s_ScaleBatoms' % (self.label),
                                             'GeometryNodeInputNamedAttribute')
             # need to be "FLOAT_VECTOR", because scale is "FLOAT_VECTOR"
             ScaleBatoms.data_type = "FLOAT_VECTOR"
             ScaleBatoms.inputs[0].default_value = "scale"
-            TransferScale = get_nodes_by_name(gn.node_group.nodes,
+            TransferScale = get_node_by_name(gn.node_group.nodes,
                                             '%s_TransferScale' % (self.label),
                                             'GeometryNodeSampleIndex')
             TransferScale.data_type = 'FLOAT_VECTOR'
@@ -239,29 +239,29 @@ class SearchBond(ObjectGN):
         """
         gn = self.gnodes
         GroupInput = gn.node_group.nodes[0]
-        SetPosition = get_nodes_by_name(gn.node_group.nodes,
+        SetPosition = get_node_by_name(gn.node_group.nodes,
                                         '%s_SetPosition' % self.label)
-        JoinGeometry = get_nodes_by_name(gn.node_group.nodes,
+        JoinGeometry = get_node_by_name(gn.node_group.nodes,
                                          '%s_JoinGeometry' % self.label,
                                          'GeometryNodeJoinGeometry')
-        CompareSpecies = get_nodes_by_name(gn.node_group.nodes,
+        CompareSpecies = get_node_by_name(gn.node_group.nodes,
                                            'CompareFloats_%s_%s' % (
                                                self.label, spname),
                                            compareNodeType)
         CompareSpecies.operation = 'EQUAL'
         # CompareSpecies.data_type = 'INT'
         CompareSpecies.inputs[1].default_value = string2Number(spname)
-        InstanceOnPoint = get_nodes_by_name(gn.node_group.nodes,
+        InstanceOnPoint = get_node_by_name(gn.node_group.nodes,
                                             'InstanceOnPoint_%s_%s' % (
                                                 self.label, spname),
                                             'GeometryNodeInstanceOnPoints')
-        ObjectInfo = get_nodes_by_name(gn.node_group.nodes,
+        ObjectInfo = get_node_by_name(gn.node_group.nodes,
                                        'ObjectInfo_%s_%s' % (
                                            self.label, spname),
                                        'GeometryNodeObjectInfo')
         ObjectInfo.inputs['Object'].default_value = \
             self.batoms.species.instancers[spname]
-        BoolShow = get_nodes_by_name(gn.node_group.nodes,
+        BoolShow = get_node_by_name(gn.node_group.nodes,
                                      'BooleanMath_%s_%s_1' % (
                                          self.label, spname),
                                      'FunctionNodeBooleanMath')
@@ -274,7 +274,7 @@ class SearchBond(ObjectGN):
                                 BoolShow.inputs[0])
         # transfer scale
         if bpy.app.version_string >= '3.2.0':
-            TransferScale = get_nodes_by_name(gn.node_group.nodes,
+            TransferScale = get_node_by_name(gn.node_group.nodes,
                                             '%s_TransferScale' % (self.label),
                                             'GeometryNodeSampleIndex')
             gn.node_group.links.new(
@@ -298,9 +298,9 @@ class SearchBond(ObjectGN):
         Args:
             spname (str): name of the species
         """
-        from batoms.utils.butils import get_nodes_by_name
+        from batoms.utils.butils import get_node_by_name
         # update  instancers
-        ObjectInfo = get_nodes_by_name(self.gnodes.node_group.nodes,
+        ObjectInfo = get_node_by_name(self.gnodes.node_group.nodes,
                                        'ObjectInfo_%s_%s' % (
                                            self.label, spname),
                                        'GeometryNodeObjectInfo')
