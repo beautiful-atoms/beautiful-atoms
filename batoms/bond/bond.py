@@ -69,6 +69,7 @@ class Bond(BaseCollection, ObjectGN):
         BaseCollection.__init__(self, coll_name=label)
         self.settings = BondSettings(self.label, batoms=batoms, bonds=self)
         self.build_geometry_node()
+        self._search_bond = SearchBond(self.label, batoms=batoms, load=True)
 
     def build_geometry_node(self):
         """
@@ -153,10 +154,11 @@ class Bond(BaseCollection, ObjectGN):
             tmp.inputs['Name'].default_value = f"offsets{i}"
             tmp.data_type = "FLOAT_VECTOR"
             OffsetsAttributes.append(tmp)
-        # second step: we need four add operations
+        # second step: we need five add operations
         # four: Get the positions with offset for four atoms
+        # one: Get center = (positions1 + positions2)/2
         VectorAdd = []
-        for i in range(4):
+        for i in range(5):
             tmp = get_node_by_name(nodes,
                                     '%s_VectorAdd%s' % (self.label, i),
                                     'ShaderNodeVectorMath')
@@ -168,6 +170,22 @@ class Bond(BaseCollection, ObjectGN):
                                     VectorAdd[i].inputs[0])
             links.new(OffsetsAttributes[i].outputs[0],
                                     VectorAdd[i].inputs[1])
+        # divide by 2 to get the center
+        VectorDivide = get_node_by_name(nodes,
+                                         'VectorDivide_%s' % self.label,
+                                         'ShaderNodeVectorMath')
+        VectorDivide.operation = 'DIVIDE'
+        VectorDivide.inputs[1].default_value = (2, 2, 2)
+        links.new(VectorAdd[0].outputs[0], VectorAdd[4].inputs[0])
+        links.new(VectorAdd[1].outputs[0], VectorAdd[4].inputs[1])
+        links.new(VectorAdd[4].outputs[0], VectorDivide.inputs[0])
+        # set center of the bond
+        SetPosition = get_node_by_name(nodes,
+                                        '%s_SetPosition' % self.label,
+                                        'GeometryNodeSetPosition')
+        links.new(MeshToPoints.outputs['Points'], SetPosition.inputs['Geometry'])
+        links.new(VectorDivide.outputs[0], SetPosition.inputs['Position'])
+
         # get the vector for the bond and the length
         # also the vector for the second bond
         VectorSubtract = []
@@ -196,14 +214,6 @@ class Bond(BaseCollection, ObjectGN):
         # calc the bond length, use it to build scale
         links.new(
             VectorSubtract[0].outputs[0], VectorLength.inputs[0])
-        #
-        CombineXYZ = get_node_by_name(nodes,
-                                       '%s_CombineXYZ' % self.label,
-                                       'ShaderNodeCombineXYZ')
-        CombineXYZ.inputs[0].default_value = 1
-        CombineXYZ.inputs[1].default_value = 1
-        links.new(
-            VectorLength.outputs['Value'], CombineXYZ.inputs['Z'])
         # cross for rotation, for high order bond
         links.new(
             VectorSubtract[0].outputs[0], VectorCross0.inputs[0])
@@ -346,7 +356,6 @@ class Bond(BaseCollection, ObjectGN):
             ["Style", "NodeSocketInt", 'INPUT'],
             ["Length", "NodeSocketFloat", 'INPUT'],
             ["Rotation", "NodeSocketVector", 'INPUT'],
-            ["Scale", "NodeSocketFloat", 'INPUT'],
             ["Geometry", "NodeSocketGeometry", 'OUTPUT'],
         ]
         # Create Node Group if not exit
@@ -365,15 +374,12 @@ class Bond(BaseCollection, ObjectGN):
         GroupInput = nodes[0]
         GroupOutput = nodes[1]
         # link the input to parent node
-        MeshToPoints = get_node_by_name(parent_tree.nodes,
-                                           '%s_MeshToPoints_edge' % (self.label),
-                                           'GeometryNodeMeshToPoints')
+        SetPosition = get_node_by_name(parent_tree.nodes,
+                                        '%s_SetPosition' % self.label,
+                                        'GeometryNodeSetPosition')
         VectorLength = get_node_by_name(parent_tree.nodes,
                                          '%s_VectorLength' % self.label,
                                          "ShaderNodeVectorMath")
-        CombineXYZ = get_node_by_name(parent_tree.nodes,
-                                       '%s_CombineXYZ' % self.label,
-                                       'ShaderNodeCombineXYZ')
         AlignEuler1 = get_node_by_name(parent_tree.nodes,
                                         '%s_AlignEuler1' % self.label,
                                         'FunctionNodeAlignEulerToVector')
@@ -396,9 +402,8 @@ class Bond(BaseCollection, ObjectGN):
             'CompareStyle_%s_%s' % (self.label,
                                            style),
             "FunctionNodeCompare")
-        parent_tree.links.new(MeshToPoints.outputs['Points'], node.inputs['Geometry'])
+        parent_tree.links.new(SetPosition.outputs['Geometry'], node.inputs['Geometry'])
         parent_tree.links.new(VectorLength.outputs['Value'], node.inputs['Length'])
-        parent_tree.links.new(CombineXYZ.outputs[0], node.inputs['Scale'])
         parent_tree.links.new(AlignEuler1.outputs[0], node.inputs['Rotation'])
         parent_tree.links.new(CompareSpecies0.outputs[0], node.inputs['Species0'])
         parent_tree.links.new(CompareSpecies1.outputs[0], node.inputs['Species1'])
@@ -446,6 +451,13 @@ class Bond(BaseCollection, ObjectGN):
         #
         links.new(GroupInput.outputs['Geometry'],
                                 InstanceOnPoint.inputs['Points'])
+        # scale
+        CombineXYZ = get_node_by_name(nodes,
+                                       '%s_CombineXYZ' % self.label,
+                                       'ShaderNodeCombineXYZ')
+        CombineXYZ.inputs[0].default_value = 1
+        CombineXYZ.inputs[1].default_value = 1
+        links.new(GroupInput.outputs['Length'], CombineXYZ.inputs['Z'])
         # show
         BondShowAttribute = get_node_by_name(nodes,
                                 '%s_NamedAttribute_bond_show' % (self.label),
@@ -480,7 +492,7 @@ class Bond(BaseCollection, ObjectGN):
                                 BoolBondLength.inputs[1])
         links.new(BoolBondLength.outputs['Boolean'],
                                 InstanceOnPoint.inputs['Selection'])
-        links.new(GroupInput.outputs['Scale'], InstanceOnPoint.inputs['Scale'])
+        links.new(CombineXYZ.outputs[0], InstanceOnPoint.inputs['Scale'])
         #
         links.new(GroupInput.outputs['Rotation'], InstanceOnPoint.inputs['Rotation'])
         #
@@ -1233,8 +1245,8 @@ class Bond(BaseCollection, ObjectGN):
             return default_bond_datas
         # ------------------------------------
         # offsets
-        offsets1 = np.dot(bondlists[:, 2:5], cell)
-        offsets2 = np.dot(bondlists[:, 5:8], cell)
+        offsets0 = np.dot(bondlists[:, 2:5], cell)
+        offsets1 = np.dot(bondlists[:, 5:8], cell)
         # polyhedra
         polyhedras = np.array(bondlists[:, 9], dtype=int)
         # bond center
@@ -1259,8 +1271,8 @@ class Bond(BaseCollection, ObjectGN):
                     atoms_index2, atoms_index3, bondlists)
         # offsets for second bond
         # this will be remove for Blender 3.1
-        offsets3 = np.dot(bondlists[:, 2:5][second_bond], cell)
-        offsets0 = np.dot(bondlists[:, 5:8][second_bond], cell)
+        offsets2 = np.dot(bondlists[:, 2:5][second_bond], cell)
+        offsets3 = np.dot(bondlists[:, 5:8][second_bond], cell)
         datas = {
             'atoms_index0': atoms_index0,
             'atoms_index1': atoms_index1,
@@ -1269,10 +1281,10 @@ class Bond(BaseCollection, ObjectGN):
             'second_bond': second_bond,
             'species_index0': species_index0,
             'species_index1': species_index1,
+            'offsets0': offsets0,
             'offsets1': offsets1,
             'offsets2': offsets2,
             'offsets3': offsets3,
-            'offsets0': offsets0,
             # 'widths': widths,
             'bond_show': shows,
             'bond_order': orders,
