@@ -12,7 +12,7 @@ from batoms.bselect import Selects
 from batoms.base.collection import BaseCollection
 from batoms.base.object import ObjectGN
 from batoms.ribbon.ribbon import Ribbon
-from batoms.utils.butils import object_mode, show_index, \
+from batoms.utils.butils import get_node_with_node_tree_by_name, show_index, \
     get_node_by_name
 from batoms.utils import string2Number, read_from_others, deprecated
 from batoms.plugins import plugin_info
@@ -268,11 +268,6 @@ class Batoms(BaseCollection, ObjectGN):
     def build_geometry_node(self):
         """Geometry node for instancing sphere on vertices!
         """
-        from batoms.utils.butils import get_node_with_node_tree_by_name
-        default_interface = [
-            ['Geometry', 'NodeSocketGeometry', 'INPUT'],
-            ['Geometry', 'NodeSocketGeometry', 'OUTPUT'],
-        ]
         # first create the nodes for the top level
         parent = self.gn_node_group
         nodes = parent.nodes
@@ -293,8 +288,70 @@ class Batoms(BaseCollection, ObjectGN):
                                 JoinGeometry.inputs['Geometry'])
         links.new(JoinGeometry.outputs['Geometry'],
                                 GroupOutput.inputs['Geometry'])
-        #-------------------------------------------------------------
+        # then create the nodes for the Wrap level
+        self.build_wrap_node_group()
         # then create the nodes for the Ball level
+        self.build_ball_node_group()
+
+    def build_wrap_node_group(self):
+        parent = self.gn_node_group
+        default_interface = [
+            ['Geometry', 'NodeSocketGeometry', 'INPUT'],
+            ['Geometry', 'NodeSocketGeometry', 'OUTPUT'],
+        ]
+        name = f'Wrap_{self.label}'
+        node = get_node_with_node_tree_by_name(parent.nodes,
+                                               name=name,
+                                               interface=default_interface)
+        nodes = node.node_tree.nodes
+        links = node.node_tree.links
+        GroupInput = nodes[0]
+        GroupOutput = nodes[1]
+        # link the input to parent node
+        parent.links.new(parent.nodes["Group Input"].outputs['Geometry'], node.inputs['Geometry'])
+        #-------------------------------------------------------------
+        # set positions
+        PositionBatoms = get_node_by_name(nodes,
+                                           '%s_PositionBatoms' % (self.label),
+                                           'GeometryNodeInputPosition')
+        SetPosition = get_node_by_name(nodes,
+                                        '%s_SetPosition' % self.label,
+                                        'GeometryNodeSetPosition')
+        links.new(GroupInput.outputs['Geometry'],
+                                SetPosition.inputs['Geometry'])
+        # TODO: use cell object directly.
+        cell = self.cell.array
+        if np.isclose(np.linalg.det(self.cell.array), 0):
+            cell = np.eye(3)
+        icell = np.linalg.inv(cell)
+        scaledPositionsNode = self.vectorDotMatrix(
+            node.node_tree, PositionBatoms.outputs[0], icell, 'scaled')
+        VectorWrap = get_node_by_name(nodes,
+                                       '%s_VectorWrap' % (self.label),
+                                       'ShaderNodeVectorMath')
+        VectorWrap.operation = 'WRAP'
+        VectorWrap.inputs[1].default_value = [1, 1, 1]
+        VectorWrap.inputs[2].default_value = [0, 0, 0]
+        links.new(
+            scaledPositionsNode.outputs[0], VectorWrap.inputs['Vector'])
+        PositionsNode = self.vectorDotMatrix(node.node_tree, VectorWrap.outputs[0], cell, '')
+        links.new(
+            PositionsNode.outputs[0], SetPosition.inputs['Position'])
+        links.new(
+            SetPosition.outputs[0], GroupOutput.inputs['Geometry'])
+        self.wrap = self.pbc
+
+    def build_ball_node_group(self):
+        # then create the nodes for the Ball level
+        parent = self.gn_node_group
+        JoinGeometry = get_node_by_name(parent.nodes,
+                                         '%s_JoinGeometry' % self.label,
+                                         'GeometryNodeJoinGeometry')
+        #
+        default_interface = [
+            ['Geometry', 'NodeSocketGeometry', 'INPUT'],
+            ['Geometry', 'NodeSocketGeometry', 'OUTPUT'],
+        ]
         name = f'Ball_{self.label}'
         node = get_node_with_node_tree_by_name(self.gn_node_group.nodes,
                                                name=name,
@@ -313,34 +370,6 @@ class Batoms(BaseCollection, ObjectGN):
                                          'GeometryNodeJoinGeometry')
         links.new(JoinGeometry.outputs['Geometry'],
                                 GroupOutput.inputs['Geometry'])
-        # set positions
-        PositionBatoms = get_node_by_name(nodes,
-                                           '%s_PositionBatoms' % (self.label),
-                                           'GeometryNodeInputPosition')
-        SetPosition = get_node_by_name(nodes,
-                                        '%s_SetPosition' % self.label,
-                                        'GeometryNodeSetPosition')
-        links.new(GroupInput.outputs['Geometry'],
-                                SetPosition.inputs['Geometry'])
-        # TODO: use cell object directly.
-        cell = self.cell.array
-        if np.isclose(np.linalg.det(self.cell.array), 0):
-            cell = np.eye(3)
-        icell = np.linalg.inv(cell)
-        scaledPositionsNode = self.vectorDotMatrix(
-            self.gn_node_group, PositionBatoms.outputs[0], icell, 'scaled')
-        VectorWrap = get_node_by_name(nodes,
-                                       '%s_VectorWrap' % (self.label),
-                                       'ShaderNodeVectorMath')
-        VectorWrap.operation = 'WRAP'
-        VectorWrap.inputs[1].default_value = [1, 1, 1]
-        VectorWrap.inputs[2].default_value = [0, 0, 0]
-        links.new(
-            scaledPositionsNode.outputs[0], VectorWrap.inputs['Vector'])
-        PositionsNode = self.vectorDotMatrix(self.gn_node_group, VectorWrap.outputs[0], cell, '')
-        links.new(
-            PositionsNode.outputs[0], SetPosition.inputs['Position'])
-        self.wrap = self.pbc
 
     def add_geometry_node(self, spname, instancer):
         """Add geometry node for each species
@@ -1444,31 +1473,40 @@ class Batoms(BaseCollection, ObjectGN):
         return list(self.coll.batoms.wrap)
 
     def set_wrap(self, wrap):
-        #
-        nodes = self.gn_node_group.nodes
+        """Use wrap node to wrap atoms."""
+        wrap_node = self.gn_node_group.nodes[f"Wrap_{self.label}"]
+        GroupInput = self.gn_node_group.nodes[0]
         self.update_gn_cell()
         if isinstance(wrap, bool):
             wrap = [wrap]*3
         self.coll.batoms.wrap = list(wrap)
         wrap = np.array(wrap)
+        to_sockets = []
         if not wrap.any():
             # switch off
-            n = len(nodes[
-                '%s_CombineXYZ_' % self.label].outputs['Vector'].links)
-            if n > 0:
-                link = nodes['%s_CombineXYZ_' %
-                             self.label].outputs['Vector'].links[0]
+            # reconnect to the group input geometry
+            for link in wrap_node.outputs['Geometry'].links:
+                to_sockets.append(link.to_socket)
                 self.gn_node_group.links.remove(link)
+            for socket in to_sockets:
+                self.gn_node_group.links.new(GroupInput.outputs['Geometry'], socket)
         else:
-            self.gn_node_group.links.new(
-                nodes['%s_CombineXYZ_' % self.label].outputs[0],
-                nodes['%s_SetPosition' % self.label].inputs['Position'])
-        self.gn_node_group.update_tag()
+            # switch on
+            # reconnect to the wrap node
+            for link in GroupInput.outputs['Geometry'].links:
+                if link.to_node == wrap_node:
+                    continue
+                to_sockets.append(link.to_socket)
+                self.gn_node_group.links.remove(link)
+            for socket in to_sockets:
+                self.gn_node_group.links.new(wrap_node.outputs['Geometry'], socket)
+        wrap_node.node_tree.update_tag()
         # TODO: support selection
 
     def update_gn_cell(self):
         # update cell
-        nodes = self.gn_node_group.nodes
+        wrap_node = self.gn_node_group.nodes[f"Wrap_{self.label}"]
+        nodes = wrap_node.node_tree.nodes
         cell = self.cell.array
         if np.isclose(np.linalg.det(self.cell.array), 0):
             cell = np.eye(3)
