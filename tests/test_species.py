@@ -84,9 +84,10 @@ def test_geometry_node_object(tio2):
     tio2.model_style = 1
     tio2.species["Ti"].color = [1, 1, 0, 1]
     tio2.species.update()
-    assert tio2.gnodes.node_group.nodes['ObjectInfo_tio2_Ti'].inputs['Object'].default_value is not None
-    assert tio2.boundary.gnodes.node_group.nodes['ObjectInfo_tio2_Ti'].inputs['Object'].default_value is not None
-    assert tio2.bond.search_bond.gnodes.node_group.nodes['ObjectInfo_tio2_Ti'].inputs['Object'].default_value is not None
+    ball_species_node = tio2.gn_node_group.nodes['Ball_tio2'].node_tree.nodes['Ball_tio2_Ti']
+    assert ball_species_node.node_tree.nodes['ObjectInfo_tio2_Ti'].inputs['Object'].default_value is not None
+    assert tio2.boundary.gn_node_group.nodes['ObjectInfo_tio2_Ti'].inputs['Object'].default_value is not None
+    assert tio2.bond.search_bond.gn_node_group.nodes['ObjectInfo_tio2_Ti'].inputs['Object'].default_value is not None
 
 def test_color_by_attribute():
     from ase.build import bulk

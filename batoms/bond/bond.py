@@ -21,6 +21,25 @@ logger = logging.getLogger(__name__)
 
 
 
+default_bond_attributes = [
+    {"name": 'atoms_index0', "data_type": 'INT', "domain": "EDGE"},
+    {"name": 'atoms_index1', "data_type": 'INT', "domain": "EDGE"},
+    {"name": 'atoms_index2', "data_type": 'INT', "domain": "EDGE"},
+    {"name": 'atoms_index3', "data_type": 'INT', "domain": "EDGE"},
+    {"name": 'species_index0', "data_type": 'INT', "domain": "EDGE"},
+    {"name": 'species_index1', "data_type": 'INT', "domain": "EDGE"},
+    {"name": 'offsets0', "data_type": 'FLOAT_VECTOR', "domain": "EDGE"},
+    {"name": 'offsets1', "data_type": 'FLOAT_VECTOR', "domain": "EDGE"},
+    {"name": 'offsets2', "data_type": 'FLOAT_VECTOR', "domain": "EDGE"},
+    {"name": 'offsets3', "data_type": 'FLOAT_VECTOR', "domain": "EDGE"},
+    {"name": 'bond_order', "data_type": 'INT', "domain": "EDGE"},
+    {"name": 'bond_style', "data_type": 'INT', "domain": "EDGE"},
+    {"name": 'bond_show', "data_type": 'BOOLEAN', "domain": "EDGE"},
+    {"name": 'bond_model_style', "data_type": 'INT', "domain": "EDGE"},
+    {"name": 'polyhedra', "data_type": 'INT', "domain": "EDGE"},
+    {"name": 'second_bond', "data_type": 'INT', "domain": "EDGE"},
+]
+
 default_bond_datas = {
     'atoms_index0': np.ones(0, dtype=int),
     'atoms_index1': np.ones(0, dtype=int),
@@ -555,7 +574,7 @@ class Bond(BaseCollection, ObjectGN):
         tstart = time()
         #
         bondlists = self.arrays
-        if len(bondlists['atoms_index1']) == 0:
+        if len(bondlists['atoms_index0']) == 0:
             return
         pairs = np.concatenate((
             bondlists['species_index0'].reshape(-1, 1),
@@ -672,6 +691,12 @@ class Bond(BaseCollection, ObjectGN):
     def set_arrays(self, arrays):
         """Add edge for bond.
         Set the bond properties."""
+        # if not attributes, set them
+        # in the case of mergeing objects, e.g. au111 += h2o,
+        # the attributes of edges are removed.
+        if "atoms_index0" not in self.obj.data.attributes:
+            for att in default_bond_attributes:
+                self.add_attribute(**att)
         # blender delete all edges
         dnvert = len(self.obj.data.edges)
         self.delete_edges_bmesh(range(dnvert))

@@ -184,52 +184,53 @@ class Highlight(ObjectGN, PluginObject):
     def build_geometry_node(self):
         """Geometry node for instancing sphere on vertices!
         """
-        gn = self.gnodes
-        GroupInput = gn.node_group.nodes[0]
-        GroupOutput = gn.node_group.nodes[1]
+        nodes = self.gn_node_group.nodes
+        links = self.gn_node_group.links
+        GroupInput = nodes[0]
+        GroupOutput = nodes[1]
         # print(gn.name)
-        JoinGeometry = get_node_by_name(gn.node_group.nodes,
+        JoinGeometry = get_node_by_name(nodes,
                                          '%s_JoinGeometry' % self.label,
                                          'GeometryNodeJoinGeometry')
         SeparateGeometry = \
-            get_node_by_name(gn.node_group.nodes,
+            get_node_by_name(nodes,
                               '%s_SeparateGeometry' % self.label,
                               'GeometryNodeSeparateGeometry')
-        gn.node_group.links.new(GroupInput.outputs['Geometry'],
+        links.new(GroupInput.outputs['Geometry'],
                                 SeparateGeometry.inputs['Geometry'])
-        gn.node_group.links.new(GroupInput.outputs[2],
+        links.new(GroupInput.outputs[2],
                                 SeparateGeometry.inputs['Selection'])
-        gn.node_group.links.new(SeparateGeometry.outputs[0],
+        links.new(SeparateGeometry.outputs[0],
                                 JoinGeometry.inputs['Geometry'])
-        gn.node_group.links.new(JoinGeometry.outputs['Geometry'],
+        links.new(JoinGeometry.outputs['Geometry'],
                                 GroupOutput.inputs['Geometry'])
         #
         # transform postions of batoms to boundary
-        ObjectBatoms = get_node_by_name(gn.node_group.nodes,
+        ObjectBatoms = get_node_by_name(nodes,
                                          '%s_ObjectBatoms' % self.label,
                                          'GeometryNodeObjectInfo')
         ObjectBatoms.inputs['Object'].default_value = self.batoms.obj
-        PositionBatoms = get_node_by_name(gn.node_group.nodes,
+        PositionBatoms = get_node_by_name(nodes,
                                            '%s_PositionBatoms' % (self.label),
                                            'GeometryNodeInputPosition')
-        TransferBatoms = get_node_by_name(gn.node_group.nodes,
+        TransferBatoms = get_node_by_name(nodes,
                                            '%s_TransferBatoms' % (self.label),
                                            'GeometryNodeSampleIndex')
         TransferBatoms.data_type = 'FLOAT_VECTOR'
-        gn.node_group.links.new(ObjectBatoms.outputs['Geometry'],
+        links.new(ObjectBatoms.outputs['Geometry'],
                                 TransferBatoms.inputs[0])
-        gn.node_group.links.new(PositionBatoms.outputs['Position'],
+        links.new(PositionBatoms.outputs['Position'],
                                 TransferBatoms.inputs[3])
-        gn.node_group.links.new(GroupInput.outputs[1],
+        links.new(GroupInput.outputs[1],
                                 TransferBatoms.inputs['Index'])
         #
         # set positions
-        SetPosition = get_node_by_name(gn.node_group.nodes,
+        SetPosition = get_node_by_name(nodes,
                                         '%s_SetPosition' % self.label,
                                         'GeometryNodeSetPosition')
-        gn.node_group.links.new(
+        links.new(
             GroupInput.outputs['Geometry'], SetPosition.inputs['Geometry'])
-        gn.node_group.links.new(
+        links.new(
             TransferBatoms.outputs[0], SetPosition.inputs['Position'])
 
     def add_geometry_node(self, slname, instancer):
@@ -242,47 +243,48 @@ class Highlight(ObjectGN, PluginObject):
                 Object to be instanced
         """
         from batoms.utils.butils import compareNodeType
-        gn = self.gnodes
-        GroupInput = gn.node_group.nodes[0]
-        SetPosition = get_node_by_name(gn.node_group.nodes,
+        nodes = self.gn_node_group.nodes
+        links = self.gn_node_group.links
+        GroupInput = nodes[0]
+        SetPosition = get_node_by_name(nodes,
                                         '%s_SetPosition' % self.label)
-        JoinGeometry = get_node_by_name(gn.node_group.nodes,
+        JoinGeometry = get_node_by_name(nodes,
                                          '%s_JoinGeometry' % self.label,
                                          'GeometryNodeJoinGeometry')
-        CompareSelect = get_node_by_name(gn.node_group.nodes,
+        CompareSelect = get_node_by_name(nodes,
                                            'CompareFloats_%s_%s' % (
                                                self.label, slname),
                                            compareNodeType)
         CompareSelect.operation = 'EQUAL'
         # CompareSelect.data_type = 'INT'
         CompareSelect.inputs[1].default_value = string2Number(slname)
-        InstanceOnPoint = get_node_by_name(gn.node_group.nodes,
+        InstanceOnPoint = get_node_by_name(nodes,
                                             'InstanceOnPoint_%s_%s' % (
                                                 self.label, slname),
                                             'GeometryNodeInstanceOnPoints')
-        ObjectInfo = get_node_by_name(gn.node_group.nodes,
+        ObjectInfo = get_node_by_name(nodes,
                                        'ObjectInfo_%s_%s' % (
                                            self.label, slname),
                                        'GeometryNodeObjectInfo')
         ObjectInfo.inputs['Object'].default_value = instancer
-        BoolShow = get_node_by_name(gn.node_group.nodes,
+        BoolShow = get_node_by_name(nodes,
                                      'BooleanMath_%s_%s_1' % (
                                          self.label, slname),
                                      'FunctionNodeBooleanMath')
         #
-        gn.node_group.links.new(SetPosition.outputs['Geometry'],
+        links.new(SetPosition.outputs['Geometry'],
                                 InstanceOnPoint.inputs['Points'])
-        gn.node_group.links.new(GroupInput.outputs[2],
+        links.new(GroupInput.outputs[2],
                                 CompareSelect.inputs[0])
-        gn.node_group.links.new(GroupInput.outputs[3], BoolShow.inputs[0])
-        gn.node_group.links.new(GroupInput.outputs[4],
+        links.new(GroupInput.outputs[3], BoolShow.inputs[0])
+        links.new(GroupInput.outputs[4],
                                 InstanceOnPoint.inputs['Scale'])
-        gn.node_group.links.new(CompareSelect.outputs[0], BoolShow.inputs[1])
-        gn.node_group.links.new(BoolShow.outputs['Boolean'],
+        links.new(CompareSelect.outputs[0], BoolShow.inputs[1])
+        links.new(BoolShow.outputs['Boolean'],
                                 InstanceOnPoint.inputs['Selection'])
-        gn.node_group.links.new(ObjectInfo.outputs['Geometry'],
+        links.new(ObjectInfo.outputs['Geometry'],
                                 InstanceOnPoint.inputs['Instance'])
-        gn.node_group.links.new(InstanceOnPoint.outputs['Instances'],
+        links.new(InstanceOnPoint.outputs['Instances'],
                                 JoinGeometry.inputs['Geometry'])
 
     def update_geometry_node_instancer(self):

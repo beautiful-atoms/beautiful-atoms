@@ -33,25 +33,6 @@ default_attributes = [
     {"name": 'model_style', "data_type": 'INT'},
 ]
 
-default_bond_attributes = [
-    {"name": 'atoms_index0', "data_type": 'INT', "domain": "EDGE"},
-    {"name": 'atoms_index1', "data_type": 'INT', "domain": "EDGE"},
-    {"name": 'atoms_index2', "data_type": 'INT', "domain": "EDGE"},
-    {"name": 'atoms_index3', "data_type": 'INT', "domain": "EDGE"},
-    {"name": 'species_index0', "data_type": 'INT', "domain": "EDGE"},
-    {"name": 'species_index1', "data_type": 'INT', "domain": "EDGE"},
-    {"name": 'offsets0', "data_type": 'FLOAT_VECTOR', "domain": "EDGE"},
-    {"name": 'offsets1', "data_type": 'FLOAT_VECTOR', "domain": "EDGE"},
-    {"name": 'offsets2', "data_type": 'FLOAT_VECTOR', "domain": "EDGE"},
-    {"name": 'offsets3', "data_type": 'FLOAT_VECTOR', "domain": "EDGE"},
-    {"name": 'bond_order', "data_type": 'INT', "domain": "EDGE"},
-    {"name": 'bond_style', "data_type": 'INT', "domain": "EDGE"},
-    {"name": 'bond_show', "data_type": 'BOOLEAN', "domain": "EDGE"},
-    {"name": 'bond_model_style', "data_type": 'INT', "domain": "EDGE"},
-    {"name": 'polyhedra', "data_type": 'INT', "domain": "EDGE"},
-    {"name": 'second_bond', "data_type": 'INT', "domain": "EDGE"},
-]
-
 default_GroupInput = [
     ['select', 'NodeSocketInt'],
     ['species_index', 'NodeSocketInt'],
@@ -245,6 +226,7 @@ class Batoms(BaseCollection, ObjectGN):
             location (list, optional):
                 Location of the object. Defaults to [0, 0, 0].
         """
+        from batoms.bond.bond import default_bond_attributes
         self.delete_obj(label)
         mesh = bpy.data.meshes.new(label)
         obj = bpy.data.objects.new(label, mesh)
