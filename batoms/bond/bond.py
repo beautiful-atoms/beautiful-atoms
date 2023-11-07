@@ -34,7 +34,7 @@ default_bond_attributes = [
     {"name": 'offsets3', "data_type": 'FLOAT_VECTOR', "domain": "EDGE"},
     {"name": 'bond_order', "data_type": 'INT', "domain": "EDGE"},
     {"name": 'bond_style', "data_type": 'INT', "domain": "EDGE"},
-    {"name": 'bond_show', "data_type": 'BOOLEAN', "domain": "EDGE"},
+    {"name": 'bond_show', "data_type": 'INT', "domain": "EDGE"},
     {"name": 'bond_model_style', "data_type": 'INT', "domain": "EDGE"},
     {"name": 'polyhedra', "data_type": 'INT', "domain": "EDGE"},
     {"name": 'second_bond', "data_type": 'INT', "domain": "EDGE"},
@@ -495,8 +495,8 @@ class Bond(BaseCollection, ObjectGN):
                                 '%s_NamedAttribute_bond_show' % (self.label),
                                 'GeometryNodeInputNamedAttribute')
         BondShowAttribute.inputs['Name'].default_value = f"bond_show"
-        BondShowAttribute.data_type = "BOOLEAN"
-        socket = get_socket_by_identifier(BondShowAttribute, "Attribute_Bool", type="outputs")
+        BondShowAttribute.data_type = "INT"
+        socket = get_socket_by_identifier(BondShowAttribute, "Attribute_Int", type="outputs")
         links.new(socket, BoolShow.inputs[0])
         # model style
         BondModelStyleAttribute = get_node_by_name(nodes,

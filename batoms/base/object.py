@@ -476,7 +476,7 @@ class ObjectGN(BaseObject):
         # get the mesh
         obj = self.obj
         att = obj.data.attributes[key]
-        if obj.mode == 'EDIT' and att.data_type in ['STRING', 'INT', 'FLOAT']:
+        if obj.mode == 'EDIT' and att.data_type in ['STRING', 'INT', 'FLOAT', 'FLOAT_VECTOR', 'FLOAT_COLOR']:
             attribute = get_mesh_attribute_bmesh(obj, att.name, index)
         else:
             attribute = get_mesh_attribute(obj, att.name, index)

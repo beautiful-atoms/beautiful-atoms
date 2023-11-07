@@ -448,6 +448,10 @@ def get_bmesh_layer(domain, key, dtype):
         layer = domain.layers.int.get(key)
     elif dtype == 'FLOAT':
         layer = domain.layers.float.get(key)
+    elif dtype == 'FLOAT_VECTOR':
+        layer = domain.layers.float_vector.get(key)
+    elif dtype == 'FLOAT_COLOR':
+        layer = domain.layers.float_color.get(key)
 
     return layer
 

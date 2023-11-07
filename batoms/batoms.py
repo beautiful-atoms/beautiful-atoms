@@ -28,7 +28,7 @@ default_attributes = [
     {"name": 'select', "data_type": 'INT'},
     {"name": 'species_index', "data_type": 'INT'},
     {"name": 'species', "data_type": 'STRING'},
-    {"name": 'show', "data_type": 'BOOLEAN'},
+    {"name": 'show', "data_type": 'INT'},
     {"name": 'scale', "data_type": 'FLOAT'},
     {"name": 'model_style', "data_type": 'INT'},
 ]
@@ -433,8 +433,8 @@ class Batoms(BaseCollection, ObjectGN):
                                 '%s_NamedAttribute_show' % (self.label),
                                 'GeometryNodeInputNamedAttribute')
         ShowAttribute.inputs['Name'].default_value = f"show"
-        ShowAttribute.data_type = "BOOLEAN"
-        show_socket = get_socket_by_identifier(ShowAttribute, "Attribute_Bool", type="outputs")
+        ShowAttribute.data_type = "INT"
+        show_socket = get_socket_by_identifier(ShowAttribute, "Attribute_Int", type="outputs")
         SelectAttribute = get_node_by_name(nodes,
                                 '%s_NamedAttribute_select' % (self.label),
                                 'GeometryNodeInputNamedAttribute')
