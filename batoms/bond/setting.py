@@ -210,7 +210,7 @@ class BondSettings(Setting):
             style = int(sp["style"])
         colors = [sp['color1'], sp['color2']]
         for i in range(2):
-            name = 'bond_%s_%s_%s_%s_%s' % (
+            name = 'Bond_%s_%s_%s_%s_%s' % (
                 self.label, sp['name'], order, style, i)
             if name in bpy.data.materials:
                 mat = bpy.data.materials.get(name)
@@ -239,7 +239,7 @@ class BondSettings(Setting):
             order = sp["order"]
         if not style:
             style = int(sp["style"])
-        name = 'bond_%s_%s_%s_%s' % (self.label, sp['name'], order, style)
+        name = 'Bond_%s_%s_%s_%s' % (self.label, sp['name'], order, style)
         radius = sp['width']
         self.delete_obj(name)
         if style == 3:
@@ -265,7 +265,8 @@ class BondSettings(Setting):
         self.build_materials(sp, order, style, material_style=sp['material_style'])
         self.assign_materials(sp, order, style)
         # update geometry nodes
-        ObjectInstancer = get_node_by_name(self.bonds.batoms.gn_node_group.nodes,
+        node = self.bonds.get_bond_pair_node(name)
+        ObjectInstancer = get_node_by_name(node.node_tree.nodes,
                                             'ObjectInfo_%s' % name,
                                             'GeometryNodeObjectInfo')
         if ObjectInstancer is not None:
@@ -431,7 +432,7 @@ class BondSettings(Setting):
             instancers[data['name']] = {}
             for order in [1, 2, 3]:
                 for style in [0, 1, 2, 3]:
-                    name = 'bond_%s_%s_%s_%s' % (
+                    name = 'Bond_%s_%s_%s_%s' % (
                         self.label, data['name'], order, style)
                     instancers[data['name']]['%s_%s' %
                                              (order, style)] = \
@@ -441,7 +442,7 @@ class BondSettings(Setting):
                 instancers[data['name']] = {}
                 for order in [1, 2, 3]:
                     for style in [0, 1, 2, 3]:
-                        name = 'bond_%s_%s_%s_%s' % (
+                        name = 'Bond_%s_%s_%s_%s' % (
                             self.label, data['name'], order, style)
                         instancers[data['name']]['%s_%s' %
                                                  (order, style)] = \
@@ -460,7 +461,7 @@ class BondSettings(Setting):
             for order in [1, 2, 3]:
                 for style in [0, 1, 2, 3]:
                     for i in range(2):
-                        name = 'bond_%s_%s_%s_%s_%s' % (
+                        name = 'Bond_%s_%s_%s_%s_%s' % (
                             self.label, data['name'], order, style, i)
                         mat = bpy.data.materials.get(name)
                         materials[data['name']]['%s_%s_%s' %
@@ -471,7 +472,7 @@ class BondSettings(Setting):
                 for order in [1, 2, 3]:
                     for style in [0, 1, 2, 3]:
                         for i in range(2):
-                            name = 'bond_%s_%s_%s_%s_%s' % (
+                            name = 'Bond_%s_%s_%s_%s_%s' % (
                                 self.label, data['name'], order, style, i)
                             mat = bpy.data.materials.get(name)
                             materials[data['name']]['%s_%s_%s' %

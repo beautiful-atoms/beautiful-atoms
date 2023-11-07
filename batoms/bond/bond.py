@@ -71,6 +71,40 @@ class Bond(BaseCollection, ObjectGN):
         self.build_geometry_node()
         self._search_bond = SearchBond(self.label, batoms=batoms, load=True)
 
+    @property
+    def bond_node(self):
+        """Get the top level node of bond node group."""
+        from batoms.utils.butils import get_node_with_node_tree_by_name
+        default_interface = [
+            ['Geometry', 'NodeSocketGeometry', 'INPUT'],
+            ['Geometry', 'NodeSocketGeometry', 'OUTPUT'],
+        ]
+        name = f'Bond_{self.label}'
+        node = get_node_with_node_tree_by_name(self.gn_node_group.nodes,
+                                               name=name,
+                                               interface=default_interface)
+        return node
+
+    def get_bond_pair_node(self, name):
+        """Get the node of bond pair node group."""
+        from batoms.utils.butils import get_node_with_node_tree_by_name
+        # create group input and output sockets
+        default_interface = [
+            ["Geometry", "NodeSocketGeometry", 'INPUT'],
+            ["Species0", "NodeSocketBool", 'INPUT'],
+            ["Species1", "NodeSocketBool", 'INPUT'],
+            ["Order", "NodeSocketInt", 'INPUT'],
+            ["Style", "NodeSocketInt", 'INPUT'],
+            ["Length", "NodeSocketFloat", 'INPUT'],
+            ["Rotation", "NodeSocketVector", 'INPUT'],
+            ["Geometry", "NodeSocketGeometry", 'OUTPUT'],
+        ]
+        # Create Node Group if not exit
+        node = get_node_with_node_tree_by_name(self.bond_node.node_tree.nodes,
+                                               name=name,
+                                               interface=default_interface)
+        return node
+
     def build_geometry_node(self):
         """
         v = (p1 + o1) - (p2 + o2)
@@ -78,18 +112,12 @@ class Bond(BaseCollection, ObjectGN):
         v align euler
         """
         from batoms.utils.butils import get_node_by_name, \
-            get_socket_by_identifier, get_node_with_node_tree_by_name
+            get_socket_by_identifier
         from batoms.utils import string2Number
-        default_interface = [
-            ['Geometry', 'NodeSocketGeometry', 'INPUT'],
-            ['Geometry', 'NodeSocketGeometry', 'OUTPUT'],
-        ]
+
         tstart = time()
         parent = self.gn_node_group
-        name = f'Bond_{self.label}'
-        node = get_node_with_node_tree_by_name(self.gn_node_group.nodes,
-                                               name=name,
-                                               interface=default_interface)
+        node = self.bond_node
         nodes = node.node_tree.nodes
         links = node.node_tree.links
         GroupInput = nodes[0]
@@ -345,25 +373,10 @@ class Bond(BaseCollection, ObjectGN):
         """
         add geometry node for each bond pair
         """
-        from batoms.utils.butils import get_node_by_name, get_socket_by_identifier, \
-            get_node_with_node_tree_by_name
-        # create group input and output sockets
-        default_interface = [
-            ["Geometry", "NodeSocketGeometry", 'INPUT'],
-            ["Species0", "NodeSocketBool", 'INPUT'],
-            ["Species1", "NodeSocketBool", 'INPUT'],
-            ["Order", "NodeSocketInt", 'INPUT'],
-            ["Style", "NodeSocketInt", 'INPUT'],
-            ["Length", "NodeSocketFloat", 'INPUT'],
-            ["Rotation", "NodeSocketVector", 'INPUT'],
-            ["Geometry", "NodeSocketGeometry", 'OUTPUT'],
-        ]
-        # Create Node Group if not exit
-        parent_tree = bpy.data.node_groups[f'Bond_{self.label}']
+        from batoms.utils.butils import get_node_by_name, get_socket_by_identifier
+        parent_tree = self.bond_node.node_tree
         name = 'Bond_%s_%s_%s_%s' % (self.label, sp["name"], order, style)
-        node = get_node_with_node_tree_by_name(parent_tree.nodes,
-                                               name=name,
-                                               interface=default_interface)
+        node = self.get_bond_pair_node(name)
         # tstart = time()
         if not order:
             order = sp["order"]
@@ -507,8 +520,8 @@ class Bond(BaseCollection, ObjectGN):
         # find bond kinds by the names of species
         from batoms.utils.butils import get_socket_by_identifier
         tstart = time()
-        nodes = self.gn_node_group.nodes
-        links = self.gn_node_group.links
+        nodes = self.bond_node.node_tree.nodes
+        links = self.bond_node.node_tree.links
         GroupInput = nodes[0]
         SpeciesAtIndexs = []
         for i in range(2):
@@ -572,9 +585,10 @@ class Bond(BaseCollection, ObjectGN):
                 self.settings.build_instancer(sp)
                 self.settings.assign_materials(sp, sp["order"], sp["style"])
             # update  instancers
-            name = 'bond_%s_%s_%s_%s' % (self.label, sp["name"],
+            name = 'Bond_%s_%s_%s_%s' % (self.label, sp["name"],
                                          sp["order"], sp["style"])
-            ObjectInstancer = get_node_by_name(self.gn_node_group.nodes,
+            node = self.get_bond_pair_node(name)
+            ObjectInstancer = get_node_by_name(node.node_tree.nodes,
                                                 'ObjectInfo_%s' % name,
                                                 'GeometryNodeObjectInfo')
             ObjectInstancer.inputs['Object'].default_value = \
