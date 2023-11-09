@@ -34,12 +34,18 @@ plugin_info = {
     }
 
 def enable_plugin():
+    # in case of using Blender as module
+    # the "batoms" addon is added, but doesn't show up in the preferences
+    if "batoms" not in bpy.context.preferences.addons:
+        return
     for key in plugin_info.keys():
         if getattr(bpy.context.preferences.addons['batoms'].preferences, key):
             plugin = importlib.import_module("batoms.plugins.{}".format(key))
             plugin.register_class()
 
 def disable_plugin():
+    if "batoms" not in bpy.context.preferences.addons:
+        return
     for key in plugin_info.keys():
         if getattr(bpy.context.preferences.addons['batoms'].preferences, key):
             plugin = importlib.import_module("batoms.plugins.{}".format(key))
