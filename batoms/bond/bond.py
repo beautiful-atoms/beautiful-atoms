@@ -105,7 +105,8 @@ class Bond(BaseCollection, ObjectGN):
         return node
 
     def get_bond_pair_node(self, name):
-        """Get the node of bond pair node group."""
+        """Get the node of bond pair node group.
+        Create the node if not exist."""
         from batoms.utils.butils import get_node_with_node_tree_by_name
         # create group input and output sockets
         default_interface = [
@@ -153,13 +154,118 @@ class Bond(BaseCollection, ObjectGN):
         JoinGeometry = get_node_by_name(nodes,
                                          '%s_JoinGeometry' % self.label,
                                          'GeometryNodeJoinGeometry')
-        MeshToPoints = get_node_by_name(nodes,
-                                           '%s_MeshToPoints_edge' % (self.label),
-                                           'GeometryNodeMeshToPoints')
-        MeshToPoints.mode = "EDGES"
-        links.new(GroupInput.outputs["Geometry"], MeshToPoints.inputs["Mesh"])
         links.new(JoinGeometry.outputs["Geometry"], GroupOutput.inputs["Geometry"])
         # ------------------------------------------------------------------
+        self.build_bond_mesh()
+        # get the species by atoms_index
+        # order
+        SpeciesIndexAttribute = get_node_by_name(nodes,
+                                '%s_NamedAttribute_species_index' % (self.label),
+                                'GeometryNodeInputNamedAttribute')
+        SpeciesIndexAttribute.inputs['Name'].default_value = f"species_index"
+        SpeciesIndexAttribute.data_type = "INT"
+        SpeciesAtIndexs = []
+        for i in range(2):
+            AtomsIndexAttribute = get_node_by_name(nodes,
+                                '%s_NamedAttribute_atoms_index%s' % (self.label, i),
+                                'GeometryNodeInputNamedAttribute')
+            AtomsIndexAttribute.inputs['Name'].default_value = f"atoms_index{i}"
+            AtomsIndexAttribute.data_type = 'INT'
+            SpeciesAtIndex = get_node_by_name(nodes,
+                                    '%s_SpeciesAtIndex%s' % (self.label, i),
+                                    'GeometryNodeSampleIndex')
+            SpeciesAtIndex.data_type = 'INT'
+            SpeciesAtIndexs.append(SpeciesAtIndex)
+            links.new(GroupInput.outputs["Geometry"], SpeciesAtIndex.inputs['Geometry'])
+            output_socket = get_socket_by_identifier(AtomsIndexAttribute, "Attribute_Int", type="outputs")
+            links.new(output_socket, SpeciesAtIndex.inputs['Index'])
+            input_socket = get_socket_by_identifier(SpeciesAtIndex, "Value_Int")
+            output_socket = get_socket_by_identifier(SpeciesIndexAttribute, "Attribute_Int", type="outputs")
+            links.new(output_socket, input_socket)
+        # find bond kinds by the names of species
+        for sp in self.batoms.species:
+            # we need two compares for one species,
+            # because we have two sockets: species_index0 and species_index1
+            CompareSpecies = []
+            for i in range(2):
+                tmp = get_node_by_name(nodes,
+                                        '%s_CompareSpecies_%s_%s' % (
+                                            self.label, sp.name, i),
+                                        "FunctionNodeCompare")
+                tmp.operation = 'EQUAL'
+                tmp.data_type = 'INT'
+                socket = get_socket_by_identifier(tmp, "B_INT")
+                socket.default_value = string2Number(sp.name)
+                CompareSpecies.append(tmp)
+            output_socket = get_socket_by_identifier(SpeciesAtIndexs[0], "Value_Int", type="outputs")
+            input_socket = get_socket_by_identifier(CompareSpecies[0], "A_INT")
+            links.new(output_socket, input_socket)
+            output_socket = get_socket_by_identifier(SpeciesAtIndexs[1], "Value_Int", type="outputs")
+            input_socket = get_socket_by_identifier(CompareSpecies[1], "A_INT")
+            links.new(output_socket, input_socket)
+        # order
+        BondOrderAttribute = get_node_by_name(nodes,
+                                '%s_NamedAttribute_bond_order' % (self.label),
+                                'GeometryNodeInputNamedAttribute')
+        BondOrderAttribute.inputs['Name'].default_value = f"bond_order"
+        BondOrderAttribute.data_type = "INT"
+        socket = get_socket_by_identifier(BondOrderAttribute, "Attribute_Int", type="outputs")
+        for order in [1, 2, 3]:
+            CompareOrder = get_node_by_name(nodes,
+                                             'CompareOrder_%s_%s' % (
+                                                 self.label, order),
+                                             "FunctionNodeCompare")
+            CompareOrder.operation = 'EQUAL'
+            CompareOrder.inputs[1].default_value = order
+            links.new(
+                socket, CompareOrder.inputs[0])
+        # style
+        BondStyleAttribute = get_node_by_name(nodes,
+                                '%s_NamedAttribute_bond_style' % (self.label),
+                                'GeometryNodeInputNamedAttribute')
+        BondStyleAttribute.inputs['Name'].default_value = f"bond_style"
+        BondStyleAttribute.data_type = "INT"
+        socket = get_socket_by_identifier(BondStyleAttribute, "Attribute_Int", type="outputs")
+        for style in [0, 1, 2, 3]:
+            CompareStyle = get_node_by_name(nodes,
+                                             'CompareStyle_%s_%s' % (
+                                                 self.label, style),
+                                             "FunctionNodeCompare")
+            CompareStyle.operation = 'EQUAL'
+            CompareStyle.inputs[1].default_value = style
+            links.new(
+                socket, CompareStyle.inputs[0])
+        logger.debug('Build geometry nodes for bonds: %s' % (time() - tstart))
+        #
+
+    def build_bond_mesh(self):
+        """Create geometry node for Bond Mesh.
+        1) Transform the edge to mesh points.
+        2) Set the position of the points to the center of the bond.
+        3) Calculate the bond vector and length.
+        """
+        from batoms.utils.butils import get_socket_by_identifier, get_node_by_name, \
+            create_node_tree
+        default_interface = [
+            ["Geometry", "NodeSocketGeometry", 'INPUT'],
+            ["Geometry", "NodeSocketGeometry", 'OUTPUT'],
+            ["Length", "NodeSocketFloat", 'OUTPUT'],
+            ["Rotation", "NodeSocketVector", 'OUTPUT'],
+        ]
+        parent_tree = self.bond_node.node_tree
+        name = 'Bond_Mesh_%s' % (self.label)
+        node = get_node_by_name(parent_tree.nodes, name=name,
+                                type="GeometryNodeGroup")
+        node_tree = create_node_tree(name=name, interface=default_interface)
+        node.node_tree = node_tree
+        nodes = node_tree.nodes
+        links = node_tree.links
+        GroupInput = nodes[0]
+        GroupOutput = nodes[1]
+        # link the input to parent node
+        parent_tree.links.new(parent_tree.nodes[0].outputs['Geometry'],
+                              node.inputs['Geometry'])
+        #-------------------------------------------------------------
         # calculate bond vector, length, rotation based on the index
         # Get four positions from batoms
         # atoms_index0, atoms_index1 of bond
@@ -230,9 +336,14 @@ class Bond(BaseCollection, ObjectGN):
         SetPosition = get_node_by_name(nodes,
                                         '%s_SetPosition' % self.label,
                                         'GeometryNodeSetPosition')
+        MeshToPoints = get_node_by_name(nodes,
+                                           '%s_MeshToPoints_edge' % (self.label),
+                                           'GeometryNodeMeshToPoints')
+        MeshToPoints.mode = "EDGES"
+        links.new(GroupInput.outputs["Geometry"], MeshToPoints.inputs["Mesh"])
         links.new(MeshToPoints.outputs['Points'], SetPosition.inputs['Geometry'])
         links.new(VectorDivide.outputs[0], SetPosition.inputs['Position'])
-
+        links.new(SetPosition.outputs["Geometry"], GroupOutput.inputs['Geometry'])
         # get the vector for the bond and the length
         # also the vector for the second bond
         VectorSubtract = []
@@ -287,86 +398,13 @@ class Bond(BaseCollection, ObjectGN):
             AlignEuler[0].outputs[0], AlignEuler[1].inputs['Rotation'])
         links.new(
             VectorCross0.outputs[0], AlignEuler[1].inputs['Vector'])
-        # get the species by atoms_index
-        # order
-        SpeciesIndexAttribute = get_node_by_name(nodes,
-                                '%s_NamedAttribute_species_index' % (self.label),
-                                'GeometryNodeInputNamedAttribute')
-        SpeciesIndexAttribute.inputs['Name'].default_value = f"species_index"
-        SpeciesIndexAttribute.data_type = "INT"
-        SpeciesAtIndexs = []
-        for i in range(2):
-            SpeciesAtIndex = get_node_by_name(nodes,
-                                    '%s_SpeciesAtIndex%s' % (self.label, i),
-                                    'GeometryNodeSampleIndex')
-            SpeciesAtIndex.data_type = 'INT'
-            SpeciesAtIndexs.append(SpeciesAtIndex)
-            links.new(GroupInput.outputs["Geometry"], SpeciesAtIndex.inputs['Geometry'])
-            output_socket = get_socket_by_identifier(AtomsIndexAttributes[i], "Attribute_Int", type="outputs")
-            links.new(output_socket, SpeciesAtIndex.inputs['Index'])
-            input_socket = get_socket_by_identifier(SpeciesAtIndex, "Value_Int")
-            output_socket = get_socket_by_identifier(SpeciesIndexAttribute, "Attribute_Int", type="outputs")
-            links.new(output_socket, input_socket)
-        # find bond kinds by the names of species
-        for sp in self.batoms.species:
-            # we need two compares for one species,
-            # because we have two sockets: species_index0 and species_index1
-            CompareSpecies = []
-            for i in range(2):
-                tmp = get_node_by_name(nodes,
-                                        '%s_CompareSpecies_%s_%s' % (
-                                            self.label, sp.name, i),
-                                        "FunctionNodeCompare")
-                tmp.operation = 'EQUAL'
-                tmp.data_type = 'INT'
-                socket = get_socket_by_identifier(tmp, "B_INT")
-                socket.default_value = string2Number(sp.name)
-                CompareSpecies.append(tmp)
-            output_socket = get_socket_by_identifier(SpeciesAtIndexs[0], "Value_Int", type="outputs")
-            input_socket = get_socket_by_identifier(CompareSpecies[0], "A_INT")
-            links.new(output_socket, input_socket)
-            output_socket = get_socket_by_identifier(SpeciesAtIndexs[1], "Value_Int", type="outputs")
-            input_socket = get_socket_by_identifier(CompareSpecies[1], "A_INT")
-            links.new(output_socket, input_socket)
-        # order
-        BondOrderAttribute = get_node_by_name(nodes,
-                                '%s_NamedAttribute_bond_order' % (self.label),
-                                'GeometryNodeInputNamedAttribute')
-        BondOrderAttribute.inputs['Name'].default_value = f"bond_order"
-        BondOrderAttribute.data_type = "INT"
-        socket = get_socket_by_identifier(BondOrderAttribute, "Attribute_Int", type="outputs")
-        for order in [1, 2, 3]:
-            CompareOrder = get_node_by_name(nodes,
-                                             'CompareOrder_%s_%s' % (
-                                                 self.label, order),
-                                             "FunctionNodeCompare")
-            CompareOrder.operation = 'EQUAL'
-            CompareOrder.inputs[1].default_value = order
-            links.new(
-                socket, CompareOrder.inputs[0])
-        # style
-        BondStyleAttribute = get_node_by_name(nodes,
-                                '%s_NamedAttribute_bond_style' % (self.label),
-                                'GeometryNodeInputNamedAttribute')
-        BondStyleAttribute.inputs['Name'].default_value = f"bond_style"
-        BondStyleAttribute.data_type = "INT"
-        socket = get_socket_by_identifier(BondStyleAttribute, "Attribute_Int", type="outputs")
-        for style in [0, 1, 2, 3]:
-            CompareStyle = get_node_by_name(nodes,
-                                             'CompareStyle_%s_%s' % (
-                                                 self.label, style),
-                                             "FunctionNodeCompare")
-            CompareStyle.operation = 'EQUAL'
-            CompareStyle.inputs[1].default_value = style
-            links.new(
-                socket, CompareStyle.inputs[0])
-        logger.debug('Build geometry nodes for bonds: %s' % (time() - tstart))
-        #
+        links.new(VectorLength.outputs['Value'], GroupOutput.inputs['Length'])
+        links.new(AlignEuler[1].outputs[0], GroupOutput.inputs['Rotation'])
 
     def update_geometry_nodes(self):
         tstart = time()
         # for sp in self.settings:
-        # self.add_geometry_node(sp.as_dict())
+        # self.add_bond_pair_node(sp.as_dict())
         # only build pair in bondlists
         bondlists = self.arrays
         if len(bondlists['atoms_index0']) == 0:
@@ -384,37 +422,30 @@ class Bond(BaseCollection, ObjectGN):
             order = pair[2]
             style = pair[3]
             sp = self.settings['%s-%s' % (sp1, sp2)]
-            self.add_geometry_node(sp.as_dict(), order, style)
+            self.add_bond_pair_node(sp.as_dict(), order, style)
 
         logger.debug('Update geometry nodes for bonds: %s' % (time() - tstart))
 
-    def add_geometry_node(self, sp, order=None, style=None):
-        """
-        add geometry node for each bond pair
+    def add_bond_pair_node(self, sp, order=None, style=None):
+        """Add geometry node for the bond pair.
         """
         from batoms.utils.butils import get_node_by_name, get_socket_by_identifier
         parent_tree = self.bond_node.node_tree
-        name = 'Bond_%s_%s_%s_%s' % (self.label, sp["name"], order, style)
-        node = self.get_bond_pair_node(name)
         # tstart = time()
         if not order:
             order = sp["order"]
         if not style:
             style = int(sp["style"])
+        name = 'Bond_%s_%s_%s_%s' % (self.label, sp["name"], order, style)
+        node = self.get_bond_pair_node(name)
         nodes = node.node_tree.nodes
         links = node.node_tree.links
         GroupInput = nodes[0]
         GroupOutput = nodes[1]
         # link the input to parent node
-        SetPosition = get_node_by_name(parent_tree.nodes,
-                                        '%s_SetPosition' % self.label,
+        BondMesh = get_node_by_name(parent_tree.nodes,
+                                        'Bond_Mesh_%s' % (self.label),
                                         'GeometryNodeSetPosition')
-        VectorLength = get_node_by_name(parent_tree.nodes,
-                                         '%s_VectorLength' % self.label,
-                                         "ShaderNodeVectorMath")
-        AlignEuler1 = get_node_by_name(parent_tree.nodes,
-                                        '%s_AlignEuler1' % self.label,
-                                        'FunctionNodeAlignEulerToVector')
         # e.g C-H bond, species0 is C, species1 is H
         CompareSpecies0 = get_node_by_name(parent_tree.nodes,
                                         '%s_CompareSpecies_%s_%s' % (
@@ -434,9 +465,9 @@ class Bond(BaseCollection, ObjectGN):
             'CompareStyle_%s_%s' % (self.label,
                                            style),
             "FunctionNodeCompare")
-        parent_tree.links.new(SetPosition.outputs['Geometry'], node.inputs['Geometry'])
-        parent_tree.links.new(VectorLength.outputs['Value'], node.inputs['Length'])
-        parent_tree.links.new(AlignEuler1.outputs[0], node.inputs['Rotation'])
+        parent_tree.links.new(BondMesh.outputs['Geometry'], node.inputs['Geometry'])
+        parent_tree.links.new(BondMesh.outputs['Length'], node.inputs['Length'])
+        parent_tree.links.new(BondMesh.outputs['Rotation'], node.inputs['Rotation'])
         parent_tree.links.new(CompareSpecies0.outputs[0], node.inputs['Species0'])
         parent_tree.links.new(CompareSpecies1.outputs[0], node.inputs['Species1'])
         parent_tree.links.new(CompareOrder.outputs[0], node.inputs['Order'])
@@ -594,7 +625,7 @@ class Bond(BaseCollection, ObjectGN):
             # update geometry node
             if self.settings.instancers[sp["name"]][order_style] is None:
                 self.settings.build_instancer(sp, order, style)
-                self.add_geometry_node(sp)
+                self.add_bond_pair_node(sp)
             #always update materials
             self.settings.build_materials(sp, material_style=sp['material_style'])
             self.settings.assign_materials(sp, sp["order"], sp["style"])

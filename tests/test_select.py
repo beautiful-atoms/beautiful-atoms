@@ -28,11 +28,11 @@ def test_select():
     assert len(au111.selects) == 3
     # model_style
     au111.selects["mol"].model_style = 1
-    assert len(au111.bond) == 8
+    assert len(au111.bond.bondlists) == 8
     assert np.isclose(au111[-1].scale, 0.4)
     au111.selects["mol"].model_style = 0
     assert np.isclose(au111[-1].scale, 1)
-    assert len(au111.bond) == 0
+    assert len(au111.bond.bondlists) == 0
 
 
 def test_select_protein():

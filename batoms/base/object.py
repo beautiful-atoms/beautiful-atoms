@@ -346,11 +346,11 @@ class ObjectGN(BaseObject):
             gn_node_group.links.new(tmp.outputs['Value'], CombineXYZ.inputs[i])
         return CombineXYZ
 
-    def add_geometry_node(self, sp):
+    def add_geometry_node(self):
         """
-        add geometry node for each bond pair
+        add geometry node for species
         """
-        pass
+        return NotImplementedError("add_geometry_node is not implemented.")
 
     @property
     def realize_instances(self):

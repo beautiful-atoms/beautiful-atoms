@@ -92,7 +92,7 @@ def test_bond_search_bond_0(tio2):
     tio2.model_style = 1
     tio2.boundary = 0.01
     tio2.model_style = 1
-    assert len(tio2.bond) == 14
+    assert len(tio2.bond.bondlists) == 14
     tio2.bond.show_search = True
     if use_cycles:
         set_cycles_res(tio2)

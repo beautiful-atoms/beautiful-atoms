@@ -97,7 +97,7 @@ class BondSetting():
         # if instancer with this order not exist, add one
         sp = self.as_dict()
         self.bonds.settings.build_instancer(sp)
-        self.bonds.add_geometry_node(sp)
+        self.bonds.add_bond_pair_node(sp)
 
     @property
     def style(self):
@@ -110,7 +110,7 @@ class BondSetting():
         # if instancer with this style not exist, add one
         sp = self.as_dict()
         self.bonds.settings.build_instancer(sp)
-        self.bonds.add_geometry_node(sp)
+        self.bonds.add_bond_pair_node(sp)
 
     @property
     def color1(self):
@@ -121,7 +121,7 @@ class BondSetting():
         self.bpy_setting[self.name].color1 = color1
         sp = self.as_dict()
         self.bonds.settings.build_instancer(sp)
-        self.bonds.add_geometry_node(sp)
+        self.bonds.add_bond_pair_node(sp)
 
     @property
     def color2(self):
@@ -132,7 +132,7 @@ class BondSetting():
         self.bpy_setting[self.name].color2 = color2
         sp = self.as_dict()
         self.bonds.settings.build_instancer(sp)
-        self.bonds.add_geometry_node(sp)
+        self.bonds.add_bond_pair_node(sp)
 
     @property
     def indices(self):

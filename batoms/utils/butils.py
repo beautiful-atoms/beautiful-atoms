@@ -106,6 +106,24 @@ def get_selected_vertices(obj):
     bpy.ops.object.mode_set(mode=mode)
     return selected_vertices.tolist()
 
+def get_selected_edges(obj):
+    """
+    """
+    import numpy as np
+    selected_edges = []
+    # if obj.mode != "EDIT":
+        # logger.warning('Warning: Please switch to Edit mode.')
+        # return selected_edges
+    mode = obj.mode
+    bpy.ops.object.mode_set(mode='OBJECT')
+    count = len(obj.data.edges)
+    sel = np.zeros(count, dtype=np.bool)
+    obj.data.edges.foreach_get('select', sel)
+    selected_edges = np.where(sel)[0]
+    # back to whatever mode we were in
+    bpy.ops.object.mode_set(mode=mode)
+    return selected_edges.tolist()
+
 def get_selected_vertices_all():
     """
     change to 'Object' mode
@@ -315,6 +333,22 @@ def get_node_by_name(nodes, name, type=None):
         node.name = name
     return node
 
+
+def create_node_tree(name, node_group_type="GeometryNodeTree", interface=[]):
+    """Create a node_tree by name and type.
+    Add default interface"""
+    # create a new node_tree if node_tree is None
+    node_tree = bpy.data.node_groups.get(name)
+    if node_tree is None:
+        node_tree = bpy.data.node_groups.new(name, type=node_group_type)
+        # add default interface if not exist
+        for i in interface:
+            node_tree.interface.new_socket(name=i[0], socket_type=i[1], in_out=i[2])
+        # create input and output node
+        node_tree.nodes.new('NodeGroupInput')
+        node_tree.nodes.new('NodeGroupOutput')
+    return node_tree
+
 def get_node_with_node_tree_by_name(nodes, name, node_type="GeometryNodeGroup",
                            node_group_type="GeometryNodeTree",
                            interface=[]):
@@ -328,17 +362,8 @@ def get_node_with_node_tree_by_name(nodes, name, node_type="GeometryNodeGroup",
     if node is None:
         node = nodes.new(type=node_type)
         node.name = name
-    # create a new node_tree if node_tree is None
-    ng = bpy.data.node_groups.get(name)
-    if ng is None:
-        ng = bpy.data.node_groups.new(name, type=node_group_type)
-        # add default interface if not exist
-        for i in interface:
-            ng.interface.new_socket(name=i[0], socket_type=i[1], in_out=i[2])
-        # create input and output node
-        ng.nodes.new('NodeGroupInput')
-        ng.nodes.new('NodeGroupOutput')
-    node.node_tree = ng
+    node_tree = create_node_tree(name, node_group_type, interface)
+    node.node_tree = node_tree
     return node
 
 def clean_default(camera=False, light=True):
