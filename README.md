@@ -47,17 +47,16 @@ Features:
 We recommend using [Visual Studio Code](https://code.visualstudio.com/) with the [Blender extension](https://github.com/JacquesLucke/blender_vscode).
 
 #### Test
-To run the tests, you need to install the development dependencies:
-
-```console
-$ pip install -r requirements-test.txt
-```
-
 We recommend using [pytest-blender](https://pypi.org/project/pytest-blender/). To run the tests, run:
 
 ```console
-$ cd tests
-$ pytest
+pip install pytest-blender
+$blender_python="$(pytest-blender)"
+$blender_python -m ensurepip
+Install the development dependencies:
+$blender_python -m pip install -r test-requirements.txt
+cd tests
+pytest
 ```
 
 #### Pre-commit
