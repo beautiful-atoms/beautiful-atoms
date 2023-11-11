@@ -27,7 +27,7 @@ class Batoms_IO_search_material_project(Operator):
     bl_description = ("Search structure by id")
 
     def execute(self, context):
-        from batoms.database.pymatgen import mp_search
+        from batoms.database.mp import mp_search
         io = context.scene.batoms.io
         batoms = mp_search(io.mp_key, io.mp_id)
         return {'FINISHED'}
