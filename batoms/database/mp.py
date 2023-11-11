@@ -1,10 +1,4 @@
-"""
-Search public database
-
-Pymatgen
-Pubchem
-Nomad
-"""
+"""Search  the Materials Project"""
 
 from batoms import Batoms
 import logging
