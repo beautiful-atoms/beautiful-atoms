@@ -94,8 +94,9 @@ dependencies:
   - curl
   - python={blender_py_ver}
   - numpy={blender_numpy_ver}
-  - pymatgen>=2020.12
+  - pymatgen>=2022.3.7
   - ase>=3.21.0
+  - mp-api>=0.37.5
   - openbabel>=3.1.1
   - scikit-image
   - scipy>=1.6.0

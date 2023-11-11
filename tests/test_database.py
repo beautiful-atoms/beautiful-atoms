@@ -1,7 +1,7 @@
 import bpy
 import pytest
 from batoms import Batoms
-from batoms.database.pymatgen import pymatgen_search
+from batoms.database.mp import mp_search
 from pymatgen.core.structure import Molecule
 from pymatgen.core import Lattice, Structure
 
