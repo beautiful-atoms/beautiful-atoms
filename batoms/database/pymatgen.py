@@ -11,7 +11,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def pymatgen_search(key, mpid):
+def mp_search(key, mpid):
     from mp_api.client import MPRester
 
     with MPRester(api_key=key) as mpr:
