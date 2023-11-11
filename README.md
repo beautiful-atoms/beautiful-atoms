@@ -38,6 +38,7 @@ Features:
 * scipy
 * Scikit-image
 * pymatgen
+* mp-api
 * openbabel
 
 ### How to use
