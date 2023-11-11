@@ -100,6 +100,7 @@ dependencies:
   - scikit-image
   - scipy>=1.6.0
   - spglib>=2.0.0
+  - mp-api>=0.37.5
   - pip
   - pip:
     - batoms-api
