@@ -23,6 +23,7 @@ default_attributes = [
     {"name": 'model_style', "data_type": 'INT'},
     {"name": 'scale', "data_type": 'FLOAT'},
     {"name": 'radius_style', "data_type": 'INT'},
+    {"name": 'boundary_offset', "data_type": 'FLOAT_VECTOR'},
 ]
 
 default_GroupInput = [
@@ -33,6 +34,7 @@ default_GroupInput = [
     ['model_style', 'NodeSocketInt'],
     ['scale', 'NodeSocketFloat'],
     ['radius_style', 'NodeSocketInt'],
+    ['boundary_offset', 'NodeSocketVector'],
 ]
 
 default_boundary_datas = {
@@ -41,7 +43,7 @@ default_boundary_datas = {
     'species': np.ones(0, dtype='U4'),
     'positions': np.zeros((0, 3)),
     'scales': np.zeros(0),
-    'offsets': np.zeros((0, 3)),
+    'boundary_offset': np.zeros((0, 3)),
     'model_styles': np.ones(0, dtype=int),
     'shows': np.ones(0, dtype=int),
     'selects': np.ones(0, dtype=int),
@@ -103,16 +105,12 @@ class Boundary(ObjectGN):
         # tstart = time()
         if len(datas['positions'].shape) == 2:
             self._trajectory = {'positions': np.array([datas['positions']]),
-                            'offsets': np.array([datas['offsets']]),
                             }
             positions = datas['positions']
-            offsets = datas['offsets']
         elif len(datas['positions'].shape) == 3:
             self._trajectory = {'positions': datas['positions'],
-                            'offsets': datas['offsets'],
                             }
             positions = datas['positions'][0]
-            offsets = datas['offsets'][0]
         else:
             raise Exception('Shape of positions is wrong!')
         #
@@ -140,15 +138,6 @@ class Boundary(ObjectGN):
         obj.parent = self.batoms.obj
         self.batoms.coll.batoms.boundary.flag = True
         #
-        name = '%s_boundary_offset' % self.label
-        self.delete_obj(name)
-        mesh = bpy.data.meshes.new(name)
-        mesh.from_pydata(offsets, [], [])
-        mesh.update()
-        obj = bpy.data.objects.new(name, mesh)
-        self.batoms.coll.objects.link(obj)
-        obj.hide_set(True)
-        obj.parent = self.obj
         bpy.context.view_layer.update()
         self.set_attributes(attributes)
         self.init_geometry_node_modifier(default_GroupInput)
@@ -193,30 +182,18 @@ class Boundary(ObjectGN):
                                 TransferBatoms.inputs['Index'])
         # ------------------------------------------------------------------
         # calculate offset for boundary atoms
-        # transfer offsets from object self.obj_o
-        ObjectOffsets = get_node_by_name(nodes,
-                                          '%s_ObjectOffsets' % (self.label),
-                                          'GeometryNodeObjectInfo')
-        ObjectOffsets.inputs['Object'].default_value = self.obj_o
-        PositionOffsets = get_node_by_name(nodes,
-                                            '%s_PositionOffsets' % (
-                                                self.label),
-                                            'GeometryNodeInputPosition')
-        TransferOffsets = get_node_by_name(nodes,
-                                        '%s_TransferOffsets' % self.label,
-                                        'GeometryNodeSampleIndex')
-        InputIndex = get_node_by_name(nodes,
-                                        '%s_InputIndex' % self.label,
-                                        'GeometryNodeInputIndex')
-        TransferOffsets.data_type = 'FLOAT_VECTOR'
-        links.new(ObjectOffsets.outputs['Geometry'],
-                                TransferOffsets.inputs[0])
-        links.new(PositionOffsets.outputs['Position'],
-                                TransferOffsets.inputs[3])
-        links.new(InputIndex.outputs[0],
-                                TransferOffsets.inputs["Index"])
-        OffsetNode = self.vectorDotMatrix(self.gn_node_group, TransferOffsets.outputs[2],
-                                          self.batoms.cell, '')
+        OffsetAttribute = get_node_by_name(nodes,
+                            '%s_boundary_offset' % (self.label),
+                            'GeometryNodeInputNamedAttribute')
+        OffsetAttribute.inputs['Name'].default_value = "boundary_offset"
+        OffsetAttribute.data_type = "FLOAT_VECTOR"
+        # get arrays of cell
+        cell_node = self.get_cell_node(self.gn_node_group)
+        cell_node.inputs['Cell'].default_value = self.batoms.cell.obj
+        dot_node = self.vector_dot_cell(self.gn_node_group)
+        links.new(OffsetAttribute.outputs[0], dot_node.inputs["Vector"])
+        for i in range(3):
+            links.new(cell_node.outputs['A%d' % (i + 1)], dot_node.inputs['Array%d' % (i + 1)])
         # we need one add operation to get the positions with offset
         VectorAdd = get_node_by_name(nodes,
                                       '%s_VectorAdd' % (self.label),
@@ -225,7 +202,7 @@ class Boundary(ObjectGN):
         # add positions with offsets
         VectorAdd.operation = 'ADD'
         links.new(TransferBatoms.outputs[2], VectorAdd.inputs[0])
-        links.new(OffsetNode.outputs[0], VectorAdd.inputs[1])
+        links.new(dot_node.outputs[0], VectorAdd.inputs[1])
         # set positions
         SetPosition = get_node_by_name(nodes,
                                         '%s_SetPosition' % self.label,
@@ -254,6 +231,107 @@ class Boundary(ObjectGN):
                                     TransferScale.inputs[3])
             links.new(GroupInput.outputs[1],
                                     TransferScale.inputs['Index'])
+
+    def vector_dot_cell(self, parent_tree):
+        """Dot product of a vector (1x3) and a cell (3x3).
+        Note, the vector could be a vector field, (Nx3)"""
+        from batoms.utils.butils import get_socket_by_identifier, get_node_by_name, \
+            create_node_tree
+        default_interface = [
+            ["Vector", "NodeSocketVector", 'INPUT'],
+            ["Array1", "NodeSocketVector", 'INPUT'],
+            ["Array2", "NodeSocketVector", 'INPUT'],
+            ["Array3", "NodeSocketVector", 'INPUT'],
+            ["Vector", "NodeSocketVector", 'OUTPUT'],
+        ]
+        name = 'Vector_dot_cell_%s' % (self.label)
+        node = get_node_by_name(parent_tree.nodes, name=name,
+                                type="GeometryNodeGroup")
+        node_tree = create_node_tree(name=name, interface=default_interface)
+        node.node_tree = node_tree
+        nodes = node_tree.nodes
+        links = node_tree.links
+        GroupInput = nodes[0]
+        GroupOutput = nodes[1]
+        #
+        SeparateXYZs = []
+        CombineXYZs = []
+        DotProdcuts = []
+        for i in range(3):
+            # SeparateXYZ to get the transpose of the cell
+            SeparateXYZ = get_node_by_name(nodes,
+                                            f'{self.label}_SeparateXYZ_{i}',
+                                            'ShaderNodeSeparateXYZ')
+            # Dot product of the vector and the array
+            DotProdcut = get_node_by_name(nodes,
+                                    f'{self.label}_DotProduct_{i}',
+                                    'ShaderNodeVectorMath')
+            DotProdcut.operation = 'DOT_PRODUCT'
+            # then combine the vectors, and output to the group output
+            CombineXYZ = get_node_by_name(nodes,
+                                            f'{self.label}_CombineXYZ_{i}',
+                                            'ShaderNodeCombineXYZ')
+            links.new(GroupInput.outputs[f'Array{i+1}'], SeparateXYZ.inputs['Vector'])
+            links.new(GroupInput.outputs['Vector'], DotProdcut.inputs[0])
+            links.new(CombineXYZ.outputs['Vector'], DotProdcut.inputs[1])
+            CombineXYZs.append(CombineXYZ)
+            SeparateXYZs.append(SeparateXYZ)
+            DotProdcuts.append(DotProdcut)
+        for i in range(3):
+            for j in range(3):
+                    links.new(SeparateXYZs[i].outputs[j], CombineXYZs[j].inputs[i])
+        # output final vector
+        CombineXYZ = get_node_by_name(nodes,
+                                    f'{self.label}_CombineXYZ',
+                                    'ShaderNodeCombineXYZ')
+        for i in range(3):
+            links.new(DotProdcuts[i].outputs['Value'], CombineXYZ.inputs[i])
+        links.new(CombineXYZ.outputs['Vector'], GroupOutput.inputs['Vector'])
+        return node
+
+    def get_cell_node(self, parent_tree):
+        """Get the position of the cell.
+        """
+        from batoms.utils.butils import get_socket_by_identifier, get_node_by_name, \
+            create_node_tree
+        default_interface = [
+            ["Cell", "NodeSocketObject", 'INPUT'],
+            ["A1", "NodeSocketVector", 'OUTPUT'],
+            ["A2", "NodeSocketVector", 'OUTPUT'],
+            ["A3", "NodeSocketVector", 'OUTPUT'],
+        ]
+        name = 'Cell_Array_%s' % (self.label)
+        node = get_node_by_name(parent_tree.nodes, name=name,
+                                type="GeometryNodeGroup")
+        node_tree = create_node_tree(name=name, interface=default_interface)
+        node.node_tree = node_tree
+        nodes = node_tree.nodes
+        links = node_tree.links
+        GroupInput = nodes[0]
+        GroupOutput = nodes[1]
+        # link the input to parent node
+        #------------------------------------------------------------------
+        CellObject = get_node_by_name(nodes,
+                                         f'{self.label}_CellObject',
+                                         'GeometryNodeObjectInfo')
+        links.new(GroupInput.outputs['Cell'], CellObject.inputs['Object'])
+        Position = get_node_by_name(nodes,
+                                    '%s_Position' % (self.label),
+                                    'GeometryNodeInputPosition')
+        for i in range(3):
+            PositionAtIndex = get_node_by_name(nodes,
+                                            f'{self.label}_PositionAtIndex_{i}',
+                                            'GeometryNodeSampleIndex')
+            PositionAtIndex.data_type = 'FLOAT_VECTOR'
+            PositionAtIndex.inputs['Index'].default_value = i + 1
+            links.new(CellObject.outputs['Geometry'],
+                                    PositionAtIndex.inputs[0])
+            input_socket = get_socket_by_identifier(PositionAtIndex, 'Value_Vector')
+            links.new(Position.outputs['Position'], input_socket)
+            output_socket = get_socket_by_identifier(PositionAtIndex, 'Value_Vector', type="outputs")
+            links.new(output_socket, GroupOutput.inputs["A%d" % (i + 1)])
+
+        return node
 
     def add_geometry_node(self, spname):
         """
@@ -391,17 +469,6 @@ class Boundary(ObjectGN):
         return obj
 
     @property
-    def obj_o(self):
-        return self.get_obj_o()
-
-    def get_obj_o(self):
-        name = '%s_boundary_offset' % self.label
-        obj_o = bpy.data.objects.get(name)
-        if obj_o is None:
-            raise KeyError('%s object is not exist.' % name)
-        return obj_o
-
-    @property
     def active(self):
         return self.batoms.coll.batoms.boundary.active
 
@@ -450,14 +517,11 @@ class Boundary(ObjectGN):
             len(attributes['species_index'])
         if dnvert > 0:
             self.add_vertices_bmesh(dnvert)
-            self.add_vertices_bmesh(dnvert, self.obj_o)
         elif dnvert < 0:
             self.delete_vertices_bmesh(range(-dnvert))
-            self.delete_vertices_bmesh(range(-dnvert), self.obj_o)
         if len(arrays["positions"]) == 0:
             return
         self.positions = arrays["positions"][0]
-        self.offsets = arrays["offsets"][0]
         self.set_trajectory(arrays)
         self.update_mesh()
         species_index = [string2Number(sp) for sp in arrays['species']]
@@ -466,6 +530,7 @@ class Boundary(ObjectGN):
                             'species_index': species_index,
                             'scale': arrays['scales'],
                             'show': arrays['shows'],
+                            'boundary_offset': arrays['boundary_offset'],
                             })
         species = np.unique(arrays['species'])
         for sp in species:
@@ -478,7 +543,6 @@ class Boundary(ObjectGN):
         # tstart = time()
         arrays = self.attributes
         arrays.update({'positions': self.positions})
-        arrays.update({'offsets': self.offsets})
         # radius
         radius = self.batoms.radius
         arrays.update({'radius': np.zeros(len(self))})
@@ -512,47 +576,8 @@ class Boundary(ObjectGN):
         boundary_data = {'positions': arrays['positions'],
                          'species': arrays['species'],
                          'indices': arrays['atoms_index'],
-                         'offsets': arrays['offsets']}
+                         'boundary_offset': arrays['boundary_offset']}
         return boundary_data
-
-    @property
-    def offsets(self):
-        return self.get_offsets()
-
-    def get_offsets(self):
-        """
-        using foreach_get and foreach_set to improve performance.
-        """
-        n = len(self)
-        offsets = np.empty(n*3, dtype=int)
-        if n == 0:
-            return
-        self.obj_o.data.vertices.foreach_get(
-            'co', offsets)
-        return offsets.reshape((n, 3))
-
-    @offsets.setter
-    def offsets(self, offsets):
-        self.set_offsets(offsets)
-
-    def set_offsets(self, offsets):
-        """
-        Set global offsets to local vertices
-        """
-        # object_mode()
-        n = len(self.obj_o.data.vertices)
-        if len(offsets) != n:
-            raise ValueError('offsets has wrong shape %s != %s.' %
-                             (len(offsets), n))
-        if n == 0:
-            return
-        offsets = offsets.reshape((n*3, 1))
-        self.obj_o.data.vertices.foreach_set(
-            'co', offsets)
-        self.obj_o.data.update()
-        # bpy.context.view_layer.objects.active = self.obj_o
-        # bpy.ops.object.mode_set(mode='EDIT')
-        # bpy.ops.object.mode_set(mode='OBJECT')
 
     @property
     def bondlists(self):
@@ -567,7 +592,6 @@ class Boundary(ObjectGN):
         """
         trajectory = {}
         trajectory['positions'] = self.get_obj_trajectory(self.obj)
-        trajectory['offsets'] = self.get_obj_trajectory(self.obj_o)
         return trajectory
 
     def set_trajectory(self, trajectory=None, frame_start=0):
@@ -576,10 +600,6 @@ class Boundary(ObjectGN):
         name = '%s_boundary' % (self.label)
         obj = self.obj
         self.set_shape_key(name, obj, trajectory['positions'], frame_start=frame_start)
-        #
-        name = '%s_boundary_offset' % (self.label)
-        obj = self.obj_o
-        self.set_shape_key(name, obj, trajectory['offsets'], frame_start=frame_start)
 
     def calc_boundary_data(self, boundary_lists, arrays, positions, cell):
         """
@@ -605,7 +625,7 @@ class Boundary(ObjectGN):
             'species': species,
             'positions': positions,
             # 'offsets':offsets,
-            'offsets': np.array([offset_vectors]),
+            'boundary_offset': offset_vectors,
             'model_styles': model_styles,
             'shows': shows,
             'selects': selects,

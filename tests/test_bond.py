@@ -88,11 +88,23 @@ def test_bond_add():
 
 
 def test_bond_search_bond_0(tio2):
+    tio2.boundary = 0.01
+    tio2.model_style = 1
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    # Get Geometry Node Instances
+    eval_obj = tio2.obj.evaluated_get(depsgraph)
+    insts = [inst for inst in depsgraph.object_instances if inst.is_instance and inst.parent == eval_obj]
+    # there are 6 atoms and 54 bonds
+    assert len(insts) == 60
+    # change search bond settings
     tio2.bond.settings[("Ti", "O")].search = 0
     tio2.model_style = 1
     tio2.boundary = 0.01
     tio2.model_style = 1
     assert len(tio2.bond.bondlists) == 14
+    eval_obj = tio2.obj.evaluated_get(depsgraph)
+    insts = [inst for inst in depsgraph.object_instances if inst.is_instance and inst.parent == eval_obj]
+    assert len(insts) == 20
     tio2.bond.show_search = True
     if use_cycles:
         set_cycles_res(tio2)

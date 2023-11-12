@@ -81,8 +81,6 @@ class Bcell(ObjectGN):
         JoinGeometry = get_node_by_name(nodes,
                                          '%s_JoinGeometry' % self.label,
                                          'GeometryNodeJoinGeometry')
-        links.new(
-            GroupInput.outputs['Geometry'], JoinGeometry.inputs['Geometry'])
         # ------------------------------------------------------------------
         # transfer first 4 positions of cell
         PositionCell = get_node_by_name(nodes,
@@ -179,6 +177,11 @@ class Bcell(ObjectGN):
                                 setMaterial.inputs[0])
         links.new(setMaterial.outputs[0],
                                 GroupOutput.inputs[0])
+        # The order of join geometry seems to be inverse.
+        # So we output the original geometry in the last step.
+        # Thus, the first four vertices are the vertices of the cell.
+        links.new(
+            GroupInput.outputs['Geometry'], JoinGeometry.inputs['Geometry'])
 
     @property
     def material(self):

@@ -28,10 +28,10 @@ default_bond_attributes = [
     {"name": 'atoms_index3', "data_type": 'INT', "domain": "EDGE"},
     {"name": 'species_index0', "data_type": 'INT', "domain": "EDGE"},
     {"name": 'species_index1', "data_type": 'INT', "domain": "EDGE"},
-    {"name": 'offsets0', "data_type": 'FLOAT_VECTOR', "domain": "EDGE"},
-    {"name": 'offsets1', "data_type": 'FLOAT_VECTOR', "domain": "EDGE"},
-    {"name": 'offsets2', "data_type": 'FLOAT_VECTOR', "domain": "EDGE"},
-    {"name": 'offsets3', "data_type": 'FLOAT_VECTOR', "domain": "EDGE"},
+    {"name": 'bond_offset0', "data_type": 'FLOAT_VECTOR', "domain": "EDGE"},
+    {"name": 'bond_offset1', "data_type": 'FLOAT_VECTOR', "domain": "EDGE"},
+    {"name": 'bond_offset2', "data_type": 'FLOAT_VECTOR', "domain": "EDGE"},
+    {"name": 'bond_offset3', "data_type": 'FLOAT_VECTOR', "domain": "EDGE"},
     {"name": 'bond_order', "data_type": 'INT', "domain": "EDGE"},
     {"name": 'bond_style', "data_type": 'INT', "domain": "EDGE"},
     {"name": 'bond_show', "data_type": 'INT', "domain": "EDGE"},
@@ -49,10 +49,10 @@ default_bond_datas = {
     'species_index0': np.ones(0, dtype=int),
     'centers': np.zeros((1, 0, 3)),
     # 'vectors':np.zeros((0, 3)),
-    'offsets0': np.zeros((0, 3)),
-    'offsets1': np.zeros((0, 3)),
-    'offsets2': np.zeros((0, 3)),
-    'offsets3': np.zeros((0, 3)),
+    'bond_offset0': np.zeros((0, 3)),
+    'bond_offset1': np.zeros((0, 3)),
+    'bond_offset2': np.zeros((0, 3)),
+    'bond_offset3': np.zeros((0, 3)),
     # 'eulers':np.eye(3),
     # 'lengths':np.zeros((0, 3)),
     # 'widths': np.ones(0, dtype=float),
@@ -304,7 +304,7 @@ class Bond(BaseCollection, ObjectGN):
             tmp = get_node_by_name(nodes,
                                 '%s_NamedAttribute_offsets%s' % (self.label, i),
                                 'GeometryNodeInputNamedAttribute')
-            tmp.inputs['Name'].default_value = f"offsets{i}"
+            tmp.inputs['Name'].default_value = f"bond_offset{i}"
             tmp.data_type = "FLOAT_VECTOR"
             OffsetsAttributes.append(tmp)
         # second step: we need five add operations
@@ -775,9 +775,9 @@ class Bond(BaseCollection, ObjectGN):
         i = arrays['atoms_index0'].reshape(-1, 1)
         j = arrays['atoms_index1'].reshape(-1, 1)
         p = arrays['polyhedra'].reshape(-1, 1)
-        offsets0 = arrays['offsets0']
-        offsets1 = arrays['offsets1']
-        bondlists = np.concatenate((i, j, offsets0, offsets1, p),
+        bond_offset0 = arrays['bond_offset0']
+        bond_offset1 = arrays['bond_offset1']
+        bondlists = np.concatenate((i, j, bond_offset0, bond_offset1, p),
                                    axis=1)
         # bondlists = bondlists.astype(int)
         # print('get_arrays: %s'%(time() - tstart))
@@ -1167,8 +1167,8 @@ class Bond(BaseCollection, ObjectGN):
             data = bonddatas[arrays['indices'][i]]
             n = len(data)
             bondlists = np.append(bondlists,  data, axis=0)
-            bondlists[-n:, 2:5] += arrays['offsets'][i]
-            bondlists[-n:, 5:8] += arrays['offsets'][i]
+            bondlists[-n:, 2:5] = bondlists[-n:, 2:5] + arrays['boundary_offset'][i]
+            bondlists[-n:, 5:8] = bondlists[-n:, 5:8] + arrays['boundary_offset'][i]
             # todo: in this case, some of the atoms overlap
             # with original atoms.
             # since it doesn't influence the 3d view, we
@@ -1177,13 +1177,13 @@ class Bond(BaseCollection, ObjectGN):
         # print('build_bondlists: {0:10.2f} s'.format(time() - tstart))
         bondlists = np.unique(bondlists, axis=0)
         # search bond type 2
-        # divide boudanry atoms by offsets
-        offsets = np.unique(arrays['offsets'], axis=0)
-        n = len(offsets)*len(molPeciesDatas)
+        # divide boudanry atoms by boundary_offset
+        boundary_offset = np.unique(arrays['boundary_offset'], axis=0)
+        n = len(boundary_offset)*len(molPeciesDatas)
         peciesArrays = np.zeros((n, 4), dtype=int)
         n = 0
-        for offset in offsets:
-            indices = np.where((arrays['offsets'] == offset).all(axis=1))[0]
+        for offset in boundary_offset:
+            indices = np.where((arrays['boundary_offset'] == offset).all(axis=1))[0]
             indices = arrays['indices'][indices]
             for p, indices0 in molPeciesDatas.items():
                 indices1 = np.intersect1d(indices0, indices)
@@ -1315,8 +1315,8 @@ class Bond(BaseCollection, ObjectGN):
             return default_bond_datas
         # ------------------------------------
         # offsets
-        offsets0 = np.dot(bondlists[:, 2:5], cell)
-        offsets1 = np.dot(bondlists[:, 5:8], cell)
+        bond_offset0 = np.dot(bondlists[:, 2:5], cell)
+        bond_offset1 = np.dot(bondlists[:, 5:8], cell)
         # polyhedra
         polyhedras = np.array(bondlists[:, 9], dtype=int)
         # bond center
@@ -1341,8 +1341,8 @@ class Bond(BaseCollection, ObjectGN):
                     atoms_index2, atoms_index3, bondlists)
         # offsets for second bond
         # this will be remove for Blender 3.1
-        offsets2 = np.dot(bondlists[:, 2:5][second_bond], cell)
-        offsets3 = np.dot(bondlists[:, 5:8][second_bond], cell)
+        bond_offset2 = np.dot(bondlists[:, 2:5][second_bond], cell)
+        bond_offset3 = np.dot(bondlists[:, 5:8][second_bond], cell)
         datas = {
             'atoms_index0': atoms_index0,
             'atoms_index1': atoms_index1,
@@ -1351,10 +1351,10 @@ class Bond(BaseCollection, ObjectGN):
             'second_bond': second_bond,
             'species_index0': species_index0,
             'species_index1': species_index1,
-            'offsets0': offsets0,
-            'offsets1': offsets1,
-            'offsets2': offsets2,
-            'offsets3': offsets3,
+            'bond_offset0': bond_offset0,
+            'bond_offset1': bond_offset1,
+            'bond_offset2': bond_offset2,
+            'bond_offset3': bond_offset3,
             # 'widths': widths,
             'bond_show': shows,
             'bond_order': orders,
