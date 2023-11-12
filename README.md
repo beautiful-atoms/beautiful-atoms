@@ -51,9 +51,9 @@ We recommend using [pytest-blender](https://pypi.org/project/pytest-blender/). T
 
 ```console
 pip install pytest-blender
-$blender_python="$(pytest-blender)"
+blender_python="$(pytest-blender)"
 $blender_python -m ensurepip
-Install the development dependencies:
+# Install the development dependencies:
 $blender_python -m pip install -r test-requirements.txt
 cd tests
 pytest
