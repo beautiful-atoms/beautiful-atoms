@@ -2,16 +2,17 @@ import bpy
 from batoms import Batoms
 import numpy as np
 import pytest
-from conftest import has_openbabel
 
-if '3.1.0' in bpy.app.version_string:
+if "3.1.0" in bpy.app.version_string:
     blender31 = False
 else:
     blender31 = True
 
+
 def test_empty():
     """Create an empty Batoms object"""
     from batoms import Batoms
+
     bpy.ops.batoms.delete()
     h2o = Batoms("h2o")
     assert len(h2o) == 0
@@ -21,6 +22,7 @@ def test_batoms_molecule():
     """Create a Batoms object from scratch"""
     bpy.ops.batoms.delete()
     from batoms import Batoms
+
     h2o = Batoms(
         "h2o",
         species=["O", "H", "H"],
@@ -33,8 +35,7 @@ def test_batoms_crystal():
     """Create a Batoms object with cell"""
     bpy.ops.batoms.delete()
     a = 4.08
-    positions = [[0, 0, 0], [a / 2, a / 2, 0],
-                 [a / 2, 0, a / 2], [0, a / 2, a / 2]]
+    positions = [[0, 0, 0], [a / 2, a / 2, 0], [a / 2, 0, a / 2], [0, a / 2, a / 2]]
     au = Batoms(
         label="au",
         species=["Au"] * len(positions),
@@ -44,6 +45,7 @@ def test_batoms_crystal():
     )
     assert au.pbc == [True, True, True]
     assert np.isclose(au.cell[0, 0], a)
+
 
 def test_batoms_parameters(h2o):
     """Create a Batoms object from scratch"""
@@ -61,24 +63,24 @@ def test_model_style(tio2):
     tio2.boundary = 0.1
     tio2.bond.show_search = True
     tio2.model_style = 2
-    assert tio2.bond.search_bond.hide == False
-    assert tio2.boundary.hide == False
+    assert tio2.bond.search_bond.hide is False
+    assert tio2.boundary.hide is False
     #
     tio2.polyhedra_style = 2
-    assert tio2.bond.hide == True
-    assert tio2.bond.search_bond.hide == True
-    assert tio2.boundary.hide == False
+    assert tio2.bond.hide is True
+    assert tio2.bond.search_bond.hide is True
+    assert tio2.boundary.hide is False
     #
     tio2.polyhedra_style = 1
-    assert tio2.bond.hide == True
-    assert tio2.bond.search_bond.hide == False
-    assert tio2.boundary.hide == False
+    assert tio2.bond.hide is True
+    assert tio2.bond.search_bond.hide is False
+    assert tio2.boundary.hide is False
 
 
 def test_batoms_write(h2o):
-    """Export Batoms to structure file
-    """
+    """Export Batoms to structure file"""
     from ase.io import read
+
     h2o.write("h2o.in")
     new_h2o = read("h2o.in")
     assert len(h2o) == len(new_h2o)
@@ -109,7 +111,7 @@ def test_batoms_wrap(au):
 def test_batoms_supercell(au):
     """make supercell"""
     # repeat
-    au = au*[2, 2, 2]
+    au = au * [2, 2, 2]
     assert len(au) == 32
     # transform
     P = np.array([[2, 3, 0, 5], [0, 1, 0, 5], [0, 0, 1, 0], [0, 0, 0, 1]])
@@ -143,6 +145,7 @@ def test_batoms_add(h2o):
     """Merge two Batoms objects"""
     from batoms import Batoms
     from ase.build import molecule
+
     co = Batoms("co", from_ase=molecule("CO"))
     batoms = h2o + co
     assert len(batoms) == 5
@@ -175,12 +178,14 @@ def test_set_arrays(h2o):
     del h2o[[2]]
     assert len(h2o.arrays["positions"]) == 2
 
+
 def test_array_attribute():
     from ase.build import bulk
     import numpy as np
     from batoms import Batoms
+
     bpy.ops.batoms.delete()
-    au = bulk('Au')
+    au = bulk("Au")
     # (nx2) array
     array2d = np.zeros((len(au), 2))
     au.set_array("array2d", array2d)
@@ -191,10 +196,11 @@ def test_array_attribute():
     # (nx4) array
     array4d = np.zeros((len(au), 4))
     au.set_array("array4d", array4d)
-    au = Batoms('au', from_ase = au)
-    au.get_attribute('array2d')
-    au.get_attribute('array3d')
-    au.get_attribute('array4d')
+    au = Batoms("au", from_ase=au)
+    au.get_attribute("array2d")
+    au.get_attribute("array3d")
+    au.get_attribute("array4d")
+
 
 ###############################
 # Patch from TT for Atoms.array
@@ -204,6 +210,7 @@ def test_set_arrays_precision():
     from batoms import Batoms
     from batoms.bio.bio import read
     import ase.io
+
     atoms_ase = ase.io.read("../tests/datas/ch4_int_flag.extxyz")
     # ASE treats additional I-field as np.int32,
     # but on most recent platforms default int is np.int64
@@ -214,8 +221,9 @@ def test_set_arrays_precision():
     atoms_bl = read("../tests/datas/ch4_int_flag.extxyz")
     # Change the array to float32 should also work
     atoms_ase2 = atoms_ase.copy()
-    arr = atoms_ase.get_array("some_int_flag")
-    atoms_ase2.arrays["some_int_flag"] = np.array([1.0, 2.0, 2.0, 2.0, 2.0], dtype="float32")
+    atoms_ase2.arrays["some_int_flag"] = np.array(
+        [1.0, 2.0, 2.0, 2.0, 2.0], dtype="float32"
+    )
     assert atoms_ase2.get_array("some_int_flag").dtype == np.float32
     atoms_bl2 = Batoms("ch4", from_ase=atoms_ase2)
     # get_attribute will return np.int64 and np.float64 explicitly
@@ -226,6 +234,7 @@ def test_set_arrays_precision():
 def test_repeat(h2o):
     """Repeat"""
     import numpy as np
+
     h2o.cell = [3, 3, 3]
     h2o.pbc = True
     h2o.repeat([2, 2, 2])
@@ -250,20 +259,24 @@ def test_make_real(h2o):
     h2o.realize_instances = True
     h2o.realize_instances = False
 
+
 def test_as_dict(au):
     data = au.as_dict()
-    assert 'lattice_plane' not in data.keys()
+    assert "lattice_plane" not in data.keys()
     # active plugin
     au.lattice_plane
     data = au.as_dict()
-    assert 'lattice_plane' in data.keys()
+    assert "lattice_plane" in data.keys()
+
 
 def test_batoms_ops():
     from batoms import Batoms
+
     bpy.ops.batoms.delete()
-    bpy.ops.batoms.bulk_add(label='au', formula='Au')
+    bpy.ops.batoms.bulk_add(label="au", formula="Au")
     au = Batoms("au")
     assert len(au) == 1
+
 
 @pytest.mark.skipif(
     blender31,
@@ -271,6 +284,7 @@ def test_batoms_ops():
 )
 def test_export_mesh_x3d(c2h6so):
     from batoms.bio.bio import read
+
     c2h6so.cell = [3, 3, 3]
     c2h6so.model_style = 1
     c2h6so.export_mesh("c2h6so.x3d", with_cell=True, with_bond=True)
@@ -279,15 +293,17 @@ def test_export_mesh_x3d(c2h6so):
     tio2.boundary = 0.01
     tio2.model_style = 2
     tio2.bond.show_search = True
-    tio2.export_mesh("tio2.x3d", with_cell=True,
-                     with_polyhedra=True,
-                     with_boundary=True,
-                     with_search_bond=True,
-                     with_bond=True)
+    tio2.export_mesh(
+        "tio2.x3d",
+        with_cell=True,
+        with_polyhedra=True,
+        with_boundary=True,
+        with_search_bond=True,
+        with_bond=True,
+    )
 
-@pytest.mark.skip(
-    reason="In Blender 4.0, export_scene.obj is not working"
-)
+
+@pytest.mark.skip(reason="In Blender 4.0, export_scene.obj is not working")
 def test_export_mesh_obj(c2h6so, tio2):
     c2h6so.cell = [3, 3, 3]
     c2h6so.model_style = 1
@@ -295,19 +311,21 @@ def test_export_mesh_obj(c2h6so, tio2):
     tio2.boundary = 0.01
     tio2.model_style = 2
     tio2.bond.show_search = True
-    tio2.export_mesh("tio2.obj", with_cell=True,
-                     with_polyhedra=True,
-                     with_boundary=True,
-                     with_search_bond=True,
-                     with_bond=True)
+    tio2.export_mesh(
+        "tio2.obj",
+        with_cell=True,
+        with_polyhedra=True,
+        with_boundary=True,
+        with_search_bond=True,
+        with_bond=True,
+    )
 
-# pytest skip if openbabel is not installed
-@pytest.mark.skipif(
-    not has_openbabel,
-    reason="Requires openbabel.",
-)
+
 def test_calc_electrostatic_potential(c2h6so):
     from time import time
+
+    # pytest skip if openbabel is not installed
+    pytest.importorskip("openbabel")
     tstart = time()
     c2h6so.auto_assign_charge()
     t = time() - tstart

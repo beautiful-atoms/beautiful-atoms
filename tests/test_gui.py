@@ -1,7 +1,6 @@
 import bpy
-from batoms import Batoms
 import numpy as np
-import pytest
+
 
 def test_render(ch4):
     """Render panel"""
@@ -33,10 +32,11 @@ def test_render(ch4):
     # bpy.context.scene.batoms.render.energy = 5
     # assert np.isclose(ch4.render.lights["Default"].energy, 5)
 
+
 def test_batom(ch4):
     """Batom panel"""
     bpy.context.view_layer.objects.active = ch4.obj
     # scale
-    assert np.isclose(bpy.context.scene.batoms.batom.scale, ch4[0].scale)
+    assert np.isclose(bpy.context.scene.batoms.batoms.scale, ch4[0].scale)
     bpy.context.scene.batoms.batom.scale = 1
-    assert np.isclose(ch4[0].scale, bpy.context.scene.batoms.batom.scale)
+    assert np.isclose(ch4[0].scale, bpy.context.scene.batoms.batoms.scale)
