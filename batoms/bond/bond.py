@@ -111,8 +111,12 @@ class Bond(BaseCollection, ObjectGN):
         # create group input and output sockets
         default_interface = [
             ["Geometry", "NodeSocketGeometry", 'INPUT'],
-            ["Species0", "NodeSocketBool", 'INPUT'],
-            ["Species1", "NodeSocketBool", 'INPUT'],
+            ["Species_index0", "NodeSocketInt", 'INPUT'],
+            ["Species0", "NodeSocketInt", 'INPUT'],
+            ["Species_index1", "NodeSocketInt", 'INPUT'],
+            ["Species1", "NodeSocketInt", 'INPUT'],
+            ["Model_style0", "NodeSocketInt", 'INPUT'],
+            ["Model_style1", "NodeSocketInt", 'INPUT'],
             ["Order", "NodeSocketInt", 'INPUT'],
             ["Style", "NodeSocketInt", 'INPUT'],
             ["Length", "NodeSocketFloat", 'INPUT'],
@@ -182,59 +186,6 @@ class Bond(BaseCollection, ObjectGN):
             input_socket = get_socket_by_identifier(SpeciesAtIndex, "Value_Int")
             output_socket = get_socket_by_identifier(SpeciesIndexAttribute, "Attribute_Int", type="outputs")
             links.new(output_socket, input_socket)
-        # find bond kinds by the names of species
-        for sp in self.batoms.species:
-            # we need two compares for one species,
-            # because we have two sockets: species_index0 and species_index1
-            CompareSpecies = []
-            for i in range(2):
-                tmp = get_node_by_name(nodes,
-                                        '%s_CompareSpecies_%s_%s' % (
-                                            self.label, sp.name, i),
-                                        "FunctionNodeCompare")
-                tmp.operation = 'EQUAL'
-                tmp.data_type = 'INT'
-                socket = get_socket_by_identifier(tmp, "B_INT")
-                socket.default_value = string2Number(sp.name)
-                CompareSpecies.append(tmp)
-            output_socket = get_socket_by_identifier(SpeciesAtIndexs[0], "Value_Int", type="outputs")
-            input_socket = get_socket_by_identifier(CompareSpecies[0], "A_INT")
-            links.new(output_socket, input_socket)
-            output_socket = get_socket_by_identifier(SpeciesAtIndexs[1], "Value_Int", type="outputs")
-            input_socket = get_socket_by_identifier(CompareSpecies[1], "A_INT")
-            links.new(output_socket, input_socket)
-        # order
-        BondOrderAttribute = get_node_by_name(nodes,
-                                '%s_NamedAttribute_bond_order' % (self.label),
-                                'GeometryNodeInputNamedAttribute')
-        BondOrderAttribute.inputs['Name'].default_value = f"bond_order"
-        BondOrderAttribute.data_type = "INT"
-        socket = get_socket_by_identifier(BondOrderAttribute, "Attribute_Int", type="outputs")
-        for order in [1, 2, 3]:
-            CompareOrder = get_node_by_name(nodes,
-                                             'CompareOrder_%s_%s' % (
-                                                 self.label, order),
-                                             "FunctionNodeCompare")
-            CompareOrder.operation = 'EQUAL'
-            CompareOrder.inputs[1].default_value = order
-            links.new(
-                socket, CompareOrder.inputs[0])
-        # style
-        BondStyleAttribute = get_node_by_name(nodes,
-                                '%s_NamedAttribute_bond_style' % (self.label),
-                                'GeometryNodeInputNamedAttribute')
-        BondStyleAttribute.inputs['Name'].default_value = f"bond_style"
-        BondStyleAttribute.data_type = "INT"
-        socket = get_socket_by_identifier(BondStyleAttribute, "Attribute_Int", type="outputs")
-        for style in [0, 1, 2, 3]:
-            CompareStyle = get_node_by_name(nodes,
-                                             'CompareStyle_%s_%s' % (
-                                                 self.label, style),
-                                             "FunctionNodeCompare")
-            CompareStyle.operation = 'EQUAL'
-            CompareStyle.inputs[1].default_value = style
-            links.new(
-                socket, CompareStyle.inputs[0])
         logger.debug('Build geometry nodes for bonds: %s' % (time() - tstart))
         #
 
@@ -446,32 +397,31 @@ class Bond(BaseCollection, ObjectGN):
         BondMesh = get_node_by_name(parent_tree.nodes,
                                         'Bond_Mesh_%s' % (self.label),
                                         'GeometryNodeSetPosition')
-        # e.g C-H bond, species0 is C, species1 is H
-        CompareSpecies0 = get_node_by_name(parent_tree.nodes,
-                                        '%s_CompareSpecies_%s_%s' % (
-                                            self.label, sp["species1"], 0),
-                                        "FunctionNodeCompare")
-        CompareSpecies1 = get_node_by_name(parent_tree.nodes,
-                                        '%s_CompareSpecies_%s_%s' % (
-                                            self.label, sp["species2"], 1),
-                                        "FunctionNodeCompare")
-        CompareOrder = get_node_by_name(
-            parent_tree.nodes,
-            'CompareOrder_%s_%s' % (self.label,
-                                           order),
-            "FunctionNodeCompare")
-        CompareStyle = get_node_by_name(
-            parent_tree.nodes,
-            'CompareStyle_%s_%s' % (self.label,
-                                           style),
-            "FunctionNodeCompare")
+        CompareSpecies = []
+        for i in range(2):
+            SpeciesAtIndex = get_node_by_name(parent_tree.nodes,
+                                    '%s_SpeciesAtIndex%s' % (self.label, i),
+                                    'GeometryNodeSampleIndex')
+            output_socket = get_socket_by_identifier(SpeciesAtIndex, "Value_Int", type="outputs")
+            parent_tree.links.new(output_socket, node.inputs[f'Species_index{i}'])
+            # e.g C-H bond, species0 is C, species1 is H
+            tmp = get_node_by_name(nodes,
+                                            '%s_CompareSpecies_%s_%s' % (
+                                                self.label, sp["species1"], i),
+                                            "FunctionNodeCompare")
+            tmp.operation = 'EQUAL'
+            tmp.data_type = 'INT'
+            node.inputs[f'Species{i}'].default_value = string2Number(sp[f"species{i+1}"])
+            CompareSpecies.append(tmp)
+            A_socket = get_socket_by_identifier(tmp, "A_INT")
+            B_socket = get_socket_by_identifier(tmp, "B_INT")
+            links.new(GroupInput.outputs[f"Species_index{i}"], A_socket)
+            links.new(GroupInput.outputs[f"Species{i}"], B_socket)
+        node.inputs["Order"].default_value = order
+        node.inputs["Style"].default_value = style
         parent_tree.links.new(BondMesh.outputs['Geometry'], node.inputs['Geometry'])
         parent_tree.links.new(BondMesh.outputs['Length'], node.inputs['Length'])
         parent_tree.links.new(BondMesh.outputs['Rotation'], node.inputs['Rotation'])
-        parent_tree.links.new(CompareSpecies0.outputs[0], node.inputs['Species0'])
-        parent_tree.links.new(CompareSpecies1.outputs[0], node.inputs['Species1'])
-        parent_tree.links.new(CompareOrder.outputs[0], node.inputs['Order'])
-        parent_tree.links.new(CompareStyle.outputs[0], node.inputs['Style'])
         # link the outputs to parent node
         JoinGeometry = get_node_by_name(parent_tree.nodes,
                                          '%s_JoinGeometry' % self.label,
@@ -487,6 +437,46 @@ class Bond(BaseCollection, ObjectGN):
         ObjectInstancer.inputs['Object'].default_value = \
             self.settings.instancers[sp["name"]]['%s_%s' % (order, style)]
         #
+        # order
+        BondOrderAttribute = get_node_by_name(nodes,
+                                '%s_NamedAttribute_bond_order' % (self.label),
+                                'GeometryNodeInputNamedAttribute')
+        BondOrderAttribute.inputs['Name'].default_value = f"bond_order"
+        BondOrderAttribute.data_type = "INT"
+        CompareOrder = get_node_by_name(
+            nodes,
+            'CompareOrder_%s_%s' % (self.label,
+                                           order),
+            "FunctionNodeCompare")
+        CompareOrder.operation = 'EQUAL'
+        CompareOrder.data_type = 'INT'
+        socket = get_socket_by_identifier(CompareOrder, "B_INT")
+        links.new(GroupInput.outputs["Order"], socket)
+        CompareOrder.inputs[1].default_value = order
+        output_socket = get_socket_by_identifier(BondOrderAttribute, "Attribute_Int", type="outputs")
+        input_socket = get_socket_by_identifier(CompareOrder, "A_INT")
+        links.new(
+            output_socket, input_socket)
+        # style
+        BondStyleAttribute = get_node_by_name(nodes,
+                                '%s_NamedAttribute_bond_style' % (self.label),
+                                'GeometryNodeInputNamedAttribute')
+        BondStyleAttribute.inputs['Name'].default_value = f"bond_style"
+        BondStyleAttribute.data_type = "INT"
+        CompareStyle = get_node_by_name(
+            nodes,
+            'CompareStyle_%s_%s' % (self.label,
+                                           style),
+            "FunctionNodeCompare")
+        CompareStyle.operation = 'EQUAL'
+        CompareStyle.data_type = 'INT'
+        socket = get_socket_by_identifier(CompareStyle, "B_INT")
+        links.new(GroupInput.outputs["Style"], socket)
+        CompareStyle.inputs[1].default_value = style
+        output_socket = get_socket_by_identifier(BondStyleAttribute, "Attribute_Int", type="outputs")
+        input_socket = get_socket_by_identifier(CompareStyle, "A_INT")
+        links.new(
+            output_socket, input_socket)
         BoolSpecies = get_node_by_name(nodes,
                                         '%s_BooleanMath_species' % name,
                                         'FunctionNodeBooleanMath')
@@ -538,14 +528,13 @@ class Bond(BaseCollection, ObjectGN):
         socket = get_socket_by_identifier(BondModelStyleAttribute, "Attribute_Int", type="outputs")
         links.new(
             socket, BoolModelStyle.inputs[0])
-        links.new(
-            GroupInput.outputs["Species0"], BoolSpecies.inputs[0])
-        links.new(
-            GroupInput.outputs["Species1"], BoolSpecies.inputs[1])
+        for i in range(2):
+            links.new(
+                CompareSpecies[i].outputs[0], BoolSpecies.inputs[i])
         links.new(BoolSpecies.outputs[0], BoolOrder.inputs[0])
-        links.new(GroupInput.outputs["Order"], BoolOrder.inputs[1])
+        links.new(CompareOrder.outputs[0], BoolOrder.inputs[1])
         links.new(BoolOrder.outputs[0], BoolStyle.inputs[0])
-        links.new(GroupInput.outputs["Style"], BoolStyle.inputs[1])
+        links.new(CompareStyle.outputs[0], BoolStyle.inputs[1])
         links.new(BoolStyle.outputs[0], BoolModelStyle.inputs[1])
         links.new(BoolModelStyle.outputs[0], BoolShow.inputs[1])
         links.new(GroupInput.outputs['Length'], LessBondLength.inputs[0])
@@ -564,38 +553,6 @@ class Bond(BaseCollection, ObjectGN):
         links.new(InstanceOnPoint.outputs['Instances'],
                                 GroupOutput.inputs['Geometry'])
         # print('Add geometry nodes for bonds: %s'%(time() - tstart))
-
-
-    def update_geometry_node_species(self):
-        # find bond kinds by the names of species
-        from batoms.utils.butils import get_socket_by_identifier
-        tstart = time()
-        nodes = self.bond_node.node_tree.nodes
-        links = self.bond_node.node_tree.links
-        GroupInput = nodes[0]
-        SpeciesAtIndexs = []
-        for i in range(2):
-            SpeciesAtIndex = get_node_by_name(nodes,
-                                    '%s_SpeciesAtIndex%s' % (self.label, i),
-                                    'GeometryNodeSampleIndex')
-            SpeciesAtIndexs.append(SpeciesAtIndex)
-        for sp in self.batoms.species:
-            # we need two compares for one species,
-            # because we have two sockets: species_index0 and species_index1
-            CompareSpecies = []
-            for i in range(2):
-                tmp = get_node_by_name(nodes,
-                                        '%s_CompareSpecies_%s_%s' % (
-                                            self.label, sp.name, i),
-                                        "FunctionNodeCompare")
-                tmp.operation = 'EQUAL'
-                tmp.inputs[1].default_value = string2Number(sp.name)
-                CompareSpecies.append(tmp)
-            for i in range(2):
-                output_socket = get_socket_by_identifier(SpeciesAtIndexs[i], "Value_Int", type="outputs")
-                links.new(
-                    output_socket, CompareSpecies[i].inputs[0])
-        logger.debug('UPdate geometry nodes species for bonds: %s'%(time() - tstart))
 
     def update_geometry_node_instancer(self):
         """
@@ -736,7 +693,6 @@ class Bond(BaseCollection, ObjectGN):
         self.add_edges(edges, self.batoms.obj)
         self.set_attributes(arrays)
         # self.set_trajectory(arrays)
-        self.update_geometry_node_species()
         self.update_geometry_node_instancer()
         self.update_geometry_nodes()
 

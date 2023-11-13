@@ -25,6 +25,19 @@ def test_bond(c2h6so):
     c2h6so.model_style = 1
     c2h6so.bond[0].order = 2
 
+def test_new_species(ch4):
+    """Add a new species.
+    Should create a new bond pair correctly."""
+    ch4.model_style = 1
+    ch4.replace([1], 'O')
+    ch4.model_style = 1
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    # Get Geometry Node Instances
+    eval_obj = ch4.obj.evaluated_get(depsgraph)
+    insts = [inst for inst in depsgraph.object_instances if inst.is_instance and inst.parent == eval_obj]
+    # there are 5 atoms and 4 bonds
+    assert len(insts) == 9
+
 def test_settings(c2h6so):
     """key search"""
     # species tuple
