@@ -1,15 +1,9 @@
 import bpy
-import bmesh
 from bpy.props import (
-    StringProperty,
-    BoolProperty,
     FloatVectorProperty,
-    FloatProperty,
-    IntProperty,
-    IntVectorProperty,
 )
 from batoms import Batoms
-from batoms.ops.base import OperatorBatoms, OperatorBatomsEdit
+from batoms.ops.base import OperatorBatoms
 
 
 class RenderAdd(OperatorBatoms):

@@ -65,7 +65,7 @@ class BuildSurfaceFCC100(Operator):
     orthogonal: BoolProperty(
         name="orthogonal",
         default=True,
-        description="If specified and true, forces the creation of a unit cell with orthogonal basis vectors. If the default is such a unit cell, this argument is not supported.",
+        description="If specified and true, forces the creation of a unit cell with orthogonal basis vectors. If the default is such a unit cell, this argument is not supported.",  # noqa: E501
     )
 
     periodic: BoolProperty(name="Periodic", default=False, description="Periodic")
@@ -123,7 +123,7 @@ class BuildSurfaceFCC110(Operator):
     orthogonal: BoolProperty(
         name="orthogonal",
         default=True,
-        description="If specified and true, forces the creation of a unit cell with orthogonal basis vectors. If the default is such a unit cell, this argument is not supported.",
+        description="If specified and true, forces the creation of a unit cell with orthogonal basis vectors. If the default is such a unit cell, this argument is not supported.",  # noqa: E501
     )
 
     periodic: BoolProperty(name="Periodic", default=False, description="Periodic")
@@ -181,7 +181,7 @@ class BuildSurfaceFCC111(Operator):
     orthogonal: BoolProperty(
         name="orthogonal",
         default=False,
-        description="If specified and true, forces the creation of a unit cell with orthogonal basis vectors. If the default is such a unit cell, this argument is not supported.",
+        description="If specified and true, forces the creation of a unit cell with orthogonal basis vectors. If the default is such a unit cell, this argument is not supported.",  # noqa: E501
     )
 
     periodic: BoolProperty(name="Periodic", default=False, description="Periodic")
@@ -239,7 +239,7 @@ class BuildSurfaceFCC211(Operator):
     orthogonal: BoolProperty(
         name="orthogonal",
         default=True,
-        description="If specified and true, forces the creation of a unit cell with orthogonal basis vectors. If the default is such a unit cell, this argument is not supported.",
+        description="If specified and true, forces the creation of a unit cell with orthogonal basis vectors. If the default is such a unit cell, this argument is not supported.",  # noqa: E501
     )
 
     def execute(self, context):
@@ -296,7 +296,7 @@ class BuildSurfaceFCC111Root(Operator):
     orthogonal: BoolProperty(
         name="orthogonal",
         default=False,
-        description="If specified and true, forces the creation of a unit cell with orthogonal basis vectors. If the default is such a unit cell, this argument is not supported.",
+        description="If specified and true, forces the creation of a unit cell with orthogonal basis vectors. If the default is such a unit cell, this argument is not supported.",  # noqa: E501
     )
 
     periodic: BoolProperty(name="Periodic", default=False, description="Periodic")
@@ -354,7 +354,7 @@ class BuildSurfaceBCC100(Operator):
     orthogonal: BoolProperty(
         name="orthogonal",
         default=True,
-        description="If specified and true, forces the creation of a unit cell with orthogonal basis vectors. If the default is such a unit cell, this argument is not supported.",
+        description="If specified and true, forces the creation of a unit cell with orthogonal basis vectors. If the default is such a unit cell, this argument is not supported.",  # noqa: E501
     )
 
     periodic: BoolProperty(name="Periodic", default=False, description="Periodic")
@@ -412,7 +412,7 @@ class BuildSurfaceBCC110(Operator):
     orthogonal: BoolProperty(
         name="orthogonal",
         default=False,
-        description="If specified and true, forces the creation of a unit cell with orthogonal basis vectors. If the default is such a unit cell, this argument is not supported.",
+        description="If specified and true, forces the creation of a unit cell with orthogonal basis vectors. If the default is such a unit cell, this argument is not supported.",  # noqa: E501
     )
 
     periodic: BoolProperty(name="Periodic", default=False, description="Periodic")
@@ -470,7 +470,7 @@ class BuildSurfaceBCC111(Operator):
     orthogonal: BoolProperty(
         name="orthogonal",
         default=False,
-        description="If specified and true, forces the creation of a unit cell with orthogonal basis vectors. If the default is such a unit cell, this argument is not supported.",
+        description="If specified and true, forces the creation of a unit cell with orthogonal basis vectors. If the default is such a unit cell, this argument is not supported.",  # noqa: E501
     )
 
     periodic: BoolProperty(name="Periodic", default=False, description="Periodic")
@@ -530,7 +530,7 @@ class BuildSurfaceBCC111Root(Operator):
     orthogonal: BoolProperty(
         name="orthogonal",
         default=False,
-        description="If specified and true, forces the creation of a unit cell with orthogonal basis vectors. If the default is such a unit cell, this argument is not supported.",
+        description="If specified and true, forces the creation of a unit cell with orthogonal basis vectors. If the default is such a unit cell, this argument is not supported.",  # noqa: E501
     )
 
     periodic: BoolProperty(name="Periodic", default=False, description="Periodic")
@@ -592,7 +592,7 @@ class BuildSurfaceHCP0001(Operator):
     orthogonal: BoolProperty(
         name="orthogonal",
         default=False,
-        description="If specified and true, forces the creation of a unit cell with orthogonal basis vectors. If the default is such a unit cell, this argument is not supported.",
+        description="If specified and true, forces the creation of a unit cell with orthogonal basis vectors. If the default is such a unit cell, this argument is not supported.",  # noqa: E501
     )
 
     periodic: BoolProperty(name="Periodic", default=False, description="Periodic")
@@ -656,7 +656,7 @@ class BuildSurfaceHCP10m10(Operator):
     orthogonal: BoolProperty(
         name="orthogonal",
         default=True,
-        description="If specified and true, forces the creation of a unit cell with orthogonal basis vectors. If the default is such a unit cell, this argument is not supported.",
+        description="If specified and true, forces the creation of a unit cell with orthogonal basis vectors. If the default is such a unit cell, this argument is not supported.",  # noqa: E501
     )
 
     periodic: BoolProperty(name="Periodic", default=False, description="Periodic")
@@ -718,7 +718,7 @@ class BuildSurfaceHCP0001Root(Operator):
     orthogonal: BoolProperty(
         name="orthogonal",
         default=False,
-        description="If specified and true, forces the creation of a unit cell with orthogonal basis vectors. If the default is such a unit cell, this argument is not supported.",
+        description="If specified and true, forces the creation of a unit cell with orthogonal basis vectors. If the default is such a unit cell, this argument is not supported.",  # noqa: E501
     )
 
     periodic: BoolProperty(name="Periodic", default=False, description="Periodic")
@@ -776,7 +776,7 @@ class BuildSurfaceDiamond100(Operator):
     orthogonal: BoolProperty(
         name="orthogonal",
         default=True,
-        description="If specified and true, forces the creation of a unit cell with orthogonal basis vectors. If the default is such a unit cell, this argument is not supported.",
+        description="If specified and true, forces the creation of a unit cell with orthogonal basis vectors. If the default is such a unit cell, this argument is not supported.",  # noqa: E501
     )
 
     periodic: BoolProperty(name="Periodic", default=False, description="Periodic")
@@ -834,7 +834,7 @@ class BuildSurfaceDiamond111(Operator):
     orthogonal: BoolProperty(
         name="orthogonal",
         default=False,
-        description="If specified and true, forces the creation of a unit cell with orthogonal basis vectors. If the default is such a unit cell, this argument is not supported.",
+        description="If specified and true, forces the creation of a unit cell with orthogonal basis vectors. If the default is such a unit cell, this argument is not supported.",  # noqa: E501
     )
 
     periodic: BoolProperty(name="Periodic", default=False, description="Periodic")

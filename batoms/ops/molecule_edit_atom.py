@@ -91,7 +91,7 @@ def edit_atom(batoms, indices, element):
                 a2 = positions[i] - positions[j]
                 bondlength = (
                     covalent_radii[chemical_symbols.index(element)]
-                    + covalent_radii[chemical_symbols.index(species[j])]
+                    + covalent_radii[chemical_symbols.index(species[j])]  # noqa: W503
                 )
                 mol.positions += positions[j] + a2 / np.linalg.norm(a2) * bondlength
                 # how many atoms (nbond) are connected to atoms i

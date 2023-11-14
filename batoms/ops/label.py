@@ -16,7 +16,6 @@ def draw_callback_text(context, positions, texts):
     n = len(positions)
     if n == 0:
         return
-    scene = context.scene
     region = context.region
     rv3d = context.region_data
     # coord = event.mouse_region_x, event.mouse_region_y

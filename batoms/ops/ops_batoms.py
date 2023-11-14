@@ -1,5 +1,4 @@
 import bpy
-import bmesh
 from bpy.types import Operator
 from bpy.props import (
     StringProperty,
@@ -85,7 +84,7 @@ class ApplyTransform(OperatorBatoms):
     def execute(self, context):
         transform = [self.a, self.b, self.c]
         batoms = Batoms(label=context.object.batoms.label)
-        batoms1 = batoms.transform(transform)
+        batoms.transform(transform)
         # batoms.obj.select_set(True)
         # batoms1.obj.select_set(False)
         bpy.context.view_layer.objects.active = batoms.obj
@@ -273,12 +272,10 @@ class deleteBatoms(Operator):
         from batoms.utils.butils import remove_collection, read_batoms_list
 
         if self.label != "":
-            coll = bpy.data.collections.get(self.label)
             remove_collection(self.label, keep_batom=False)
         else:
             batoms_list = read_batoms_list()
             for label in batoms_list:
-                coll = bpy.data.collections.get(label)
                 remove_collection(label, keep_batom=False)
                 self.report({"INFO"}, "Delete {}".format(label))
         return {"FINISHED"}
@@ -294,7 +291,6 @@ class deleteSelectedBatoms(OperatorBatoms):
 
         batoms_list = get_selected_batoms()
         for label in batoms_list:
-            coll = bpy.data.collections.get(label)
             remove_collection(label, keep_batom=False)
             self.report({"INFO"}, "Delete {}".format(label))
         return {"FINISHED"}

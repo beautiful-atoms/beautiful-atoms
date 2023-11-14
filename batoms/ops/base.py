@@ -2,7 +2,6 @@
 This module defines abstract Operator classes.
 """
 
-import bpy
 from bpy.types import Operator
 from batoms import Batoms
 
@@ -22,7 +21,7 @@ class OperatorBatoms(Operator):
 
     def execute(self, context):
         obj = context.object
-        batoms = Batoms(label=obj.batoms.label)
+        Batoms(label=obj.batoms.label)
         return {"FINISHED"}
 
 

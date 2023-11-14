@@ -10,7 +10,7 @@ from bpy.props import (
     IntProperty,
     BoolProperty,
 )
-from ase.cluster import Decahedron, Icosahedron, Octahedron, wulff_construction
+from ase.cluster import Decahedron, Icosahedron, Octahedron
 from batoms import Batoms
 
 

@@ -1,8 +1,6 @@
 import bpy
-import bmesh
-from bpy_extras.io_utils import ImportHelper, ExportHelper
-from bpy.types import Operator
-from bpy.props import BoolProperty, FloatProperty, StringProperty, EnumProperty
+from bpy_extras.io_utils import ImportHelper
+from bpy.props import BoolProperty, StringProperty, EnumProperty
 from batoms import Batoms
 from batoms.ops.base import OperatorBatoms
 from batoms.internal_data.bpy_data import get_volumetric_data
@@ -95,7 +93,8 @@ class VolumetricDataCreate(OperatorBatoms):
         batoms = Batoms(label=obj.batoms.label)
         if len(batoms.volumetric_data) < 2:
             self.report(
-                {"WARNING"}, "Not enough volumetric data to be used.".format(self.name)
+                {"WARNING"},
+                "Not enough volumetric data to be used for {}.".format(self.name),
             )
             return {"FINISHED"}
         if self.name in batoms.volumetric_data.keys():
@@ -103,12 +102,12 @@ class VolumetricDataCreate(OperatorBatoms):
         if self.operator.upper() == "ADD":
             batoms.volumetric_data[self.name] = (
                 batoms.volumetric_data[self.select_data1]
-                + batoms.volumetric_data[self.select_data2]
+                + batoms.volumetric_data[self.select_data2]  # noqa: W503
             )
         else:
             batoms.volumetric_data[self.name] = (
                 batoms.volumetric_data[self.select_data1]
-                - batoms.volumetric_data[self.select_data2]
+                - batoms.volumetric_data[self.select_data2]  # noqa: W503
             )
         context.view_layer.objects.active = obj
         self.report({"INFO"}, "Volumetric data {} is created.".format(self.name))

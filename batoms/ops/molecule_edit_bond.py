@@ -1,17 +1,14 @@
 import bpy
 from bpy.types import Operator
 from bpy.props import (
-    StringProperty,
     IntProperty,
     BoolProperty,
 )
 import bmesh
 from batoms import Batoms
-from ase.data import covalent_radii, chemical_symbols
 import numpy as np
 import logging
 
-# logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 
 
@@ -22,7 +19,6 @@ def edit_bond(batoms, indices, order):
         order (int): The target order
     """
     logger.debug("edit bond")
-    positions = batoms.positions
     species = batoms.arrays["species"]
     bondlists = batoms.bonds.bondlists
     removeH = []
@@ -40,8 +36,6 @@ def edit_bond(batoms, indices, order):
         baj1 = np.where((bondlists[:, 1] == aj))[0]
         bai = np.append(bondlists[bai0, 1], bondlists[bai1, 0]).astype(int)
         baj = np.append(bondlists[baj0, 1], bondlists[baj1, 0]).astype(int)
-        nbondi = len(bai)
-        nbondj = len(baj)
         spsi = species[bai]
         spsj = species[baj]
         indhi = bai[np.where(spsi == "H")[0]]

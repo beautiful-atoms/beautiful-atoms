@@ -1,4 +1,3 @@
-import bpy
 import bmesh
 from bpy.types import Operator
 from bpy.props import BoolProperty, FloatProperty, StringProperty
