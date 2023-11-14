@@ -10,7 +10,7 @@ import numpy as np
 from ase.geometry import complete_cell
 from batoms.base.object import ObjectGN
 from batoms.utils import number2String, string2Number
-from batoms.utils.butils import compareNodeType, object_mode
+from batoms.utils.butils import compareNodeType
 import logging
 
 # logger = logging.getLogger('batoms')
@@ -237,7 +237,6 @@ class Boundary(ObjectGN):
         """Dot product of a vector (1x3) and a cell (3x3).
         Note, the vector could be a vector field, (Nx3)"""
         from batoms.utils.butils import (
-            get_socket_by_identifier,
             get_node_by_name,
             create_node_tree,
         )
@@ -275,7 +274,7 @@ class Boundary(ObjectGN):
             CombineXYZ = get_node_by_name(
                 nodes, f"{self.label}_CombineXYZ_{i}", "ShaderNodeCombineXYZ"
             )
-            links.new(GroupInput.outputs[f"Array{i+1}"], SeparateXYZ.inputs["Vector"])
+            links.new(GroupInput.outputs[f"Array{i + 1}"], SeparateXYZ.inputs["Vector"])
             links.new(GroupInput.outputs["Vector"], DotProdcut.inputs[0])
             links.new(CombineXYZ.outputs["Vector"], DotProdcut.inputs[1])
             CombineXYZs.append(CombineXYZ)
@@ -720,11 +719,11 @@ def search_boundary(
     # boundary condition
     ind1 = np.where(
         (npositions[:, 0] > boundary[0][0])
-        & (npositions[:, 0] < boundary[0][1])
-        & (npositions[:, 1] > boundary[1][0])
-        & (npositions[:, 1] < boundary[1][1])
-        & (npositions[:, 2] > boundary[2][0])
-        & (npositions[:, 2] < boundary[2][1])
+        & (npositions[:, 0] < boundary[0][1])  # noqa: W503
+        & (npositions[:, 1] > boundary[1][0])  # noqa: W503
+        & (npositions[:, 1] < boundary[1][1])  # noqa: W503
+        & (npositions[:, 2] > boundary[2][0])  # noqa: W503
+        & (npositions[:, 2] < boundary[2][1])  # noqa: W503
     )[0]
     offsets_b = offsets[ind1]
     # print('search boundary: {0:10.2f} s'.format(time() - tstart))

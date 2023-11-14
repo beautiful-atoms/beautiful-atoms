@@ -369,7 +369,7 @@ class Species(BaseObject):
             for link in node_tree.links:
                 if (
                     link.from_node.name in ["Color Ramp", "ColorRamp"]
-                    and link.to_node.name == "Principled BSDF"
+                    and link.to_node.name == "Principled BSDF"  # noqa: W503
                 ):
                     node_tree.links.remove(link)
         else:
@@ -518,7 +518,7 @@ class Bspecies(Setting):
 
     def add(self, props, instancer=None):
         """ """
-        from batoms.utils import get_default_species_data, default_element_prop
+        from batoms.utils import get_default_species_data
 
         if props is None:
             return
@@ -608,9 +608,6 @@ class Bspecies(Setting):
 
     def get_species_props(self):
         species_props = {}
-        instancers = self.instancers
-        species_props = {}
-        species = self.species
         for name, sp in self.species.items():
             radius = sp.radius
             color = sp.color
