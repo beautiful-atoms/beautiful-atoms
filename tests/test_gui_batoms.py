@@ -20,4 +20,4 @@ def test_batoms(ch4):
     # show
     assert bpy.context.scene.batoms.batoms.show is True
     bpy.context.scene.batoms.batoms.show = False
-    assert ch4.show[0] is False
+    assert ch4.show[0] == 0
