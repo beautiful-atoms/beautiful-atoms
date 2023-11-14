@@ -7,14 +7,13 @@ import subprocess
 import os
 import logging
 
-# logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 
 account_name = "beautiful-atoms"
 repo_name = "beautiful-atoms"
 DEFAULT_PLUGIN_NAME = "batoms"
 
-repo_git = f"https://github.com/{account_name}/{repo_name}.git"
+repo_git = f"https://github.com/{account_name}/{repo_name}.git"  # noqa E231
 
 
 def subprocess_run(cmds):

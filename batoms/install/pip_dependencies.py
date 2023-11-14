@@ -8,7 +8,6 @@ from bpy.props import (
 )
 import logging
 
-# logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 
 dependencies = {
@@ -24,7 +23,7 @@ def has_pip():
 
 def has_module(modname):
     try:
-        module = importlib.import_module(modname)
+        importlib.import_module(modname)
         return True
     except ImportError:
         return False
@@ -43,6 +42,7 @@ def install_pip():
 
 def install_wheel():
     cmd = [sys.executable, "-m", "pip", "install", "wheel"]
+    not subprocess.call(cmd)
 
 
 def install_module(package, modname):

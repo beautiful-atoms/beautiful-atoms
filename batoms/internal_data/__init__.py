@@ -1,11 +1,8 @@
-from . import bpy_data
-from .bpy_data import Base
-
-import bpy
 from bpy.props import (
     PointerProperty,
-    CollectionProperty,
 )
+from . import bpy_data
+from bpy.types import Collection, Object
 
 classes = [
     bpy_data.Belement,
@@ -21,7 +18,7 @@ classes = [
 ]
 
 
-from bpy.types import Collection, Object
+__all__ = ["register_class", "unregister_class"]
 
 
 def register_class():

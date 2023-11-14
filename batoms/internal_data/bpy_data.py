@@ -162,8 +162,6 @@ class Battribute(Base):
 
     @property
     def shape(self) -> int:
-        import numpy as np
-
         return self.shape_[: self.dimension]
 
     @shape.setter
@@ -285,7 +283,7 @@ class Bboundary(Base):
             self.color[3],
         )
         boundary = np.array(self.boundary)
-        s += " %s \n ".format(boundary)
+        s += " {} \n ".format(boundary)
         s += "-" * 60 + "\n"
         return s
 
