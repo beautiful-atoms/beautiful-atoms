@@ -6,6 +6,8 @@ from . import (
     ui_list,
 )
 
+__all__ = ["MolecularSurface"]
+
 
 classes = [
     # internal data first

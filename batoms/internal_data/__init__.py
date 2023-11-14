@@ -3,6 +3,7 @@ from bpy.props import (
 )
 from . import bpy_data
 from bpy.types import Collection, Object
+from .bpy_data import Base
 
 classes = [
     bpy_data.Belement,
@@ -18,7 +19,7 @@ classes = [
 ]
 
 
-__all__ = ["register_class", "unregister_class"]
+__all__ = ["register_class", "unregister_class", "Base"]
 
 
 def register_class():

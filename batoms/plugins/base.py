@@ -4,7 +4,6 @@
 
 import bpy
 from time import time
-import numpy as np
 from batoms.base.collection import Setting
 from batoms.base.object import BaseObject
 import logging
@@ -102,7 +101,7 @@ class PluginObject(BaseObject):
         if len(indices) == 0:
             return
         # select atoms
-        positions = self.batoms.positions[indices]
+        self.batoms.positions[indices]
         logger.debug("Draw Template: %s" % (time() - tstart))
 
     @property

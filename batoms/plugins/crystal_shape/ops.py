@@ -1,4 +1,3 @@
-import bpy
 import bmesh
 from bpy.props import BoolProperty, FloatProperty, IntVectorProperty, StringProperty
 from batoms import Batoms

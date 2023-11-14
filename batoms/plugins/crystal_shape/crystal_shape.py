@@ -3,14 +3,12 @@
 """
 
 import bpy
-from time import time
 import numpy as np
 from batoms.plugins.base import PluginObject
 from .setting import CrystalShapeSettings
 from batoms.draw import draw_cylinder, draw_surface_from_vertices
 import logging
 
-# logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 
 
@@ -233,7 +231,7 @@ def faces_from_vertices(vertices, normal, include_center=False, scale=[1, 1, 1])
     # nvec = vec/length[:, None]
     vertices = center + np.array([scale]) * vec
     # search convex polyhedra
-    angles = sorted(angles, key=lambda l: l[1])
+    angles = sorted(angles, key=lambda x: x[1])
     if not include_center:
         faces = [[a[0] for a in angles]]
         edges = [[angles[0][0], angles[-1][0]]]

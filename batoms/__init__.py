@@ -12,12 +12,13 @@ rendering atomic structures using blender.""",
     "tracker_url": "https://github.com/beautiful-atoms/beautiful-atoms/issues/new/choose",
 }
 
-from batoms.batoms import Batoms  # noqa: E402
 
 # install pip dependencies
 from .install import pip_dependencies  # noqa: E402
 
 pip_dependencies.install()
+
+from batoms.batoms import Batoms  # noqa: E402
 
 
 __all__ = ["Batoms"]

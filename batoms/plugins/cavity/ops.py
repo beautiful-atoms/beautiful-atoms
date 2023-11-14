@@ -1,7 +1,4 @@
-import bpy
-import bmesh
-from bpy.types import Operator
-from bpy.props import BoolProperty, FloatProperty, StringProperty
+from bpy.props import BoolProperty, StringProperty
 from batoms import Batoms
 from batoms.ops.base import OperatorBatoms
 

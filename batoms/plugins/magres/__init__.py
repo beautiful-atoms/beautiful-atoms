@@ -6,6 +6,7 @@ from . import (
     ui_list,
 )
 
+__all__ = ["Magres"]
 
 classes = [
     bpy_data.MagresSetting,

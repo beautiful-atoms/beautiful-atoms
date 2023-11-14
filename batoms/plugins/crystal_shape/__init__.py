@@ -6,6 +6,7 @@ from . import (
     gui,
 )
 
+__all__ = ["CrystalShape"]
 
 classes_bpy_data = [
     # internal data first

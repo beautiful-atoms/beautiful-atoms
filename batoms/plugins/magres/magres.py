@@ -5,14 +5,12 @@ This module defines the Magres object in the Batoms package.
 """
 
 import bpy
-import bmesh
 from time import time
 import numpy as np
 from batoms.base.object import BaseObject
 from .setting import MagresSettings
 import logging
 
-# logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 
 

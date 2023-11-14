@@ -85,7 +85,7 @@ class IsosurfaceSetting(Base):
     def __repr__(self) -> str:
         s = "-" * 60 + "\n"
         s = "Name    volumetric_data    level        color            \n"
-        s += "{0:10s}   {0:10s}  {1:1.6f}  [{2:1.2f}  {3:1.2f}  {4:1.2f}   {5:1.2f}] \n".format(
+        s += "{0:10s}   {1:10s}  {2:1.6f}  [{3:1.2f}  {4:1.2f}  {5:1.2f}   {6:1.2f}] \n".format(
             self.name,
             self.volumetric_data,
             self.level,

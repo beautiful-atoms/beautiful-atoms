@@ -6,19 +6,13 @@ from bpy.types import Menu, Panel, UIList
 from bpy.props import (
     BoolProperty,
     FloatProperty,
-    EnumProperty,
-    StringProperty,
 )
 
 
-from batoms import Batoms
 from batoms.gui.utils import (
     get_active_bpy_data,
     get_attr,
-    get_enum_attr,
     set_attr,
-    set_enum_attr,
-    get_active_module,
     set_module_attr,
 )
 
@@ -76,8 +70,8 @@ class VIEW3D_PT_Batoms_highlight(Panel):
             if context.object.batoms.type != "OTHER":
                 name = context.object.batoms.label
         layout = self.layout
-        # layout.label(text="Active: " + name)
-        iso = context.scene.Bhighlight
+        layout.label(text="Active: " + name)
+        context.scene.Bhighlight
 
         layout.separator()
 

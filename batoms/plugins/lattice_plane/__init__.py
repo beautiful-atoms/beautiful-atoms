@@ -1,4 +1,3 @@
-from . import gui
 from .lattice_plane import LatticePlane
 
 from . import (
@@ -7,6 +6,7 @@ from . import (
     gui,
 )
 
+__all__ = ["LatticePlane"]
 
 classes_bpy_data = [
     # internal data first

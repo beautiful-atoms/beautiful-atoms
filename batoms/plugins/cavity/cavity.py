@@ -5,13 +5,12 @@ This module defines the Cavity object in the Batoms package.
 """
 
 import bpy
-from time import time
 import numpy as np
 from batoms.base.object import ObjectGN
 from batoms.plugins.base import PluginObject
 from .setting import CavitySettings
 from scipy import spatial
-from batoms.utils.butils import object_mode, get_node_by_name
+from batoms.utils.butils import get_node_by_name
 from batoms.utils import string2Number
 import logging
 
@@ -102,13 +101,13 @@ class Cavity(ObjectGN, PluginObject):
         """ """
         from scipy import spatial
 
-        tstart = time()
+        # tstart = time()
         self.kdtree = spatial.KDTree(positions)
         self.kdtree_mesh = spatial.KDTree(self.meshgrids)
         # print('KDTree positions: %s' % (time() - tstart))
 
     def query_distance(self, points, parallel=1):
-        tstart = time()
+        # tstart = time()
         distance, indices = self.kdtree.query(points, workers=parallel)
         # print('KDTree query: %s' % (time() - tstart))
         # here we consider the size of atoms using one value for all.
@@ -120,7 +119,7 @@ class Cavity(ObjectGN, PluginObject):
         Algorithm:
         Use KDTree to query the tree for neighbors within a radius r.
         """
-        tstart = time()
+        # tstart = time()
         kdtree_mesh = spatial.KDTree(meshgrids)
         indices = kdtree_mesh.query_ball_point(points, radii)
         # print('KDTree query: %s' % (time() - tstart))
@@ -138,7 +137,7 @@ class Cavity(ObjectGN, PluginObject):
         generate gridpoints
         """
         length = cell.length
-        npoint = [int(l / resolution) for l in length]
+        npoint = [int(x / resolution) for x in length]
         grids = []
         for i in range(3):
             grids.append(np.arange(npoint[i]) / npoint[i])

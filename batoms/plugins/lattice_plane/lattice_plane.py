@@ -6,14 +6,12 @@ This module defines the plane object in the Batoms package.
 
 import bpy
 import bmesh
-from time import time
 import numpy as np
 from batoms.plugins.base import PluginObject
 from .setting import LatticePlaneSettings
 from batoms.draw import draw_cylinder, draw_surface_from_vertices
 import logging
 
-# logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 
 
@@ -129,7 +127,6 @@ class LatticePlane(PluginObject):
         """
         from scipy import ndimage
         from ase.cell import Cell
-        from batoms.utils.butils import object_mode
         from batoms.utils.attribute import set_mesh_attribute
 
         volume = self.batoms.volumetric_data[plane["color_by"]]
@@ -394,7 +391,7 @@ def faces_from_vertices(vertices, normal, include_center=False, scale=[1, 1, 1])
     # nvec = vec/length[:, None]
     vertices = center + np.array([scale]) * vec
     # search convex polyhedra
-    angles = sorted(angles, key=lambda l: l[1])
+    angles = sorted(angles, key=lambda x: x[1])
     if not include_center:
         faces = [[a[0] for a in angles]]
         edges = [[angles[0][0], angles[-1][0]]]

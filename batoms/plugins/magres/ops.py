@@ -1,4 +1,3 @@
-import bpy
 from bpy.props import BoolProperty, StringProperty
 from batoms import Batoms
 from batoms.ops.base import OperatorBatoms

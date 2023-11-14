@@ -2,8 +2,6 @@
 """
 import bpy
 from batoms.base.collection import Setting, tuple2string
-import numpy as np
-from time import time
 
 
 class CrystalShapeSettings(Setting):

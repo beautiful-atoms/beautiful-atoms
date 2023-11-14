@@ -6,11 +6,8 @@ To insert lattice planes in structural models.
 """
 import bpy
 from batoms.base.collection import Setting, tuple2string
-import numpy as np
-from time import time
 import logging
 
-# logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 
 

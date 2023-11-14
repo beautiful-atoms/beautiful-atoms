@@ -5,17 +5,14 @@ This module defines the highlight object in the Batoms package.
 """
 
 import bpy
-from time import time
 import numpy as np
 from batoms.base.object import ObjectGN
 from batoms.plugins.base import PluginObject
 from .setting import HighlightSettings
-from scipy import spatial
-from batoms.utils.butils import object_mode, get_node_by_name
+from batoms.utils.butils import get_node_by_name
 from batoms.utils import string2Number
 import logging
 
-# logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 
 default_attributes = [

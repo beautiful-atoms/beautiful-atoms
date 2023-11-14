@@ -5,12 +5,9 @@ Molecular surface:
 3) Solvent-excluded surface (SES) or Connolly surface
 """
 import bpy
-import numpy as np
-from time import time
 from batoms.base.collection import Setting
 import logging
 
-# logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 
 

@@ -6,6 +6,7 @@ from . import (
     gui,
 )
 
+__all__ = ["Highlight"]
 
 classes_bpy_data = [
     # internal data first

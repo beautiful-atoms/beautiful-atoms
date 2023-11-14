@@ -5,13 +5,11 @@ This module defines the isosurface object in the Batoms package.
 """
 
 import bpy
-from time import time
 import numpy as np
 from batoms.base.object import BaseObject
 from .setting import IsosurfaceSettings
 import logging
 
-# logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 
 
