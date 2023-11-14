@@ -1105,7 +1105,7 @@ def _link_pip_dir(parameters):
         cprint(f"Pip python directory {pip_python} already exists", color="OKBLUE")
     else:
         shutil.copytree(factory_python_target, pip_python)
-        cprint(f"Copy {factory_python_target} -->  {pip_python}", color="OKGREEN")
+        cprint(f"Copy {factory_python_target} --> {pip_python}", color="OKGREEN")
     _symlink_dir(pip_python, factory_python_source)
     cprint(f"Symlink {pip_python} --> {factory_python_source}", color="OKGREEN")
     return
