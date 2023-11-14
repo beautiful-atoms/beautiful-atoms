@@ -13,7 +13,6 @@ class DrawText:
     def draw_callback_text(self, positions, texts):
         # get the context arguments
         context = bpy.context
-        scene = context.scene
         region = context.region
         rv3d = context.region_data
         font_id = 0
@@ -48,11 +47,9 @@ class DrawCrystalAxes:
     def draw_callback_text(self, cell):
         # get the context arguments
         context = bpy.context
-        scene = context.scene
         region = context.region
         rv3d = context.region_data
         font_id = 0
-        n = len(cell)
         origin = view3d_utils.location_3d_to_region_2d(
             region, rv3d, [0, 0, 0], default=None
         )
@@ -62,7 +59,7 @@ class DrawCrystalAxes:
             coord = cell[i]
             coord_2d = np.array(
                 view3d_utils.location_3d_to_region_2d(region, rv3d, coord, default=None)
-                - origin
+                - origin  # noqa W503
             )
             vector = coord_2d / np.linalg.norm(coord_2d) * self.length + [100, 100]
             positions = [[100, 100], vector]

@@ -1,10 +1,8 @@
 import bpy
 from batoms.material import create_material
 import numpy as np
-from time import time
 import logging
 
-# logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 # ========================================================
 
@@ -54,7 +52,6 @@ def draw_cylinder(
         return obj
 
     source = bond_source[datas["vertices"]]
-    # tstart = time()
     verts, faces = cylinder_mesh_from_vec(
         datas["centers"], datas["normals"], datas["lengths"], datas["width"], source
     )
@@ -96,7 +93,6 @@ def draw_surface_from_vertices(name, datas, coll=None, use_smooth=True):
     if coll is not None:
         coll.objects.link(obj)
     return obj
-    # print('bonds: {0}   {1:10.2f} s'.format(name, time() - tstart))
 
 
 def draw_vertices(name, vertices):
@@ -112,7 +108,6 @@ def draw_vertices(name, vertices):
 
 
 def draw_text(coll_text=None, atoms=None, type=None):
-    tstart = time()
     positions = atoms.positions
     n = len(positions)
     for i in range(n):
@@ -125,7 +120,6 @@ def draw_text(coll_text=None, atoms=None, type=None):
             ob.data.body = "%s" % atoms[i].symbol
         ob.location = location
         coll_text.objects.link(ob)
-    logger.debug("text: {0:10.2f} s".format(time() - tstart))
 
 
 def draw_2d_slicing(name, datas, coll=None):
@@ -281,7 +275,6 @@ def sphere_mesh_from_instance(centers, radius, source):
 def cylinder_mesh_from_vec(centers, normals, lengths, scale, source):
     from scipy.spatial.transform import Rotation as R
 
-    tstart = time()
     vert0, face1, face2 = source
     nb = len(centers)
     nvert = len(vert0)

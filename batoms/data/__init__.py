@@ -1150,24 +1150,3 @@ default_polyhedras = {
     "Pt",
     "X",
 }
-
-
-if __name__ == "__main__":
-    import json
-
-    datas = {}
-    for pair, value in default_bonds.items():
-        if value[2]:
-            width = 0.1
-        else:
-            width = 0.02
-        datas[pair] = {
-            "search": value[0],
-            "polyhedra": value[1],
-            "type": value[2],
-            "style": "1",
-            "width": width,
-        }
-    # with open("default_bond.json", "w") as fp:
-    # json.dump(datas, fp, indent=2)
-    print(datas)

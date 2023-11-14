@@ -3,11 +3,8 @@
 import bpy
 import numpy as np
 from ase.cell import Cell
-from batoms.utils.butils import object_mode, clean_coll_objects
+from batoms.utils.butils import object_mode
 from batoms.base.object import ObjectGN
-from batoms.draw import draw_cylinder
-
-# from time import time
 
 
 class Bcell(ObjectGN):

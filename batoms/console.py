@@ -1,9 +1,7 @@
 import bpy
 import console_python
-from batoms.batoms import Batoms
 import logging
 
-# logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 
 
