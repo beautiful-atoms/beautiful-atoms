@@ -2,14 +2,11 @@
 """
 import bpy
 import numpy as np
-from time import time
 from batoms.utils import string2Number
 from batoms.base.collection import Setting, tuple2string
 
-# from pprint import pprint
 import logging
 
-# logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 
 
@@ -145,7 +142,7 @@ class BondSetting:
         sp2 = self.bonds.arrays["species_index1"]
         indices = np.where(
             (sp1 == string2Number(self.species1))
-            & (sp2 == string2Number(self.species2))
+            & (sp2 == string2Number(self.species2))  # noqa: W503
         )[0]
         return indices
 
@@ -681,7 +678,7 @@ class BondSettings(Setting):
             if b.search == 1:
                 temp = bondlists0[
                     (speciesarray[bondlists0[:, 0]] == b.species1)
-                    & (speciesarray[bondlists0[:, 1]] == b.species2)
+                    & (speciesarray[bondlists0[:, 1]] == b.species2)  # noqa: W503
                 ]
                 bondlist1.extend(temp)
                 temp = offsets_skin0[(speciesarray[offsets_skin0[:, 0]] == b.species1)]
@@ -691,7 +688,7 @@ class BondSettings(Setting):
                 temp = bondlists0[
                     (
                         (speciesarray[bondlists0[:, 0]] == b.species1)
-                        & (speciesarray[bondlists0[:, 1]] == b.species2)
+                        & (speciesarray[bondlists0[:, 1]] == b.species2)  # noqa: W503
                     )
                 ]
                 bondlist2.extend(temp)
@@ -702,7 +699,7 @@ class BondSettings(Setting):
                 bondlist2.extend(temp1)
                 temp = offsets_skin0[
                     (speciesarray[offsets_skin0[:, 0]] == b.species1)
-                    | (speciesarray[offsets_skin0[:, 0]] == b.species2)
+                    | (speciesarray[offsets_skin0[:, 0]] == b.species2)  # noqa: W503
                 ]
                 offsets_skin2.extend(temp)
         return (

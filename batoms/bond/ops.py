@@ -157,7 +157,6 @@ class BondShowSearch(OperatorBatoms):
     bl_description = "Show atoms by searching bonds."
 
     def execute(self, context):
-        obj = context.object
         batoms = Batoms(label=context.object.batoms.label)
         batoms.bond.show_search = not batoms.bond.show_search
         batoms.bond.update()

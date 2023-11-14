@@ -1,4 +1,3 @@
-import bpy
 from bpy.props import (
     StringProperty,
     BoolProperty,
@@ -51,7 +50,7 @@ class BondSetting(Base):
 
     @property
     def name(self) -> str:
-        return "%s-%s-%s" % (self.species1, self.species2)
+        return "%s-%s" % (self.species1, self.species2)
 
     def as_dict(self, reversed=False) -> dict:
         setdict = {

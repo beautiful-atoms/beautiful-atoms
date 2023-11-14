@@ -9,9 +9,7 @@ from bpy.props import (
 
 from batoms.utils.butils import get_selected_edges
 from batoms.batoms import Batoms
-from batoms.bond import Bond
-from batoms.bond.slicebonds import SliceBonds
-from batoms.gui.utils import get_attr, set_attr, get_enum_attr
+from batoms.gui.utils import get_enum_attr
 
 
 # The panel.

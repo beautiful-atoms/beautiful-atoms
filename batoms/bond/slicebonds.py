@@ -1,12 +1,8 @@
-import bpy
-import bmesh
 import numpy as np
 from batoms.utils import number2String
 from batoms.base.object import childObjectGN
-import time
 import logging
 
-# logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 
 
@@ -95,10 +91,10 @@ class SliceBonds(childObjectGN):
         ai = arrays["atoms_index0"][self.indices[0]]
         aj = arrays["atoms_index1"][self.indices[0]]
         indi = np.where(
-            (arrays["atoms_index0"] == ai)
-            | (arrays["atoms_index1"] == ai)
-            | (arrays["atoms_index0"] == aj)
-            | (arrays["atoms_index1"] == aj)
+            (arrays["atoms_index0"] == ai)  # noqa: W503
+            | (arrays["atoms_index1"] == ai)  # noqa: W503
+            | (arrays["atoms_index0"] == aj)  # noqa: W503
+            | (arrays["atoms_index1"] == aj)  # noqa: W503
         )[0]
         if len(indi) == 1:
             second_bond = [0, 1]
