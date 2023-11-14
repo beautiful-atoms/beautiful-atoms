@@ -22,26 +22,12 @@ Features:
 * ``Cross-platform``: (Linux, Windows, macOS)
 
 
-### Beautiful Atoms 2.0
+### How to use
+
+Please vist: https://beautiful-atoms.readthedocs.io/en/latest/
 
 
-
-### Author
-* Xing Wang  <xingwang1991@gmail.com>
-
-### Dependencies
-
-* Blender
-* Python
-* ASE
-* numpy
-* scipy
-* Scikit-image
-* pymatgen
-* mp-api
-* openbabel
-
-### Development
+### How to contribute
 
 #### Editor
 We recommend using [Visual Studio Code](https://code.visualstudio.com/) with the [Blender extension](https://github.com/JacquesLucke/blender_vscode).
@@ -66,6 +52,6 @@ To install the pre-commit hooks, run:
 $ pre-commit install
 ```
 
-### How to use
 
-Please vist: https://beautiful-atoms.readthedocs.io/en/latest/
+### Contact
+* Xing Wang  <xingwang1991@gmail.com>

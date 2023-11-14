@@ -2,22 +2,21 @@
 """
 import bpy
 import numpy as np
-from time import time
 from batoms.utils import string2Number
 from batoms.base.collection import Setting, tuple2string
-# from pprint import pprint
+
 import logging
-# logger = logging.getLogger('batoms')
+
 logger = logging.getLogger(__name__)
 
-class BondSetting():
 
+class BondSetting:
     def __init__(self, label, name, bonds=None) -> None:
         self.label = label
         self.coll_name = label
         self.name = name
         self.bonds = bonds
-        self.type = 'Bbond'
+        self.type = "Bbond"
 
     @property
     def coll(self):
@@ -93,7 +92,7 @@ class BondSetting():
     @order.setter
     def order(self, order):
         self.bpy_setting[self.name].order = order
-        self.bonds.set_attribute_with_indices('bond_order', self.indices, order)
+        self.bonds.set_attribute_with_indices("bond_order", self.indices, order)
         # if instancer with this order not exist, add one
         sp = self.as_dict()
         self.bonds.settings.build_instancer(sp)
@@ -106,7 +105,7 @@ class BondSetting():
     @style.setter
     def style(self, style):
         self.bpy_setting[self.name].style = str(style)
-        self.bonds.set_attribute_with_indices('bond_style', self.indices, style)
+        self.bonds.set_attribute_with_indices("bond_style", self.indices, style)
         # if instancer with this style not exist, add one
         sp = self.as_dict()
         self.bonds.settings.build_instancer(sp)
@@ -139,20 +138,28 @@ class BondSetting():
         return self.get_indices()
 
     def get_indices(self):
-        sp1 = self.bonds.arrays['species_index0']
-        sp2 = self.bonds.arrays['species_index1']
-        indices = np.where((sp1 == string2Number(self.species1)) &
-                           (sp2 == string2Number(self.species2)))[0]
+        sp1 = self.bonds.arrays["species_index0"]
+        sp2 = self.bonds.arrays["species_index1"]
+        indices = np.where(
+            (sp1 == string2Number(self.species1))
+            & (sp2 == string2Number(self.species2))  # noqa: W503
+        )[0]
         return indices
 
     def __repr__(self) -> str:
-        s = '-'*60 + '\n'
-        s = 'Bondpair   min     max   width    Search_bond    Polyhedra  Order Style\n'
-        s += '{:10s} {:4.3f}   {:4.3f}  {:4.3f}   {:10s}   {:10s}  {}   {}\n'.format(
-            self.name, self.min, self.max, self.width, str(
-                self.search), str(self.polyhedra),
-            self.order, self.style)
-        s += '-'*60 + '\n'
+        s = "-" * 60 + "\n"
+        s = "Bondpair   min     max   width    Search_bond    Polyhedra  Order Style\n"
+        s += "{:10s} {:4.3f}   {:4.3f}  {:4.3f}   {:10s}   {:10s}  {}   {}\n".format(
+            self.name,
+            self.min,
+            self.max,
+            self.width,
+            str(self.search),
+            str(self.polyhedra),
+            self.order,
+            self.style,
+        )
+        s += "-" * 60 + "\n"
         return s
 
     def as_dict(self) -> dict:
@@ -161,10 +168,9 @@ class BondSetting():
 
 
 class BondSettings(Setting):
-    def __init__(self, label, batoms=None,
-                 bonds=None,
-                 bondsettings=None,
-                 dcutoff=0.5) -> None:
+    def __init__(
+        self, label, batoms=None, bonds=None, bondsettings=None, dcutoff=0.5
+    ) -> None:
         """
         BondSettings object
         The BondSettings object store the bondpair information.
@@ -177,7 +183,7 @@ class BondSettings(Setting):
         """
         Setting.__init__(self, label, coll_name=label)
         self.label = label
-        self.name = 'Bbond'
+        self.name = "Bbond"
         self.dcutoff = dcutoff
         self.batoms = batoms
         self.bonds = bonds
@@ -198,30 +204,33 @@ class BondSettings(Setting):
             raise KeyError("The collection property {} not exist!".format(self.name))
         return collection.settings
 
-
-    def build_materials(self, sp, order=None, style = None, node_inputs=None,
-                        material_style='default'):
-        """
-        """
+    def build_materials(
+        self, sp, order=None, style=None, node_inputs=None, material_style="default"
+    ):
+        """ """
         from batoms.material import create_material
+
         if not order:
             order = sp["order"]
         if not style:
             style = int(sp["style"])
-        colors = [sp['color1'], sp['color2']]
+        colors = [sp["color1"], sp["color2"]]
         for i in range(2):
-            name = 'Bond_%s_%s_%s_%s_%s' % (
-                self.label, sp['name'], order, style, i)
+            name = "Bond_%s_%s_%s_%s_%s" % (self.label, sp["name"], order, style, i)
             if name in bpy.data.materials:
                 mat = bpy.data.materials.get(name)
                 bpy.data.materials.remove(mat, do_unlink=True)
-            create_material(name,
-                            color=colors[i],
-                            node_inputs=node_inputs,
-                            material_style=material_style,
-                            backface_culling=True)
+            create_material(
+                name,
+                color=colors[i],
+                node_inputs=node_inputs,
+                material_style=material_style,
+                backface_culling=True,
+            )
 
-    def build_instancer(self, sp, order=None, style=None, vertices=32, shade_smooth=True):
+    def build_instancer(
+        self, sp, order=None, style=None, vertices=32, shade_smooth=True
+    ):
         """_summary_
 
         Args:
@@ -239,21 +248,26 @@ class BondSettings(Setting):
             order = sp["order"]
         if not style:
             style = int(sp["style"])
-        name = 'Bond_%s_%s_%s_%s' % (self.label, sp['name'], order, style)
-        radius = sp['width']
+        name = "Bond_%s_%s_%s_%s" % (self.label, sp["name"], order, style)
+        radius = sp["width"]
         self.delete_obj(name)
         if style == 3:
             obj = self.build_spring_bond(name, radius=radius)
         else:
-            obj = self.cylinder(name, order=order, style=style,
-                                vertices=vertices, depth=1, radius=radius)
-        obj.Bbond.width = sp['width']
-        obj.batoms.type = 'INSTANCER'
+            obj = self.cylinder(
+                name,
+                order=order,
+                style=style,
+                vertices=vertices,
+                depth=1,
+                radius=radius,
+            )
+        obj.Bbond.width = sp["width"]
+        obj.batoms.type = "INSTANCER"
         #
         for coll in obj.users_collection:
             coll.objects.unlink(obj)
-        self.batoms.coll.children['%s_instancer' %
-                                  self.label].objects.link(obj)
+        self.batoms.coll.children["%s_instancer" % self.label].objects.link(obj)
         # bpy.context.scene.objects.unlink(bb.obj)
         if shade_smooth:
             bpy.ops.object.shade_smooth()
@@ -262,15 +276,15 @@ class BondSettings(Setting):
         obj.scale = [0.001, 0.001, 0.001]
 
         #
-        self.build_materials(sp, order, style, material_style=sp['material_style'])
+        self.build_materials(sp, order, style, material_style=sp["material_style"])
         self.assign_materials(sp, order, style)
         # update geometry nodes
         node = self.bonds.get_bond_pair_node(name)
-        ObjectInstancer = get_node_by_name(node.node_tree.nodes,
-                                            'ObjectInfo_%s' % name,
-                                            'GeometryNodeObjectInfo')
+        ObjectInstancer = get_node_by_name(
+            node.node_tree.nodes, "ObjectInfo_%s" % name, "GeometryNodeObjectInfo"
+        )
         if ObjectInstancer is not None:
-            ObjectInstancer.inputs['Object'].default_value = obj
+            ObjectInstancer.inputs["Object"].default_value = obj
         # obj.data.materials.append(materials[data[0]])
         bpy.context.view_layer.update()
         return obj
@@ -281,18 +295,19 @@ class BondSettings(Setting):
         todo: subdivde by the a ratio = radius1/radius2
         """
         style = int(style)
-        radius = radius/order
+        radius = radius / order
         if style == 2:
-            depth = depth/20
+            depth = depth / 20
             radius = radius
         bpy.ops.mesh.primitive_cylinder_add(
-            vertices=vertices, depth=depth, radius=radius)
+            vertices=vertices, depth=depth, radius=radius
+        )
         obj = bpy.context.view_layer.objects.active
         me = obj.data
         # select edges for subdivde
         n = len(me.vertices)
-        vertices = np.zeros(n*3, dtype=np.float64)
-        me.vertices.foreach_get('co', vertices)
+        vertices = np.zeros(n * 3, dtype=np.float64)
+        me.vertices.foreach_get("co", vertices)
         vertices = vertices.reshape((n, 3))
         #
         me.update()
@@ -301,41 +316,41 @@ class BondSettings(Setting):
         for i in range(m):
             v0 = me.edges[i].vertices[0]
             v1 = me.edges[i].vertices[1]
-            center = (vertices[v0] + vertices[v1])/2
+            center = (vertices[v0] + vertices[v1]) / 2
             if np.isclose(center[2], 0):
                 selects[i] = True
         #
-        bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.mesh.select_all(action='DESELECT')
-        bpy.ops.object.mode_set(mode='OBJECT')
-        me.edges.foreach_set('select', selects)
-        bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.mesh.subdivide(
-            number_cuts=1, smoothness=0, fractal_along_normal=0)
-        bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.ops.object.mode_set(mode="EDIT")
+        bpy.ops.mesh.select_all(action="DESELECT")
+        bpy.ops.object.mode_set(mode="OBJECT")
+        me.edges.foreach_set("select", selects)
+        bpy.ops.object.mode_set(mode="EDIT")
+        bpy.ops.mesh.subdivide(number_cuts=1, smoothness=0, fractal_along_normal=0)
+        bpy.ops.object.mode_set(mode="OBJECT")
         # order
-        mod = obj.modifiers.new('arrayOrder', 'ARRAY')
+        mod = obj.modifiers.new("arrayOrder", "ARRAY")
         mod.relative_offset_displace = (2, 0, 0)
         mod.count = order
         nv = len(obj.data.vertices)
         for i in range(nv):
-            obj.data.vertices[i].co[0] -= 2*(order - 1)*radius
+            obj.data.vertices[i].co[0] -= 2 * (order - 1) * radius
         # bpy.ops.object.modifier_apply(modifier='Array')
         #
         if style == 2:
-            mod = obj.modifiers.new('arrayStyle', 'ARRAY')
+            mod = obj.modifiers.new("arrayStyle", "ARRAY")
             mod.relative_offset_displace = (0, 0, 2)
             mod.count = 10
             nv = len(obj.data.vertices)
             for i in range(nv):
-                obj.data.vertices[i].co[2] -= (10 - 1)*depth
+                obj.data.vertices[i].co[2] -= (10 - 1) * depth
         # bpy.ops.object.modifier_apply(modifier='Array')
         obj.name = name
         obj.data.name = name
         return obj
 
-    def build_spring_bond(self, name, radius=1.0, resolution=5, n=10,
-                          bevel_radius=0.02):
+    def build_spring_bond(
+        self, name, radius=1.0, resolution=5, n=10, bevel_radius=0.02
+    ):
         """Build a spring bond instancer
 
         Args:
@@ -355,71 +370,73 @@ class BondSettings(Setting):
         """
 
         # Prepare arrays x, y, z
-        theta = np.linspace(-n * np.pi, n * np.pi, resolution*n)
-        z = np.linspace(-0.5, 0.5, resolution*n)
-        r = radius*1.5
+        theta = np.linspace(-n * np.pi, n * np.pi, resolution * n)
+        z = np.linspace(-0.5, 0.5, resolution * n)
+        r = radius * 1.5
         x = r * np.sin(theta)
         y = r * np.cos(theta)
-        vertices = np.concatenate((x.reshape(-1, 1),
-                                   y.reshape(-1, 1),
-                                   z.reshape(-1, 1)), axis=1)
+        vertices = np.concatenate(
+            (x.reshape(-1, 1), y.reshape(-1, 1), z.reshape(-1, 1)), axis=1
+        )
         #
-        crv = bpy.data.curves.new('spring', 'CURVE')
-        crv.dimensions = '3D'
+        crv = bpy.data.curves.new("spring", "CURVE")
+        crv.dimensions = "3D"
         crv.resolution_u = 3
-        crv.fill_mode = 'FULL'
+        crv.fill_mode = "FULL"
         crv.use_fill_caps = True
-        crv.twist_mode = 'Z_UP'  # ''
-        spline = crv.splines.new(type='NURBS')
+        crv.twist_mode = "Z_UP"  # ''
+        spline = crv.splines.new(type="NURBS")
         nvert = len(vertices)
-        spline.points.add(nvert-1)
+        spline.points.add(nvert - 1)
         vertices = np.append(vertices, np.ones((nvert, 1)), axis=1)
         vertices = vertices.reshape(-1, 1)
-        spline.points.foreach_set('co', vertices)
+        spline.points.foreach_set("co", vertices)
         # bevel
         bpy.ops.curve.primitive_bezier_circle_add(
-            radius=bevel_radius, enter_editmode=False)
+            radius=bevel_radius, enter_editmode=False
+        )
         bevel_control = bpy.context.active_object
         bevel_control.data.resolution_u = 2
         bevel_control.hide_set(True)
         bevel_control.hide_render = True
-        bevel_control.data.name = bevel_control.name = '%s_bevel' % \
-            name
+        bevel_control.data.name = bevel_control.name = "%s_bevel" % name
         crv.bevel_object = bevel_control
-        crv.bevel_mode = 'OBJECT'
-        obj = bpy.data.objects.new('spring', crv)
-        bpy.data.collections['Collection'].objects.link(obj)
+        crv.bevel_mode = "OBJECT"
+        obj = bpy.data.objects.new("spring", crv)
+        bpy.data.collections["Collection"].objects.link(obj)
         depsgraph = bpy.context.evaluated_depsgraph_get()
         object_eval = obj.evaluated_get(depsgraph)
         mesh = bpy.data.meshes.new_from_object(object_eval)
         obj_m = bpy.data.objects.new(name, mesh)
-        self.delete_obj('spring')
-        self.delete_obj('%s_bevel' % name)
+        self.delete_obj("spring")
+        self.delete_obj("%s_bevel" % name)
         return obj_m
 
     def assign_materials(self, sp, order, style=0):
         # sort element by occu
         style = int(style)
-        me = self.instancers[sp["name"]]['%s_%s' % (order, style)].data
+        me = self.instancers[sp["name"]]["%s_%s" % (order, style)].data
         me.materials.clear()
         if style in [0, 2, 3]:
             for i in range(2):
                 me.materials.append(
-                    self.materials[sp["name"]]['%s_%s_%s' % (order, style, 0)])
+                    self.materials[sp["name"]]["%s_%s_%s" % (order, style, 0)]
+                )
         elif style == 1:
             for i in range(2):
                 me.materials.append(
-                    self.materials[sp["name"]]['%s_%s_%s' % (order, style, i)])
+                    self.materials[sp["name"]]["%s_%s_%s" % (order, style, i)]
+                )
         # find the face index for sp1 and sp2
         #
         npoly = len(me.polygons)
-        centers = np.zeros(npoly*3, dtype=np.float64)
-        me.polygons.foreach_get('center', centers)
+        centers = np.zeros(npoly * 3, dtype=np.float64)
+        me.polygons.foreach_get("center", centers)
         centers = centers.reshape((npoly, 3))
-        material_indexs = np.zeros(npoly, dtype='int')
+        material_indexs = np.zeros(npoly, dtype="int")
         index = np.where(centers[:, 2] < 0)[0]
         material_indexs[index] = 1
-        me.polygons.foreach_set('material_index', material_indexs)
+        me.polygons.foreach_set("material_index", material_indexs)
 
     @property
     def instancers(self):
@@ -429,24 +446,27 @@ class BondSettings(Setting):
         instancers = {}
         for sp in self:
             data = sp.as_dict()
-            instancers[data['name']] = {}
+            instancers[data["name"]] = {}
             for order in [1, 2, 3]:
                 for style in [0, 1, 2, 3]:
-                    name = 'Bond_%s_%s_%s_%s' % (
-                        self.label, data['name'], order, style)
-                    instancers[data['name']]['%s_%s' %
-                                             (order, style)] = \
-                        bpy.data.objects.get(name)
+                    name = "Bond_%s_%s_%s_%s" % (self.label, data["name"], order, style)
+                    instancers[data["name"]][
+                        "%s_%s" % (order, style)
+                    ] = bpy.data.objects.get(name)
             data = sp.as_dict(reversed=True)
             if sp.search == 2:
-                instancers[data['name']] = {}
+                instancers[data["name"]] = {}
                 for order in [1, 2, 3]:
                     for style in [0, 1, 2, 3]:
-                        name = 'Bond_%s_%s_%s_%s' % (
-                            self.label, data['name'], order, style)
-                        instancers[data['name']]['%s_%s' %
-                                                 (order, style)] = \
-                            bpy.data.objects.get(name)
+                        name = "Bond_%s_%s_%s_%s" % (
+                            self.label,
+                            data["name"],
+                            order,
+                            style,
+                        )
+                        instancers[data["name"]][
+                            "%s_%s" % (order, style)
+                        ] = bpy.data.objects.get(name)
         return instancers
 
     @property
@@ -457,26 +477,36 @@ class BondSettings(Setting):
         materials = {}
         for sp in self:
             data = sp.as_dict()
-            materials[data['name']] = {}
+            materials[data["name"]] = {}
             for order in [1, 2, 3]:
                 for style in [0, 1, 2, 3]:
                     for i in range(2):
-                        name = 'Bond_%s_%s_%s_%s_%s' % (
-                            self.label, data['name'], order, style, i)
+                        name = "Bond_%s_%s_%s_%s_%s" % (
+                            self.label,
+                            data["name"],
+                            order,
+                            style,
+                            i,
+                        )
                         mat = bpy.data.materials.get(name)
-                        materials[data['name']]['%s_%s_%s' %
-                                                (order, style, i)] = mat
+                        materials[data["name"]]["%s_%s_%s" % (order, style, i)] = mat
             data = sp.as_dict(reversed=True)
             if sp.search == 2:
-                materials[data['name']] = {}
+                materials[data["name"]] = {}
                 for order in [1, 2, 3]:
                     for style in [0, 1, 2, 3]:
                         for i in range(2):
-                            name = 'Bond_%s_%s_%s_%s_%s' % (
-                                self.label, data['name'], order, style, i)
+                            name = "Bond_%s_%s_%s_%s_%s" % (
+                                self.label,
+                                data["name"],
+                                order,
+                                style,
+                                i,
+                            )
                             mat = bpy.data.materials.get(name)
-                            materials[data['name']]['%s_%s_%s' %
-                                                    (order, style, i)] = mat
+                            materials[data["name"]][
+                                "%s_%s_%s" % (order, style, i)
+                            ] = mat
         return materials
 
     def __setitem__(self, index, setdict):
@@ -484,8 +514,10 @@ class BondSettings(Setting):
         Set properties
         """
         if isinstance(index, str):
-            raise Exception("Bond index should be a tuple or list, \
-    e.g. h2o.bondseeting[('O', 'H')]")
+            raise Exception(
+                "Bond index should be a tuple or list, \
+    e.g. h2o.bondseeting[('O', 'H')]"
+            )
         name = tuple2string(index)
         subset = self.find(name)
         if subset is None:
@@ -506,7 +538,7 @@ class BondSettings(Setting):
         name = tuple2string(index)
         item = self.find(name)
         if item is None:
-            raise Exception('%s not in %s setting' % (name, self.name))
+            raise Exception("%s not in %s setting" % (name, self.name))
         item = BondSetting(label=self.label, name=name, bonds=self.bonds)
         return item
 
@@ -521,17 +553,17 @@ class BondSettings(Setting):
         for sp1 in nspecies1:
             for sp2 in nspecies2:
                 pair = (sp1, sp2)
-                props = {sp1: self.batoms.species.species_props[sp1],
-                         sp2: other.batoms.species.species_props[sp2]}
+                props = {
+                    sp1: self.batoms.species.species_props[sp1],
+                    sp2: other.batoms.species.species_props[sp2],
+                }
                 self.add(pair, props)
 
-    def add_species_list(self, speciesList,
-                         only_default=True):
+    def add_species_list(self, speciesList, only_default=True):
         for sp in speciesList:
             self.add_species(sp, only_default)
 
-    def add_species(self, name,
-                         only_default=True):
+    def add_species(self, name, only_default=True):
         """_summary_
 
         Args:
@@ -540,11 +572,12 @@ class BondSettings(Setting):
             only_default (bool, optional): _description_. Defaults to False.
         """
         from batoms.data import default_bonds
+
         species_props = self.batoms.species.species_props
         pairs = []
-        ele = species_props[name]['element']
+        ele = species_props[name]["element"]
         for name1, props in species_props.items():
-            ele1 = props['element']
+            ele1 = props["element"]
             if only_default:
                 pair = (ele, ele1)
                 if pair in default_bonds:
@@ -558,7 +591,7 @@ class BondSettings(Setting):
         for pair in pairs:
             self.add(pair)
 
-    def add(self, key, value = None):
+    def add(self, key, value=None):
         """_summary_
 
         Args:
@@ -576,6 +609,7 @@ class BondSettings(Setting):
 
     def copy(self, label):
         from batoms.utils.butils import object_mode
+
         object_mode()
         bondsetting = self.__class__(label)
         for b in self:
@@ -583,13 +617,14 @@ class BondSettings(Setting):
         return bondsetting
 
     def __repr__(self) -> str:
-        s = "-"*60 + "\n"
+        s = "-" * 60 + "\n"
         s = "Bondpair    min     max   Search_bond    Polyhedra style\n"
         for b in self.bpy_setting:
             s += "{:10s}  {:4.3f}   {:4.3f}      ".format(b.name, b.min, b.max)
-            s += "{:10s}   {:10s}  {:4s} \n".format(str(b.search),
-                                                    str(b.polyhedra), b.style)
-        s += "-"*60 + "\n"
+            s += "{:10s}   {:10s}  {:4s} \n".format(
+                str(b.search), str(b.polyhedra), b.style
+            )
+        s += "-" * 60 + "\n"
         return s
 
     def as_dict(self) -> dict:
@@ -638,44 +673,50 @@ class BondSettings(Setting):
         offsets_skin1 = []
         bondlist2 = []
         offsets_skin2 = []
-        speciesarray = np.array(atoms.arrays['species'])
+        speciesarray = np.array(atoms.arrays["species"])
         for b in self:
             if b.search == 1:
                 temp = bondlists0[
                     (speciesarray[bondlists0[:, 0]] == b.species1)
-                    & (speciesarray[bondlists0[:, 1]] == b.species2)]
+                    & (speciesarray[bondlists0[:, 1]] == b.species2)  # noqa: W503
+                ]
                 bondlist1.extend(temp)
-                temp = offsets_skin0[(
-                    speciesarray[offsets_skin0[:, 0]] == b.species1)]
+                temp = offsets_skin0[(speciesarray[offsets_skin0[:, 0]] == b.species1)]
                 offsets_skin1.extend(temp)
             elif b.search == 2:
                 #  recursively if either sp1 or sp2
-                temp = bondlists0[(
-                    (speciesarray[bondlists0[:, 0]] == b.species1)
-                    & (speciesarray[bondlists0[:, 1]] == b.species2))]
+                temp = bondlists0[
+                    (
+                        (speciesarray[bondlists0[:, 0]] == b.species1)
+                        & (speciesarray[bondlists0[:, 1]] == b.species2)  # noqa: W503
+                    )
+                ]
                 bondlist2.extend(temp)
                 temp1 = temp.copy()
                 temp1[:, 0] = temp[:, 1]
                 temp1[:, 1] = temp[:, 0]
                 temp1[:, 2:] = -temp[:, 2:]
                 bondlist2.extend(temp1)
-                temp = offsets_skin0[(
-                    speciesarray[offsets_skin0[:, 0]] == b.species1)
-                    | (speciesarray[offsets_skin0[:, 0]] == b.species2)]
+                temp = offsets_skin0[
+                    (speciesarray[offsets_skin0[:, 0]] == b.species1)
+                    | (speciesarray[offsets_skin0[:, 0]] == b.species2)  # noqa: W503
+                ]
                 offsets_skin2.extend(temp)
-        return np.array(offsets_skin1), np.array(bondlist1), \
-            np.array(offsets_skin2), np.array(bondlist2)
+        return (
+            np.array(offsets_skin1),
+            np.array(bondlist1),
+            np.array(offsets_skin2),
+            np.array(bondlist2),
+        )
 
     def get_bondtable(self, pair, props, dcutoff=0.5):
-        """
-        """
+        """ """
         from batoms.data import default_bonds
 
         sp1 = pair[0]
         sp2 = pair[1]
-        bondmax = props[sp1]['radius'] + \
-            props[sp2]['radius'] + dcutoff
-        pair_ele = (props[sp1]['element'], props[sp2]['element'])
+        bondmax = props[sp1]["radius"] + props[sp2]["radius"] + dcutoff
+        pair_ele = (props[sp1]["element"], props[sp2]["element"])
         if pair_ele in default_bonds:
             search = default_bonds[pair_ele][0]
             polyhedra = default_bonds[pair_ele][1]
@@ -685,27 +726,27 @@ class BondSettings(Setting):
             polyhedra = 0
             bondtype = 0
         bond = {
-            'label': self.label,
-            'species1': sp1,
-            'species2': sp2,
-            'min': 0.0,
-            'max': bondmax,
-            'search': search,
-            'polyhedra': polyhedra,
-            'color1': props[sp1]['color'],
-            'color2': props[sp2]['color'],
-            'bond_order': 1,
-            'order_offset': 0.15,
-            'bond_style': '1',
-            'type': bondtype,
+            "label": self.label,
+            "species1": sp1,
+            "species2": sp2,
+            "min": 0.0,
+            "max": bondmax,
+            "search": search,
+            "polyhedra": polyhedra,
+            "color1": props[sp1]["color"],
+            "color2": props[sp2]["color"],
+            "bond_order": 1,
+            "order_offset": 0.15,
+            "bond_style": "1",
+            "type": bondtype,
         }
         # special for hydrogen bond
         if bondtype == 1:
-            bond['min'] = 1.5
-            bond['max'] = 2.5
-            bond['search'] = 0
-            bond['color1'] = [0.1, 0.1, 0.1, 1.0]
-            bond['bond_style'] = '2'
+            bond["min"] = 1.5
+            bond["max"] = 2.5
+            bond["search"] = 0
+            bond["color1"] = [0.1, 0.1, 0.1, 1.0]
+            bond["bond_style"] = "2"
         return bond
 
 

@@ -6,20 +6,19 @@ import bpy
 import subprocess
 import os
 import logging
-# logger = logging.getLogger('batoms')
+
 logger = logging.getLogger(__name__)
 
 account_name = "beautiful-atoms"
 repo_name = "beautiful-atoms"
 DEFAULT_PLUGIN_NAME = "batoms"
 
-repo_git = f"https://github.com/{account_name}/{repo_name}.git"
+repo_git = f"https://github.com/{account_name}/{repo_name}.git"  # noqa E231
+
 
 def subprocess_run(cmds):
     try:
-        p = subprocess.Popen(cmds,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT)
+        p = subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         stdout, stderr = p.communicate()
         if p.returncode == 0:
             return True
@@ -30,8 +29,10 @@ def subprocess_run(cmds):
         return False
     return False
 
+
 def has_git():
-    return subprocess_run(['git','--version'])
+    return subprocess_run(["git", "--version"])
+
 
 def gitclone(workdir=".", version="main", url=repo_git):
     """Make a git clone to the directory
@@ -39,6 +40,7 @@ def gitclone(workdir=".", version="main", url=repo_git):
     """
     import shutil
     import pathlib
+
     batoms_dir = os.path.dirname(pathlib.Path(__file__).parent.resolve())
     addon_dir = os.path.dirname(batoms_dir)
     clone_into = os.path.join(addon_dir, repo_name)
@@ -68,8 +70,10 @@ def gitclone(workdir=".", version="main", url=repo_git):
     logger.info("Move {} to {}".format(src, batoms_dir))
     shutil.move(src, batoms_dir)
 
+
 class BatomsUpdateButton(bpy.types.Operator):
     """Update Batoms"""
+
     bl_idname = "batoms.update"
     bl_label = "Update Batoms"
     bl_description = "Update to the latest development version."

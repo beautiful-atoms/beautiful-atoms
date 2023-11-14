@@ -8,15 +8,22 @@ import numpy as np
 from batoms.base.collection import BaseCollection
 from batoms.base.object import BaseObject
 import logging
+
 # logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 
 
 class Light(BaseObject):
-    def __init__(self, label, name, type='SUN', energy=5,
-                 location=(0, 0, 30),
-                 direction=[0, 0, 1],
-                 lock_to_camera=False) -> None:
+    def __init__(
+        self,
+        label,
+        name,
+        type="SUN",
+        energy=5,
+        location=(0, 0, 30),
+        direction=[0, 0, 1],
+        lock_to_camera=False,
+    ) -> None:
         """Light Class
 
         A Light object is linked to a Light object in Blender.
@@ -88,13 +95,14 @@ class Light(BaseObject):
 
     def set_direction(self, direction):
         from batoms.utils import rotate_frame
+
         self.lock_to_camera = False
         self.obj.Blight.direction = direction
         #
         new_frame = rotate_frame(self.coll.Brender.viewport)
         dirction = np.dot(direction, new_frame)
-        dirction = dirction/np.linalg.norm(dirction)
-        location = self.look_at + dirction*self.coll.Brender.distance
+        dirction = dirction / np.linalg.norm(dirction)
+        location = self.look_at + dirction * self.coll.Brender.distance
         self.location = location
         self.look_at = self.coll.Brender.center
 
@@ -113,15 +121,14 @@ class Light(BaseObject):
         self.obj.Blight.lock_to_camera = lock_to_camera
 
     def create_light(self, type, location, energy):
-        '''
+        """
         type: str
         energy: float
-        '''
+        """
         # check light exist or not
         if self.obj_name in bpy.data.objects:
             if not bpy.data.objects[self.obj_name].Blight.flag:
-                raise Exception("%s is not a Light for Batoms!" %
-                                self.obj_name)
+                raise Exception("%s is not a Light for Batoms!" % self.obj_name)
             light = bpy.data.objects[self.obj_name]
         else:
             if self.obj_name in bpy.data.lights:
@@ -131,16 +138,21 @@ class Light(BaseObject):
             light = bpy.data.objects.new(self.obj_name, light_data)
             light.data.energy = energy
             light.data.use_nodes = True
-            light.data.node_tree.nodes['Emission'].inputs['Strength'].default_value = 0.1
+            light.data.node_tree.nodes["Emission"].inputs[
+                "Strength"
+            ].default_value = 0.1
             light.location = Vector(location)
             light.Blight.flag = True
             light.Blight.label = self.label
             light.Blight.name = self.name
 
     def __repr__(self) -> str:
-        s = "Light('%s', energy = %s, direction = %s, lock_to_camera = %s)" \
-            % (self.type, self.energy, list(self.direction),
-               self.lock_to_camera)
+        s = "Light('%s', energy = %s, direction = %s, lock_to_camera = %s)" % (
+            self.type,
+            self.energy,
+            list(self.direction),
+            self.lock_to_camera,
+        )
         return s
 
 
@@ -161,10 +173,12 @@ class Lights(BaseCollection):
     def get_lights(self):
         lights = {}
         for light in self.coll.objects:
-            lights[light.Blight.name] = Light(light.Blight.label,
-                                                    light.Blight.name,
-                                                    direction=light.Blight.direction,
-                                                    lock_to_camera=light.Blight.lock_to_camera)
+            lights[light.Blight.name] = Light(
+                light.Blight.label,
+                light.Blight.name,
+                direction=light.Blight.direction,
+                lock_to_camera=light.Blight.lock_to_camera,
+            )
         return lights
 
     def __getitem__(self, name):
@@ -174,10 +188,10 @@ class Lights(BaseCollection):
         """
         if isinstance(name, str):
             if name not in self.lights:
-                raise SystemExit('%s is not in this light' % name)
+                raise SystemExit("%s is not in this light" % name)
             return self.lights[name]
         elif isinstance(name, list):
-            raise SystemExit('dict not supported yet!')
+            raise SystemExit("dict not supported yet!")
 
     def __setitem__(self, name, setdict):
         """
@@ -188,11 +202,12 @@ class Lights(BaseCollection):
             setattr(light, key, value)
 
     def __repr__(self) -> str:
-        s = '       Name        Type    Direction      Lock_to_camera\n'
+        s = "       Name        Type    Direction      Lock_to_camera\n"
         i = 0
         for name, l in self.lights.items():
-            s += '{:3d}   {:10s}  {:5s}   {}    {}\n'.format(i,
-                                                             name, l.type, l.direction, l.lock_to_camera)
+            s += "{:3d}   {:10s}  {:5s}   {}    {}\n".format(
+                i, name, l.type, l.direction, l.lock_to_camera
+            )
             i += 1
         return s
 

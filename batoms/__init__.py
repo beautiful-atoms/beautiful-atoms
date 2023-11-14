@@ -12,18 +12,18 @@ rendering atomic structures using blender.""",
     "tracker_url": "https://github.com/beautiful-atoms/beautiful-atoms/issues/new/choose",
 }
 
-from time import time
-tstart0 = time()
-import bpy
+
 # install pip dependencies
-from .install import pip_dependencies
+from .install import pip_dependencies  # noqa: E402
+
 pip_dependencies.install()
 
-from batoms.batoms import Batoms
+from batoms.batoms import Batoms  # noqa: E402
 
 
+__all__ = ["Batoms"]
 
-from . import (
+from . import (  # noqa: E402
     logger,
     preferences,
     plugins,
@@ -36,27 +36,29 @@ from . import (
 
 logger.set_logger(bl_info["version"])
 
+modules = ["bond", "polyhedra", "render", "ribbon"]
 
-
-import importlib
-
-modules = ['bond',
-            'polyhedra',
-            'render',
-            'ribbon']
 
 def enable_module():
+    import importlib
+
     for key in modules:
         module = importlib.import_module("batoms.{}".format(key))
         module.register_class()
 
+
 def disable_module():
+    import importlib
+
     for key in modules:
         module = importlib.import_module("batoms.{}".format(key))
         module.unregister_class()
 
 
 def register():
+    from time import time
+
+    tstart0 = time()
     # dependencies
     pip_dependencies.register_class()
     preferences.register_class()
@@ -82,7 +84,6 @@ def register():
     logger.update_logging_level()
 
 
-
 def unregister():
     # dependencies
     pip_dependencies.unregister_class()
@@ -103,6 +104,6 @@ def unregister():
     plugins.disable_plugin()
     preferences.unregister_class()
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     register()

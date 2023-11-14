@@ -5,19 +5,20 @@ import numpy as np
 
 def test_settings(ch4):
     """species panel"""
-    assert ch4.coll.batoms.ui_list_index_select==0
+    assert ch4.coll.batoms.ui_list_index_select == 0
     # add
-    ch4.selects.add('s1', [1])
-    assert ch4.coll.batoms.ui_list_index_select==1
+    ch4.selects.add("s1", [1])
+    assert ch4.coll.batoms.ui_list_index_select == 1
     # remove
-    ch4.selects.remove('s1')
-    assert ch4.coll.batoms.ui_list_index_select==0
+    ch4.selects.remove("s1")
+    assert ch4.coll.batoms.ui_list_index_select == 0
 
 
 def test_select():
     from ase.build import molecule, fcc111
     from batoms.batoms import Batoms
     import numpy as np
+
     bpy.ops.batoms.delete()
     au111 = fcc111("Au", (4, 4, 4), vacuum=0)
     au111 = Batoms("au111", from_ase=au111)
@@ -37,6 +38,7 @@ def test_select():
 
 def test_select_protein():
     from batoms.pdbparser import read_pdb
+
     bpy.ops.batoms.delete()
     atoms = read_pdb("../tests/datas/1ema.pdb")  # 1tim
     batoms = Batoms("protein", from_ase=atoms)

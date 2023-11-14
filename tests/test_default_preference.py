@@ -1,9 +1,7 @@
 """Test if batoms' default preferences and startup file are correctly loaded
 This test assumes the user has initialized the Blender environment with default settings
 """
-from filecmp import DEFAULT_IGNORES
 import bpy
-import pytest
 import numpy as np
 
 

@@ -2,8 +2,6 @@
 """
 import bpy
 from batoms.base.collection import Setting, tuple2string
-import numpy as np
-from time import time
 
 
 class CrystalShapeSettings(Setting):
@@ -20,8 +18,8 @@ class CrystalShapeSettings(Setting):
     """
 
     def __init__(self, label, parent=None, plane=None) -> None:
-        Setting.__init__(self, label, coll_name='%s' % label)
-        self.name = 'Bcrystalshape'
+        Setting.__init__(self, label, coll_name="%s" % label)
+        self.name = "Bcrystalshape"
         self.parent = parent
         if plane is not None:
             for key, data in plane.items():
@@ -56,20 +54,20 @@ class CrystalShapeSettings(Setting):
         subset.label = self.label
 
     def add(self, indices):
-        self[indices] = {'indices': indices}
+        self[indices] = {"indices": indices}
 
     def __repr__(self) -> str:
-        s = "-"*60 + "\n"
+        s = "-" * 60 + "\n"
         s = "Indices   distance  symmetry  \n"
         for p in self.bpy_setting:
             s += "{0:10s}   {1:1.3f}   ".format(p.name, p.distance)
-            s += "{:10s} \n".format(
-                str(p.symmetry))
-        s += "-"*60 + "\n"
+            s += "{:10s} \n".format(str(p.symmetry))
+        s += "-" * 60 + "\n"
         return s
 
     def get_symmetry_indices(self):
         from batoms.utils import get_equivalent_indices
+
         if self.no == 1:
             return
         for p in self:
@@ -89,7 +87,9 @@ class CrystalShapeSettings(Setting):
                         p1.flag = True
 
     @property
-    def no(self, ):
+    def no(
+        self,
+    ):
         return self.parent.batoms.get_spacegroup_number()
 
     @no.setter

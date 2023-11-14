@@ -1,5 +1,4 @@
 import bpy
-import pytest
 from batoms.batoms import Batoms
 from ase.build import molecule, bulk
 from batoms.bio.bio import read
@@ -25,52 +24,65 @@ def test_bond(c2h6so):
     c2h6so.model_style = 1
     c2h6so.bond[0].order = 2
 
+
 def test_new_species(ch4):
     """Add a new species.
     Should create a new bond pair correctly."""
     ch4.model_style = 1
-    ch4.replace([1], 'O')
+    ch4.replace([1], "O")
     ch4.model_style = 1
     depsgraph = bpy.context.evaluated_depsgraph_get()
     # Get Geometry Node Instances
     eval_obj = ch4.obj.evaluated_get(depsgraph)
-    insts = [inst for inst in depsgraph.object_instances if inst.is_instance and inst.parent == eval_obj]
+    insts = [
+        inst
+        for inst in depsgraph.object_instances
+        if inst.is_instance and inst.parent == eval_obj
+    ]
     # there are 5 atoms and 4 bonds
     assert len(insts) == 9
+
 
 def test_settings(c2h6so):
     """key search"""
     # species tuple
-    assert c2h6so.bond.settings.find(('C', 'H')) is not None
+    assert c2h6so.bond.settings.find(("C", "H")) is not None
     # species list
-    assert c2h6so.bond.settings.find(['C', 'H']) is not None
+    assert c2h6so.bond.settings.find(["C", "H"]) is not None
     # name str
-    assert c2h6so.bond.settings.find('C-H') is not None
+    assert c2h6so.bond.settings.find("C-H") is not None
     # remove by tuple
-    c2h6so.bond.settings.remove(('C', 'H'))
-    assert c2h6so.bond.settings.find(('C', 'H')) is None
+    c2h6so.bond.settings.remove(("C", "H"))
+    assert c2h6so.bond.settings.find(("C", "H")) is None
     # add by tuple
-    c2h6so.bond.settings.add(('C', 'H'))
-    assert c2h6so.bond.settings.find(('C', 'H')) is not None
+    c2h6so.bond.settings.add(("C", "H"))
+    assert c2h6so.bond.settings.find(("C", "H")) is not None
     # remove by str
-    c2h6so.bond.settings.remove('C-H')
-    assert c2h6so.bond.settings.find(('C', 'H')) is None
+    c2h6so.bond.settings.remove("C-H")
+    assert c2h6so.bond.settings.find(("C", "H")) is None
 
 
 def test_color(c2h6so):
     c2h6so.model_style = 1
-    assert np.isclose(c2h6so.bond.settings.\
-        instancers['C-H']['1_1'].data.materials[1].\
-            diffuse_color[:], np.array([1, 1, 1, 1])).all()
+    assert np.isclose(
+        c2h6so.bond.settings.instancers["C-H"]["1_1"]
+        .data.materials[1]
+        .diffuse_color[:],
+        np.array([1, 1, 1, 1]),
+    ).all()
     c2h6so.bond.settings["C-H"].color1 = [0, 1, 0, 1]
     c2h6so.bond.settings["C-H"].color2 = [0, 1, 1, 1]
-    assert np.isclose(c2h6so.bond.settings.\
-        instancers['C-H']['1_1'].data.materials[1].\
-            diffuse_color[:], np.array([0, 1, 1, 1])).all()
+    assert np.isclose(
+        c2h6so.bond.settings.instancers["C-H"]["1_1"]
+        .data.materials[1]
+        .diffuse_color[:],
+        np.array([0, 1, 1, 1]),
+    ).all()
 
 
 def test_bond_high_order():
-    from ase.build import molecule, bulk
+    from ase.build import molecule
+
     bpy.ops.batoms.delete()
     c6h6 = Batoms("c6h6", from_ase=molecule("C6H6"))
     c6h6.model_style = 1
@@ -83,7 +95,7 @@ def test_bond_high_order():
 def test_bond_performance(h2o):
     h2o.cell = [3, 3, 3]
     h2o.pbc = True
-    h2o = h2o*[10, 10, 10]
+    h2o = h2o * [10, 10, 10]
     tstart = time()
     h2o.model_style = 1
     t = time() - tstart
@@ -94,7 +106,7 @@ def test_bond_add():
     bpy.ops.batoms.delete()
     au = bulk("Au")
     au = Batoms("au", from_ase=au)
-    au = au*[2, 2, 2]
+    au = au * [2, 2, 2]
     assert len(au.bond.settings) == 0
     au.bond.settings.add(("Au", "Au"))
     assert len(au.bond.settings) == 1
@@ -106,7 +118,11 @@ def test_bond_search_bond_0(tio2):
     depsgraph = bpy.context.evaluated_depsgraph_get()
     # Get Geometry Node Instances
     eval_obj = tio2.obj.evaluated_get(depsgraph)
-    insts = [inst for inst in depsgraph.object_instances if inst.is_instance and inst.parent == eval_obj]
+    insts = [
+        inst
+        for inst in depsgraph.object_instances
+        if inst.is_instance and inst.parent == eval_obj
+    ]
     # there are 6 atoms and 54 bonds
     assert len(insts) == 60
     # change search bond settings
@@ -116,7 +132,11 @@ def test_bond_search_bond_0(tio2):
     tio2.model_style = 1
     assert len(tio2.bond.bondlists) == 14
     eval_obj = tio2.obj.evaluated_get(depsgraph)
-    insts = [inst for inst in depsgraph.object_instances if inst.is_instance and inst.parent == eval_obj]
+    insts = [
+        inst
+        for inst in depsgraph.object_instances
+        if inst.is_instance and inst.parent == eval_obj
+    ]
     assert len(insts) == 20
     tio2.bond.show_search = True
     if use_cycles:
@@ -163,10 +183,11 @@ def test_hydrogen_bond():
         set_cycles_res(ch3oh)
     ch3oh.get_image([1, 0, 0], output="bond-hb.png", **extras)
 
+
 def test_bond_reload(tio2):
-    """save to blend file and reload
-    """
+    """save to blend file and reload"""
     import os
+
     tio2.boundary = 0.01
     tio2.model_style = 1
     tio2.bond.show_search = True

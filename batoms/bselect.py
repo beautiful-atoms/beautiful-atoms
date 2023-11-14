@@ -7,15 +7,23 @@ import bpy
 from batoms.base.collection import Setting
 import numpy as np
 from batoms.utils import string2Number
+
 # from time import time
 import logging
+
 # logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 
-class Select():
-    def __init__(self, label, parent, name='all',
-                 batoms=None, indices=None,
-                 ) -> None:
+
+class Select:
+    def __init__(
+        self,
+        label,
+        parent,
+        name="all",
+        batoms=None,
+        indices=None,
+    ) -> None:
         """_summary_
 
         Args:
@@ -34,7 +42,7 @@ class Select():
         self.parent = parent
         self.name = name
         self.batoms = batoms
-        self.coll_name = '%s_%s' % (label, name)
+        self.coll_name = "%s_%s" % (label, name)
         if indices is not None:
             self.indices = indices
 
@@ -63,7 +71,7 @@ class Select():
         self.set_model_style(model_style)
 
     def get_model_style(self):
-        model_style = self.batoms.arrays['model_style']
+        model_style = self.batoms.arrays["model_style"]
         return model_style[self.indices]
 
     def set_model_style(self, model_style):
@@ -75,9 +83,9 @@ class Select():
             self.scale = 0.4
         elif int(model_style) == 3:
             self.scale = 0.0001
-        model_style0 = self.batoms.attributes['model_style']
+        model_style0 = self.batoms.attributes["model_style"]
         model_style0[self.indices] = model_style
-        model_style = {'model_style': model_style0}
+        model_style = {"model_style": model_style0}
         self.batoms.set_attributes(model_style)
         self.batoms.draw()
 
@@ -104,19 +112,19 @@ class Select():
         self.set_show(state)
 
     def get_show(self):
-        return self.batoms.attributes['show'][self.indices]
+        return self.batoms.attributes["show"][self.indices]
 
     def set_show(self, show):
         show0 = self.batoms.show
         show0[self.indices] = show
-        self.batoms.set_attributes({'show': show0})
+        self.batoms.set_attributes({"show": show0})
 
     @property
     def mask(self):
         return self.get_mask()
 
     def get_mask(self):
-        mask = self.batoms.arrays['select']
+        mask = self.batoms.arrays["select"]
         mask = np.where(mask == string2Number(self.name))[0]
         return mask
 
@@ -138,18 +146,21 @@ class Select():
     def get_indices(self):
         vg_idx = self.vg.index
         obj = self.batoms.obj
-        indices = [v.index for v in obj.data.vertices if vg_idx in [
-            vg.group for vg in v.groups]]
+        indices = [
+            v.index
+            for v in obj.data.vertices
+            if vg_idx in [vg.group for vg in v.groups]
+        ]
         return indices
 
     def set_indices(self, indices):
         if isinstance(indices, np.ndarray):
             indices = indices.tolist()
-        self.vg.add(indices, 1.0, 'ADD')
-        select = self.batoms.attributes['select']
-        select[self.indices] = string2Number('all')
+        self.vg.add(indices, 1.0, "ADD")
+        select = self.batoms.attributes["select"]
+        select[self.indices] = string2Number("all")
         select[indices] = string2Number(self.name)
-        select = {'select': select}
+        select = {"select": select}
         self.batoms.set_attributes(select)
 
     @property
@@ -161,21 +172,20 @@ class Select():
         self.set_scale(scale)
 
     def get_scale(self):
-        scale = self.batoms.attributes['scale'][self.indices]
+        scale = self.batoms.attributes["scale"][self.indices]
         return scale
 
     def set_scale(self, scale):
-        """
-        """
-        scale0 = self.batoms.attributes['scale']
+        """ """
+        scale0 = self.batoms.attributes["scale"]
         scale0[self.indices] = scale
         # for species
         if isinstance(scale, dict):
-            species = self.batoms.attributes['species']
+            species = self.batoms.attributes["species"]
             for key, value in scale.items():
                 scale0[np.where((species == key) & self.mask)] = value
             scale = scale0
-        self.batoms.set_attributes({'scale': scale0})
+        self.batoms.set_attributes({"scale": scale0})
 
     @property
     def color(self):
@@ -186,17 +196,16 @@ class Select():
         self.set_color(color)
 
     def get_color(self):
-        """
-        """
+        """ """
         color = {}
         materials = self.materials
         main_elements = self.main_elements
         for sp in self.batoms.species:
             for node in materials[sp][main_elements[sp]].node_tree.nodes:
-                if 'Base Color' in node.inputs:
-                    node_color = node.inputs['Base Color'].default_value[:]
-                if 'Alpha' in node.inputs:
-                    Alpha = node.inputs['Alpha'].default_value
+                if "Base Color" in node.inputs:
+                    node_color = node.inputs["Base Color"].default_value[:]
+                if "Alpha" in node.inputs:
+                    Alpha = node.inputs["Alpha"].default_value
             color[sp] = [node_color[0], node_color[1], node_color[2], Alpha]
         return color
 
@@ -205,10 +214,10 @@ class Select():
             color = [color[0], color[1], color[2], 1]
         self.materials[self.main_elements].diffuse_color = color
         for node in self.materials[self.main_elements].node_tree.nodes:
-            if 'Base Color' in node.inputs:
-                node.inputs['Base Color'].default_value = color
-            if 'Alpha' in node.inputs:
-                node.inputs['Alpha'].default_value = color[3]
+            if "Base Color" in node.inputs:
+                node.inputs["Base Color"].default_value = color
+            if "Alpha" in node.inputs:
+                node.inputs["Alpha"].default_value = color[3]
 
     @property
     def radius(self):
@@ -229,16 +238,16 @@ class Select():
         radius = self.radius
         color = self.color
         for sp in self.species:
-            species_props[sp] = {'radius': radius[sp], 'color': color[sp]}
+            species_props[sp] = {"radius": radius[sp], "color": color[sp]}
         return species_props
 
     def __repr__(self) -> str:
-        s = '-'*60 + '\n'
-        s = 'Name   model_style   radius_style     show \n'
-        s += '{0:10s} {1:10s}   {2:10s}   {3:10s} \n'.format(
-            self.name, str(self.model_style[0]),
-            self.radius_style[0], str(self.show[0]))
-        s += '-'*60 + '\n'
+        s = "-" * 60 + "\n"
+        s = "Name   model_style   radius_style     show \n"
+        s += "{0:10s} {1:10s}   {2:10s}   {3:10s} \n".format(
+            self.name, str(self.model_style[0]), self.radius_style[0], str(self.show[0])
+        )
+        s += "-" * 60 + "\n"
         return s
 
 
@@ -252,7 +261,7 @@ class Selects(Setting):
     def __init__(self, label, batoms=None) -> None:
         Setting.__init__(self, label, coll_name=label)
         self.label = label
-        self.name = 'batoms'
+        self.name = "batoms"
         self.batoms = batoms
 
     def get_ui_list_index(self):
@@ -276,13 +285,15 @@ class Selects(Setting):
     def get_selects(self):
         selects = {}
         for b in self.bpy_setting:
-            selects[b.name] = Select(self.label, parent=self, name=b.name,
-                                     batoms=self.batoms)
+            selects[b.name] = Select(
+                self.label, parent=self, name=b.name, batoms=self.batoms
+            )
         for vg in self.batoms.obj.vertex_groups:
             if vg.name not in selects:
                 self.add(vg.name)
-            selects[vg.name] = Select(self.label, parent=self, name=vg.name,
-                                      batoms=self.batoms)
+            selects[vg.name] = Select(
+                self.label, parent=self, name=vg.name, batoms=self.batoms
+            )
         return selects
 
     def __getitem__(self, key):
@@ -292,19 +303,19 @@ class Selects(Setting):
         """
         if isinstance(key, str):
             if key not in self.selects:
-                raise KeyError('%s is not in this structure' % key)
+                raise KeyError("%s is not in this structure" % key)
             return self.selects[key]
         elif isinstance(key, list):
-            raise KeyError('dict not supported yet!')
+            raise KeyError("dict not supported yet!")
 
     def __len__(self):
         return len(self.selects)
 
     def __repr__(self) -> str:
-        s = '     Name        model_style    show  \n'
+        s = "     Name        model_style    show  \n"
         i = 0
         for name, sel in self.selects.items():
-            s += '{:3d}   {:10s}  \n'.format(i, name)
+            s += "{:3d}   {:10s}  \n".format(i, name)
             i += 1
         return s
 
@@ -314,8 +325,16 @@ class Selects(Setting):
         else:
             indices = None
         if len(name) > 4:
-            print("Warning: the name of the select: {}, longer than four characters. Has been renamed to {}".format(name, name[:4]))
-            logger.warning("The name of the select: {}, longer than four characters. Has been renamed to {}".format(name, name[:4]))
+            print(
+                "Warning: the name of the select: {}, longer than four characters. Has been renamed to {}".format(
+                    name, name[:4]
+                )
+            )
+            logger.warning(
+                "The name of the select: {}, longer than four characters. Has been renamed to {}".format(
+                    name, name[:4]
+                )
+            )
             name = name[:4]
         # select = self.batoms.attributes['select']
         # select[indices] = string2Number(name)
@@ -330,55 +349,55 @@ class Selects(Setting):
         subset.label = self.label
         subset.flag = True
         # species_props = self.batoms.
-        sel = Select(self.label, parent=self, name=name,
-                     batoms=self.batoms, indices=indices)
+        sel = Select(
+            self.label, parent=self, name=name, batoms=self.batoms, indices=indices
+        )
         return sel
 
 
 def elect_expression(expre, batoms):
     """
-    select expression
-all
-none
+        select expression
+    all
+    none
 
-Logical
-not Sele
-sele1 and sele2
+    Logical
+    not Sele
+    sele1 and sele2
 
-Properties
-element O
+    Properties
+    element O
 
-Coordinates
-z<5
+    Coordinates
+    z<5
 
-Chemcial classses
+    Chemcial classses
 
-solvent: water
-hydrogens:
-metals
-
-"""
+    solvent: water
+    hydrogens:
+    metals
+    """
     indices = None
     if isinstance(expre, (list, np.ndarray)):
         return expre
     if isinstance(expre, str):
-        if 'chain' in expre:
+        if "chain" in expre:
             chainid = expre.split()[1]
-            logger.debug('chain %s' % chainid)
-            indices = np.where(batoms.attributes['chainids'] == chainid)[0]
-        if 'sheet' in expre:
+            logger.debug("chain %s" % chainid)
+            indices = np.where(batoms.attributes["chainids"] == chainid)[0]
+        if "sheet" in expre:
             sheet = expre.split()[1]
-            logger.debug('sheet %s' % sheet)
+            logger.debug("sheet %s" % sheet)
             indices = batoms.ribbon.protein.sheets[sheet].indices
-        if 'helix' in expre:
+        if "helix" in expre:
             helix = expre.split()[1]
-            logger.debug('helix %s' % helix)
+            logger.debug("helix %s" % helix)
             indices = batoms.ribbon.protein.helixs[helix].indices
-        if 'hetatm' in expre:
-            logger.debug('hetatm')
-            indices = np.where(batoms.attributes['types'] == 'HETATM')[0]
-        if 'species' in expre:
+        if "hetatm" in expre:
+            logger.debug("hetatm")
+            indices = np.where(batoms.attributes["types"] == "HETATM")[0]
+        if "species" in expre:
             species = expre.split()[1]
-            logger.debug('species %s' % species)
-            indices = np.where(batoms.attributes['species'] == species)[0]
+            logger.debug("species %s" % species)
+            indices = np.where(batoms.attributes["species"] == species)[0]
     return indices

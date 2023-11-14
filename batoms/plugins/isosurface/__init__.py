@@ -6,6 +6,7 @@ from . import (
     ui_list,
 )
 
+__all__ = ["Isosurface"]
 
 classes = [
     # internal data first
@@ -24,18 +25,20 @@ def register_class():
     from bpy.types import Collection, Object
     from bpy.props import PointerProperty
     from bpy.utils import register_class
+
     for cls in classes:
         register_class(cls)
     # attach to blender internal data
-    Collection.Bisosurface = PointerProperty(name='Bisosurface',
-                                        type=bpy_data.Isosurface)
-    Object.Bisosurface = PointerProperty(name='Bisosurface',
-                                    type=bpy_data.Isosurface)
+    Collection.Bisosurface = PointerProperty(
+        name="Bisosurface", type=bpy_data.Isosurface
+    )
+    Object.Bisosurface = PointerProperty(name="Bisosurface", type=bpy_data.Isosurface)
 
 
 def unregister_class():
     from bpy.types import Collection, Object
     from bpy.utils import unregister_class
+
     for cls in reversed(classes):
         unregister_class(cls)
 

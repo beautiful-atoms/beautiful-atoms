@@ -3,10 +3,10 @@ from batoms import Batoms
 import numpy as np
 import pytest
 
-if "3.1.0" in bpy.app.version_string:
-    blender31 = False
+if bpy.app.version_string >= "4.0.0":
+    blender40 = False
 else:
-    blender31 = True
+    blender40 = True
 
 
 def test_empty():
@@ -184,22 +184,36 @@ def test_array_attribute():
     import numpy as np
     from batoms import Batoms
 
-    bpy.ops.batoms.delete()
-    au = bulk("Au")
     # (nx2) array
+    au = bulk("Au")
     array2d = np.zeros((len(au), 2))
     au.set_array("array2d", array2d)
     #
     # (nx3) array
     array3d = np.zeros((len(au), 3))
     au.set_array("array3d", array3d)
-    # (nx4) array
-    array4d = np.zeros((len(au), 4))
-    au.set_array("array4d", array4d)
     au = Batoms("au", from_ase=au)
     au.get_attribute("array2d")
     au.get_attribute("array3d")
+    bpy.ops.batoms.delete()
+
+
+@pytest.mark.skipif(
+    blender40,
+    reason="Requires Blender >= 4.0.0",
+)
+def test_array_attribute_4d():
+    from ase.build import bulk
+    import numpy as np
+    from batoms import Batoms
+
+    # (nx4) array
+    au = bulk("Au")
+    array4d = np.zeros((len(au), 4))
+    au.set_array("array4d", array4d)
+    au = Batoms("au", from_ase=au)
     au.get_attribute("array4d")
+    bpy.ops.batoms.delete()
 
 
 ###############################
@@ -278,10 +292,6 @@ def test_batoms_ops():
     assert len(au) == 1
 
 
-@pytest.mark.skipif(
-    blender31,
-    reason="Requires Blender >= 3.1.",
-)
 def test_export_mesh_x3d(c2h6so):
     from batoms.bio.bio import read
 
@@ -303,7 +313,9 @@ def test_export_mesh_x3d(c2h6so):
     )
 
 
-@pytest.mark.skip(reason="In Blender 4.0, export_scene.obj is not working")
+@pytest.mark.skipif(
+    not blender40, reason="In Blender 4.0, export_scene.obj is not working."
+)
 def test_export_mesh_obj(c2h6so, tio2):
     c2h6so.cell = [3, 3, 3]
     c2h6so.model_style = 1

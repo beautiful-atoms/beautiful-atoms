@@ -3,8 +3,8 @@ import pytest
 from ase.build import bulk
 from batoms import Batoms
 from batoms.bio.bio import read
-import numpy as np
 import os
+
 try:
     from _common_helpers import has_display, set_cycles_res
 
@@ -48,7 +48,7 @@ def test_boundary():
 def test_lattice_plane_ops():
     bpy.ops.batoms.delete()
     bpy.ops.batoms.bulk_add(formula="Au")
-    au = Batoms('Au')
+    au = Batoms("Au")
     bpy.context.view_layer.objects.active = au.obj
     bpy.ops.plane.lattice_plane_add(indices=(1, 1, 1))
     au.lattice_plane.settings["1-1-1"].distance = 3.0
@@ -60,28 +60,32 @@ def test_lattice_plane_ops():
     print(au.lattice_plane.settings)
     bpy.ops.plane.lattice_plane_draw()
 
+
 def test_gui():
     """latticeplane panel"""
     from batoms.batoms import Batoms
+
     bpy.ops.batoms.delete()
     bpy.ops.batoms.bulk_add(formula="Au", cubic=True)
-    au = Batoms('Au')
+    au = Batoms("Au")
     au.obj.select_set(True)
-    assert bpy.context.scene.Blatticeplane.show == True
+    assert bpy.context.scene.Blatticeplane.show is True
     bpy.context.scene.Blatticeplane.show = False
-    assert au.lattice_plane.show == False
+    assert au.lattice_plane.show is False
+
 
 def test_gui_uilist():
     """latticeplane panel"""
     from batoms.batoms import Batoms
+
     bpy.ops.batoms.delete()
     bpy.ops.batoms.bulk_add(formula="Au", cubic=True)
-    au = Batoms('Au')
+    au = Batoms("Au")
     au.obj.select_set(True)
-    assert au.coll.Blatticeplane.ui_list_index==0
+    assert au.coll.Blatticeplane.ui_list_index == 0
     bpy.ops.plane.lattice_plane_add(indices=(1, 1, 1))
     bpy.ops.plane.lattice_plane_add(indices=(1, 0, 0))
-    assert au.coll.Blatticeplane.ui_list_index==1
+    assert au.coll.Blatticeplane.ui_list_index == 1
 
 
 if __name__ == "__main__":

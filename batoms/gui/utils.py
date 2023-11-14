@@ -2,12 +2,13 @@ import bpy
 from batoms.batoms import Batoms
 
 
-def get_active_bpy_data(btype = 'cell'):
+def get_active_bpy_data(btype="cell"):
     """Helper function.
 
     Args:
         btype (str, optional): _description_. Defaults to 'cell'.
     """
+
     def getter():
         """Get the collection of the active Batoms
 
@@ -20,18 +21,20 @@ def get_active_bpy_data(btype = 'cell'):
             bpy.type.collection: _description_
         """
         context = bpy.context
-        if context.object and context.object.batoms.type != 'OTHER':
+        if context.object and context.object.batoms.type != "OTHER":
             return getattr(bpy.data.collections[context.object.batoms.label], btype)
         return None
+
     return getter
 
 
-def get_active_bpy_data_batoms(btype = 'cell'):
+def get_active_bpy_data_batoms(btype="cell"):
     """Helper function.
 
     Args:
         btype (str, optional): _description_. Defaults to 'cell'.
     """
+
     def getter():
         """
 
@@ -39,13 +42,16 @@ def get_active_bpy_data_batoms(btype = 'cell'):
             bpy.type.collection: _description_
         """
         context = bpy.context
-        if context.object and context.object.batoms.type != 'OTHER':
-            return getattr(bpy.data.collections[context.object.batoms.label].batoms, btype)
+        if context.object and context.object.batoms.type != "OTHER":
+            return getattr(
+                bpy.data.collections[context.object.batoms.label].batoms, btype
+            )
         return None
+
     return getter
 
 
-def get_active_module(module_name = 'cell'):
+def get_active_module(module_name="cell"):
     """Helper function.
 
     Args:
@@ -54,6 +60,7 @@ def get_active_module(module_name = 'cell'):
     Returns:
         function: function to get the module
     """
+
     def getter():
         """Get the module of Batoms by name
 
@@ -61,14 +68,16 @@ def get_active_module(module_name = 'cell'):
             _type_: _description_
         """
         context = bpy.context
-        if context.object and context.object.batoms.type != 'OTHER':
+        if context.object and context.object.batoms.type != "OTHER":
             mode = context.object.mode
             batoms = Batoms(label=context.object.batoms.label)
             bpy.context.view_layer.objects.active = batoms.obj
             bpy.ops.object.mode_set(mode=mode)
             return getattr(batoms, module_name)
         return None
+
     return getter
+
 
 def set_module_attr(module_name):
     """Helper function.
@@ -76,13 +85,14 @@ def set_module_attr(module_name):
     Args:
         module_name (_type_): _description_
     """
+
     def setter(key, value):
         module = get_active_module(module_name)()
         if module is not None:
             setattr(module, key, value)
             # bpy.context.view_layer.objects.active = module.obj
-    return setter
 
+    return setter
 
 
 def get_enum_attr(name, func):
@@ -133,6 +143,7 @@ def get_attr(name, func):
         else:
             prop = self.bl_rna.properties[name]
             return prop.default
+
     return getter
 
 

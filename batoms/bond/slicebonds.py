@@ -1,21 +1,18 @@
-import bpy
-import bmesh
 import numpy as np
 from batoms.utils import number2String
 from batoms.base.object import childObjectGN
-import time
 import logging
-# logger = logging.getLogger('batoms')
+
 logger = logging.getLogger(__name__)
 
+
 class SliceBonds(childObjectGN):
-    """Batom Class
-    """
+    """Batom Class"""
 
     def __init__(self, label, indices=0, bonds=None) -> None:
-        childObjectGN.__init__(self, label, indices,
-                    obj_name="{}_bond".format(label),
-                    parent=bonds)
+        childObjectGN.__init__(
+            self, label, indices, obj_name="{}_bond".format(label), parent=bonds
+        )
 
     def __repr__(self):
         # bpy.context.view_layer.objects.active = self.parent.obj
@@ -29,22 +26,21 @@ class SliceBonds(childObjectGN):
 
     @property
     def species(self):
-        #TODO: support slice
-        sp1 = self.get_attribute('species_index0')
-        sp2 = self.get_attribute('species_index1')
+        # TODO: support slice
+        sp1 = self.get_attribute("species_index0")
+        sp2 = self.get_attribute("species_index1")
         if len(self.indices) == 1:
-            name = np.array(['%s-%s' % (number2String(sp1), number2String(sp2))])
+            name = np.array(["%s-%s" % (number2String(sp1), number2String(sp2))])
         else:
             n = len(sp1)
             name = np.zeros(n, dtype="U20")
             for i in range(n):
-                name[i] = '%s-%s' % (number2String(sp1[i]), number2String(sp2[i]))
-        order = self.get_attribute('bond_order')
-        style = self.get_attribute('bond_style')
+                name[i] = "%s-%s" % (number2String(sp1[i]), number2String(sp2[i]))
+        order = self.get_attribute("bond_order")
+        style = self.get_attribute("bond_style")
         # name = '%s-%s' % (sp1, sp2)
         sp = self.parent.settings[name[0]].as_dict()
-        sp.update({'order': order[0],
-                   'style': style[0]})
+        sp.update({"order": order[0], "style": style[0]})
         return sp
 
     @species.setter
@@ -57,33 +53,33 @@ class SliceBonds(childObjectGN):
 
     @property
     def order(self):
-        order = self.get_attribute('bond_order')
+        order = self.get_attribute("bond_order")
         return order
 
     @order.setter
     def order(self, value):
-        self.set_attribute('bond_order', value)
+        self.set_attribute("bond_order", value)
         # find plane for high order
         a2, a3 = self.secondBond()
-        self.set_attribute('atoms_index2', a2)
-        self.set_attribute('atoms_index3', a3)
+        self.set_attribute("atoms_index2", a2)
+        self.set_attribute("atoms_index3", a3)
         # if order not exist, add one
         sp = self.species
-        sp['order'] = value
+        sp["order"] = value
         self.parent.settings.build_instancer(sp)
         self.parent.add_bond_pair_node(sp)
 
     @property
     def style(self):
-        style = self.get_attribute('bond_style')
+        style = self.get_attribute("bond_style")
         return style
 
     @style.setter
     def style(self, value):
-        self.set_attribute('bond_style', value)
+        self.set_attribute("bond_style", value)
         # if stule not exist, add one
         sp = self.species
-        sp['style'] = value
+        sp["style"] = value
         self.parent.settings.build_instancer(sp)
         self.parent.add_bond_pair_node(sp)
 
@@ -92,21 +88,21 @@ class SliceBonds(childObjectGN):
         determine the plane of high order bond
         """
         arrays = self.parent.arrays
-        ai = arrays['atoms_index0'][self.indices[0]]
-        aj = arrays['atoms_index1'][self.indices[0]]
-        indi = np.where((arrays['atoms_index0'] == ai) |
-                        (arrays['atoms_index1'] == ai) |
-                        (arrays['atoms_index0'] == aj) |
-                        (arrays['atoms_index1'] == aj))[0]
+        ai = arrays["atoms_index0"][self.indices[0]]
+        aj = arrays["atoms_index1"][self.indices[0]]
+        indi = np.where(
+            (arrays["atoms_index0"] == ai)  # noqa: W503
+            | (arrays["atoms_index1"] == ai)  # noqa: W503
+            | (arrays["atoms_index0"] == aj)  # noqa: W503
+            | (arrays["atoms_index1"] == aj)  # noqa: W503
+        )[0]
         if len(indi) == 1:
             second_bond = [0, 1]
         else:
             for i in indi:
-                if arrays['atoms_index0'][i] == ai and \
-                        arrays['atoms_index1'][i] == aj:
+                if arrays["atoms_index0"][i] == ai and arrays["atoms_index1"][i] == aj:
                     continue
-                second_bond = [arrays['atoms_index0']
-                               [i], arrays['atoms_index1'][i]]
+                second_bond = [arrays["atoms_index0"][i], arrays["atoms_index1"][i]]
                 break
         return second_bond
 
@@ -115,19 +111,19 @@ class SliceBonds(childObjectGN):
         determine the plane of high order bond
         """
         arrays = self.parent.arrays
-        ai = arrays['atoms_index0'][self.indices]
-        aj = arrays['atoms_index1'][self.indices]
-        indi = np.where(arrays['atoms_index0'] == ai)[0]
+        ai = arrays["atoms_index0"][self.indices]
+        aj = arrays["atoms_index1"][self.indices]
+        indi = np.where(arrays["atoms_index0"] == ai)[0]
         if len(indi) == 1:
             second_bond = np.array([0.0, 0.0, 1])
         else:
             for i in indi:
-                if arrays['atoms_index1'][i] == aj:
+                if arrays["atoms_index1"][i] == aj:
                     continue
-                second_bond = arrays['vectors'][i]
+                second_bond = arrays["vectors"][i]
                 break
-        vec = np.cross(second_bond,
-                       arrays['vectors'][self.indices]) + np.array([1e-8, 0, 0])
-        offset = np.cross(vec, arrays['vectors']
-                          [self.indices]) + np.array([1e-8, 0, 0])
+        vec = np.cross(second_bond, arrays["vectors"][self.indices]) + np.array(
+            [1e-8, 0, 0]
+        )
+        offset = np.cross(vec, arrays["vectors"][self.indices]) + np.array([1e-8, 0, 0])
         return offset

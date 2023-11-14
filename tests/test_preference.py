@@ -1,5 +1,4 @@
 import bpy
-import pytest
 import logging
 import importlib
 import pkgutil
@@ -11,13 +10,14 @@ preferences = addon.preferences
 
 
 def test_enable_disable_plugin():
-    from bpy.types import Collection, Object
-    assert preferences.magres==True
-    assert hasattr(Collection, 'Bmagres')
-    preferences.magres=False
-    assert not hasattr(Collection, 'Bmagres')
-    preferences.magres=True
-    assert hasattr(Collection, 'Bmagres')
+    from bpy.types import Collection
+
+    assert preferences.magres is True
+    assert hasattr(Collection, "Bmagres")
+    preferences.magres = False
+    assert not hasattr(Collection, "Bmagres")
+    preferences.magres = True
+    assert hasattr(Collection, "Bmagres")
 
 
 def create_molecule():
@@ -25,7 +25,7 @@ def create_molecule():
     from batoms import Batoms
     from ase.build import molecule
 
-    batoms = Batoms(from_ase=molecule("CO"))
+    Batoms(from_ase=molecule("CO"))
     bpy.ops.batoms.delete()
     return
 
@@ -110,10 +110,3 @@ def test_logging_level_emit():
     create_molecule()
     lines2 = read_log_lines(root_logger)[len(lines1) :]
     assert all(["Add object" not in line for line in lines2])
-
-
-if __name__ == "__main__":
-    test_logging_level()
-    test_logging_level_emit()
-    test_child_loggers()
-    print("\n Batoms: All pass! \n")

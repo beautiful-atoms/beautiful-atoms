@@ -1,7 +1,5 @@
 import bpy
-import pytest
 from batoms.cell import Bcell
-from batoms.batoms import Batoms
 import numpy as np
 
 
@@ -27,16 +25,14 @@ def test_repeat(au):
     au.cell = [2, 2, 2]
     # au.cell.rotate(np.pi/4, 'Z')
     au.cell.repeat([2, 2, 2])
-    assert np.allclose(au.cell.array, np.array(
-        [[4, 0, 0], [0, 4, 0], [0, 0, 4]]))
+    assert np.allclose(au.cell.array, np.array([[4, 0, 0], [0, 4, 0], [0, 0, 4]]))
 
 
 def test_translate_repeat(au):
     au.cell = [2, 2, 2]
     au.cell.translate([0, 0, 2])
     au.cell.repeat([2, 2, 2])
-    assert np.allclose(au.cell.array, np.array(
-        [[4, 0, 0], [0, 4, 0], [0, 0, 4]]))
+    assert np.allclose(au.cell.array, np.array([[4, 0, 0], [0, 4, 0], [0, 0, 4]]))
 
 
 def test_copy(au):
@@ -52,11 +48,12 @@ def test_draw(au):
     au.cell.width = 0.1
     au.cell.color = [1, 0, 0, 1]
 
+
 def test_bond_reload(au):
-    """save to blend file and reload
-    """
+    """save to blend file and reload"""
     import os
     from batoms import Batoms
+
     au.cell.width = 0.01
     au.cell.color = [1, 0, 0, 0.5]
     cwd = os.getcwd()

@@ -1,5 +1,4 @@
 import bpy
-import pytest
 from batoms.pdbparser import read_pdb
 from batoms.batoms import Batoms
 

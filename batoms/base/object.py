@@ -1,9 +1,12 @@
 import bpy
 import numpy as np
-from batoms.utils.butils import (get_node_by_name, object_mode, set_look_at,
-                                 update_object)
+from batoms.utils.butils import (
+    get_node_by_name,
+    object_mode,
+    set_look_at,
+    update_object,
+)
 
-from time import time
 import bmesh
 import logging
 
@@ -11,15 +14,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-default_object_attributes = [
-]
+default_object_attributes = []
 
-default_object_datas = {
-}
+default_object_datas = {}
 
 
-class BaseObject():
-
+class BaseObject:
     def __init__(self, obj_name, btype="batoms"):
         self.obj_name = obj_name
         self.btype = btype
@@ -31,7 +31,7 @@ class BaseObject():
     def get_obj(self):
         obj = bpy.data.objects.get(self.obj_name)
         if obj is None:
-            raise KeyError('%s object is not exist.' % self.obj_name)
+            raise KeyError("%s object is not exist." % self.obj_name)
         return obj
 
     @property
@@ -59,6 +59,7 @@ class BaseObject():
     @property
     def type(self):
         return self.get_type()
+
     # this is weak, because not work for mesh object
 
     @type.setter
@@ -132,11 +133,11 @@ class BaseObject():
         >>> h.translate([0, 0, 5])
         """
         object_mode()
-        bpy.ops.object.select_all(action='DESELECT')
+        bpy.ops.object.select_all(action="DESELECT")
         self.obj.select_set(True)
         bpy.ops.transform.translate(value=displacement)
 
-    def rotate(self, angle, axis='Z', orient_type='GLOBAL'):
+    def rotate(self, angle, axis="Z", orient_type="GLOBAL"):
         """Rotate atomic based on a axis and an angle.
 
         Parameters:
@@ -152,11 +153,12 @@ class BaseObject():
 
         """
         object_mode()
-        bpy.ops.object.select_all(action='DESELECT')
+        bpy.ops.object.select_all(action="DESELECT")
         self.obj.select_set(True)
         bpy.context.view_layer.objects.active = self.obj
-        bpy.ops.transform.rotate(value=angle, orient_axis=axis.upper(),
-                                 orient_type=orient_type)
+        bpy.ops.transform.rotate(
+            value=angle, orient_axis=axis.upper(), orient_type=orient_type
+        )
 
     def delete_obj(self, name):
         if name in bpy.data.objects:
@@ -169,7 +171,9 @@ class BaseObject():
             bpy.data.materials.remove(obj, do_unlink=True)
 
     def update_mesh(self, obj=None):
-        import bmesh
+        """Update mesh of the object.
+        By switching to edit mode and back to object mode."""
+
         object_mode()
         if obj is None:
             obj = self.obj
@@ -182,12 +186,13 @@ class BaseObject():
         # I don't why the shape key is not udpate in background mode, so we need this.
         bpy.context.view_layer.objects.active = self.obj
         mode = self.obj.mode
-        bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.ops.object.mode_set(mode="EDIT")
+        bpy.ops.object.mode_set(mode="OBJECT")
         bpy.ops.object.mode_set(mode=mode)
 
     def add_verts(self, count, obj=None):
-        import bmesh
+        """Add vertices to the object."""
+
         object_mode()
         if obj is None:
             obj = self.obj
@@ -197,6 +202,7 @@ class BaseObject():
     def add_vertices_bmesh(self, count, obj=None):
         import bmesh
         import numpy as np
+
         object_mode()
         if obj is None:
             obj = self.obj
@@ -209,11 +215,16 @@ class BaseObject():
         bm.to_mesh(obj.data)
         bm.clear()
 
-    def delete_vertices_bmesh(self, index=[], obj=None,):
+    def delete_vertices_bmesh(
+        self,
+        index=[],
+        obj=None,
+    ):
         """
         delete verts
         """
         import bmesh
+
         object_mode()
         if obj is None:
             obj = self.obj
@@ -221,7 +232,7 @@ class BaseObject():
         bm.from_mesh(obj.data)
         bm.verts.ensure_lookup_table()
         verts_select = [bm.verts[i] for i in index]
-        bmesh.ops.delete(bm, geom=verts_select, context='VERTS')
+        bmesh.ops.delete(bm, geom=verts_select, context="VERTS")
         bm.to_mesh(obj.data)
         bm.clear()
 
@@ -230,15 +241,20 @@ class BaseObject():
         if obj is None:
             obj = self.obj
         obj.data.edges.add(len(edges))
-        edges = edges.reshape(len(edges)*2)
-        obj.data.edges.foreach_set('vertices', edges)
+        edges = edges.reshape(len(edges) * 2)
+        obj.data.edges.foreach_set("vertices", edges)
         self.update_mesh(obj)
 
-    def delete_edges_bmesh(self, index=[], obj=None,):
+    def delete_edges_bmesh(
+        self,
+        index=[],
+        obj=None,
+    ):
         """
         delete edges
         """
         import bmesh
+
         object_mode()
         if obj is None:
             obj = self.obj
@@ -246,15 +262,15 @@ class BaseObject():
         bm.from_mesh(obj.data)
         bm.edges.ensure_lookup_table()
         edges_select = [bm.edges[i] for i in index]
-        bmesh.ops.delete(bm, geom=edges_select, context='EDGES_FACES')
+        bmesh.ops.delete(bm, geom=edges_select, context="EDGES_FACES")
         bm.to_mesh(obj.data)
         bm.clear()
 
     @property
     def shape_keys(self):
-        base_name = "Basis_%s"%self.obj_name
+        base_name = "Basis_%s" % self.obj_name
         if self.obj.data.shape_keys is None and len(self) > 0:
-            sk = self.obj.shape_key_add(name=base_name)
+            self.obj.shape_key_add(name=base_name)
         return self.obj.data.shape_keys
 
     def __len__(self):
@@ -270,7 +286,7 @@ class ObjectGN(BaseObject):
     def __init__(self, label, name=None):
         if name:
             self.name = name
-            obj_name = '%s_%s' % (label, name)
+            obj_name = "%s_%s" % (label, name)
         else:
             obj_name = label
         BaseObject.__init__(self, obj_name=obj_name)
@@ -298,7 +314,7 @@ class ObjectGN(BaseObject):
 
     def get_gn_modifier(self):
         """Get the geometry node modifier of the object."""
-        name = 'GeometryNodes_%s' % self.obj_name
+        name = "GeometryNodes_%s" % self.obj_name
         modifier = self.obj.modifiers.get(name)
         if modifier is None:
             self.init_geometry_node_modifier()
@@ -308,13 +324,23 @@ class ObjectGN(BaseObject):
         """Init geometry node modifier"""
         # blender 4.0 use a interface to add sockets, both input and output
         from batoms.utils.butils import build_gn_modifier
-        name = 'GeometryNodes_%s' % self.obj_name
+
+        name = "GeometryNodes_%s" % self.obj_name
         modifier = build_gn_modifier(self.obj, name)
-        interface = modifier.node_group.interface
-        for input in inputs:
-            socket = interface.new_socket(name=input[0], socket_type=input[1], in_out='INPUT')
-            modifier['%s_use_attribute' % socket.identifier] = True
-            modifier['%s_attribute_name' % socket.identifier] = input[0]
+        if bpy.app.version_string >= "4.0.0":
+            interface = modifier.node_group.interface
+            for input in inputs:
+                socket = interface.new_socket(
+                    name=input[0], socket_type=input[1], in_out="INPUT"
+                )
+                modifier["%s_use_attribute" % socket.identifier] = True
+                modifier["%s_attribute_name" % socket.identifier] = input[0]
+        else:
+            for input in inputs:
+                modifier.node_group.inputs.new(input[1], input[0])
+                id = modifier.node_group.inputs[input[0]].identifier
+                modifier["%s_use_attribute" % id] = True
+                modifier["%s_attribute_name" % id] = input[0]
         return modifier
 
     def build_geometry_node(self):
@@ -322,28 +348,31 @@ class ObjectGN(BaseObject):
         Geometry node for everything!
         """
         from batoms.utils.butils import build_gn_modifier
-        name = 'GeometryNodes_%s' % self.obj_name
+
+        name = "GeometryNodes_%s" % self.obj_name
         modifier = build_gn_modifier(self.obj, name)
         return modifier
 
     def vectorDotMatrix(self, gn_node_group, vector_output, matrix, name):
-        """
-        """
-        CombineXYZ = get_node_by_name(gn_node_group.nodes,
-                                       '%s_CombineXYZ_%s' % (self.label, name),
-                                       'ShaderNodeCombineXYZ')
+        """ """
+        CombineXYZ = get_node_by_name(
+            gn_node_group.nodes,
+            "%s_CombineXYZ_%s" % (self.label, name),
+            "ShaderNodeCombineXYZ",
+        )
         #
         VectorDot = []
         for i in range(3):
-            tmp = get_node_by_name(gn_node_group.nodes,
-                                    '%s_VectorDot%s_%s' % (
-                                        self.label, i, name),
-                                    'ShaderNodeVectorMath')
-            tmp.operation = 'DOT_PRODUCT'
+            tmp = get_node_by_name(
+                gn_node_group.nodes,
+                "%s_VectorDot%s_%s" % (self.label, i, name),
+                "ShaderNodeVectorMath",
+            )
+            tmp.operation = "DOT_PRODUCT"
             VectorDot.append(tmp)
             tmp.inputs[1].default_value = matrix[:, i]
             gn_node_group.links.new(vector_output, tmp.inputs[0])
-            gn_node_group.links.new(tmp.outputs['Value'], CombineXYZ.inputs[i])
+            gn_node_group.links.new(tmp.outputs["Value"], CombineXYZ.inputs[i])
         return CombineXYZ
 
     def add_geometry_node(self):
@@ -364,32 +393,37 @@ class ObjectGN(BaseObject):
         return list(self.coll.batoms.realize_instances)
 
     def set_realize_instances(self, realize_instances):
-        """ Make instancing object real
+        """Make instancing object real
         # TODO: add make real to geometry node
         """
         #
         nodes = self.gn_node_group.nodes
-        RealizeInstances = get_node_by_name(self.gn_node_group.nodes,
-                                             '%s_RealizeInstances' % self.label,
-                                             'GeometryNodeRealizeInstances')
+        RealizeInstances = get_node_by_name(
+            self.gn_node_group.nodes,
+            "%s_RealizeInstances" % self.label,
+            "GeometryNodeRealizeInstances",
+        )
         if not realize_instances:
             # switch off
             if len(RealizeInstances.outputs[0].links) > 0:
                 link = RealizeInstances.outputs[0].links[0]
                 self.gn_node_group.links.remove(link)
             self.gn_node_group.links.new(
-                nodes['%s_JoinGeometry' % self.label].outputs[0],
-                nodes[1].inputs[0])
+                nodes["%s_JoinGeometry" % self.label].outputs[0], nodes[1].inputs[0]
+            )
         else:
             self.gn_node_group.links.new(
-                nodes['%s_JoinGeometry' % self.label].outputs[0],
-                RealizeInstances.inputs[0])
+                nodes["%s_JoinGeometry" % self.label].outputs[0],
+                RealizeInstances.inputs[0],
+            )
             self.gn_node_group.links.new(
-                RealizeInstances.outputs[0],
-                nodes[1].inputs[0])
+                RealizeInstances.outputs[0], nodes[1].inputs[0]
+            )
         self.gn_node_group.update_tag()
 
-    def update(self, ):
+    def update(
+        self,
+    ):
         """
         update object'data.
         calculate data in all farmes
@@ -429,8 +463,11 @@ class ObjectGN(BaseObject):
         """
         object_mode()
         arrays = self.attributes
-        arrays.update({'positions': self.positions[0],
-                       })
+        arrays.update(
+            {
+                "positions": self.positions[0],
+            }
+        )
         return arrays
 
     @property
@@ -441,7 +478,7 @@ class ObjectGN(BaseObject):
     def attributes(self, attributes):
         self.set_attributes(attributes)
 
-    def get_attributes(self, domains=['POINT']):
+    def get_attributes(self, domains=["POINT"]):
         """Get all attributes of the Batoms object.
 
 
@@ -450,7 +487,7 @@ class ObjectGN(BaseObject):
         """
         attributes = {}
         for att in self.obj.data.attributes:
-            if att.name.startswith('.') or att.domain not in domains:
+            if att.name.startswith(".") or att.domain not in domains:
                 continue
             attributes[att.name] = self.get_attribute(att.name)
         return attributes
@@ -470,13 +507,18 @@ class ObjectGN(BaseObject):
         Returns:
             _type_: _description_
         """
-        from batoms.utils import type_blender_to_py
-        from batoms.utils.butils import get_att_length
-        from batoms.utils.attribute import get_mesh_attribute,get_mesh_attribute_bmesh
+        from batoms.utils.attribute import get_mesh_attribute, get_mesh_attribute_bmesh
+
         # get the mesh
         obj = self.obj
         att = obj.data.attributes[key]
-        if obj.mode == 'EDIT' and att.data_type in ['STRING', 'INT', 'FLOAT', 'FLOAT_VECTOR', 'FLOAT_COLOR']:
+        if obj.mode == "EDIT" and att.data_type in [
+            "STRING",
+            "INT",
+            "FLOAT",
+            "FLOAT_VECTOR",
+            "FLOAT_COLOR",
+        ]:
             attribute = get_mesh_attribute_bmesh(obj, att.name, index)
         else:
             attribute = get_mesh_attribute(obj, att.name, index)
@@ -484,9 +526,9 @@ class ObjectGN(BaseObject):
         return attribute
 
     def add_attribute_from_array(self, name, data, domain="POINT"):
-        """Add an attribute from array
-        """
+        """Add an attribute from array"""
         from batoms.utils import type_py_to_blender
+
         # check the type of the array, and convert it to blender type
         # only the first element is checked
         # check if shape of the data array
@@ -497,33 +539,40 @@ class ObjectGN(BaseObject):
                 type_py = type(array.flat[0])
                 dtype_bl = type_py_to_blender(type_py)
                 if dtype_bl is False:
-                    print(f'Attribute: {name} is not added. The type of the array: {type_py} is not supported.')
+                    print(
+                        f"Attribute: {name} is not added. The type of the array: {type_py} is not supported."  # noqa E501
+                    )
                     return False
                 self.add_attribute(name=name, data_type=dtype_bl, domain=domain)
             elif len(data.shape) == 2:
                 if data.shape[1] == 2:
                     self.add_attribute(name=name, data_type="FLOAT2", domain=domain)
                 elif data.shape[1] == 3:
-                    self.add_attribute(name=name, data_type="FLOAT_VECTOR", domain=domain)
+                    self.add_attribute(
+                        name=name, data_type="FLOAT_VECTOR", domain=domain
+                    )
                 elif data.shape[1] == 4:
                     self.add_attribute(name=name, data_type="QUATERNION", domain=domain)
                 else:
-                    print(f'Attribute: {name} is not added. The shape of the array: {data.shape} is not supported.')
+                    print(
+                        f"Attribute: {name} is not added. The shape of the array: {data.shape} is not supported."  # noqa E501
+                    )
                     return False
             else:
                 # print a Warning message
-                print(f'Attribute: {name} is not added. The shape of the array: {data.shape} is not supported.')
+                print(
+                    f"Attribute: {name} is not added. The shape of the array: {data.shape} is not supported."  # noqa E501
+                )
                 return False
-        except:
-            print(f'Attribute: {name} is not added. The shape of the array: {data.shape} is not supported.')
+        except Exception:
+            print(
+                f"Attribute: {name} is not added. The shape of the array: {data.shape} is not supported."  # noqa E501
+            )
             return False
 
-
-
-    def add_attribute(self, name, data_type='FLOAT', domain='POINT'):
+    def add_attribute(self, name, data_type="FLOAT", domain="POINT"):
         """Add an attribute to the mesh"""
-        self.obj.data.attributes.new(name=name,
-                type=data_type, domain=domain)
+        self.obj.data.attributes.new(name=name, type=data_type, domain=domain)
         return True
 
     def set_attributes(self, attributes):
@@ -540,7 +589,7 @@ class ObjectGN(BaseObject):
             if key not in obj.data.attributes:
                 # try to create a new attribute
                 flag = self.add_attribute_from_array(key, array)
-                logger.debug(f'Add new attribute: {key}')
+                logger.debug(f"Add new attribute: {key}")
                 # if failed, do not add this attribute
                 if flag is False:
                     continue
@@ -575,10 +624,13 @@ class ObjectGN(BaseObject):
             array (np.array): value of the attribute
         """
         from batoms.utils.attribute import set_mesh_attribute, set_mesh_attribute_bmesh
+
         obj = self.obj
         me = obj.data
         if key not in me.attributes:
-            raise KeyError('Attribute: {} is not exist. Please add it first.'.format(key))
+            raise KeyError(
+                "Attribute: {} is not exist. Please add it first.".format(key)
+            )
         array = np.array(array)
         if len(array.shape) == 0:
             array = np.array([array])
@@ -586,7 +638,9 @@ class ObjectGN(BaseObject):
             return
         # single value data
         att = me.attributes.get(key)
-        if att.data_type == 'STRING' or (obj.mode == 'EDIT' and att.data_type in ['INT', 'FLOAT']):
+        if att.data_type == "STRING" or (
+            obj.mode == "EDIT" and att.data_type in ["INT", "FLOAT"]
+        ):
             set_mesh_attribute_bmesh(obj, key, array, index)
         else:
             set_mesh_attribute(obj, key, array, index)
@@ -620,8 +674,8 @@ class ObjectGN(BaseObject):
     def get_positions(self):
         """Get the local positions of the object."""
         n = len(self)
-        positions = np.empty(n*3, dtype=np.float64)
-        self.obj.data.vertices.foreach_get('co', positions)
+        positions = np.empty(n * 3, dtype=np.float64)
+        self.obj.data.vertices.foreach_get("co", positions)
         positions = positions.reshape((n, 3))
         return positions
 
@@ -637,16 +691,15 @@ class ObjectGN(BaseObject):
         natom = len(self)
         n = len(positions)
         if n != natom:
-            raise ValueError('positions has wrong shape %s != %s.' %
-                             (n, natom))
+            raise ValueError("positions has wrong shape %s != %s." % (n, natom))
         if natom == 0:
             return
-        positions = positions.reshape((natom*3, 1))
-        self.obj.data.vertices.foreach_set('co', positions)
+        positions = positions.reshape((natom * 3, 1))
+        self.obj.data.vertices.foreach_set("co", positions)
         self.obj.data.update()
         bpy.context.view_layer.objects.active = self.obj
-        bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.ops.object.mode_set(mode="EDIT")
+        bpy.ops.object.mode_set(mode="OBJECT")
 
     @property
     def global_positions(self):
@@ -661,8 +714,8 @@ class ObjectGN(BaseObject):
         Get global positions.
         """
         from batoms.utils import local2global
-        global_positions = local2global(self.positions,
-                                 np.array(self.obj.matrix_world))
+
+        global_positions = local2global(self.positions, np.array(self.obj.matrix_world))
         return global_positions
 
     def set_global_positions(self, positions):
@@ -671,16 +724,16 @@ class ObjectGN(BaseObject):
         """
         object_mode()
         from batoms.utils import local2global
+
         natom = len(self)
         nposition = len(positions)
         if nposition != natom:
-            raise ValueError('positions has wrong shape %s != %s.' %
-                             (nposition, natom))
+            raise ValueError("positions has wrong shape %s != %s." % (nposition, natom))
         if natom == 0:
             return
-        local_positions = local2global(positions,
-                                 np.array(self.obj.matrix_world),
-                                 reversed=True)
+        local_positions = local2global(
+            positions, np.array(self.obj.matrix_world), reversed=True
+        )
         self.local_positions = local_positions
 
     @property
@@ -698,19 +751,21 @@ class ObjectGN(BaseObject):
         read shape key
         """
         from batoms.utils import local2global
+
         n = len(self)
         nframe = self.nframe
         trajectory = np.empty((nframe, n, 3), dtype=np.float64)
         for i in range(nframe):
-            positions = np.empty(n*3, dtype=np.float64)
+            positions = np.empty(n * 3, dtype=np.float64)
             sk = obj.data.shape_keys.key_blocks[i]
-            sk.data.foreach_get('co', positions)
+            sk.data.foreach_get("co", positions)
             local_positions = positions.reshape((n, 3))
             if local:
                 trajectory[i] = local_positions
             else:
-                global_positions = local2global(local_positions,
-                                                np.array(self.obj.matrix_world))
+                global_positions = local2global(
+                    local_positions, np.array(self.obj.matrix_world)
+                )
                 trajectory[i] = global_positions
         return trajectory
 
@@ -727,6 +782,7 @@ class ObjectGN(BaseObject):
             start frame
         """
         from batoms.utils.butils import add_keyframe_to_shape_key
+
         if trajectory is None:
             trajectory = self.trajectory
         nframe = len(trajectory)
@@ -737,7 +793,7 @@ class ObjectGN(BaseObject):
             return
         # name = '%s_bond%s'%(self.label, sp)
         # obj = bpy.data.objects.get(name)
-        base_name = 'Basis_%s' % (name)
+        base_name = "Basis_%s" % (name)
         if obj.data.shape_keys is None:
             sk = obj.shape_key_add(name=base_name)
         elif base_name not in obj.data.shape_keys.key_blocks:
@@ -747,8 +803,8 @@ class ObjectGN(BaseObject):
         # set basis key
         nvert = len(obj.data.shape_keys.key_blocks[0].data)
         positions = trajectory[0]
-        vertices = positions.reshape(nvert*3)
-        sk.data.foreach_set('co', vertices)
+        vertices = positions.reshape(nvert * 3)
+        sk.data.foreach_set("co", vertices)
         # self.obj.data.update()
         for i in range(1, nframe):
             name = str(i)
@@ -756,22 +812,22 @@ class ObjectGN(BaseObject):
                 sk = obj.shape_key_add(name=name)
                 # Add Keytrajectory, the last one is different
                 if i != nframe - 1:
-                    add_keyframe_to_shape_key(sk, 'value',
-                                              [0, 1, 0],
-                                              [frame_start + i - 1,
-                                                  frame_start + i,
-                                                  frame_start + i + 1])
+                    add_keyframe_to_shape_key(
+                        sk,
+                        "value",
+                        [0, 1, 0],
+                        [frame_start + i - 1, frame_start + i, frame_start + i + 1],
+                    )
                 else:
-                    add_keyframe_to_shape_key(sk, 'value',
-                                              [0, 1],
-                                              [frame_start + i - 1,
-                                                  frame_start + i])
+                    add_keyframe_to_shape_key(
+                        sk, "value", [0, 1], [frame_start + i - 1, frame_start + i]
+                    )
             else:
                 sk = obj.data.shape_keys.key_blocks.get(name)
             # Use the local position here
             positions = trajectory[i]
-            vertices = positions.reshape((nvert*3, 1))
-            sk.data.foreach_set('co', vertices)
+            vertices = positions.reshape((nvert * 3, 1))
+            sk.data.foreach_set("co", vertices)
         self.update_mesh(obj)
 
     def delete_obj(self, name):
@@ -784,7 +840,7 @@ class ObjectGN(BaseObject):
             bpy.data.objects.remove(obj, do_unlink=True)
 
 
-class childObjectGN():
+class childObjectGN:
     """
     Slice of Object with Geometry Node.
 
@@ -812,7 +868,7 @@ class childObjectGN():
     def get_obj(self):
         obj = bpy.data.objects.get(self.obj_name)
         if obj is None:
-            raise KeyError('%s object is not exist.' % self.obj_name)
+            raise KeyError("%s object is not exist." % self.obj_name)
         return obj
 
     @property
@@ -824,8 +880,8 @@ class childObjectGN():
 
     @property
     def bm(self):
-        if self.obj.mode == 'EDIT':
-            bm =bmesh.from_edit_mesh(self.obj.data)
+        if self.obj.mode == "EDIT":
+            bm = bmesh.from_edit_mesh(self.obj.data)
         else:
             bm = bmesh.new()
             bm.from_mesh(self.obj.data)
@@ -853,7 +909,6 @@ class childObjectGN():
         else:
             return self.parent.local_positions[self.indices]
 
-
     @property
     def position(self):
         if len(self.indices) == 1:
@@ -875,8 +930,10 @@ class childObjectGN():
         Get global position.
         """
         from batoms.utils import local2global
-        position = local2global(np.array([self.local_position]),
-                                np.array(self.obj.matrix_world))
+
+        position = local2global(
+            np.array([self.local_position]), np.array(self.obj.matrix_world)
+        )
         return position[0]
 
     def set_position(self, value):
@@ -885,10 +942,11 @@ class childObjectGN():
         """
         object_mode()
         from batoms.utils import local2global
+
         position = np.array([value])
-        position = local2global(position,
-                                np.array(self.obj.matrix_world),
-                                reversed=True)
+        position = local2global(
+            position, np.array(self.obj.matrix_world), reversed=True
+        )
         # rashpe to (natoms*3, 1) and use forseach_set
         self.vertice.co = position[0]
         self.obj.data.update()
@@ -896,19 +954,19 @@ class childObjectGN():
 
     @property
     def scale(self):
-        return self.get_attribute('scale')
+        return self.get_attribute("scale")
 
     @scale.setter
     def scale(self, value):
-        self.set_attribute('scale', value)
+        self.set_attribute("scale", value)
 
     @property
     def show(self):
-        return self.get_attribute('show')
+        return self.get_attribute("show")
 
     @show.setter
     def show(self, value):
-        self.set_attribute('show', value)
+        self.set_attribute("show", value)
 
     def get_attribute(self, key):
         """Helper function to get attribute

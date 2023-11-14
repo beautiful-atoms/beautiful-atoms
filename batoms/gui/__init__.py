@@ -16,10 +16,12 @@ from . import (
     view3d_mt_edit_mesh_context_menu,
 )
 
+
 class BatomsCollection(bpy.types.PropertyGroup):
     """
     Collection properties of all panel properties.
     """
+
     batoms: PointerProperty(type=gui_batoms.BatomsProperties)
     batom: PointerProperty(type=gui_slicebatoms.BatomProperties)
     cell: PointerProperty(type=gui_cell.CellProperties)
@@ -73,9 +75,9 @@ classes = [
 ]
 
 
-
 def register_class():
     from bpy.utils import register_class
+
     for cls in classes:
         register_class(cls)
     scene = bpy.types.Scene
@@ -84,6 +86,7 @@ def register_class():
 
 def unregister_class():
     from bpy.utils import unregister_class
+
     for cls in reversed(classes):
         unregister_class(cls)
     scene = bpy.types.Scene
@@ -92,14 +95,22 @@ def unregister_class():
 
 def register_menu():
     bpy.types.VIEW3D_MT_add.prepend(view3d_mt_batoms_add.menu_func)
-    bpy.types.VIEW3D_MT_object_context_menu.prepend(view3d_mt_object_context_menu.menu_func)
-    bpy.types.VIEW3D_MT_edit_mesh_context_menu.prepend(view3d_mt_edit_mesh_context_menu.menu_func)
+    bpy.types.VIEW3D_MT_object_context_menu.prepend(
+        view3d_mt_object_context_menu.menu_func
+    )
+    bpy.types.VIEW3D_MT_edit_mesh_context_menu.prepend(
+        view3d_mt_edit_mesh_context_menu.menu_func
+    )
+
 
 def unregister_menu():
     bpy.types.VIEW3D_MT_add.remove(view3d_mt_batoms_add.menu_func)
-    bpy.types.VIEW3D_MT_object_context_menu.remove(view3d_mt_object_context_menu.menu_func)
-    bpy.types.VIEW3D_MT_edit_mesh_context_menu.remove(view3d_mt_edit_mesh_context_menu.menu_func)
-
+    bpy.types.VIEW3D_MT_object_context_menu.remove(
+        view3d_mt_object_context_menu.menu_func
+    )
+    bpy.types.VIEW3D_MT_edit_mesh_context_menu.remove(
+        view3d_mt_edit_mesh_context_menu.menu_func
+    )
 
 
 # handle the keymap
@@ -108,18 +119,36 @@ wm = bpy.context.window_manager
 # so we have to check this to avoid nasty errors in background case.
 kc = wm.keyconfigs.addon
 
+
 def register_keymap():
     # in background mode, we don't need tool and we can not regester keymap
     if kc:
         # tool
-        bpy.utils.register_tool(gui_toolbar.BatomsTransform, after={"builtin.cursor"}, separator=True, group=True)
-        bpy.utils.register_tool(gui_toolbar.BatomsBoundary, after={gui_toolbar.BatomsTransform.bl_idname})
-        bpy.utils.register_tool(gui_toolbar.BatomsCell, after={gui_toolbar.BatomsBoundary.bl_idname})
+        bpy.utils.register_tool(
+            gui_toolbar.BatomsTransform,
+            after={"builtin.cursor"},
+            separator=True,
+            group=True,
+        )
+        bpy.utils.register_tool(
+            gui_toolbar.BatomsBoundary, after={gui_toolbar.BatomsTransform.bl_idname}
+        )
+        bpy.utils.register_tool(
+            gui_toolbar.BatomsCell, after={gui_toolbar.BatomsBoundary.bl_idname}
+        )
         # bpy.utils.register_tool(gui_toolbar.AddAtoms, after={gui_toolbar.AddSurface.bl_idname})
-        bpy.utils.register_tool(gui_toolbar.MoleculeEditElement,
-            after={"builtin.scale_cage"}, separator=True, group=True)
-        bpy.utils.register_tool(gui_toolbar.MolecueEditBond,
-            after={gui_toolbar.MoleculeEditElement.bl_idname}, separator=True, group=True)
+        bpy.utils.register_tool(
+            gui_toolbar.MoleculeEditElement,
+            after={"builtin.scale_cage"},
+            separator=True,
+            group=True,
+        )
+        bpy.utils.register_tool(
+            gui_toolbar.MolecueEditBond,
+            after={gui_toolbar.MoleculeEditElement.bl_idname},
+            separator=True,
+            group=True,
+        )
 
 
 def unregister_keymap():

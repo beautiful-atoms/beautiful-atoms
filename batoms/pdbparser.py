@@ -16,16 +16,16 @@ from ase.io.espresso import label_to_symbol
 
 def read_atom_line(line):
     """
-    Read atom line from pdb format
-ATOM     25  CA  LYS A   5      48.356  17.146  -2.714  1.00  0.00           C
+        Read atom line from pdb format
+    ATOM     25  CA  LYS A   5      48.356  17.146  -2.714  1.00  0.00           C
     """
 
-    line = line.rstrip('\n')
+    line = line.rstrip("\n")
     type_record = line[0:6].strip()
     name = line[12:16].strip()
     altloc = line[16]
     resname = line[17:21]
-    chainid = line[21]        # Not used
+    chainid = line[21]  # Not used
     seq = line[22:26].split()
     if len(seq) == 0:
         resseq = 1
@@ -34,9 +34,10 @@ ATOM     25  CA  LYS A   5      48.356  17.146  -2.714  1.00  0.00           C
     # icode = line[26]          # insertion code, not used
     # atomic coordinates
     try:
-        coord = np.array([float(line[30:38]),
-                          float(line[38:46]),
-                          float(line[46:54])], dtype=np.float64)
+        coord = np.array(
+            [float(line[30:38]), float(line[38:46]), float(line[46:54])],
+            dtype=np.float64,
+        )
     except ValueError:
         raise ValueError("Invalid or missing coordinate(s)")
     # occupancy & B factor
@@ -53,17 +54,29 @@ ATOM     25  CA  LYS A   5      48.356  17.146  -2.714  1.00  0.00           C
         bfactor = 0.0
     # segid = line[72:76] # not used
     symbol = line[76:78].strip().upper()
-    return symbol, name, altloc, resname, coord,\
-        occupancy, bfactor, resseq, chainid, type_record
+    return (
+        symbol,
+        name,
+        altloc,
+        resname,
+        coord,
+        occupancy,
+        bfactor,
+        resseq,
+        chainid,
+        type_record,
+    )
 
 
 def read_line_cyrstal(line):
-    cellpar = [float(line[6:15]),  # a
-               float(line[15:24]),  # b
-               float(line[24:33]),  # c
-               float(line[33:40]),  # alpha
-               float(line[40:47]),  # beta
-               float(line[47:54])]  # gamma
+    cellpar = [
+        float(line[6:15]),  # a
+        float(line[15:24]),  # b
+        float(line[24:33]),  # c
+        float(line[33:40]),  # alpha
+        float(line[40:47]),  # beta
+        float(line[47:54]),
+    ]  # gamma
     cell = Cell.new(cellpar)
     pbc = True
     return cell, pbc
@@ -71,8 +84,7 @@ def read_line_cyrstal(line):
 
 def read_line_sheet(line):
     """
-SHEET    1   A 9 PHE A   6  TRP A  12  0
-"""
+    SHEET    1   A 9 PHE A   6  TRP A  12  0"""
     # Chain identifier
     # sheetId = int(line[6:10].strip())
     # chainId = line[11:14].strip()
@@ -82,33 +94,33 @@ SHEET    1   A 9 PHE A   6  TRP A  12  0
     endChain = line[32]
     endResi = int(line[33:37])
     sheet = {
-        'name': '%s-%s-%s-%s' % (startChain, startResi, endChain, endResi),
+        "name": "%s-%s-%s-%s" % (startChain, startResi, endChain, endResi),
         # 'sheetId': sheetId,
         # 'chainId': chainId,
-        'startChain': startChain,
-        'startResi': startResi,
-        'endChain': endChain,
-        'endResi': endResi,
+        "startChain": startChain,
+        "startResi": startResi,
+        "endChain": endChain,
+        "endResi": endResi,
     }
     return sheet
 
 
 def read_line_helix(line):
     """
-HELIX    3   3 GLY A  724  LEU A  728  5   5
+    HELIX    3   3 GLY A  724  LEU A  728  5   5
     """
     startChain = line[19]
     startResi = int(line[21:25])
     endChain = line[31]
     endResi = int(line[33:37])
     helix = {
-        'name': '%s-%s-%s-%s' % (startChain, startResi, endChain, endResi),
+        "name": "%s-%s-%s-%s" % (startChain, startResi, endChain, endResi),
         # 'sheetId': sheetId,
         # 'chainId': chainId,
-        'startChain': startChain,
-        'startResi': startResi,
-        'endChain': endChain,
-        'endResi': endResi,
+        "startChain": startChain,
+        "startResi": startResi,
+        "endChain": endChain,
+        "endResi": endResi,
     }
     return helix
 
@@ -136,44 +148,44 @@ def read_pdb(fileobj, index=-1, read_arrays=True):
     pbc = None
 
     def build_atoms():
-        atoms = Atoms(symbols=symbols,
-                      cell=cell, pbc=pbc,
-                      positions=positions)
+        atoms = Atoms(symbols=symbols, cell=cell, pbc=pbc, positions=positions)
 
         if not read_arrays:
             return atoms
 
-        info = {'occupancy': occ,
-                'bfactor': bfactor,
-                'residuenames': residuenames,
-                'atomtypes': atomtypes,
-                'residuenumbers': residuenumbers,
-                'chainids': chainids,
-                'types': types,
-                }
+        info = {
+            "occupancy": occ,
+            "bfactor": bfactor,
+            "residuenames": residuenames,
+            "atomtypes": atomtypes,
+            "residuenumbers": residuenumbers,
+            "chainids": chainids,
+            "types": types,
+        }
         for name, array in info.items():
             if len(array) == 0:
                 pass
             elif len(array) != len(atoms):
-                warnings.warn('Length of {} array, {}, '
-                              'different from number of atoms {}'.
-                              format(name, len(array), len(atoms)))
+                warnings.warn(
+                    "Length of {} array, {}, "
+                    "different from number of atoms {}".format(
+                        name, len(array), len(atoms)
+                    )
+                )
             else:
                 atoms.set_array(name, np.array(array))
-        atoms.info['sheet'] = sheet
-        atoms.info['helix'] = helix
+        atoms.info["sheet"] = sheet
+        atoms.info["helix"] = helix
         return atoms
 
     for line in fileobj.readlines():
-        if line.startswith('CRYST1'):
+        if line.startswith("CRYST1"):
             cell, pbc = read_line_cyrstal(line)
         for c in range(3):
-            if line.startswith('ORIGX' + '123'[c]):
-                orig[c] = [float(line[10:20]),
-                           float(line[20:30]),
-                           float(line[30:40])]
+            if line.startswith("ORIGX" + "123"[c]):
+                orig[c] = [float(line[10:20]), float(line[20:30]), float(line[30:40])]
                 trans[c] = float(line[45:55])
-        if line.startswith('ATOM') or line.startswith('HETATM'):
+        if line.startswith("ATOM") or line.startswith("HETATM"):
             # line_info = symbol, name, altloc, resname, coord, occupancy,
             #             bfactor, resseq
             line_info = read_atom_line(line)
@@ -210,7 +222,7 @@ def read_pdb(fileobj, index=-1, read_arrays=True):
             pass
         if line.startswith("COMPND"):
             pass
-        if line.startswith('END'):
+        if line.startswith("END"):
             # End of configuration reached
             # According to the latest PDB file format (v3.30),
             # this line should start with 'ENDMDL' (not 'END'),
@@ -234,7 +246,7 @@ def read_pdb(fileobj, index=-1, read_arrays=True):
 
 
 if __name__ == "__main__":
-    images = read_pdb('test/datas/1tim.pdb')
+    images = read_pdb("test/datas/1tim.pdb")
     # images = read_pdb('test/datas/2piw.pdb')
     print(images.arrays.keys())
-    print(images.info['helix'])
+    print(images.info["helix"])

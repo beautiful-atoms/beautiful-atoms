@@ -1,10 +1,11 @@
 import bpy
 import numpy as np
 from batoms.utils.butils import object_mode
+
 # from time import time
 
-class BaseCollection():
 
+class BaseCollection:
     def __init__(self, coll_name):
         self.coll_name = coll_name
 
@@ -24,7 +25,7 @@ class BaseCollection():
     def get_coll(self):
         coll = bpy.data.collections.get(self.coll_name)
         if coll is None:
-            raise('No collection: %s' % self.coll_name)
+            raise ("No collection: %s" % self.coll_name)
         return coll
 
     @property
@@ -44,11 +45,11 @@ class BaseCollection():
         >>> h2o.translate([0, 0, 5])
         """
         object_mode()
-        bpy.ops.object.select_all(action='DESELECT')
+        bpy.ops.object.select_all(action="DESELECT")
         self.obj.select_set(True)
         bpy.ops.transform.translate(value=displacement)
 
-    def rotate(self, angle, axis='Z', orient_type='GLOBAL'):
+    def rotate(self, angle, axis="Z", orient_type="GLOBAL"):
         """Rotate atomic based on a axis and an angle.
 
         Parameters:
@@ -64,13 +65,14 @@ class BaseCollection():
 
         """
         object_mode()
-        bpy.ops.object.select_all(action='DESELECT')
+        bpy.ops.object.select_all(action="DESELECT")
         self.obj.select_set(True)
-        angle = angle/180.0*np.pi
-        bpy.ops.transform.rotate(value=angle, orient_axis=axis.upper(),
-                                 orient_type=orient_type)
+        angle = angle / 180.0 * np.pi
+        bpy.ops.transform.rotate(
+            value=angle, orient_axis=axis.upper(), orient_type=orient_type
+        )
 
-    def mirror(self, axis='Z', orient_type='GLOBAL'):
+    def mirror(self, axis="Z", orient_type="GLOBAL"):
         """mirror atomic based on a axis.
 
         Parameters:
@@ -86,12 +88,13 @@ class BaseCollection():
 
         """
         object_mode()
-        bpy.ops.object.select_all(action='DESELECT')
+        bpy.ops.object.select_all(action="DESELECT")
         self.obj.select_set(True)
         constraint_axis = [False, False, False]
-        constraint_axis['XYZ'.index(axis.upper())] = True
-        bpy.ops.transform.mirror(constraint_axis=constraint_axis,
-                                 orient_type=orient_type)
+        constraint_axis["XYZ".index(axis.upper())] = True
+        bpy.ops.transform.mirror(
+            constraint_axis=constraint_axis, orient_type=orient_type
+        )
 
 
 def tuple2string(index):
@@ -99,11 +102,11 @@ def tuple2string(index):
         return str(index)
     name = str(index[0])
     for key in index[1:]:
-        name += '-%s' % key
+        name += "-%s" % key
     return name
 
 
-class Setting():
+class Setting:
     """
     Setting object
 
@@ -126,7 +129,7 @@ class Setting():
 
     def __init__(self, label, coll_name=None, obj_name=None) -> None:
         self.label = label
-        self.name = 'base'
+        self.name = "base"
         self.coll_name = coll_name
         self.obj_name = obj_name
 
@@ -158,7 +161,7 @@ class Setting():
     def get_obj(self):
         obj = bpy.data.objects.get(self.obj_name)
         if obj is None:
-            raise KeyError('%s object is not exist.' % self.obj_name)
+            raise KeyError("%s object is not exist." % self.obj_name)
         return obj
 
     @property
@@ -205,10 +208,6 @@ class Setting():
     def set_ui_list_index(self, value):
         self.bpy_data.ui_list_index = value
 
-    @property
-    def bpy_setting(self):
-        return self.get_bpy_setting()
-
     def get_bpy_setting(self):
         return self.bpy_data.settings
 
@@ -235,7 +234,7 @@ class Setting():
     def __getitem__(self, key):
         item = self.find(key)
         if item is None:
-            raise Exception('%s not in %s setting' % (key, self.name))
+            raise Exception("%s not in %s setting" % (key, self.name))
         return item
 
     def __setitem__(self, key, setdict):
@@ -253,7 +252,6 @@ class Setting():
         for key, value in setdict.items():
             setattr(subset, key, value)
 
-
     def __delitem__(self, key):
         self.remove(key)
 
@@ -261,7 +259,7 @@ class Setting():
         if isinstance(datas, dict):
             datas = [datas]
         for data in datas:
-            subset = self.find(data['name'])
+            subset = self.find(data["name"])
             if subset is None:
                 subset = self.bpy_setting.add()
             for key, value in data.items():
@@ -297,10 +295,9 @@ class Setting():
         if item is not None:
             i = self.bpy_setting.find(item.name)
             self.bpy_setting.remove(i)
-            self.ui_list_index = min(max(0, self.ui_list_index - 1),
-                                                len(self) - 1)
+            self.ui_list_index = min(max(0, self.ui_list_index - 1), len(self) - 1)
         else:
-            raise Exception('%s is not in %s' % (key, self.name))
+            raise Exception("%s is not in %s" % (key, self.name))
 
     def __add__(self, other):
         self += other
@@ -348,12 +345,11 @@ class Setting():
             return self.bpy_setting[i]
 
     def __repr__(self) -> str:
-        s = '-'*60 + '\n'
-        s = 'Name\n'
+        s = "-" * 60 + "\n"
+        s = "Name\n"
         for b in self.bpy_setting:
-            s += '{0:10s}  \n'.format(
-                b.name)
-        s += '-'*60 + '\n'
+            s += "{0:10s}  \n".format(b.name)
+        s += "-" * 60 + "\n"
         return s
 
     def delete_obj(self, name):

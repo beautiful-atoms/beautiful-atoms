@@ -2,10 +2,9 @@ from .ribbon import Ribbon
 
 from . import (
     bpy_data,
-    ops,
-    ui_list,
 )
 
+__all__ = ["Ribbon"]
 
 classes = [
     # internal data first
@@ -32,18 +31,18 @@ def register_class():
     from bpy.types import Collection, Object
     from bpy.props import PointerProperty
     from bpy.utils import register_class
+
     for cls in classes:
         register_class(cls)
     # attach to blender internal data
-    Collection.Bprotein = PointerProperty(name='Bprotein',
-                                        type=bpy_data.Protein)
-    Object.Bprotein = PointerProperty(name='Bprotein',
-                                    type=bpy_data.Protein)
+    Collection.Bprotein = PointerProperty(name="Bprotein", type=bpy_data.Protein)
+    Object.Bprotein = PointerProperty(name="Bprotein", type=bpy_data.Protein)
 
 
 def unregister_class():
     from bpy.types import Collection, Object
     from bpy.utils import unregister_class
+
     for cls in reversed(classes):
         unregister_class(cls)
 

@@ -1,13 +1,10 @@
 import bpy
 from bpy.types import Panel
 from bpy.props import (
-    FloatVectorProperty,
-    IntVectorProperty,
     FloatProperty,
     EnumProperty,
 )
 from batoms.render.render import Render
-from batoms import Batoms
 from batoms.gui.utils import get_attr, set_attr
 
 
@@ -15,7 +12,7 @@ class Render_PT_prepare(Panel):
     bl_label = "Render"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_options = {'DEFAULT_CLOSED'}
+    bl_options = {"DEFAULT_CLOSED"}
     bl_category = "Batoms"
     bl_idname = "RENDER_PT_Tools"
 
@@ -36,7 +33,7 @@ class Render_PT_prepare(Panel):
         layout.label(text="Camera")
         layout.label(text="Type")
         layout.prop(render, "camera_type", expand=True)
-        if render.camera_type == 'ORTHO':
+        if render.camera_type == "ORTHO":
             layout.prop(render, "ortho_scale")
         else:
             layout.prop(render, "camera_lens")
@@ -53,15 +50,16 @@ class Render_PT_prepare(Panel):
 
 # ---------------------------------------------------
 
-def modify_render_attr(context, key, value):
 
+def modify_render_attr(context, key, value):
     from batoms.batoms import Batoms
-    if context.object and context.object.batoms.type != 'OTHER':
+
+    if context.object and context.object.batoms.type != "OTHER":
         batoms = Batoms(label=context.object.batoms.label)
         setattr(batoms.render, key, value)
-        if key not in ['distance']:
+        if key not in ["distance"]:
             batoms.render.init()
-        context.space_data.region_3d.view_perspective = 'CAMERA'
+        context.space_data.region_3d.view_perspective = "CAMERA"
 
 
 def set_light_attr(key, value):
@@ -74,11 +72,12 @@ def set_light_attr(key, value):
         value (_type_): _description_
     """
     from batoms.batoms import Batoms
-    if bpy.context.object and bpy.context.object.batoms.type != 'OTHER':
+
+    if bpy.context.object and bpy.context.object.batoms.type != "OTHER":
         batoms = Batoms(label=bpy.context.object.batoms.label)
-        setattr(batoms.render.lights['Default'], key, value)
+        setattr(batoms.render.lights["Default"], key, value)
         batoms.render.init()
-        bpy.context.space_data.region_3d.view_perspective = 'CAMERA'
+        bpy.context.space_data.region_3d.view_perspective = "CAMERA"
 
 
 def set_camera_attr(key, value):
@@ -91,16 +90,17 @@ def set_camera_attr(key, value):
         value (_type_): _description_
     """
     from batoms.batoms import Batoms
-    if bpy.context.object and bpy.context.object.batoms.type != 'OTHER':
+
+    if bpy.context.object and bpy.context.object.batoms.type != "OTHER":
         batoms = Batoms(label=bpy.context.object.batoms.label)
-        if key == 'ortho_scale':
+        if key == "ortho_scale":
             batoms.render.camera.set_ortho_scale(value)
-        elif key in ['lens']:
+        elif key in ["lens"]:
             setattr(batoms.render.camera, key, value)
         else:
             setattr(batoms.render.camera, key, value)
             batoms.render.init()
-        bpy.context.space_data.region_3d.view_perspective = 'CAMERA'
+        bpy.context.space_data.region_3d.view_perspective = "CAMERA"
 
 
 def get_active_render_collection():
@@ -114,40 +114,39 @@ def get_active_render_collection():
     Returns:
         bpy.type.collection: _description_
     """
-    if 'batoms_render' in bpy.data.collections:
-        return bpy.data.collections['batoms_render'].Brender
+    if "batoms_render" in bpy.data.collections:
+        return bpy.data.collections["batoms_render"].Brender
     return None
 
 
 def get_active_render():
-    context = bpy.context
-    if 'batoms_render' in bpy.data.collections:
-        render = Render(label='batoms')
+    if "batoms_render" in bpy.data.collections:
+        render = Render(label="batoms")
         return render
     return None
 
 
 def get_default_camera():
-    if 'batoms_camera_Default' in bpy.data.objects:
-        return bpy.data.objects['batoms_camera_Default']
+    if "batoms_camera_Default" in bpy.data.objects:
+        return bpy.data.objects["batoms_camera_Default"]
     return None
 
 
 def get_default_camera_data():
-    if 'batoms_camera_Default' in bpy.data.objects:
-        return bpy.data.objects['batoms_camera_Default'].data
+    if "batoms_camera_Default" in bpy.data.objects:
+        return bpy.data.objects["batoms_camera_Default"].data
     return None
 
 
 def get_default_light():
-    if 'batoms_light_Default' in bpy.data.objects:
-        return bpy.data.objects['batoms_light_Default']
+    if "batoms_light_Default" in bpy.data.objects:
+        return bpy.data.objects["batoms_light_Default"]
     return None
 
 
 def get_default_light_dat():
-    if 'batoms_light_Default' in bpy.data.objects:
-        return bpy.data.objects['batoms_light_Default'].data
+    if "batoms_light_Default" in bpy.data.objects:
+        return bpy.data.objects["batoms_light_Default"].data
     return None
 
 
@@ -160,6 +159,7 @@ def get_viewport(i):
             return render.viewport[i]
         else:
             return 0
+
     return getter
 
 
@@ -173,13 +173,14 @@ def set_viewport(i):
             viewport[i] = value
             render = get_active_render()
             render.viewport = viewport
+
     return setter
 
 
 def get_camera_type(self):
     camera = get_default_camera()
     if camera is not None:
-        if camera.data.type == 'ORTHO':
+        if camera.data.type == "ORTHO":
             return 0
         else:
             return 1
@@ -193,7 +194,7 @@ def set_camera_type(self, value):
     type = item.identifier
     # print(type)
     self["type"] = type
-    set_camera_attr('type', type)
+    set_camera_attr("type", type)
 
 
 def get_distance(self):
@@ -219,6 +220,7 @@ def get_light_direction(i):
             return light.Blight.direction[i]
         else:
             return 0
+
     return getter
 
 
@@ -230,40 +232,48 @@ def set_light_direction(i):
         if light is not None:
             light_direction = light.Blight.direction
             light_direction[i] = value
-            set_light_attr('direction', light_direction)
+            set_light_attr("direction", light_direction)
+
     return setter
 
 
 class RenderProperties(bpy.types.PropertyGroup):
-    """
-    """
+    """ """
+
     viewport_x: FloatProperty(
-        name="viewport_x", default=0,
-        soft_min=-5, soft_max=5,
+        name="viewport_x",
+        default=0,
+        soft_min=-5,
+        soft_max=5,
         description="Miller viewport for the render",
         get=get_viewport(0),
-        set=set_viewport(0))
+        set=set_viewport(0),
+    )
 
     viewport_y: FloatProperty(
-        name="viewport_y", default=0,
-        soft_min=-5, soft_max=5,
+        name="viewport_y",
+        default=0,
+        soft_min=-5,
+        soft_max=5,
         description="Miller viewport for the render",
         get=get_viewport(1),
-        set=set_viewport(1))
+        set=set_viewport(1),
+    )
 
     viewport_z: FloatProperty(
-        name="viewport_z", default=1,
-        soft_min=-5, soft_max=5,
+        name="viewport_z",
+        default=1,
+        soft_min=-5,
+        soft_max=5,
         description="Miller viewport for the render",
         get=get_viewport(2),
-        set=set_viewport(2))
+        set=set_viewport(2),
+    )
 
     camera_type: EnumProperty(
         name="type",
         description="camera type",
-        items=(('ORTHO', "ORTHO", "", 0),
-               ('PERSP', "PERSP", "", 1)
-               ),
+        items=(("ORTHO", "ORTHO", "", 0), ("PERSP", "PERSP", "", 1)),
         default=0,
         get=get_camera_type,
         set=set_camera_type,
@@ -275,54 +285,68 @@ class RenderProperties(bpy.types.PropertyGroup):
     # description="Miller resolution for the render", update=Callback_modify_resolution)
 
     ortho_scale: FloatProperty(
-        name="ortho_scale", default=10,
-        soft_min=1, soft_max=100,
+        name="ortho_scale",
+        default=10,
+        soft_min=1,
+        soft_max=100,
         description="ortho_scale",
         get=get_attr("ortho_scale", get_default_camera_data),
-        set=set_attr("ortho_scale", set_camera_attr)
+        set=set_attr("ortho_scale", set_camera_attr),
     )
 
     light_direction_x: FloatProperty(
-        name="light_direction_x", default=0,
-        soft_min=-5, soft_max=5,
+        name="light_direction_x",
+        default=0,
+        soft_min=-5,
+        soft_max=5,
         description="Light direction for the render",
         get=get_light_direction(0),
-        set=set_light_direction(0)
+        set=set_light_direction(0),
     )
 
     light_direction_y: FloatProperty(
-        name="light_direction_y", default=0,
-        soft_min=-5, soft_max=5,
+        name="light_direction_y",
+        default=0,
+        soft_min=-5,
+        soft_max=5,
         description="Light direction for the render",
         get=get_light_direction(1),
-        set=set_light_direction(1)
+        set=set_light_direction(1),
     )
 
     light_direction_z: FloatProperty(
-        name="light_direction_z", default=1,
-        soft_min=-5, soft_max=5,
+        name="light_direction_z",
+        default=1,
+        soft_min=-5,
+        soft_max=5,
         description="Light direction for the render",
         get=get_light_direction(2),
-        set=set_light_direction(2)
+        set=set_light_direction(2),
     )
 
     energy: FloatProperty(
-        name="energy", default=10,
-        soft_min=1, soft_max=100,
+        name="energy",
+        default=10,
+        soft_min=1,
+        soft_max=100,
         description="energy",
         get=get_attr("energy", get_default_light_dat),
-        set=set_attr("energy", set_light_attr)
+        set=set_attr("energy", set_light_attr),
     )
 
     distance: FloatProperty(
-        name="distance", default=3,
+        name="distance",
+        default=3,
         description="distance from origin",
         get=get_distance,
-        set=set_distance)
+        set=set_distance,
+    )
 
     camera_lens: FloatProperty(
-        name="lens", default=100,
-        soft_min=1, soft_max=100,
+        name="lens",
+        default=100,
+        soft_min=1,
+        soft_max=100,
         get=get_attr("lens", get_default_camera_data),
-        set=set_attr("lens", set_camera_attr)
+        set=set_attr("lens", set_camera_attr),
     )
