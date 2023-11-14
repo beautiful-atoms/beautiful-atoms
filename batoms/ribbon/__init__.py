@@ -2,10 +2,9 @@ from .ribbon import Ribbon
 
 from . import (
     bpy_data,
-    ops,
-    ui_list,
 )
 
+__all__ = ["Ribbon"]
 
 classes = [
     # internal data first

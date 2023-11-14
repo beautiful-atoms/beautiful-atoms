@@ -5,10 +5,9 @@ from batoms.render.camera import Camera
 
 from . import (
     bpy_data,
-    ops,
-    ui_list,
 )
 
+__all__ = ["Render", "Light", "Lights", "Camera"]
 
 classes = [
     # internal data first

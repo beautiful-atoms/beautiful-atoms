@@ -6,6 +6,7 @@ from . import (
     ui_list,
 )
 
+__all__ = ["Polyhedra"]
 
 classes = [
     # internal data first

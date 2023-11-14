@@ -2,13 +2,10 @@
 """
 import bpy
 from batoms.base.collection import Setting, tuple2string
-import numpy as np
 from batoms.data import default_polyhedras
 
-# from time import time
 import logging
 
-# logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 
 

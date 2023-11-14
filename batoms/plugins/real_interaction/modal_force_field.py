@@ -4,7 +4,8 @@ based on force field methods.
 
 
 Molecule: Rigid molecules, to constrain all internal
-degrees of freedom using the RATTLE-type constraints of the The FixBondLengths class to constrain all internal atomic distances.
+degrees of freedom using the RATTLE-type constraints of
+the The FixBondLengths class to constrain all internal atomic distances.
 
 Intermolecular: atomic radii.
 
@@ -28,16 +29,15 @@ from bpy.props import (
     FloatVectorProperty,
 )
 
-from ase.optimize import QuasiNewton, MDMin
+from ase.optimize import QuasiNewton
 
 try:
     from asap3 import EMT
-except:
+except ImportError:
     from ase.calculators.emt import EMT
 from ase.constraints import FixAtoms
 import logging
 
-# logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 
 
@@ -91,6 +91,7 @@ def add_constraint(atoms, mol_index):
     # Fix others
     mask = set(range(len(atoms))) - mol_index
     fixlayers = FixAtoms(mask=mask)
+    atoms.set_constraint(fixlayers)
     return atoms
 
 
@@ -193,14 +194,16 @@ class ForceFieldProperties(bpy.types.PropertyGroup):
         return get_selected_batoms()
 
     def Callback_modify_fmax(self, context):
-        clpanel = bpy.context.scene.clpanel
-        transform = clpanel.transform
+        # clpanel = bpy.context.scene.clpanel
+        # transform = clpanel.transform
         # modify_transform(self.selected_batoms, transform)
+        pass
 
     def Callback_modify_steps(self, context):
-        clpanel = bpy.context.scene.clpanel
-        transform = clpanel.transform
+        # clpanel = bpy.context.scene.clpanel
+        # transform = clpanel.transform
         # modify_transform(self.selected_batoms, transform)
+        pass
 
     fmax: FloatProperty(
         name="Max force",

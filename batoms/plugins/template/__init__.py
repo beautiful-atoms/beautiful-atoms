@@ -6,6 +6,7 @@ from . import (
     gui,
 )
 
+__all__ = ["Template"]
 
 classes_bpy_data = [
     bpy_data.TemplateSetting,

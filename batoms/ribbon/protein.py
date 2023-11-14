@@ -5,7 +5,6 @@ from time import time
 import numpy as np
 import logging
 
-# logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 
 
@@ -77,7 +76,7 @@ class Protein:
                     elif arrays["atomtypes"][j] == "C":
                         resi.C = j
                     elif arrays["atomtypes"][j] == "O":
-                        resi.O = j
+                        resi.O = j  # noqa E741
             else:
                 resi.type = -1
             residues.append(resi)
@@ -126,7 +125,7 @@ class Protein:
                         break
                     elif (
                         residues[i].resSeq > sheet.startResi
-                        and residues[i].resSeq < sheet.endResi
+                        and residues[i].resSeq < sheet.endResi  # noqa W503
                     ):
                         residues[i].type = 1
                         sheets[sheet.name].append(residues[i])
@@ -146,7 +145,7 @@ class Protein:
                         break
                     elif (
                         residues[i].resSeq > helix.startResi
-                        and residues[i].resSeq < helix.endResi
+                        and residues[i].resSeq < helix.endResi  # noqa W503
                     ):
                         residues[i].type = 2
                         helixs[helix.name].append(residues[i])
@@ -227,7 +226,7 @@ class Residue:
         self.resSeq = resSeq
         self.Ca = 0
         self.C = 0
-        self.O = 0
+        self.O = 0  # noqa E741
         self.plane = None
         self.type = type
         self.indices = []
@@ -261,7 +260,7 @@ class secondaryStructure:
         self.indices = []
         self.Ca = []
         self.C = []
-        self.O = []
+        self.O = []  # noqa E741
         self.extrude = 1.0
         self.depth = 0.25
         self.resolution = 20
@@ -329,7 +328,7 @@ class secondaryStructure:
                 np.dot(
                     self.residues[i - 1].plane["side"], self.residues[i].plane["side"]
                 )
-                < 0
+                < 0  # noqa W503
             ):
                 self.residues[i].plane["flipped"] = True
                 self.residues[i].plane["normal"] = -self.residues[i].plane["normal"]
@@ -400,7 +399,7 @@ class Helix(secondaryStructure):
         for i in range(n):
             positions[i] = (
                 self.residues[i].plane["position"]
-                + self.residues[i].plane["normal"] * 1.5
+                + self.residues[i].plane["normal"] * 1.5  # noqa W503
             )
         return positions
 
@@ -450,7 +449,7 @@ class Turn(secondaryStructure):
             if self.residues[i].type == 2:
                 positions[i] = (
                     self.residues[i].plane["position"]
-                    + self.residues[i].plane["normal"] * 1.5
+                    + self.residues[i].plane["normal"] * 1.5  # noqa W503
                 )
             else:
                 positions[i] = self.residues[i].plane["position"]

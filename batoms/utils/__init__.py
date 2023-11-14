@@ -118,9 +118,16 @@ def read_from_pybel(mol):
     """
     conda install openbabel -c conda-forge
     Converts a pybel molecule to batoms.
-    Molecules have the following attributes: atoms, charge, data, dim, energy, exactmass, formula, molwt, spin, sssr, title and unitcell (if crystal data).
+    Molecules have the following attributes: atoms,
+    charge, data, dim, energy, exactmass, formula, molwt,
+    spin, sssr, title and unitcell (if crystal data).
 
-    Atoms have the following attributes: atomicmass, atomicnum, coords, exactmass, formalcharge, heavyvalence, heterovalence, hyb, idx, implicitvalence, isotope, partialcharge, spin, type, valence, vector. The .coords attribute provides a tuple (x, y, z) of the atom’s coordinates. The remaining attributes are as for the Get methods of OBAtom.
+    Atoms have the following attributes: atomicmass, atomicnum,
+    coords, exactmass, formalcharge, heavyvalence, heterovalence,
+    hyb, idx, implicitvalence, isotope, partialcharge, spin, type,
+    valence, vector. The .coords attribute provides a tuple (x, y, z)
+    of the atom’s coordinates. The remaining attributes are as for
+    the Get methods of OBAtom.
     """
     from openbabel import pybel
     from ase.data import chemical_symbols
@@ -446,12 +453,12 @@ def calc_V2(u, v, w, U, V, W):
     a6 = np.square(V)
     V2 = (
         a1 * a5 * (a2 + a3 + a4 + a6 - a1 - a5)
-        + a2 * a6 * (a1 + a3 + a4 + a5 - a2 - a6)
-        + a3 * a4 * (a1 + a2 + a5 + a6 - a3 - a4)
-        - a1 * a2 * a4
-        - a2 * a3 * a5
-        - a1 * a3 * a6
-        - a4 * a5 * a6
+        + a2 * a6 * (a1 + a3 + a4 + a5 - a2 - a6)  # noqa W503
+        + a3 * a4 * (a1 + a2 + a5 + a6 - a3 - a4)  # noqa W503
+        - a1 * a2 * a4  # noqa W503
+        - a2 * a3 * a5  # noqa W503
+        - a1 * a3 * a6  # noqa W503
+        - a4 * a5 * a6  # noqa W503
     ) / 144
     return V2
 

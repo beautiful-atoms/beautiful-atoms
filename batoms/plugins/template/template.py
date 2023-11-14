@@ -6,7 +6,6 @@ This module defines the plugin object in the Batoms package.
 
 import bpy
 from time import time
-import numpy as np
 from batoms.plugins.base import PluginObject
 from .setting import TemplateSettings
 import logging

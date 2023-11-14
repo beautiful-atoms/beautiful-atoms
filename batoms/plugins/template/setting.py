@@ -1,7 +1,6 @@
 """
 """
 import bpy
-import numpy as np
 from batoms.base.collection import Setting
 import logging
 

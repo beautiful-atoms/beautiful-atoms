@@ -1,9 +1,7 @@
-import bpy
 from batoms.base.object import childObjectGN
 import numpy as np
 import logging
 
-# logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 
 
@@ -63,7 +61,6 @@ class SliceBatoms(childObjectGN):
 
     @polyhedra.setter
     def polyhedra(self, polyhedra):
-        model_style = np.array(polyhedra).astype(int)
         if len(self.indices) == 1:
             self.attributes["model_style"].data[self.indices[0]].value = (
                 2 if polyhedra else 1

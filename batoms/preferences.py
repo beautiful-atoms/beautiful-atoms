@@ -18,7 +18,6 @@ from batoms.install import update
 from batoms.logger import update_logging_level
 import logging
 
-# logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 
 
@@ -143,7 +142,7 @@ class BatomsDefaultStartup(bpy.types.Operator):
     bl_description = "Use defatul startup of Batoms"
 
     def execute(self, context):
-        import sys, os
+        import os
         import pathlib
 
         addon_dir = pathlib.Path(__file__).parent.resolve()
@@ -192,7 +191,6 @@ class BatomsAddonPreferences(AddonPreferences):
 
     def batoms_setting_path_update(self, context):
         import os
-        import subprocess
 
         if os.name == "posix":  # Linux
             cmds = ["export", "BATOMS_SETTING_PATH={}".format(self.batoms_setting_path)]

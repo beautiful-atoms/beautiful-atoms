@@ -149,14 +149,16 @@ class RigidBodyProperties(bpy.types.PropertyGroup):
         return get_selected_batoms()
 
     def Callback_modify_fix(self, context):
-        clpanel = bpy.context.scene.clpanel
-        transform = clpanel.transform
+        # clpanel = bpy.context.scene.clpanel
+        # transform = clpanel.transform
         # modify_transform(self.selected_batoms, transform)
+        pass
 
     def Callback_modify_cell(self, context):
-        clpanel = bpy.context.scene.clpanel
-        cell = [clpanel.cell_a, clpanel.cell_b, clpanel.cell_c]
+        # clpanel = bpy.context.scene.clpanel
+        # cell = [clpanel.cell_a, clpanel.cell_b, clpanel.cell_c]
         # modify_batoms_attr(self.selected_batoms, 'cell', cell)
+        pass
 
     fix: BoolProperty(
         name="fix", default=True, description="fix", update=Callback_modify_fix
