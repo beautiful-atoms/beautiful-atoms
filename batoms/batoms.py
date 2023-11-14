@@ -215,7 +215,7 @@ class Batoms(BaseCollection, ObjectGN):
 
     def hideOneLevel(self):
         """Hide one level of collecitons in the outline in Blender"""
-        from batoms.utils.butils import hideOneLevel
+        # from batoms.utils.butils import hideOneLevel
 
         # hideOneLevel()
         pass
@@ -345,7 +345,6 @@ class Batoms(BaseCollection, ObjectGN):
         )
         nodes = node.node_tree.nodes
         links = node.node_tree.links
-        GroupInput = nodes[0]
         GroupOutput = nodes[1]
         # link the input to parent node
         parent.links.new(
@@ -410,7 +409,7 @@ class Batoms(BaseCollection, ObjectGN):
             "%s_Attribute_species_index" % (self.label),
             "GeometryNodeInputNamedAttribute",
         )
-        SpeciesIndexAttribute.inputs["Name"].default_value = f"species_index"
+        SpeciesIndexAttribute.inputs["Name"].default_value = "species_index"
         SpeciesIndexAttribute.data_type = "INT"
         CompareSpecies = get_node_by_name(
             nodes, "CompareSpecies_%s_%s" % (self.label, spname), "FunctionNodeCompare"
@@ -451,7 +450,7 @@ class Batoms(BaseCollection, ObjectGN):
             "%s_NamedAttribute_scale" % (self.label),
             "GeometryNodeInputNamedAttribute",
         )
-        ScaleAttribute.inputs["Name"].default_value = f"scale"
+        ScaleAttribute.inputs["Name"].default_value = "scale"
         ScaleAttribute.data_type = "FLOAT"
         scale_socket = get_socket_by_identifier(
             ScaleAttribute, "Attribute_Float", type="outputs"
@@ -461,21 +460,20 @@ class Batoms(BaseCollection, ObjectGN):
             "%s_NamedAttribute_show" % (self.label),
             "GeometryNodeInputNamedAttribute",
         )
-        ShowAttribute.inputs["Name"].default_value = f"show"
+        ShowAttribute.inputs["Name"].default_value = "show"
         ShowAttribute.data_type = "INT"
         show_socket = get_socket_by_identifier(
             ShowAttribute, "Attribute_Int", type="outputs"
         )
+        # TODO select attribute is not used
         SelectAttribute = get_node_by_name(
             nodes,
             "%s_NamedAttribute_select" % (self.label),
             "GeometryNodeInputNamedAttribute",
         )
-        SelectAttribute.inputs["Name"].default_value = f"select"
+        SelectAttribute.inputs["Name"].default_value = "select"
         SelectAttribute.data_type = "INT"
-        select_socket = get_socket_by_identifier(
-            SelectAttribute, "Attribute_Int", type="outputs"
-        )
+        get_socket_by_identifier(SelectAttribute, "Attribute_Int", type="outputs")
         #
         links.new(show_socket, BoolShow.inputs[0])
         links.new(GroupInput.outputs["Geometry"], InstanceOnPoint.inputs["Points"])
@@ -558,7 +556,6 @@ class Batoms(BaseCollection, ObjectGN):
         data["boundary"] = self.boundary.as_dict()
         # plugins
         for key, info in plugin_info.items():
-            _name = "_{}".format(key)
             if len(info) == 0:
                 continue
             if getattr(getattr(self.coll, info[2]), "active"):
@@ -1241,7 +1238,6 @@ class Batoms(BaseCollection, ObjectGN):
         from batoms.utils import get_default_species_data
 
         # if kind exists, merger, otherwise build a new kind and add.
-        mode = self.obj.mode
         bpy.context.view_layer.objects.active = self.obj
         if isinstance(species, str):
             ele = species.split("_")[0]
@@ -1289,7 +1285,6 @@ class Batoms(BaseCollection, ObjectGN):
         Args:
             tol (float, optional): _description_. Defaults to 1e-5.
         """
-        from batoms.data import jmol_colors
         from batoms.utils import get_equivalent_atoms
 
         equivalent_atoms = get_equivalent_atoms(self.as_ase(), tol)
@@ -1568,7 +1563,7 @@ class Batoms(BaseCollection, ObjectGN):
         )
         if sg is None:
             return None
-        no = int(sg[sg.find("(") + 1 : sg.find(")")])
+        no = int(sg[sg.find("(") + 1 : sg.find(")")])  # noqa E203
         return no
 
     def find_primitive(
@@ -1644,7 +1639,7 @@ class Batoms(BaseCollection, ObjectGN):
     @property
     def bond(self):
         """bond object."""
-        from batoms.bond.bond import Bond, default_bond_datas
+        from batoms.bond.bond import Bond
 
         if self._bond is not None:
             return self._bond
@@ -1684,7 +1679,7 @@ class Batoms(BaseCollection, ObjectGN):
     @property
     def boundary(self):
         """boundary object."""
-        from batoms.boundary import Boundary, default_boundary_datas
+        from batoms.boundary import Boundary
 
         if self._boundary is not None:
             return self._boundary
@@ -2020,7 +2015,6 @@ class Batoms(BaseCollection, ObjectGN):
             steps (int, optional): _description_. Defaults to 500.
         """
         from openbabel import openbabel as ob
-        from openbabel import pybel
 
         # from batoms.utils import read_from_pybel
         mol = self.as_pybel()

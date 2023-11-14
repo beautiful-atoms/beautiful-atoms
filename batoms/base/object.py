@@ -7,7 +7,6 @@ from batoms.utils.butils import (
     update_object,
 )
 
-from time import time
 import bmesh
 import logging
 
@@ -534,7 +533,7 @@ class ObjectGN(BaseObject):
                 dtype_bl = type_py_to_blender(type_py)
                 if dtype_bl is False:
                     print(
-                        f"Attribute: {name} is not added. The type of the array: {type_py} is not supported."   # noqa E501
+                        f"Attribute: {name} is not added. The type of the array: {type_py} is not supported."  # noqa E501
                     )
                     return False
                 self.add_attribute(name=name, data_type=dtype_bl, domain=domain)
@@ -555,12 +554,12 @@ class ObjectGN(BaseObject):
             else:
                 # print a Warning message
                 print(
-                    f"Attribute: {name} is not added. The shape of the array: {data.shape} is not supported."   # noqa E501
+                    f"Attribute: {name} is not added. The shape of the array: {data.shape} is not supported."  # noqa E501
                 )
                 return False
         except Exception:
             print(
-                f"Attribute: {name} is not added. The shape of the array: {data.shape} is not supported." # noqa E501
+                f"Attribute: {name} is not added. The shape of the array: {data.shape} is not supported."  # noqa E501
             )
             return False
 
