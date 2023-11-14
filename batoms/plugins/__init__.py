@@ -23,15 +23,16 @@ print("Read plugin info: {:1.2f}".format(time() - tstart))
 
 
 plugin_info = {
-    'highlight': ['highlight', 'Highlight', 'Bhighlight'],
-    'cavity': ['cavity', 'Cavity', 'Bcavity'],
-    'crystal_shape': ['crystal_shape', 'CrystalShape', 'Bcrystalshape'],
-    'lattice_plane': ['lattice_plane', 'LatticePlane', 'Blatticeplane'],
-    'isosurface': ['isosurface', 'Isosurface', 'Bisosurface'],
-    'molecular_surface': ['molecular_surface', 'MolecularSurface', 'Bmolecularsurface'],
-    'magres': ['magres', 'Magres', 'Bmagres'],
-    'template': ['template', 'Template', 'Btemplate'],
-    }
+    "highlight": ["highlight", "Highlight", "Bhighlight"],
+    "cavity": ["cavity", "Cavity", "Bcavity"],
+    "crystal_shape": ["crystal_shape", "CrystalShape", "Bcrystalshape"],
+    "lattice_plane": ["lattice_plane", "LatticePlane", "Blatticeplane"],
+    "isosurface": ["isosurface", "Isosurface", "Bisosurface"],
+    "molecular_surface": ["molecular_surface", "MolecularSurface", "Bmolecularsurface"],
+    "magres": ["magres", "Magres", "Bmagres"],
+    "template": ["template", "Template", "Btemplate"],
+}
+
 
 def enable_plugin():
     # in case of using Blender as module
@@ -39,14 +40,15 @@ def enable_plugin():
     if "batoms" not in bpy.context.preferences.addons:
         return
     for key in plugin_info.keys():
-        if getattr(bpy.context.preferences.addons['batoms'].preferences, key):
+        if getattr(bpy.context.preferences.addons["batoms"].preferences, key):
             plugin = importlib.import_module("batoms.plugins.{}".format(key))
             plugin.register_class()
+
 
 def disable_plugin():
     if "batoms" not in bpy.context.preferences.addons:
         return
     for key in plugin_info.keys():
-        if getattr(bpy.context.preferences.addons['batoms'].preferences, key):
+        if getattr(bpy.context.preferences.addons["batoms"].preferences, key):
             plugin = importlib.import_module("batoms.plugins.{}".format(key))
             plugin.unregister_class()

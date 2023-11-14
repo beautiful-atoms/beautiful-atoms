@@ -13,7 +13,7 @@ from . import (
     measure,
     manual_mapping,
     ops_render,
-    )
+)
 
 classes = [
     add_object.AddMolecule,
@@ -73,40 +73,46 @@ classes = [
     measure.MeasureButton,
 ]
 
-manuals = [manual_mapping.batoms_ase_manual_map,manual_mapping.batoms_manual_map]
-
+manuals = [manual_mapping.batoms_ase_manual_map, manual_mapping.batoms_manual_map]
 
 
 def register_class():
     from bpy.utils import register_class
+
     for cls in classes:
         register_class(cls)
 
 
 def unregister_class():
     from bpy.utils import unregister_class
+
     for cls in reversed(classes):
         unregister_class(cls)
 
 
 def register_manual_map():
     from bpy.utils import register_manual_map
+
     for cls in manuals:
         register_manual_map(cls)
 
 
 def unregister_manual_map():
     from bpy.utils import unregister_manual_map
+
     for cls in reversed(manuals):
         unregister_manual_map(cls)
 
 
 def register_menu():
     import bpy
+
     bpy.types.TOPBAR_MT_file_import.append(ops_io.menu_func_import_batoms)
     bpy.types.TOPBAR_MT_file_export.append(ops_io.menu_func_export_batoms)
 
+
 def unregister_menu():
     import bpy
+
     bpy.types.TOPBAR_MT_file_import.remove(ops_io.menu_func_import_batoms)
     bpy.types.TOPBAR_MT_file_export.remove(ops_io.menu_func_export_batoms)

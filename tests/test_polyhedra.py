@@ -11,18 +11,19 @@ except ImportError:
 
 extras = dict(engine="cycles") if use_cycles else {}
 
+
 def test_polyhedra_species(tio2):
     """
     This is an example to show different polyhedra for the same element, but different species.
     """
     assert len(tio2.polyhedra.settings) == 1
     # We set the first one to a new species Ti_1.
-    tio2.replace([0], 'Ti_1')
+    tio2.replace([0], "Ti_1")
     tio2.bond.settings
     tio2.model_style = 2
     assert len(tio2.polyhedra) == 12
     # remove Ti_1 to polyhedra.
-    tio2.polyhedra.settings.remove('Ti_1')
+    tio2.polyhedra.settings.remove("Ti_1")
     assert len(tio2.polyhedra.settings) == 1
     tio2.model_style = 2
     assert len(tio2.polyhedra) == 6

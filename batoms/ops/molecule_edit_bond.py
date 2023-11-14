@@ -1,14 +1,16 @@
 import bpy
 from bpy.types import Operator
-from bpy.props import (StringProperty,
-                       IntProperty,
-                       BoolProperty,
-                       )
+from bpy.props import (
+    StringProperty,
+    IntProperty,
+    BoolProperty,
+)
 import bmesh
 from batoms import Batoms
 from ase.data import covalent_radii, chemical_symbols
 import numpy as np
 import logging
+
 # logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 
@@ -19,9 +21,9 @@ def edit_bond(batoms, indices, order):
     Args:
         order (int): The target order
     """
-    logger.debug('edit bond')
+    logger.debug("edit bond")
     positions = batoms.positions
-    species = batoms.arrays['species']
+    species = batoms.arrays["species"]
     bondlists = batoms.bonds.bondlists
     removeH = []
     for i in indices:
@@ -42,8 +44,8 @@ def edit_bond(batoms, indices, order):
         nbondj = len(baj)
         spsi = species[bai]
         spsj = species[baj]
-        indhi = bai[np.where(spsi == 'H')[0]]
-        indhj = bai[np.where(spsj == 'H')[0]]
+        indhi = bai[np.where(spsi == "H")[0]]
+        indhj = bai[np.where(spsj == "H")[0]]
         # difference between order and target order
         dorder = order - order0
         if dorder >= 0:
@@ -69,37 +71,34 @@ def edit_bond(batoms, indices, order):
 class MolecueEditBond(Operator):
     bl_idname = "batoms.molecule_edit_bond"
     bl_label = "Edit bond"
-    bl_options = {'REGISTER', 'UNDO'}
-    bl_description = ("Edit bond")
+    bl_options = {"REGISTER", "UNDO"}
+    bl_description = "Edit bond"
 
-    order: IntProperty(
-        name="order", default=1,
-        description="order")
+    order: IntProperty(name="order", default=1, description="order")
     # TODO rotate around bond
-    rotate: IntProperty(
-        name="rotate", default=1,
-        description="rotate")
+    rotate: IntProperty(name="rotate", default=1, description="rotate")
     hydrogen: BoolProperty(
-        name="Ajust hydrogen", default=1,
-        description="Ajust hydrogen")
+        name="Ajust hydrogen", default=1, description="Ajust hydrogen"
+    )
 
     @classmethod
     def poll(cls, context):
-        return context.mode in {'EDIT_MESH'}
+        return context.mode in {"EDIT_MESH"}
 
     def execute(self, context):
         obj = context.object
         if not obj.batoms.bbond.flag:
-            logger.critical('Please select a Batom.')
-            return {'FINISHED'}
+            logger.critical("Please select a Batom.")
+            return {"FINISHED"}
         data = obj.data
         if data.total_vert_sel > 0:
             bm = bmesh.from_edit_mesh(data)
-            indices = [s.index for s in bm.select_history
-                       if isinstance(s, bmesh.types.BMVert)]
-            self.report({'INFO'}, '%s atoms were replaced' % len(indices))
+            indices = [
+                s.index for s in bm.select_history if isinstance(s, bmesh.types.BMVert)
+            ]
+            self.report({"INFO"}, "%s atoms were replaced" % len(indices))
             batoms = Batoms(label=obj.batoms.label)
             edit_bond(batoms, indices, self.order)
             bpy.context.view_layer.objects.active = batoms.obj
-            bpy.ops.object.mode_set(mode='EDIT')
-        return {'FINISHED'}
+            bpy.ops.object.mode_set(mode="EDIT")
+        return {"FINISHED"}

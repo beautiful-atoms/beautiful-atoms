@@ -53,6 +53,6 @@ def surface(label, lattice, indices, layers, **kwargs):
     if isinstance(lattice, Batoms):
         lattice = lattice.atoms
     atoms = build.surface(lattice, indices, layers, **kwargs)
-    atoms.info.pop('species', None)
+    atoms.info.pop("species", None)
     batoms = Batoms(label=label, from_ase=atoms)
     return batoms

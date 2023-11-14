@@ -30,6 +30,7 @@ def test_cavity(tio2):
 
 def test_cavity_zsm():
     from batoms.bio.bio import read
+
     bpy.ops.batoms.delete()
     mof = read("../tests/datas/zsm-5.cif")
     mof.boundary = 0.01
@@ -41,8 +42,10 @@ def test_cavity_zsm():
         set_cycles_res(mof)
     mof.get_image([0, 1, 0], output="mof-5.png", **extras)
 
+
 def test_cavity_mof():
     from batoms.bio.bio import read
+
     bpy.ops.batoms.delete()
     mof = read("../tests/datas/mof-5.cif")
     mof.boundary = 0.01
@@ -53,6 +56,7 @@ def test_cavity_mof():
     if use_cycles:
         set_cycles_res(mof)
     mof.get_image([0, 1, 0], output="mof-5.png", **extras)
+
 
 def test_cavity_ops():
     bpy.ops.batoms.delete()
@@ -65,9 +69,11 @@ def test_cavity_ops():
     print(mof.cavity.settings)
     assert len(mof.cavity.settings) == 0
 
+
 def test_gui():
     """latticeplane panel"""
     from batoms.bio.bio import read
+
     bpy.ops.batoms.delete()
     mof = read("../tests/datas/mof-5.cif")
     bpy.context.view_layer.objects.active = mof.obj

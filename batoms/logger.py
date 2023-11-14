@@ -11,20 +11,16 @@ import os
 batoms_dir = os.path.dirname(Path(__file__).parent)
 
 
-
 # logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 root_logger = logging.getLogger("batoms")
 
+
 def set_logger(version):
     # formatter = ('%(levelname)-8s '
     #                             '[%(funcName)-20s]: %(message)s')
-    formatter = ('%(levelname)s '
-                    '[%(name)-10s %(funcName)-10s]: %(message)s')
-    logging.basicConfig(stream=sys.stdout,
-                        format=formatter,
-                        level=logging.INFO
-                        )
+    formatter = "%(levelname)s " "[%(name)-10s %(funcName)-10s]: %(message)s"
+    logging.basicConfig(stream=sys.stdout, format=formatter, level=logging.INFO)
     # add logger file
     filepath = Path(gettempdir()) / ("beautiful_atoms.log")
     root_logger.info("Log file: " + str(filepath))
@@ -40,9 +36,9 @@ def set_logger(version):
 def update_logging_level():
     if "batoms" not in bpy.context.preferences.addons:
         return
-    prefs = bpy.context.preferences.addons['batoms'].preferences
+    prefs = bpy.context.preferences.addons["batoms"].preferences
     root_logger.setLevel(prefs.logging_level)
 
 
 def print_time(key, value):
-    return '{}: {}'.format(key, value)
+    return "{}: {}".format(key, value)

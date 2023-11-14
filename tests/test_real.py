@@ -6,6 +6,7 @@ from batoms import Batoms
 from batoms.utils.butils import removeAll
 from ase.build import graphene_nanoribbon
 
+
 @pytest.mark.skip(reason="Need to run manualy by mouse")
 def test_force_field():
     bpy.ops.batoms.delete()

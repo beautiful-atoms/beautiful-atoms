@@ -13,14 +13,16 @@ rendering atomic structures using blender.""",
 }
 
 from time import time
+
 tstart0 = time()
 import bpy
+
 # install pip dependencies
 from .install import pip_dependencies
+
 pip_dependencies.install()
 
 from batoms.batoms import Batoms
-
 
 
 from . import (
@@ -37,18 +39,16 @@ from . import (
 logger.set_logger(bl_info["version"])
 
 
-
 import importlib
 
-modules = ['bond',
-            'polyhedra',
-            'render',
-            'ribbon']
+modules = ["bond", "polyhedra", "render", "ribbon"]
+
 
 def enable_module():
     for key in modules:
         module = importlib.import_module("batoms.{}".format(key))
         module.register_class()
+
 
 def disable_module():
     for key in modules:
@@ -82,7 +82,6 @@ def register():
     logger.update_logging_level()
 
 
-
 def unregister():
     # dependencies
     pip_dependencies.unregister_class()
@@ -103,6 +102,6 @@ def unregister():
     plugins.disable_plugin()
     preferences.unregister_class()
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     register()
