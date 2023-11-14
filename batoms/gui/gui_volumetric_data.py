@@ -5,10 +5,6 @@ import bpy
 from bpy.types import Menu, Panel, UIList
 from bpy.props import (
     StringProperty,
-    BoolProperty,
-    BoolVectorProperty,
-    IntProperty,
-    FloatProperty,
     EnumProperty,
 )
 
@@ -64,7 +60,7 @@ class VIEW3D_PT_Batoms_volumetric_data(Panel):
             if context.object.batoms.type != "OTHER":
                 name = context.object.batoms.label
         layout = self.layout
-        # layout.label(text="Active: " + name)
+        layout.label(text="Active: " + name)
         batoms = context.scene.batoms
         op = layout.operator(
             "batoms.volumetric_data_create",

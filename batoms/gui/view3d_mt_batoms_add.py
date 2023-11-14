@@ -1,9 +1,7 @@
-"""
-this adds your menu to shift-a add object menu
-please look at other menu classes in \scripts\startup\bl_ui\
+"""This adds a menu to shift-a add object menu.
+please look at other menu classes in \\scripts\\startup\\bl_ui
 i.e. space_view3d.py
 """
-import bpy
 from bpy.types import Menu
 
 

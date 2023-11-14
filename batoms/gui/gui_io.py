@@ -26,7 +26,7 @@ class Batoms_IO_search_material_project(Operator):
         from batoms.database.mp import mp_search
 
         io = context.scene.batoms.io
-        batoms = mp_search(io.mp_key, io.mp_id)
+        mp_search(io.mp_key, io.mp_id)
         return {"FINISHED"}
 
 
@@ -58,7 +58,7 @@ class Batoms_IO_search_pubchem(Operator):
         from batoms.database.pubchem import pubchem_search
 
         io = context.scene.batoms.io
-        batoms = pubchem_search(io.pubchem_cid)
+        pubchem_search(io.pubchem_cid)
         return {"FINISHED"}
 
 

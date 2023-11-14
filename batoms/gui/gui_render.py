@@ -1,13 +1,10 @@
 import bpy
 from bpy.types import Panel
 from bpy.props import (
-    FloatVectorProperty,
-    IntVectorProperty,
     FloatProperty,
     EnumProperty,
 )
 from batoms.render.render import Render
-from batoms import Batoms
 from batoms.gui.utils import get_attr, set_attr
 
 
@@ -123,7 +120,6 @@ def get_active_render_collection():
 
 
 def get_active_render():
-    context = bpy.context
     if "batoms_render" in bpy.data.collections:
         render = Render(label="batoms")
         return render

@@ -1,8 +1,6 @@
-"""
-VIEW3D_MT_edit_mesh_context_menu
+"""VIEW3D_MT_edit_mesh_context_menu
 """
 
-import bpy
 from bpy.types import Menu
 
 

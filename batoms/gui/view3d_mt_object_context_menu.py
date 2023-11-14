@@ -1,8 +1,6 @@
-"""
-view3d_mt_object_context_menu
+"""view3d_mt_object_context_menu
 """
 
-import bpy
 from bpy.types import Menu
 
 
