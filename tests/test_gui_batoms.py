@@ -18,6 +18,6 @@ def test_batoms(ch4):
     bpy.context.scene.batoms.batoms.color_style = "CPK"
     assert ch4.color_style == "2"
     # show
-    assert bpy.context.scene.batoms.batoms.show == True
+    assert bpy.context.scene.batoms.batoms.show is True
     bpy.context.scene.batoms.batoms.show = False
-    assert ch4.show[0] == False
+    assert ch4.show[0] is False

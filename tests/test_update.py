@@ -1,5 +1,4 @@
 import bpy
-import pytest
 
 # assume on github test
 try:

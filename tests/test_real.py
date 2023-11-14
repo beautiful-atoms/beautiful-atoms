@@ -1,9 +1,7 @@
 import bpy
 import pytest
-import numpy as np
 from ase.build import bulk
 from batoms import Batoms
-from batoms.utils.butils import removeAll
 from ase.build import graphene_nanoribbon
 
 

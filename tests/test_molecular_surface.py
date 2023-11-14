@@ -1,7 +1,6 @@
 import bpy
 import pytest
 from time import time
-from ase.build import molecule
 from batoms.pdbparser import read_pdb
 from batoms import Batoms
 
@@ -122,8 +121,6 @@ def test_molecule_surface_uilist(ch4):
 
 def test_SAS_protein():
     """ """
-    import numpy as np
-
     bpy.ops.batoms.delete()
     prot = read_pdb("../tests/datas/1ema.pdb")  # 1tim
     prot = Batoms("1ema", from_ase=prot)

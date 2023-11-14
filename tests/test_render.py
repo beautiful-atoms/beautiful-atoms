@@ -1,6 +1,4 @@
 import bpy
-import pytest
-import numpy as np
 from ase.build import molecule, fcc111
 from batoms.render import Render
 from batoms import Batoms

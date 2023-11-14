@@ -1,13 +1,11 @@
 import pytest
 import sys
 from pathlib import Path
-
-curdir = Path(__file__).parent.resolve()
-print(curdir)
-sys.path.append(curdir.parent.as_posix())
-print(sys.path)
 import os
 from tempfile import TemporaryDirectory
+
+curdir = Path(__file__).parent.resolve()
+sys.path.append(curdir.parent.as_posix())
 
 
 def test_empty_dir():
@@ -27,7 +25,6 @@ def test_empty_dir():
 
 def test_default_location_linux(fs):
     """Test requires the `pyfakefs` package's fs fixture"""
-    from pathlib import Path
     from install import _get_default_locations
 
     with pytest.raises(NotImplementedError):
@@ -43,12 +40,12 @@ def test_default_location_macos(fs, monkeypatch):
 
     # macos case 1
     fdn1 = "/Applications/Blender.app/Contents/Resources/3.4"
-    fdd1 = fs.create_dir(fdn1)
+    fs.create_dir(fdn1)
     assert _get_default_locations("macos") == Path(fdn1)
 
     # macos case 2: Blender 3.4 and 3.1 both exist, should return 3.4
     fdn2 = "/Applications/Blender.app/Contents/Resources/3.1"
-    fdd2 = fs.create_dir(fdn2)
+    fs.create_dir(fdn2)
     assert _get_default_locations("macos").name == "3.4"
 
     fs.rmdir(fdn1)
@@ -58,8 +55,8 @@ def test_default_location_macos(fs, monkeypatch):
 
     # macos case 3: both user and application blender
     fdn3 = os.path.expandvars("$HOME/Applications/Blender.app/Contents/Resources/3.4")
-    fdd1 = fs.create_dir(fdn1)
-    fdd3 = fs.create_dir(fdn3)
+    fs.create_dir(fdn1)
+    fs.create_dir(fdn3)
     assert _get_default_locations("macos") == Path(fdn1)
 
 
@@ -83,7 +80,7 @@ def test_blender_bin(fs):
     fs.create_file("./blender/blender")
     assert (
         _get_blender_bin("linux", "./blender/3.4")
-        == Path("./blender/blender").resolve()
+        == Path("./blender/blender").resolve()  # noqa: W503
     )
     # fs.remove("./blender/blender")
     # fs.rmdir("./blender")
@@ -110,7 +107,6 @@ def test_blender_py_location(monkeypatch):
         return MockClass()
 
     from pathlib import Path
-    import install
 
     monkeypatch.setattr("install._run_blender_multiline_expr", fake_output)
     from install import _get_blender_py
@@ -136,8 +132,6 @@ def test_factory_version(monkeypatch):
 
         return MockClass()
 
-    import install
-
     monkeypatch.setattr("install._run_blender_multiline_expr", fake_output)
     from install import _get_factory_versions
 
@@ -159,8 +153,6 @@ def test_blender_version(monkeypatch):
             stdout = output.encode("utf8")
 
         return MockClass()
-
-    import install
 
     monkeypatch.setattr("install._run_process", fake_output)
     from install import _get_blender_version
@@ -220,10 +212,9 @@ def test_symlink(fs):
 
 def test_binary_file(fs):
     from install import _is_binary_file
-    import sys
     import struct
 
-    ff = fs.create_file("test_plain")
+    fs.create_file("test_plain")
     with open("test_plain", "w") as fd:
         fd.write("sdf")
     assert _is_binary_file("test_plain") is False

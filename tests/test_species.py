@@ -1,14 +1,6 @@
 import bpy
-from batoms import Batoms
 import numpy as np
 import pytest
-
-try:
-    import spglib
-
-    has_spglib = True
-except ImportError:
-    has_spglib = False
 
 
 def test_settings(ch4):
@@ -61,12 +53,9 @@ def test_species_color(ch4):
     assert np.isclose(ch4.species["C"].color, np.array([1, 0, 0, 1])).all()
 
 
-@pytest.mark.skipif(
-    not has_spglib,
-    reason="Requires spglib.",
-)
 def test_auto_build_species():
     """auto build species use spglib"""
+    pytest.importorskip("spglib")
     from batoms.bio.bio import read
 
     bpy.ops.batoms.delete()
@@ -116,6 +105,6 @@ def test_color_by_attribute():
     au.species.color_by_attribute("z_coor")
     assert (
         au.species["Au"].materials["Au"].node_tree.nodes["Attribute"].attribute_name
-        == "z_coor"
+        == "z_coor"  # noqa W503
     )
     assert len(au.species["Au"].materials["Au"].node_tree.links) > 2

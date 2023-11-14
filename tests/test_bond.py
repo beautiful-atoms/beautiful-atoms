@@ -1,5 +1,4 @@
 import bpy
-import pytest
 from batoms.batoms import Batoms
 from ase.build import molecule, bulk
 from batoms.bio.bio import read
@@ -82,7 +81,7 @@ def test_color(c2h6so):
 
 
 def test_bond_high_order():
-    from ase.build import molecule, bulk
+    from ase.build import molecule
 
     bpy.ops.batoms.delete()
     c6h6 = Batoms("c6h6", from_ase=molecule("C6H6"))

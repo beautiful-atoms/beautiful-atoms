@@ -1,6 +1,5 @@
 import bpy
 from batoms import Batoms
-import pytest
 
 
 def test_batoms_label_element():

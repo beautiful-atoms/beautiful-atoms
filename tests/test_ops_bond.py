@@ -23,6 +23,6 @@ def test_bond_hydrogen_bond():
 def test_bond_search_bond(tio2):
     tio2.boundary = 0.01
     tio2.model_style = 1
-    assert tio2.bond.show_search == False
+    assert tio2.bond.show_search is False
     bpy.ops.bond.show_search()
-    assert tio2.bond.show_search == True
+    assert tio2.bond.show_search is True

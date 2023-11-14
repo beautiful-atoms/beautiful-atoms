@@ -1,9 +1,4 @@
 import bpy
-import pytest
-from batoms.batoms import Batoms
-from ase.io import read
-import numpy as np
-from time import time
 
 
 def test_magres():
@@ -41,8 +36,3 @@ def test_magres_uilist():
     assert ethanol.coll.Bmagres.ui_list_index == 0
     bpy.ops.surface.magres_add(name="2")
     assert ethanol.coll.Bmagres.ui_list_index == 1
-
-
-if __name__ == "__main__":
-    test_magres()
-    print("\n Magres: All pass! \n")

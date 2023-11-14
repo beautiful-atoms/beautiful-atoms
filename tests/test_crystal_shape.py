@@ -1,8 +1,5 @@
 import bpy
-import pytest
-from ase.build import bulk
 from batoms import Batoms
-import numpy as np
 import os
 
 try:
@@ -79,9 +76,9 @@ def test_gui():
     bpy.ops.batoms.bulk_add(formula="Au", cubic=True)
     au = Batoms("Au")
     au.obj.select_set(True)
-    assert bpy.context.scene.Bcrystalshape.show == True
+    assert bpy.context.scene.Bcrystalshape.show is True
     bpy.context.scene.Bcrystalshape.show = False
-    assert au.crystal_shape.show == False
+    assert au.crystal_shape.show is False
 
 
 def test_crystalshape_uilist():

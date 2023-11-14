@@ -1,5 +1,5 @@
 try:
-    from _common_helpers import has_display, set_cycles_res
+    from _common_helpers import has_display
 
     use_cycles = not has_display()
 except ImportError:

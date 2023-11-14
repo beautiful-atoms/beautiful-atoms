@@ -1,5 +1,3 @@
-import pytest
-from ase.build import bulk
 import bpy
 
 

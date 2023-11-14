@@ -1,7 +1,5 @@
 import bpy
-import pytest
 from batoms import Batoms
-import numpy as np
 from batoms.render import Camera
 from ase.build import fcc111
 

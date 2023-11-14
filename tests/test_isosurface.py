@@ -1,9 +1,5 @@
 import bpy
-import pytest
-from batoms.batoms import Batoms
-from batoms.bio.bio import read
 import numpy as np
-from time import time
 
 try:
     from _common_helpers import has_display, set_cycles_res
@@ -13,7 +9,6 @@ except ImportError:
     use_cycles = False
 
 extras = dict(engine="cycles") if use_cycles else {}
-import os
 
 
 def test_settings(h2o_homo):

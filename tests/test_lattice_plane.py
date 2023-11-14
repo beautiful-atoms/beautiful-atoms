@@ -3,7 +3,6 @@ import pytest
 from ase.build import bulk
 from batoms import Batoms
 from batoms.bio.bio import read
-import numpy as np
 import os
 
 try:
@@ -70,9 +69,9 @@ def test_gui():
     bpy.ops.batoms.bulk_add(formula="Au", cubic=True)
     au = Batoms("Au")
     au.obj.select_set(True)
-    assert bpy.context.scene.Blatticeplane.show == True
+    assert bpy.context.scene.Blatticeplane.show is True
     bpy.context.scene.Blatticeplane.show = False
-    assert au.lattice_plane.show == False
+    assert au.lattice_plane.show is False
 
 
 def test_gui_uilist():

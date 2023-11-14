@@ -1,7 +1,5 @@
 import bpy
-import pytest
 from batoms.cell import Bcell
-from batoms.batoms import Batoms
 import numpy as np
 
 

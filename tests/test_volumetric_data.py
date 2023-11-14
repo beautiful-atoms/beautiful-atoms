@@ -1,9 +1,8 @@
 import bpy
 import numpy as np
-from time import time
 
 try:
-    from _common_helpers import has_display, set_cycles_res
+    from _common_helpers import has_display
 
     use_cycles = not has_display()
 except ImportError:
@@ -34,7 +33,6 @@ def test_settings():
 def test_gui():
     """gui panel"""
     from batoms.batoms import Batoms
-    from batoms.batoms import Batoms
     from ase.io.cube import read_cube_data
 
     bpy.ops.batoms.delete()
@@ -56,7 +54,6 @@ def test_gui():
 
 def test_ops_add():
     """gui panel"""
-    from batoms.batoms import Batoms
     from batoms.batoms import Batoms
     from ase.io.cube import read_cube_data
 

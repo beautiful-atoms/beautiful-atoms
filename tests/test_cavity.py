@@ -1,10 +1,5 @@
-from time import time
-
 import bpy
 import numpy as np
-import pytest
-from ase.build import bulk, molecule
-from batoms.batoms import Batoms
 from batoms.bio.bio import read
 
 try:
@@ -77,8 +72,8 @@ def test_gui():
     bpy.ops.batoms.delete()
     mof = read("../tests/datas/mof-5.cif")
     bpy.context.view_layer.objects.active = mof.obj
-    assert bpy.context.scene.Bcavity.show == True
+    assert bpy.context.scene.Bcavity.show is True
     bpy.context.scene.Bcavity.show = False
-    assert mof.cavity.show == False
+    assert mof.cavity.show is False
     bpy.context.scene.Bcavity.minCave = 3.0
     assert np.isclose(mof.cavity.minCave, 3.0)

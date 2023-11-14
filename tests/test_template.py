@@ -1,13 +1,10 @@
 import bpy
-import pytest
 from ase.build import bulk
 from batoms import Batoms
-from batoms.bio.bio import read
-import numpy as np
 import os
 
 try:
-    from _common_helpers import has_display, set_cycles_res
+    from _common_helpers import has_display
 
     use_cycles = not has_display()
 except ImportError:
@@ -50,9 +47,9 @@ def test_gui():
     bpy.ops.batoms.bulk_add(formula="Au", cubic=True)
     au = Batoms("Au")
     au.obj.select_set(True)
-    assert bpy.context.scene.Btemplate.show == True
+    assert bpy.context.scene.Btemplate.show is True
     bpy.context.scene.Btemplate.show = False
-    assert au.template.show == False
+    assert au.template.show is False
 
 
 def test_gui_uilist():
