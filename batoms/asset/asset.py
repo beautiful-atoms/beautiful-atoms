@@ -1,4 +1,3 @@
-from pathlib import Path
 import bpy
 import pathlib
 import os
@@ -80,7 +79,6 @@ def create_asset(batoms, model_style=0, metadata={}):
         batoms (Batoms): _description_
         metadata (dict): _description_
     """
-    import time
 
     batoms.model_style = model_style
     batoms.coll.asset_mark()

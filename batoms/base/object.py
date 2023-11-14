@@ -172,7 +172,8 @@ class BaseObject:
             bpy.data.materials.remove(obj, do_unlink=True)
 
     def update_mesh(self, obj=None):
-        import bmesh
+        """Update mesh of the object.
+        By switching to edit mode and back to object mode."""
 
         object_mode()
         if obj is None:
@@ -191,7 +192,7 @@ class BaseObject:
         bpy.ops.object.mode_set(mode=mode)
 
     def add_verts(self, count, obj=None):
-        import bmesh
+        """Add vertices to the object."""
 
         object_mode()
         if obj is None:
@@ -270,7 +271,7 @@ class BaseObject:
     def shape_keys(self):
         base_name = "Basis_%s" % self.obj_name
         if self.obj.data.shape_keys is None and len(self) > 0:
-            sk = self.obj.shape_key_add(name=base_name)
+            self.obj.shape_key_add(name=base_name)
         return self.obj.data.shape_keys
 
     def __len__(self):
@@ -500,8 +501,6 @@ class ObjectGN(BaseObject):
         Returns:
             _type_: _description_
         """
-        from batoms.utils import type_blender_to_py
-        from batoms.utils.butils import get_att_length
         from batoms.utils.attribute import get_mesh_attribute, get_mesh_attribute_bmesh
 
         # get the mesh
@@ -535,7 +534,7 @@ class ObjectGN(BaseObject):
                 dtype_bl = type_py_to_blender(type_py)
                 if dtype_bl is False:
                     print(
-                        f"Attribute: {name} is not added. The type of the array: {type_py} is not supported."
+                        f"Attribute: {name} is not added. The type of the array: {type_py} is not supported."   # noqa E501
                     )
                     return False
                 self.add_attribute(name=name, data_type=dtype_bl, domain=domain)
@@ -550,18 +549,18 @@ class ObjectGN(BaseObject):
                     self.add_attribute(name=name, data_type="QUATERNION", domain=domain)
                 else:
                     print(
-                        f"Attribute: {name} is not added. The shape of the array: {data.shape} is not supported."
+                        f"Attribute: {name} is not added. The shape of the array: {data.shape} is not supported."  # noqa E501
                     )
                     return False
             else:
                 # print a Warning message
                 print(
-                    f"Attribute: {name} is not added. The shape of the array: {data.shape} is not supported."
+                    f"Attribute: {name} is not added. The shape of the array: {data.shape} is not supported."   # noqa E501
                 )
                 return False
-        except:
+        except Exception:
             print(
-                f"Attribute: {name} is not added. The shape of the array: {data.shape} is not supported."
+                f"Attribute: {name} is not added. The shape of the array: {data.shape} is not supported." # noqa E501
             )
             return False
 

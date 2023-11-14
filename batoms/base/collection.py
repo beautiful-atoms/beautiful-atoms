@@ -208,10 +208,6 @@ class Setting:
     def set_ui_list_index(self, value):
         self.bpy_data.ui_list_index = value
 
-    @property
-    def bpy_setting(self):
-        return self.get_bpy_setting()
-
     def get_bpy_setting(self):
         return self.bpy_data.settings
 
