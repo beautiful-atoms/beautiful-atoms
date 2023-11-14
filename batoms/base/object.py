@@ -533,6 +533,8 @@ class ObjectGN(BaseObject):
         # only the first element is checked
         # check if shape of the data array
         # if 1x2, 1x3, 1x4
+        if isinstance(data, list):
+            data = np.array(data)
         try:
             if len(data.shape) == 1:
                 array = np.asarray(data)

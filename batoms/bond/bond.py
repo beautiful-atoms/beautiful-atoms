@@ -720,7 +720,7 @@ class Bond(BaseCollection, ObjectGN):
             arrays["model_style"][show],
         )
         if orders:
-            bond_datas.update({"order": orders})
+            bond_datas.update({"bond_order": orders})
         if len(bond_datas) == 0:
             return
         self.set_arrays(bond_datas)
