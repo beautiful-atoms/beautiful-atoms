@@ -7,6 +7,7 @@ from . import (
     gui_slicebonds,
 )
 
+__all__ = ["Bond", "register_class", "unregister_class"]
 
 classes_bpy_data = [
     # internal data first

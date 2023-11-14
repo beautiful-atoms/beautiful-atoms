@@ -5,7 +5,6 @@ This module defines the Bond object in the Batoms package.
 """
 
 import bpy
-import bmesh
 from time import time
 from batoms.utils.butils import object_mode, get_node_by_name
 from batoms.utils import string2Number, number2String
@@ -15,10 +14,8 @@ from batoms.base.collection import BaseCollection
 from .setting import BondSettings
 from batoms.bond.search_bond import SearchBond, default_search_bond_datas
 
-# from pprint import pprint
 import logging
 
-# logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
 
 
@@ -47,7 +44,7 @@ default_bond_datas = {
     "atoms_index2": np.ones(0, dtype=int),
     "atoms_index3": np.ones(0, dtype=int),
     "species_index0": np.ones(0, dtype=int),
-    "species_index0": np.ones(0, dtype=int),
+    "species_index1": np.ones(0, dtype=int),
     "centers": np.zeros((1, 0, 3)),
     # 'vectors':np.zeros((0, 3)),
     "bond_offset0": np.zeros((0, 3)),
@@ -140,7 +137,6 @@ class Bond(BaseCollection, ObjectGN):
         v align euler
         """
         from batoms.utils.butils import get_node_by_name, get_socket_by_identifier
-        from batoms.utils import string2Number
 
         tstart = time()
         parent = self.gn_node_group
@@ -175,7 +171,7 @@ class Bond(BaseCollection, ObjectGN):
             "%s_NamedAttribute_species_index" % (self.label),
             "GeometryNodeInputNamedAttribute",
         )
-        SpeciesIndexAttribute.inputs["Name"].default_value = f"species_index"
+        SpeciesIndexAttribute.inputs["Name"].default_value = "species_index"
         SpeciesIndexAttribute.data_type = "INT"
         SpeciesAtIndexs = []
         for i in range(2):
@@ -439,7 +435,7 @@ class Bond(BaseCollection, ObjectGN):
             tmp.operation = "EQUAL"
             tmp.data_type = "INT"
             node.inputs[f"Species{i}"].default_value = string2Number(
-                sp[f"species{i+1}"]
+                sp[f"species{i + 1}"]
             )
             CompareSpecies.append(tmp)
             A_socket = get_socket_by_identifier(tmp, "A_INT")
@@ -475,7 +471,7 @@ class Bond(BaseCollection, ObjectGN):
             "%s_NamedAttribute_bond_order" % (self.label),
             "GeometryNodeInputNamedAttribute",
         )
-        BondOrderAttribute.inputs["Name"].default_value = f"bond_order"
+        BondOrderAttribute.inputs["Name"].default_value = "bond_order"
         BondOrderAttribute.data_type = "INT"
         CompareOrder = get_node_by_name(
             nodes, "CompareOrder_%s_%s" % (self.label, order), "FunctionNodeCompare"
@@ -496,7 +492,7 @@ class Bond(BaseCollection, ObjectGN):
             "%s_NamedAttribute_bond_style" % (self.label),
             "GeometryNodeInputNamedAttribute",
         )
-        BondStyleAttribute.inputs["Name"].default_value = f"bond_style"
+        BondStyleAttribute.inputs["Name"].default_value = "bond_style"
         BondStyleAttribute.data_type = "INT"
         CompareStyle = get_node_by_name(
             nodes, "CompareStyle_%s_%s" % (self.label, style), "FunctionNodeCompare"
@@ -550,7 +546,7 @@ class Bond(BaseCollection, ObjectGN):
             "%s_NamedAttribute_bond_show" % (self.label),
             "GeometryNodeInputNamedAttribute",
         )
-        BondShowAttribute.inputs["Name"].default_value = f"bond_show"
+        BondShowAttribute.inputs["Name"].default_value = "bond_show"
         BondShowAttribute.data_type = "INT"
         socket = get_socket_by_identifier(
             BondShowAttribute, "Attribute_Int", type="outputs"
@@ -562,7 +558,7 @@ class Bond(BaseCollection, ObjectGN):
             "%s_NamedAttribute_bond_model_style" % (self.label),
             "GeometryNodeInputNamedAttribute",
         )
-        BondModelStyleAttribute.inputs["Name"].default_value = f"bond_model_style"
+        BondModelStyleAttribute.inputs["Name"].default_value = "bond_model_style"
         BondModelStyleAttribute.data_type = "INT"
         socket = get_socket_by_identifier(
             BondModelStyleAttribute, "Attribute_Int", type="outputs"
@@ -981,10 +977,11 @@ class Bond(BaseCollection, ObjectGN):
         nb = len(nli)
         nlSi = np.zeros((nb, 3))
         # print('build_bondlists: {0:10.2f} s'.format(time() - tstart))
+        # TODO search0 is not used, please check why
         # search type 0,
-        search0 = np.where(
-            (nlk == 0) & (nlSj != np.array([0, 0, 0])).any(axis=1), False, True
-        )
+        # search0 = np.where(
+        # (nlk == 0) & (nlSj != np.array([0, 0, 0])).any(axis=1), False, True
+        # )
         # 0  1  2:5       5:8          8     9
         # i, j, offset_i, offset_j, search, search_style
         bondlists = np.concatenate(
@@ -1286,11 +1283,11 @@ class Bond(BaseCollection, ObjectGN):
         # boundary condition
         mask1 = np.where(
             (npositions[:, 0] > boundary[0][0] - eps)
-            & (npositions[:, 0] < boundary[0][1] + eps)
-            & (npositions[:, 1] > boundary[1][0] - eps)
-            & (npositions[:, 1] < boundary[1][1] + eps)
-            & (npositions[:, 2] > boundary[2][0] - eps)
-            & (npositions[:, 2] < boundary[2][1] + eps),
+            & (npositions[:, 0] < boundary[0][1] + eps)  # noqa W503
+            & (npositions[:, 1] > boundary[1][0] - eps)  # noqa W503
+            & (npositions[:, 1] < boundary[1][1] + eps)  # noqa W503
+            & (npositions[:, 2] > boundary[2][0] - eps)  # noqa W503
+            & (npositions[:, 2] < boundary[2][1] + eps),  # noqa W503
             False,
             True,
         )
@@ -1431,10 +1428,10 @@ class Bond(BaseCollection, ObjectGN):
         for i in indices1:
             # find another bond for this bond: bondlists[i]
             indices3 = np.where(
-                (bondlists2[:, 0] == bondlists[i, 0])
-                | (bondlists2[:, 1] == bondlists[i, 0])
-                | (bondlists2[:, 0] == bondlists[i, 1])
-                | (bondlists2[:, 1] == bondlists[i, 1])
+                (bondlists2[:, 0] == bondlists[i, 0])  # noqa W503
+                | (bondlists2[:, 1] == bondlists[i, 0])  # noqa W503
+                | (bondlists2[:, 0] == bondlists[i, 1])  # noqa W503
+                | (bondlists2[:, 1] == bondlists[i, 1])  # noqa W503
             )[0]
             indices3 = indices2[indices3]
             if len(indices3) > 1:
@@ -1464,13 +1461,13 @@ class Bond(BaseCollection, ObjectGN):
             mask = np.logical_not(
                 (
                     (bondlists2[:, 0] == bondlists1[i, 0])
-                    & (bondlists2[:, 1] == bondlists1[i, 1])
+                    & (bondlists2[:, 1] == bondlists1[i, 1])  # noqa W503
                 )
-                | (
+                | (  # noqa W503
                     (bondlists2[:, 0] != bondlists1[i, 0])
-                    & (bondlists2[:, 0] != bondlists1[i, 1])
-                    & (bondlists2[:, 1] != bondlists1[i, 0])
-                    & (bondlists2[:, 1] != bondlists1[i, 1])
+                    & (bondlists2[:, 0] != bondlists1[i, 1])  # noqa W503
+                    & (bondlists2[:, 1] != bondlists1[i, 0])  # noqa W503
+                    & (bondlists2[:, 1] != bondlists1[i, 1])  # noqa W503
                 )
             )
             localbondlist = bondlists2[mask]
