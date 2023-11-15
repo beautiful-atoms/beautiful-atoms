@@ -72,10 +72,8 @@ BLENDER_BACKUP_PATH = "blender.origin"  # Backup of the factory blender binary
 REPO_NAME = os.environ.get("GITHUB_REPO", DEFAULT_REPO_NAME)
 ACCOUNT_NAME = os.environ.get("GITHUB_ACCOUNT", DEFAULT_GITHUB_ACCOUNT)
 
-REPO_GIT = f"https://github.com/{ACCOUNT_NAME}/{REPO_NAME}.git"
-INSTALL_SCRIPT_PATH = (
-    f"https://raw.githubusercontent.com/{ACCOUNT_NAME}/{REPO_NAME}/main/install.py"
-)
+REPO_GIT = f"https://github.com/{ACCOUNT_NAME}/{REPO_NAME}.git"  # noqa: E231
+INSTALL_SCRIPT_PATH = f"https://raw.githubusercontent.com/{ACCOUNT_NAME}/{REPO_NAME}/main/install.py"  # noqa: E231
 
 
 ################################################################################
@@ -238,7 +236,7 @@ BLENDER_ALIAS_SH = """#!/bin/sh
 export LD_LIBRARY_PATH={conda_prefix}/lib:${{LD_LIBRARY_PATH}}
 os_name=$(uname -s)
 
-# Add DYLD_LIBRARY_PATH which may be relevant for Dawrin 
+# Add DYLD_LIBRARY_PATH which may be relevant for Dawrin
 # see https://docs.conda.io/projects/conda-build/en/stable/resources/use-shared-libraries.html
 if [ "$os_name" = "Darwin" ]
 then
@@ -426,17 +424,17 @@ def _get_default_locations(os_name):
         )
     matches = []
     true_search_locations = []
-    for l in default_locations[os_name]:
+    for loc in default_locations[os_name]:
         for version in ALLOWED_BLENDER_VERSIONS:
             true_location = Path(
-                expandvars(expanduser(l.format(version=version)))
+                expandvars(expanduser(loc.format(version=version)))
             ).absolute()
             true_search_locations.append(true_location)
             if true_location.is_dir():
                 matches.append(true_location)
     # Multiple blender installation may occur on macos
     if len(matches) > 1:
-        cprint(f"Multiple blender installations exists:", color="HEADER")
+        cprint("Multiple blender installations exists: ", color="HEADER")
         for i, m in enumerate(matches):
             cprint(f"{i}: {m}", color="HEADER")
         choice = int(input("Choose one (default 0): ") or "0")
@@ -480,8 +478,7 @@ def _get_blender_bin(os_name, blender_bundle_root):
         ):
             extra_msg = f"""
             It seems you are running the installation script in WSL but points to Blender
-            installed on Windows host. Please rerun the script directly on Windows host,
-            see instructions at {help_url}
+            installed on Windows host. Please rerun the script directly on Windows host, see instructions at {help_url}
             """
         else:
             extra_msg = f"Please refer to instructions at {help_url}"
@@ -595,7 +592,7 @@ def _rename_dir(src, dst):
             raise OSError(f"Directory {dst} is not empty!")
     try:
         os.rename(src, dst)
-    except (OSError, PermissionError) as e:
+    except (OSError, PermissionError):
         try:
             shutil.move(src, dst)
         except Exception as e:
@@ -619,7 +616,7 @@ def _symlink_dir(src, dst):
             raise OSError(f"Directory {dst} is not empty!")
     try:
         os.symlink(src, dst)
-    except (OSError, PermissionError) as e:
+    except (OSError, PermissionError):
         raise
 
 
@@ -650,6 +647,7 @@ def _is_conda_name_abbrev(env_name):
     return not any([c in env_name for c in (" ", "/", ":", "#")])
 
 
+# TODO redefinition
 def _find_conda_bin_path(env_name, conda_vars):
     """Return the path of binary search directory ($PATH) of the given conda env"""
     if env_name is None:
@@ -784,7 +782,7 @@ def _conda_update(
         commands_prefix = [conda_bin, "env", "update", "-p", env_name]
 
     # NamedTemporaryFile can only work on Windows if delete=False
-    # see https://stackoverflow.com/questions/55081022/python-tempfile-with-a-context-manager-on-windows-10-leads-to-permissionerror
+    # see https://stackoverflow.com/questions/55081022/python-tempfile-with-a-context-manager-on-windows-10-leads-to-permissionerror   # noqa: E501
     tmp_del = False if _get_os_name() in ["windows"] else True
     with tempfile.NamedTemporaryFile(suffix=".yml", delete=tmp_del) as ftemp:
         tmp_yml = ftemp.name
@@ -805,9 +803,12 @@ def _conda_update(
 
 
 def _conda_cache_move(condition, conda_vars, blender_python_root):
-    """The _conda_cache_move function is DEPRECATED since batoms 2.2.0 as spglib >= 2.0 now has full wheel support on Windows. (Assume no body is using ARM windows 11?)
+    """The _conda_cache_move function is DEPRECATED since batoms 2.2.0
+    as spglib >= 2.0 now has full wheel support on Windows.
+    (Assume no body is using ARM windows 11?)
 
-    Install relevant package (spglib) in conda environment and move to python's site-packages
+    Install relevant package (spglib) in conda environment
+    and move to python's site-packages.
     This is A DANGEROUS WORKAROUND as it can silently break many things.
     Only to use until the conda environment bug in blender fixed.
     blender_python_root looks like <root>/<3.x>/python
@@ -817,7 +818,7 @@ def _conda_cache_move(condition, conda_vars, blender_python_root):
     cprint(f"Conda bin at: {conda_bin}", color="HEADER")
     commands = [conda_bin, "search", "-c", "conda-forge", str(condition)]
     proc = _run_process(commands, capture_output=True)
-    lines = [l for l in proc.stdout.decode("utf-8").split("\n") if len(l) > 1]
+    lines = [x for x in proc.stdout.decode("utf-8").split("\n") if len(x) > 1]
 
     # Choose the newest version
     name, version, build, channel = lines[-1].strip().split()
@@ -846,7 +847,7 @@ def _ensure_pip(blender_py):
     """
     blender_py = str(blender_py)
     commands = [blender_py, "-m", "ensurepip"]
-    proc = _run_process(commands, shell=False)
+    _run_process(commands, shell=False)
     return
 
 
@@ -871,13 +872,13 @@ def _pip_install(blender_py, numpy_version=DEFAULT_BLENDER_NUMPY_VER):
         "scikit-image",
         "spglib>=2.0.0",
     ]
-    proc = _run_process(commands)
+    _run_process(commands)
 
     # Step 4: install openbabel (only if compiler exists)
     commands = pip_prefix + ["install", "--no-input", "openbabel"]
     try:
-        proc = _run_process(commands)
-    except RuntimeError as e:
+        _run_process(commands)
+    except RuntimeError:
         cprint(
             (
                 "Cannot install openbabel. You need to have a working compiler on windows. "
@@ -911,7 +912,7 @@ def _pip_uninstall(blender_py, old_blender_py=None):
 
     try:
         factory_pip_packages = _pip_get_packages(old_blender_py)
-    except Exception as e:
+    except Exception:
         factory_pip_packages = []
 
     if len(factory_pip_packages) < 5:
@@ -955,11 +956,11 @@ def _pip_uninstall(blender_py, old_blender_py=None):
     if len(remove_packages) > 0:
         commands = (
             pip_prefix
-            + [
+            + [  # noqa: W503
                 "uninstall",
                 "-y",
             ]
-            + remove_packages
+            + remove_packages  # noqa: W503
         )
         _run_process(commands)
     else:
@@ -967,7 +968,7 @@ def _pip_uninstall(blender_py, old_blender_py=None):
     return
 
 
-def _find_conda_bin_path(env_name, conda_vars):
+def _find_conda_bin_path(env_name, conda_vars):  # noqa: F811
     """Return the path of binary search directory ($PATH) of the given conda env
     Since there are some cases where the env is still empty,
     the bindir may not (yet) exist, return None in that case.
@@ -1104,7 +1105,7 @@ def _link_pip_dir(parameters):
         cprint(f"Pip python directory {pip_python} already exists", color="OKBLUE")
     else:
         shutil.copytree(factory_python_target, pip_python)
-        cprint(f"Copy {factory_python_target} -->  {pip_python}", color="OKGREEN")
+        cprint(f"Copy {factory_python_target} --> {pip_python}", color="OKGREEN")
     _symlink_dir(pip_python, factory_python_source)
     cprint(f"Symlink {pip_python} --> {factory_python_source}", color="OKGREEN")
     return
@@ -1114,12 +1115,12 @@ def _remove_pip_python(parameters):
     """Copy the _old_python folder to _pip_python and link to python source
     only to be called when use_pip is enabled
 
-    In the production stage we don't automatically remove the _pip_python clone since user may want to reuse for the sake of speed
+    In the production stage we don't automatically remove the _pip_python
+    clone since user may want to reuse for the sake of speed
     """
     if parameters["use_pip"] is False:
         return
     factory_python_source = parameters["factory_python_source"]
-    factory_python_target = parameters["factory_python_target"]
     pip_python = factory_python_source.with_name("_pip_python")
     if pip_python.is_dir():
         shutil.rmtree(pip_python)
@@ -1134,7 +1135,6 @@ def _link_env(parameters):
     # cprint("--use-pip switch, ignore conda env linking", color="HEADER")
     # return
     factory_python_source = parameters["factory_python_source"]
-    factory_python_target = parameters["factory_python_target"]
     conda_vars = parameters["conda_vars"]
     conda_prefix = conda_vars["CONDA_PREFIX"]
     if parameters["use_pip"]:
@@ -1448,7 +1448,7 @@ def _create_batomspy(parameters):
             fd.write(BATOMSPY_TEST)
         os.chmod(tmp_py, 0o755)
     _run_process([tmp_py], capture_output=True)
-    cprint(f"Shebang support for batomspy is now activated", color="OKGREEN")
+    cprint("Shebang support for batomspy is now activated", color="OKGREEN")
     return
 
 
@@ -1456,7 +1456,7 @@ def _remove_batomspy(parameters):
     if parameters["os_name"] == "windows":
         return
     if parameters["dry_run"]:
-        cprint(("Simulate: remove batomspy script\n" f"action: None\n"), color="OKBLUE")
+        cprint(("Simulate: remove batomspy script\n" "action: None\n"), color="OKBLUE")
         return
 
     conda_vars = parameters["conda_vars"]
@@ -1495,7 +1495,7 @@ def _install_dependencies(parameters):
         )
         return
 
-    blender_bin = parameters["blender_bin"]
+    # blender_bin = parameters["blender_bin"]
     blender_version = parameters.get("blender_version", None)
     blender_py = parameters.get("blender_py", None)
     factory_py_ver = parameters.get("factory_py_ver", None)
@@ -1525,7 +1525,7 @@ def _install_dependencies(parameters):
     # If use_pip, only install python
     # pip and download utils
     # minimal_env = parameters["use_pip"]
-    env_file = parameters["conda_env_file"]
+    # env_file = parameters["conda_env_file"]
     _conda_update(
         parameters["conda_env_file"],
         parameters["conda_vars"],
@@ -1687,7 +1687,7 @@ def _print_success_install(parameters):
     )
     batomspy_msg = (
         "\n\n"
-        f"You can now use `batomspy` in the shebang line of python scripts. For more details please check beautful-atoms' documentation."
+        "You can now use `batomspy` in the shebang line of python scripts. For more details please check beautful-atoms' documentation."  # noqa: E501
     )
     if parameters["os_name"] != "windows":
         msg = base_msg + blender_alias_msg + batomspy_msg
@@ -1704,9 +1704,9 @@ def _print_success_uninstall(parameters):
         return
     conda_vars = parameters["conda_vars"]
     env_pref = conda_vars["CONDA_PREFIX"]
-    blender_bin = parameters["blender_bin"]
+    # blender_bin = parameters["blender_bin"]
     factory_python_source = parameters["factory_python_source"]
-    factory_python_target = parameters["factory_python_target"]
+    # factory_python_target = parameters["factory_python_target"]
     pip_python = factory_python_source.with_name("_pip_python").absolute()
 
     base_msg = "Beautiful-atoms uninstallation finished!"
@@ -2073,7 +2073,7 @@ def main():
         develop=args.develop,
         no_mamba=args.no_mamba,
         no_blender_alias=args.no_blender_alias,
-        plugin_version=args.plugin_version,
+        plugin_version=plugin_version,
         dry_run=args.dry_run,
         uninstall=args.uninstall,
     )

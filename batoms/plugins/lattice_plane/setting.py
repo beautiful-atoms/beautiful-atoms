@@ -6,10 +6,8 @@ To insert lattice planes in structural models.
 """
 import bpy
 from batoms.base.collection import Setting, tuple2string
-import numpy as np
-from time import time
 import logging
-# logger = logging.getLogger('batoms')
+
 logger = logging.getLogger(__name__)
 
 
@@ -26,9 +24,9 @@ class LatticePlaneSettings(Setting):
 
     """
 
-    def __init__(self, label, parent = None, plane=None) -> None:
-        Setting.__init__(self, label, coll_name='%s' % label)
-        self.name = 'Blatticeplane'
+    def __init__(self, label, parent=None, plane=None) -> None:
+        Setting.__init__(self, label, coll_name="%s" % label)
+        self.name = "Blatticeplane"
         self.parent = parent
         if plane is not None:
             for key, data in plane.items():
@@ -46,7 +44,9 @@ class LatticePlaneSettings(Setting):
         return collection.settings
 
     @property
-    def no(self, ):
+    def no(
+        self,
+    ):
         return self.parent.batoms.get_spacegroup_number()
 
     @no.setter
@@ -71,14 +71,13 @@ class LatticePlaneSettings(Setting):
         subset.label = self.label
 
     def add(self, indices):
-        self[indices] = {'indices': indices}
+        self[indices] = {"indices": indices}
 
     def __repr__(self) -> str:
-        s = "-"*60 + "\n"
+        s = "-" * 60 + "\n"
         s = "Indices   distance  slicing   boundary\n"
         for p in self.bpy_setting:
             s += "{0:10s}   {1:1.3f}   ".format(p.name, p.distance)
-            s += "{:10s}  {:10s}  \n".format(
-                str(p.slicing),  str(p.boundary))
-        s += "-"*60 + "\n"
+            s += "{:10s}  {:10s}  \n".format(str(p.slicing), str(p.boundary))
+        s += "-" * 60 + "\n"
         return s

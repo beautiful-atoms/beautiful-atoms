@@ -11,15 +11,19 @@ class Species(BaseObject):
         BaseObject (_type_): _description_
     """
 
-    def __init__(self, name, parent,
-                 data=None,
-                 ) -> None:
+    def __init__(
+        self,
+        name,
+        parent,
+        data=None,
+    ) -> None:
         self.name = name
         self.parent = parent
         self.label = parent.label
         self.coll_name = "%s_instancer" % (self.label)
-        BaseObject.__init__(self, obj_name="%s_%s" % (self.label, name),
-                            btype="binstancer")
+        BaseObject.__init__(
+            self, obj_name="%s_%s" % (self.label, name), btype="binstancer"
+        )
         if data is not None:
             self.update(data)
 
@@ -29,24 +33,24 @@ class Species(BaseObject):
         Args:
             data (dict): properites of species
         """
-        data['elements'] = self.check_occupancy(data['elements'])
+        data["elements"] = self.check_occupancy(data["elements"])
         #
         sp = self.data
         for key, value in data.items():
-            if key == 'elements':
+            if key == "elements":
                 continue
             setattr(sp, key, value)
         # add elements
         sp.elements.clear()
-        for name, eledata in data['elements'].items():
+        for name, eledata in data["elements"].items():
             ele = sp.elements.add()
             ele.name = name
             if "occupancy" in eledata:
-                ele.occupancy = eledata['occupancy']
+                ele.occupancy = eledata["occupancy"]
             if "color" in eledata:
-                ele.color = eledata['color']
+                ele.color = eledata["color"]
         # update the color for species, which is the color of the main element
-        for name, eledata in data['elements'].items():
+        for name, eledata in data["elements"].items():
             if name == self.main_element and "color" in eledata:
                 sp.color = eledata["color"]
         self.build_instancer()
@@ -65,18 +69,16 @@ class Species(BaseObject):
             _type_: dict of element with its occupancy
         """
         if isinstance(elements, str):
-            elements = {elements: {
-                "occupancy": 1.0, "color": (0, 0.2, 0.8, 1)}}
+            elements = {elements: {"occupancy": 1.0, "color": (0, 0.2, 0.8, 1)}}
         elif isinstance(elements, dict):
             for ele, eledata in elements.items():
                 if isinstance(eledata, (int, float)):
                     elements[ele] = {"occupancy": eledata}
-            occupancy = [ele['occupancy'] for ele in elements.values()]
+            occupancy = [ele["occupancy"] for ele in elements.values()]
             total = sum(occupancy)
             # not fully occupied.
             if total < 1 - 1e-6:
-                elements['X'] = {"occupancy": 1 - total,
-                                 "color": (0.8, 0.8, 0.0, 1.0)}
+                elements["X"] = {"occupancy": 1 - total, "color": (0.8, 0.8, 0.0, 1.0)}
             elif total > 1 + 1e-6:
                 raise ValueError("Total occupancy should be smaller than 1!")
         return elements
@@ -88,17 +90,17 @@ class Species(BaseObject):
             bpy Object: instancer
         """
         sp = self.data
-        name = '%s_%s' % (self.label, sp.name)
-        radius = sp.radius*sp.scale
+        name = "%s_%s" % (self.label, sp.name)
+        radius = sp.radius * sp.scale
         segments = sp.segments
-        shape = 'UV_SPHERE'
+        shape = "UV_SPHERE"
         self.delete_obj(name)
-        if shape.upper() == 'UV_SPHERE':
-            bpy.ops.mesh.primitive_uv_sphere_add(segments=segments[0],
-                                                 ring_count=segments[1],
-                                                 radius=radius)
-        if shape.upper() == 'METABALL':
-            bpy.ops.object.metaball_add(type='BALL', location=[0, 0, 0])
+        if shape.upper() == "UV_SPHERE":
+            bpy.ops.mesh.primitive_uv_sphere_add(
+                segments=segments[0], ring_count=segments[1], radius=radius
+            )
+        if shape.upper() == "METABALL":
+            bpy.ops.object.metaball_add(type="BALL", location=[0, 0, 0])
         obj = bpy.context.view_layer.objects.active
         # In the geometry node, a new scale will be add to the instance
         # Here we use a small value to hide the instance from preview
@@ -106,29 +108,31 @@ class Species(BaseObject):
         obj.name = name
         obj.data.name = name
         obj.batoms.atom.radius = radius
-        obj.batoms.type = 'INSTANCER'
+        obj.batoms.type = "INSTANCER"
         #
         obj.users_collection[0].objects.unlink(obj)
-        bpy.data.collections['%s_instancer' % self.label].objects.link(obj)
+        bpy.data.collections["%s_instancer" % self.label].objects.link(obj)
         bpy.ops.object.shade_smooth()
-        if shape.upper() != 'METABALL':
+        if shape.upper() != "METABALL":
             obj.hide_set(True)
             obj.hide_render = True
         #
-        self.build_materials(material_style = sp.material_style)
+        self.build_materials(material_style=sp.material_style)
         self.assign_materials()
         # self.color = sp.color
         bpy.context.view_layer.update()
-        self.parent.batoms.add_geometry_node(sp.name, obj)
+        self.parent.batoms.add_species_node(sp.name, obj)
         # update boundary and search_bond
-        if hasattr(self.parent.batoms, '_species'):
+        if hasattr(self.parent.batoms, "_species"):
             # ignore for when init species
             # only for update
             self.parent.batoms.boundary.update_geometry_node_instancer(sp.name, obj)
-            self.parent.batoms.bond.search_bond.update_geometry_node_instancer(sp.name, obj)
+            self.parent.batoms.bond.search_bond.update_geometry_node_instancer(
+                sp.name, obj
+            )
         return obj
 
-    def build_materials(self, node_inputs=None, material_style='default'):
+    def build_materials(self, node_inputs=None, material_style="default"):
         """Create materials for instancer object
 
         Args:
@@ -138,41 +142,42 @@ class Species(BaseObject):
                 Materials style. Defaults to 'default'.
         """
         from batoms.material import create_material
+
         mesh = self.obj.data
         mesh.materials.clear()
         elements = self.elements
         i = 0
         for occ in self.sorted_occupancies:
             ele = elements[occ[0]]
-            name = '%s_%s_%s' % (self.label, self.name, ele["name"])
+            name = "%s_%s_%s" % (self.label, self.name, ele["name"])
             self.delete_material(name)
-            if i==0:
+            if i == 0:
                 color = self.data.color
             else:
                 color = ele["color"]
-            mat = create_material(name,
-                                  color=color,
-                                  node_inputs=node_inputs,
-                                  material_style=material_style,
-                                  backface_culling=True)
+            mat = create_material(
+                name,
+                color=color,
+                node_inputs=node_inputs,
+                material_style=material_style,
+                backface_culling=True,
+            )
             # add attribute and color ramp
-            Attrribute = mat.node_tree.nodes.new('ShaderNodeAttribute')
-            Attrribute.attribute_type = 'INSTANCER'
-            ValToRGB = mat.node_tree.nodes.new('ShaderNodeValToRGB')
+            Attrribute = mat.node_tree.nodes.new("ShaderNodeAttribute")
+            Attrribute.attribute_type = "INSTANCER"
+            ValToRGB = mat.node_tree.nodes.new("ShaderNodeValToRGB")
             ValToRGB.color_ramp.elements.new(0.5)
             ValToRGB.color_ramp.elements[0].color = (1, 0, 0, 1)
             ValToRGB.color_ramp.elements[1].color = (0, 1, 0, 1)
             ValToRGB.color_ramp.elements[2].color = (0, 0, 1, 1)
-            mat.node_tree.links.new(Attrribute.outputs['Fac'],
-                                ValToRGB.inputs['Fac'])
+            mat.node_tree.links.new(Attrribute.outputs["Fac"], ValToRGB.inputs["Fac"])
 
             mesh.materials.append(mat)
             self.parent.batoms.obj.data.materials.append(mat)
             i += 1
 
     def assign_materials(self):
-        """Assign materials for instancer with order
-        """
+        """Assign materials for instancer with order"""
         # find the face index for ele
         mesh = self.obj.data
         occs = self.sorted_occupancies
@@ -181,13 +186,13 @@ class Species(BaseObject):
         if nele > 1:
             # calc the angles
             npoly = len(mesh.polygons)
-            normals = np.zeros(npoly*3)
-            material_indexs = np.zeros(npoly, dtype='int')
-            mesh.polygons.foreach_get('normal', normals)
-            mesh.polygons.foreach_get('material_index', material_indexs)
+            normals = np.zeros(npoly * 3)
+            material_indexs = np.zeros(npoly, dtype="int")
+            mesh.polygons.foreach_get("normal", normals)
+            mesh.polygons.foreach_get("material_index", material_indexs)
             normals = normals.reshape(-1, 3)
-            xy = normals - np.dot(normals, [0, 0, 1])[:, None]*[0, 0, 1]
-            angles = (np.arctan2(xy[:, 1], xy[:, 0]) + np.pi)/np.pi/2
+            xy = normals - np.dot(normals, [0, 0, 1])[:, None] * [0, 0, 1]
+            angles = (np.arctan2(xy[:, 1], xy[:, 0]) + np.pi) / np.pi / 2
             #
             tos = 0
             for i in range(1, nele):
@@ -195,7 +200,7 @@ class Species(BaseObject):
                 index = np.where((angles > tos) & (angles < toe))[0]
                 material_indexs[index] = i
                 tos = toe
-            mesh.polygons.foreach_set('material_index', material_indexs)
+            mesh.polygons.foreach_set("material_index", material_indexs)
 
     @property
     def data(self):
@@ -264,7 +269,7 @@ class Species(BaseObject):
             for ele, eledata in elements.items():
                 if isinstance(eledata, (int, float)):
                     elements[ele] = {"occupancy": eledata}
-        data['elements'] = elements
+        data["elements"] = elements
         self.update(data)
 
     @property
@@ -277,7 +282,7 @@ class Species(BaseObject):
         """
         main_element = {}
         occs = self.sorted_occupancies
-        if occs[0][0] == 'X' and len(occs) > 1:
+        if occs[0][0] == "X" and len(occs) > 1:
             main_element = occs[1][0]
         else:
             main_element = occs[0][0]
@@ -292,7 +297,7 @@ class Species(BaseObject):
         """
         materials = {}
         for ele in self.elements:
-            name = '%s_%s_%s' % (self.label, self.name, ele)
+            name = "%s_%s_%s" % (self.label, self.name, ele)
             mat = bpy.data.materials.get(name)
             materials[ele] = mat
         return materials
@@ -322,14 +327,13 @@ class Species(BaseObject):
         self.set_color(color)
 
     def get_color(self):
-        """
-        """
+        """ """
         # Viewpoint_color = self.materials[self.main_element].diffuse_color
         for node in self.materials[self.main_element].node_tree.nodes:
-            if 'Base Color' in node.inputs:
-                node_color = node.inputs['Base Color'].default_value[:]
-            if 'Alpha' in node.inputs:
-                Alpha = node.inputs['Alpha'].default_value
+            if "Base Color" in node.inputs:
+                node_color = node.inputs["Base Color"].default_value[:]
+            if "Alpha" in node.inputs:
+                Alpha = node.inputs["Alpha"].default_value
         color = [node_color[0], node_color[1], node_color[2], Alpha]
         return color
 
@@ -338,10 +342,10 @@ class Species(BaseObject):
             color = [color[0], color[1], color[2], 1]
         self.materials[self.main_element].diffuse_color = color
         for node in self.materials[self.main_element].node_tree.nodes:
-            if 'Base Color' in node.inputs:
-                node.inputs['Base Color'].default_value = color
-            if 'Alpha' in node.inputs:
-                node.inputs['Alpha'].default_value = color[3]
+            if "Base Color" in node.inputs:
+                node.inputs["Base Color"].default_value = color
+            if "Alpha" in node.inputs:
+                node.inputs["Alpha"].default_value = color[3]
         # self.data.elements[self.main_element].color = color
         self.data.color = color
 
@@ -352,32 +356,38 @@ class Species(BaseObject):
     @material_style.setter
     def material_style(self, material_style):
         self.data.material_style = material_style
-        self.build_materials(material_style = material_style)
+        self.build_materials(material_style=material_style)
         self.assign_materials()
 
     def color_by_attribute(self, attribute, cmap="viridis"):
         """Color by attribute"""
         import matplotlib.pyplot as plt
+
         node_tree = self.materials[self.main_element].node_tree
         if attribute in ["element"]:
             # remove the link
             for link in node_tree.links:
-                if link.from_node.name in ['Color Ramp', 'ColorRamp'] and link.to_node.name == 'Principled BSDF':
+                if (
+                    link.from_node.name in ["Color Ramp", "ColorRamp"]
+                    and link.to_node.name == "Principled BSDF"  # noqa: W503
+                ):
                     node_tree.links.remove(link)
         else:
             # Blender 3.6: 'Color Ramp', Blender 3.4: 'ColorRamp'
-            if node_tree.nodes.get('Color Ramp'):
-                color_ramp_node = node_tree.nodes.get('Color Ramp')
+            if node_tree.nodes.get("Color Ramp"):
+                color_ramp_node = node_tree.nodes.get("Color Ramp")
             else:
-                color_ramp_node = node_tree.nodes.get('ColorRamp')
-            node_tree.nodes['Attribute'].attribute_name = attribute
+                color_ramp_node = node_tree.nodes.get("ColorRamp")
+            node_tree.nodes["Attribute"].attribute_name = attribute
             colormap = plt.get_cmap(cmap)
             colors = colormap([0, 0.5, 1])
             color_ramp_node.color_ramp.elements[0].color = colors[0]
             color_ramp_node.color_ramp.elements[1].color = colors[1]
             color_ramp_node.color_ramp.elements[2].color = colors[2]
-            node_tree.links.new(color_ramp_node.outputs['Color'],
-                                    node_tree.nodes['Principled BSDF'].inputs['Base Color'])
+            node_tree.links.new(
+                color_ramp_node.outputs["Color"],
+                node_tree.nodes["Principled BSDF"].inputs["Base Color"],
+            )
 
     @property
     def radius(self):
@@ -388,19 +398,16 @@ class Species(BaseObject):
 
     @property
     def indices(self):
-        indices = np.where(
-            self.parent.batoms.attributes['species'] == self.name)[0]
+        indices = np.where(self.parent.batoms.attributes["species"] == self.name)[0]
         return indices
 
     @property
     def scale(self):
-        return self.parent.batoms.get_attribute_with_indices('scale',
-                                                             self.indices)
+        return self.parent.batoms.get_attribute_with_indices("scale", self.indices)
 
     @scale.setter
     def scale(self, scale):
-        self.parent.batoms.set_attribute_with_indices(
-            'scale', self.indices, scale)
+        self.parent.batoms.set_attribute_with_indices("scale", self.indices, scale)
 
     @property
     def segments(self):
@@ -422,10 +429,10 @@ class Species(BaseObject):
 
     def as_dict(self) -> dict:
         data = {
-            'species': self.name,
-            'name': self.name,
-            'radius': self.radius,
-            'elements': self.elements,
+            "species": self.name,
+            "name": self.name,
+            "radius": self.radius,
+            "elements": self.elements,
         }
         return data
 
@@ -439,18 +446,20 @@ class Species(BaseObject):
 
 
 class Bspecies(Setting):
-    """Bspecies Class
-    """
+    """Bspecies Class"""
 
-    def __init__(self, label, species=None,
-                 batoms=None,
-                 material_style='default',
-                 segments=None,
-                 subdivisions=2,
-                 ) -> None:
+    def __init__(
+        self,
+        label,
+        species=None,
+        batoms=None,
+        material_style="default",
+        segments=None,
+        subdivisions=2,
+    ) -> None:
         Setting.__init__(self, label, coll_name=label)
         self.label = label
-        self.name = 'batoms'
+        self.name = "batoms"
         self.batoms = batoms
         #
         self.calc_segments(segments)
@@ -458,7 +467,7 @@ class Bspecies(Setting):
         if species is not None:
             self.add(species)
         # for sp, data in species.items():
-            # self[sp] = data
+        # self[sp] = data
 
     def get_ui_list_index(self):
         return self.bpy_data.ui_list_index_species
@@ -508,9 +517,9 @@ class Bspecies(Setting):
         self.add({name: data})
 
     def add(self, props, instancer=None):
-        """
-        """
-        from batoms.utils import get_default_species_data, default_element_prop
+        """ """
+        from batoms.utils import get_default_species_data
+
         if props is None:
             return
         if isinstance(props, str):
@@ -519,10 +528,12 @@ class Bspecies(Setting):
             species_list = props
             props = {}
             for species in species_list:
-                ele = species.split('_')[0]
-                props[species] = get_default_species_data({ele: {"occupancy": 1.0}},
-                                             radius_style=self.batoms.radius_style,
-                                             color_style=self.batoms.color_style)
+                ele = species.split("_")[0]
+                props[species] = get_default_species_data(
+                    {ele: {"occupancy": 1.0}},
+                    radius_style=self.batoms.radius_style,
+                    color_style=self.batoms.color_style,
+                )
 
         for name, data in props.items():
             # if 'color_style' not in data:
@@ -533,9 +544,12 @@ class Bspecies(Setting):
             if sp is None:
                 sp = self.bpy_setting.add()
                 self.ui_list_index = len(self) - 1
-            if 'color' not in data:
-                props = get_default_species_data(data['elements'], radius_style=self.batoms.radius_style,
-                                    color_style=self.batoms.color_style)
+            if "color" not in data:
+                props = get_default_species_data(
+                    data["elements"],
+                    radius_style=self.batoms.radius_style,
+                    color_style=self.batoms.color_style,
+                )
                 data.update(props)
             sp.name = name
             sp.label = self.label
@@ -545,7 +559,7 @@ class Bspecies(Setting):
     def update_geometry_node(self):
         instancers = self.instancers
         for sp, obj in instancers.items():
-            self.batoms.add_geometry_node(sp, obj)
+            self.batoms.add_species_node(sp, obj)
 
     def keys(self):
         return self.species.keys()
@@ -554,24 +568,24 @@ class Bspecies(Setting):
         return self.species.items()
 
     def __repr__(self):
-        s = ''
+        s = ""
         for name, sp in self.species.items():
             s += str(sp)
-            s += '\n'
+            s += "\n"
         return s
 
-    @ property
+    @property
     def instancers(self):
         return self.get_instancers()
 
     def get_instancers(self):
         instancers = {}
         for sp in self.species:
-            name = '%s_%s' % (self.label, sp)
+            name = "%s_%s" % (self.label, sp)
             instancers[sp] = bpy.data.objects.get(name)
         return instancers
 
-    @ property
+    @property
     def species(self):
         return self.get_species()
 
@@ -581,27 +595,27 @@ class Bspecies(Setting):
             species[sp.name] = Species(sp.name, parent=self)
         return species
 
-    @ property
+    @property
     def main_elements(self):
         main_elements = {}
         for name, sp in self.species.items():
             main_elements[name] = sp.main_element
         return main_elements
 
-    @ property
+    @property
     def species_props(self):
         return self.get_species_props()
 
     def get_species_props(self):
         species_props = {}
-        instancers = self.instancers
-        species_props = {}
-        species = self.species
         for name, sp in self.species.items():
             radius = sp.radius
             color = sp.color
-            species_props[name] = {'radius': radius, 'color': color,
-                'element': sp.main_element}
+            species_props[name] = {
+                "radius": radius,
+                "color": color,
+                "element": sp.main_element,
+            }
         return species_props
 
     def __add__(self, other):
@@ -623,17 +637,14 @@ class Bspecies(Setting):
         """
         for sp, instancer in self.instancers.items():
             instancer = instancer.copy()
-            bpy.data.collections['Collection'].objects.link(instancer)
+            bpy.data.collections["Collection"].objects.link(instancer)
             instancer.hide_set(True)
-            instancer.name = '%s_%s_instancer' % (label, sp)
-        bspecies = self.__class__(label, label, species={},
-                                  batoms=None)
+            instancer.name = "%s_%s_instancer" % (label, sp)
+        bspecies = self.__class__(label, label, species={}, batoms=None)
         return bspecies
 
     def extend(self, other):
-        """
-
-        """
+        """ """
         species1 = self.species
         species2 = other.species
         species3 = {}
@@ -641,7 +652,7 @@ class Bspecies(Setting):
             data = sp.as_dict()
             if key not in species1:
                 instancer = other.instancers[key]
-                name = '%s_%s' % (self.label, key)
+                name = "%s_%s" % (self.label, key)
                 instancer.name = name
                 # materials
                 # for mat in instancer.materials_slots:
@@ -649,8 +660,8 @@ class Bspecies(Setting):
                 species3[key] = [data, instancer]
             elif data != species1[key].as_dict():
                 instancer = other.instancers[key]
-                spname = '%s_%s' % (key, other.label)
-                name = '%s_%s' % (self.label, spname)
+                spname = "%s_%s" % (key, other.label)
+                name = "%s_%s" % (self.label, spname)
                 instancer.name = name
                 species3[spname] = [data, instancer]
         #

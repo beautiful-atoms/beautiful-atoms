@@ -1,5 +1,4 @@
 import bpy
-import pytest
 from batoms.pdbparser import read_pdb
 from batoms.batoms import Batoms
 
@@ -12,8 +11,4 @@ def test_ribbon():
     sel1 = protein.selects.add("sel1", "sheet A-160-A-170")
     sel1.show = True
     sel1.model_style = 1
-
-
-if __name__ == "__main__":
-    test_ribbon()
-    print("\n Ribbon: All pass! \n")
+    bpy.ops.batoms.delete()

@@ -4,7 +4,6 @@ import os
 import argparse
 import requests
 from bs4 import BeautifulSoup
-from distutils.version import LooseVersion
 import re
 from subprocess import run, PIPE
 from pathlib import Path
@@ -35,7 +34,7 @@ def get_latest_url(version="3.1", regex=r"blender-(\d+\.\d+\.\d+)-linux-x64.tar.
 
 def extract_blender(url, filename, root="/bin"):
     """Extract the tar.xz"""
-    commands = f"wget {url} && tar -xvf {filename} --strip-components=1 -C {root} && rm -rf ./blender-*"
+    commands = f"wget {url} && tar -xvf {filename} --strip-components=1 -C {root} && rm -rf ./blender-*"  # noqa E501
     proc = run(commands, shell=True)
     if proc.returncode != 0:
         raise RuntimeError("Error extracting blender")
@@ -52,8 +51,8 @@ def get_default_bl_py_version(blender_root):
 
 def extract_python_source(blender_root, python_version):
     short_version = ".".join(python_version.split(".")[:2])
-    url = f"https://www.python.org/ftp/python/{python_version}/Python-{python_version}.tgz"
-    commands = f"wget {url} && tar -xzf Python-*.tgz && mkdir -p {blender_root}/python/include/python{short_version} && cp -r Python-*/Include/* {blender_root}/python/include/python{short_version}/ && rm -rf Python-*"
+    url = f"https://www.python.org/ftp/python/{python_version}/Python-{python_version}.tgz"  # noqa E231
+    commands = f"wget {url} && tar -xzf Python-*.tgz && mkdir -p {blender_root}/python/include/python{short_version} && cp -r Python-*/Include/* {blender_root}/python/include/python{short_version}/ && rm -rf Python-*"  # noqa E501
     proc = run(commands, shell=True)
     if proc.returncode != 0:
         raise RuntimeError("Error extracting python source")
@@ -66,7 +65,7 @@ def main():
     version = arguments.version
     url, href = get_latest_url(version)
     print(url, href)
-    print(f"Extract blender bin")
+    print("Extract blender bin")
     extract_blender(url, href, root="/bin")
     blender_root = f"/bin/{version}"
     python_version = get_default_bl_py_version(blender_root)

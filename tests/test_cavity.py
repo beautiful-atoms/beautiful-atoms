@@ -1,10 +1,5 @@
-from time import time
-
 import bpy
 import numpy as np
-import pytest
-from ase.build import bulk, molecule
-from batoms.batoms import Batoms
 from batoms.bio.bio import read
 
 try:
@@ -17,10 +12,7 @@ except ImportError:
 extras = dict(engine="cycles") if use_cycles else {}
 
 
-def test_cavity():
-    from batoms.bio.bio import read
-    bpy.ops.batoms.delete()
-    tio2 = read("../tests/datas/tio2.cif")
+def test_cavity(tio2):
     tio2.boundary = 0.01
     tio2.cavity.resolution = 1
     # tio2.cavity.build_cavity()
@@ -28,11 +20,12 @@ def test_cavity():
     tio2.cavity.draw()
     if use_cycles:
         set_cycles_res(tio2)
-    tio2.get_image([0, 1, 0], output="mof-5.png", **extras)
+    tio2.get_image([0, 1, 0], output="tio2-cavity.png", **extras)
 
 
 def test_cavity_zsm():
     from batoms.bio.bio import read
+
     bpy.ops.batoms.delete()
     mof = read("../tests/datas/zsm-5.cif")
     mof.boundary = 0.01
@@ -44,8 +37,10 @@ def test_cavity_zsm():
         set_cycles_res(mof)
     mof.get_image([0, 1, 0], output="mof-5.png", **extras)
 
+
 def test_cavity_mof():
     from batoms.bio.bio import read
+
     bpy.ops.batoms.delete()
     mof = read("../tests/datas/mof-5.cif")
     mof.boundary = 0.01
@@ -56,6 +51,7 @@ def test_cavity_mof():
     if use_cycles:
         set_cycles_res(mof)
     mof.get_image([0, 1, 0], output="mof-5.png", **extras)
+
 
 def test_cavity_ops():
     bpy.ops.batoms.delete()
@@ -68,19 +64,16 @@ def test_cavity_ops():
     print(mof.cavity.settings)
     assert len(mof.cavity.settings) == 0
 
+
 def test_gui():
     """latticeplane panel"""
-    from batoms.batoms import Batoms
     from batoms.bio.bio import read
+
     bpy.ops.batoms.delete()
     mof = read("../tests/datas/mof-5.cif")
-    assert bpy.context.scene.Bcavity.show == True
+    bpy.context.view_layer.objects.active = mof.obj
+    assert bpy.context.scene.Bcavity.show is True
     bpy.context.scene.Bcavity.show = False
-    assert mof.cavity.show == False
+    assert mof.cavity.show is False
     bpy.context.scene.Bcavity.minCave = 3.0
     assert np.isclose(mof.cavity.minCave, 3.0)
-
-if __name__ == "__main__":
-    test_cavity()
-    test_cavity_zsm()
-    test_cavity_mof()

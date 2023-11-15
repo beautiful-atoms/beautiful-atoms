@@ -1,8 +1,6 @@
 import subprocess
-import pytest
 import os
 import shutil
-from pathlib import Path
 import tempfile
 
 BATOMSPY_TEST = """#!/usr/bin/env batomspy

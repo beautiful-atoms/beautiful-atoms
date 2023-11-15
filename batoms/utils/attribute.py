@@ -27,18 +27,19 @@ def get_mesh_attribute_bmesh(obj, key, index=None):
     import bmesh
     from batoms.utils.butils import get_att_length, get_bmesh_layer, get_bmesh_domain
     from batoms.utils import type_blender_to_py
+
     # get the mesh
     me = obj.data
     # get attribute data type for the attribute
     att = me.attributes.get(key)
     if att is None:
-        raise KeyError('{} is not exist.'.format(key))
+        raise KeyError("{} is not exist.".format(key))
     # get type and domain
     dtype = att.data_type
     # get attribute length based on domain
     n = get_att_length(obj.data, att)
     # check mode
-    if obj.mode == 'EDIT':
+    if obj.mode == "EDIT":
         bm = bmesh.from_edit_mesh(obj.data)
         domain = get_bmesh_domain(bm, att)
         domain.ensure_lookup_table()
@@ -83,12 +84,14 @@ def get_mesh_attribute(obj, key, index=None):
     """
     from batoms.utils.butils import get_att_length
     from batoms.utils import type_blender_to_py
+
     # get the mesh
     me = obj.data
     # get attribute data type for the attribute
     att = me.attributes.get(key)
+    # print(f"Attribute: {att.data_type} {att.domain}")
     if att is None:
-        raise KeyError('{} is not exist.'.format(key))
+        raise KeyError("{} is not exist.".format(key))
     dtype = att.data_type
     # get single attribute value
     if index is not None:
@@ -98,13 +101,29 @@ def get_mesh_attribute(obj, key, index=None):
         n = get_att_length(obj.data, att)
         # init
         attribute = np.zeros(n, dtype=type_blender_to_py(dtype, str="U20"))
-        if dtype == 'STRING':
+        if dtype == "STRING":
             for i in range(n):
                 attribute[i] = att.data[i].value
         elif dtype in ["INT", "FLOAT", "BOOLEAN"]:
             att.data.foreach_get("value", attribute)
+        elif dtype == "FLOAT2":
+            attribute = np.zeros(n * 2, dtype="float")
+            att.data.foreach_get("vector", attribute)
+            attribute = attribute.reshape(n, 2)
+        elif dtype == "FLOAT_VECTOR":
+            attribute = np.zeros(n * 3, dtype="float")
+            att.data.foreach_get("vector", attribute)
+            attribute = attribute.reshape(n, 3)
+        elif dtype in ["FLOAT_COLOR"]:
+            attribute = np.zeros(n * 4, dtype="float")
+            att.data.foreach_get("color", attribute)
+            attribute = attribute.reshape(n, 4)
+        elif dtype in ["QUATERNION"]:
+            attribute = np.zeros(n * 4, dtype="float")
+            att.data.foreach_get("value", attribute)
+            attribute = attribute.reshape(n, 4)
         else:
-            raise KeyError('Attribute type: %s is not support.' % dtype)
+            raise KeyError("Attribute type: %s is not support." % dtype)
         attribute = np.array(attribute)
     return attribute
 
@@ -120,20 +139,21 @@ def set_mesh_attribute_bmesh(obj, key, value, index=None):
     """
     import bmesh
     from batoms.utils.butils import get_bmesh_domain, get_bmesh_layer
+
     me = obj.data
     # get attribute type
     att = me.attributes.get(key)
     dtype = att.data_type
-    if dtype == 'STRING':
+    if dtype == "STRING":
         value = np.char.encode(value)
     # check object mode
-    if obj.mode == 'EDIT':
+    if obj.mode == "EDIT":
         bm = bmesh.from_edit_mesh(me)
         domain = get_bmesh_domain(bm, att)
         domain.ensure_lookup_table()
         layer = get_bmesh_layer(domain, key, dtype)
         if index is not None:
-            domain[index][layer] = value[0]
+            domain[index][layer] = value
         else:
             n = len(domain)
             for i in range(n):
@@ -165,17 +185,30 @@ def set_mesh_attribute(obj, key, value, index=None):
         index (bool, int): index of the data, used to set singe attribute value
     """
     from batoms.utils.butils import get_att_length
-    logger.debug("Key: {}".format(key))
+
     me = obj.data
     # get attribute
     att = me.attributes.get(key)
+    # print(f"Attribute: {att.data_type} {att.domain}")
     if index is not None:
         att.data[index].value = value[0]
     else:
         # get attribute domain and length
         n = get_att_length(obj.data, att)
-        if att.data_type == 'STRING':
+        if att.data_type == "STRING":
             for j in range(n):
                 att.data[j].value = value[j]
+        elif att.data_type == "FLOAT2":
+            value = value.reshape((n * 2, 1))
+            att.data.foreach_set("vector", value)
+        elif att.data_type == "FLOAT_VECTOR":
+            value = value.reshape((n * 3, 1))
+            att.data.foreach_set("vector", value)
+        elif att.data_type in ["FLOAT_COLOR"]:
+            value = value.reshape((n * 4, 1))
+            att.data.foreach_set("color", value)
+        elif att.data_type in ["QUATERNION"]:
+            value = value.reshape((n * 4, 1))
+            att.data.foreach_set("value", value)
         else:
             att.data.foreach_set("value", value)

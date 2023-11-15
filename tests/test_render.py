@@ -1,6 +1,4 @@
 import bpy
-import pytest
-import numpy as np
 from ase.build import molecule, fcc111
 from batoms.render import Render
 from batoms import Batoms
@@ -29,18 +27,12 @@ def test_render():
     assert render.resolution == [200, 200]
 
 
-def test_render_gpu():
-    bpy.ops.batoms.delete()
-    h2o = molecule("H2O")
-    h2o = Batoms("h2o", from_ase=h2o)
+def test_render_gpu(h2o):
     h2o.render.init()
     h2o.render.gpu = True
 
 
-def test_render_init():
-    bpy.ops.batoms.delete()
-    h2o = molecule("H2O")
-    h2o = Batoms("h2o", from_ase=h2o)
+def test_render_init(h2o):
     h2o.render.init()
     h2o.render.viewport = [1, 0, 0]
     h2o.render.resolution = [200, 200]
@@ -49,10 +41,7 @@ def test_render_init():
     h2o.get_image(**extras)
 
 
-def test_render_setter():
-    bpy.ops.batoms.delete()
-    h2o = molecule("H2O")
-    h2o = Batoms("h2o", from_ase=h2o)
+def test_render_setter(h2o):
     h2o.render.init()
     h2o.render.viewport = [1, 0, 0]
     nh3 = molecule("NH3")
@@ -80,10 +69,3 @@ def test_render_au111():
     au111.get_image([1, 1, 1], output="au111-eevee.png", **extras)
     au111.render.engine = "cycles"
     au111.get_image([1, 1, 1], output="au111-cycles.png", **extras)
-
-
-if __name__ == "__main__":
-    test_render()
-    test_render_setter()
-    test_render_au111()
-    print("\n render: All pass! \n")

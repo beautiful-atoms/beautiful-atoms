@@ -7,6 +7,7 @@ from . import (
     gui_slicebonds,
 )
 
+__all__ = ["Bond", "register_class", "unregister_class"]
 
 classes_bpy_data = [
     # internal data first
@@ -36,16 +37,16 @@ def register_class():
     from bpy.types import Collection, Object, Scene
     from bpy.props import PointerProperty
     from bpy.utils import register_class
+
     for cls in classes_bpy_data:
         register_class(cls)
     # attach to blender internal data
-    Collection.Bbond = PointerProperty(name='Bbond',
-                                        type=bpy_data.Bond)
-    Object.Bbond = PointerProperty(name='Bbond',
-                                    type=bpy_data.BondSetting)
+    Collection.Bbond = PointerProperty(name="Bbond", type=bpy_data.Bond)
+    Object.Bbond = PointerProperty(name="Bbond", type=bpy_data.BondSetting)
     Scene.Bbond = PointerProperty(type=gui_slicebonds.BondProperties)
     for cls in classes:
         register_class(cls)
+
 
 def unregister_class():
     from bpy.types import Collection, Object, Scene

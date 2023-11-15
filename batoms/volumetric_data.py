@@ -3,16 +3,14 @@ Add Volumetric data.
 """
 import bpy
 import numpy as np
-from time import time
 from batoms.base.collection import Setting
 import logging
-# logger = logging.getLogger('batoms')
+
 logger = logging.getLogger(__name__)
 
 
-
 class VolumetricData(Setting):
-    def __init__(self, label, volume = None, parent = None) -> None:
+    def __init__(self, label, volume=None, parent=None) -> None:
         """VolumetricData object
         The VolumetricData object store the Volumetric Data information.
 
@@ -24,7 +22,7 @@ class VolumetricData(Setting):
         """
         Setting.__init__(self, label, coll_name=label)
         self.label = label
-        self.name = 'batoms'
+        self.name = "batoms"
         self.parent = parent
         if volume is not None:
             for key, data in volume.items():
@@ -44,11 +42,10 @@ class VolumetricData(Setting):
             raise KeyError("The collection property {} not exist!".format(self.name))
         return data.settings_volumetric_data
 
-
     def __getitem__(self, key):
         item = self.get_volume(key)
         if item is None:
-            raise Exception('%s not in %s setting' % (key, self.name))
+            raise Exception("%s not in %s setting" % (key, self.name))
         return item
 
     def __setitem__(self, key, volume):
@@ -68,12 +65,11 @@ class VolumetricData(Setting):
         self[name] = datas
 
     def set_collection(self, label):
-        """
-        """
+        """ """
         if not bpy.data.collections.get(label):
             coll = bpy.data.collections.new(label)
             self.parent.batoms.coll.children.link(coll)
-            coll.batoms.type = 'VOLUME'
+            coll.batoms.type = "VOLUME"
             coll.batoms.label = label
 
     def build_object(self, setting, volume):
@@ -106,7 +102,7 @@ class VolumetricData(Setting):
         obj = bpy.data.objects.new(name, mesh)
         obj.data = mesh
         obj.parent = self.parent.obj
-        obj.batoms.type = 'VOLUME'
+        obj.batoms.type = "VOLUME"
         obj.batoms.volume.shape = shape
         self.coll.objects.link(obj)
         obj.hide_set(True)
@@ -123,12 +119,12 @@ class VolumetricData(Setting):
         setting = self.find(name)
         if setting is None:
             return None
-        obj = bpy.data.objects.get('{}_volume_{}'.format(self.label, setting.name))
+        obj = bpy.data.objects.get("{}_volume_{}".format(self.label, setting.name))
         if obj is None:
             return None
         n = len(obj.data.vertices)
-        volume = np.empty(n*3, dtype=np.float64)
-        obj.data.vertices.foreach_get('co', volume)
+        volume = np.empty(n * 3, dtype=np.float64)
+        obj.data.vertices.foreach_get("co", volume)
         volume = volume.reshape(-1, 1)
         shape = setting.shape
         npoint = np.product(shape)
@@ -139,18 +135,19 @@ class VolumetricData(Setting):
 
     def __imul__(self, m):
         import numpy as np
+
         for volume in self.bpy_setting:
             data = self[volume.name]
             self[volume.name] = np.tile(data, m)
         return self
 
     def __repr__(self) -> str:
-        s = "-"*60 + "\n"
+        s = "-" * 60 + "\n"
         s = "name          npoint        shape  \n"
         for volume in self.bpy_setting:
-            s += "{:4s}   {:10d} ".format(
-                volume.name, volume.npoint)
+            s += "{:4s}   {:10d} ".format(volume.name, volume.npoint)
             s += "[{:5d}  {:5d}  {:5d}] \n".format(
-                volume.shape[0], volume.shape[1], volume.shape[2])
-        s += "-"*60 + "\n"
+                volume.shape[0], volume.shape[1], volume.shape[2]
+            )
+        s += "-" * 60 + "\n"
         return s

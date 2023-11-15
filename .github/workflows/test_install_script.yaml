@@ -118,7 +118,7 @@ jobs:
       #     cp install.py $HOME && cd $HOME
       #     # echo "blender root parent"
       #     ls -alh ${BLENDER_ROOT}/..
-      #     $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} -t 
+      #     $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} -t
       #     $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
       #   if: ${{ matrix.blender_ver != '3.2.0' }}
 
@@ -135,7 +135,7 @@ jobs:
       matrix:
         # Somehow the macos installers are throwing segfault, could we check?
         blender_ver: ["3.4.1"]
-        
+
     steps:
       - uses: actions/checkout@v2
       - uses: conda-incubator/setup-miniconda@v2

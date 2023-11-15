@@ -6,6 +6,7 @@ from . import (
     gui,
 )
 
+__all__ = ["Template"]
 
 classes_bpy_data = [
     bpy_data.TemplateSetting,
@@ -27,21 +28,22 @@ def register_class():
     from bpy.types import Collection, Object, Scene
     from bpy.props import PointerProperty
     from bpy.utils import register_class
+
     for cls in classes_bpy_data:
         register_class(cls)
     # attach to blender internal data
-    Collection.Btemplate = PointerProperty(name='Btemplate',
-                                        type=bpy_data.Template)
-    Object.Btemplate = PointerProperty(name='Btemplate',
-                                    type=bpy_data.Template)
+    Collection.Btemplate = PointerProperty(name="Btemplate", type=bpy_data.Template)
+    Object.Btemplate = PointerProperty(name="Btemplate", type=bpy_data.Template)
     Scene.Btemplate = PointerProperty(type=gui.TemplateProperties)
     #
     for cls in classes:
         register_class(cls)
 
+
 def unregister_class():
     from bpy.types import Collection, Object, Scene
     from bpy.utils import unregister_class
+
     #
     del Collection.Btemplate
     del Object.Btemplate

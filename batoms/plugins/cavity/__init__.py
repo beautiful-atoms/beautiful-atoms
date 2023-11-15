@@ -6,6 +6,7 @@ from . import (
     gui,
 )
 
+__all__ = ["Cavity"]
 
 classes_bpy_data = [
     # internal data first
@@ -29,17 +30,17 @@ def register_class():
     from bpy.types import Collection, Object, Scene
     from bpy.props import PointerProperty
     from bpy.utils import register_class
+
     for cls in classes_bpy_data:
         register_class(cls)
     # attach to blender internal data
-    Collection.Bcavity = PointerProperty(name='Bcavity',
-                                        type=bpy_data.Cavity)
-    Object.Bcavity = PointerProperty(name='Bcavity',
-                                    type=bpy_data.Cavity)
+    Collection.Bcavity = PointerProperty(name="Bcavity", type=bpy_data.Cavity)
+    Object.Bcavity = PointerProperty(name="Bcavity", type=bpy_data.Cavity)
     Scene.Bcavity = PointerProperty(type=gui.CavityProperties)
-#
+    #
     for cls in classes:
         register_class(cls)
+
 
 def unregister_class():
     from bpy.types import Collection, Object, Scene

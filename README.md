@@ -22,25 +22,36 @@ Features:
 * ``Cross-platform``: (Linux, Windows, macOS)
 
 
-### Beautiful Atoms 2.0
-
-
-
-### Author
-* Xing Wang  <xingwang1991@gmail.com>
-
-### Dependencies
-
-* Blender
-* Python
-* ASE
-* numpy
-* scipy
-* Scikit-image
-* pymatgen
-* mp-api
-* openbabel
-
 ### How to use
 
 Please vist: https://beautiful-atoms.readthedocs.io/en/latest/
+
+
+### How to contribute
+
+#### Editor
+We recommend using [Visual Studio Code](https://code.visualstudio.com/) with the [Blender extension](https://github.com/JacquesLucke/blender_vscode).
+
+#### Test
+We recommend using [pytest-blender](https://pypi.org/project/pytest-blender/). To run the tests, run:
+
+```console
+pip install pytest-blender
+blender_python="$(pytest-blender)"
+$blender_python -m ensurepip
+# Install the development dependencies:
+$blender_python -m pip install -r test-requirements.txt
+cd tests
+pytest
+```
+
+#### Pre-commit
+To install the pre-commit hooks, run:
+
+```console
+$ pre-commit install
+```
+
+
+### Contact
+* Xing Wang  <xingwang1991@gmail.com>

@@ -1,8 +1,5 @@
 import bpy
-import pytest
-import numpy as np
-from batoms.utils.butils import removeAll
-from batoms.render import Render, Lights, Light
+from batoms.render import Render, Lights
 from batoms.build import molecule
 
 try:
@@ -38,9 +35,3 @@ def test_light_direction():
     if use_cycles:
         set_cycles_res(h2o)
     h2o.get_image([0, 0, 1], output="light-direction.png", **extras)
-
-
-if __name__ == "__main__":
-    test_lights()
-    test_light_direction()
-    print("\n light: All pass! \n")
