@@ -373,7 +373,7 @@ class Batoms(BaseCollection, ObjectGN):
         nt = bpy.data.node_groups[f"Atoms_{self.label}"]
         name = "Atoms_%s_%s" % (self.label, spname)
         node = get_node_by_name(nt.nodes, name, type="GeometryNodeGroup")
-        node_tree = self.create_geometry_node_for_species(spname, instancer)
+        node_tree = self.create_geometry_node_for_species(spname)
         node.node_tree = node_tree
         node.inputs["Instancer"].default_value = instancer
         node.inputs["Species"].default_value = int(string2Number(spname))
@@ -386,7 +386,7 @@ class Batoms(BaseCollection, ObjectGN):
         )
         nt.links.new(node.outputs["Geometry"], JoinGeometry.inputs["Geometry"])
 
-    def create_geometry_node_for_species(self, spname, instancer):
+    def create_geometry_node_for_species(self, spname):
         """Create geometry node for one species."""
         from batoms.utils.butils import get_socket_by_identifier, create_node_tree
 
