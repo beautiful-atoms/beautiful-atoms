@@ -178,7 +178,6 @@ class Species(BaseObject):
         sp = self.data
         # here to update the color
         self.parent.batoms.add_species_node(sp.name, self.obj)
-        
 
     def assign_materials(self):
         """Assign materials for instancer with order"""
