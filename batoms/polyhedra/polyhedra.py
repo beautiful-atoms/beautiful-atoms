@@ -567,31 +567,34 @@ class Polyhedra(ObjectGN):
                 vertices1 = positions21[mask]
                 dnv = len(vertices1)
                 if dnv >= 4:
-                    # search face for polyhedra
-                    hull = ConvexHull(vertices1)
-                    face = hull.simplices
-                    # tri = Delaunay(vertices1)
-                    # face = tri.simplices
-                    dnf = len(face)
-                    face = face + nv
-                    edge = []
-                    for f in face:
-                        edge.append([f[0], f[1]])
-                        edge.append([f[0], f[2]])
-                        edge.append([f[1], f[2]])
-                    edges = edges + list(edge)
-                    faces = faces + list(face)
-                    vertices.extend(vertices1)
-                    offsets.extend(bondlist1[mask, 5:8])
-                    nv1 = nv + dnv
-                    nf1 = nf + dnf
-                    atoms_index1[nv:nv1] = bondlist1[mask, 0]
-                    atoms_index2[nv:nv1] = bondlist1[mask, 1]
-                    widths[nv:nv1] = poly.width
-                    species_index[nv:nv1] = string2Number(poly.species)
-                    face_species_index[nf:nf1] = string2Number(poly.species)
-                    nv = nv1
-                    nf = nf1
+                    try:
+                        # search face for polyhedra
+                        hull = ConvexHull(vertices1)
+                        face = hull.simplices
+                        # tri = Delaunay(vertices1)
+                        # face = tri.simplices
+                        dnf = len(face)
+                        face = face + nv
+                        edge = []
+                        for f in face:
+                            edge.append([f[0], f[1]])
+                            edge.append([f[0], f[2]])
+                            edge.append([f[1], f[2]])
+                        edges = edges + list(edge)
+                        faces = faces + list(face)
+                        vertices.extend(vertices1)
+                        offsets.extend(bondlist1[mask, 5:8])
+                        nv1 = nv + dnv
+                        nf1 = nf + dnf
+                        atoms_index1[nv:nv1] = bondlist1[mask, 0]
+                        atoms_index2[nv:nv1] = bondlist1[mask, 1]
+                        widths[nv:nv1] = poly.width
+                        species_index[nv:nv1] = string2Number(poly.species)
+                        face_species_index[nf:nf1] = string2Number(poly.species)
+                        nv = nv1
+                        nf = nf1
+                    except Exception as e:
+                        logger.error(e)
         n = len(vertices)
         if n == 0:
             datas = default_polyhedra_datas
