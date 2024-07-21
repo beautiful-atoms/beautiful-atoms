@@ -215,7 +215,7 @@ class Highlight(ObjectGN, PluginObject):
         )
         TransferBatoms.data_type = "FLOAT_VECTOR"
         links.new(ObjectBatoms.outputs["Geometry"], TransferBatoms.inputs[0])
-        links.new(PositionBatoms.outputs["Position"], TransferBatoms.inputs[3])
+        links.new(PositionBatoms.outputs["Position"], TransferBatoms.inputs["Value"])
         links.new(GroupInput.outputs[1], TransferBatoms.inputs["Index"])
         #
         # set positions
