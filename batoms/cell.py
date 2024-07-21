@@ -97,7 +97,7 @@ class Bcell(ObjectGN):
             )
             InputInt.integer = i
             links.new(GroupInput.outputs["Geometry"], TransferCell.inputs[0])
-            links.new(PositionCell.outputs["Position"], TransferCell.inputs[3])
+            links.new(PositionCell.outputs["Position"], TransferCell.inputs["Value"])
             links.new(InputInt.outputs[0], TransferCell.inputs["Index"])
             TransferCells.append(TransferCell)
         # ------------------------------------------------------------------
@@ -108,13 +108,13 @@ class Bcell(ObjectGN):
             )
             VectorAdd.operation = "ADD"
             VectorAdds.append(VectorAdd)
-        links.new(TransferCells[1].outputs[2], VectorAdds[0].inputs[0])
-        links.new(TransferCells[2].outputs[2], VectorAdds[0].inputs[1])
-        links.new(TransferCells[1].outputs[2], VectorAdds[1].inputs[0])
-        links.new(TransferCells[3].outputs[2], VectorAdds[1].inputs[1])
-        links.new(TransferCells[2].outputs[2], VectorAdds[2].inputs[0])
-        links.new(TransferCells[3].outputs[2], VectorAdds[2].inputs[1])
-        links.new(TransferCells[3].outputs[2], VectorAdds[3].inputs[0])
+        links.new(TransferCells[1].outputs["Value"], VectorAdds[0].inputs[0])
+        links.new(TransferCells[2].outputs["Value"], VectorAdds[0].inputs[1])
+        links.new(TransferCells[1].outputs["Value"], VectorAdds[1].inputs[0])
+        links.new(TransferCells[3].outputs["Value"], VectorAdds[1].inputs[1])
+        links.new(TransferCells[2].outputs["Value"], VectorAdds[2].inputs[0])
+        links.new(TransferCells[3].outputs["Value"], VectorAdds[2].inputs[1])
+        links.new(TransferCells[3].outputs["Value"], VectorAdds[3].inputs[0])
         links.new(VectorAdds[0].outputs[0], VectorAdds[3].inputs[1])
         # ============================================================
         # In this implementation.
@@ -152,9 +152,9 @@ class Bcell(ObjectGN):
             links.new(Circle.outputs[0], CurveToMesh.inputs[1])
             links.new(CurveToMesh.outputs[0], JoinGeometry.inputs[0])
             for j in range(4):
-                k = 2 if faces[i][j] < 4 else 0
+                key = "Value" if faces[i][j] < 4 else "Vector"
                 links.new(
-                    input_nodes[faces[i][j]].outputs[k], Quadrilateral.inputs[j + 7]
+                    input_nodes[faces[i][j]].outputs[key], Quadrilateral.inputs[j + 7]
                 )
         setMaterial = get_node_by_name(
             self.gn_node_group.nodes,
