@@ -118,7 +118,7 @@ class BATOMS_PT_lattice_plane(Panel):
     bl_parent_id = "VIEW3D_PT_Batoms_lattice_plane"
     # bl_options = {'DEFAULT_CLOSED'}
 
-    COMPAT_ENGINES = {"BLENDER_RENDER", "BLENDER_EEVEE", "BLENDER_WORKBENCH"}
+    COMPAT_ENGINES = {"BLENDER_RENDER", "BLENDER_EEVEE_NEXT", "BLENDER_WORKBENCH"}
 
     @classmethod
     def poll(cls, context):
