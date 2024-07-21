@@ -354,26 +354,25 @@ class ObjectGN(BaseObject):
         return modifier
 
     def vectorDotMatrix(self, gn_node_group, vector_output, matrix, name):
-        """ """
-        CombineXYZ = get_node_by_name(
+        """Create a vector dot matrix operation."""
+        project_point = get_node_by_name(
             gn_node_group.nodes,
-            "%s_CombineXYZ_%s" % (self.label, name),
-            "ShaderNodeCombineXYZ",
+            "%s_ProjectPoint_%s" % (self.label, name),
+            "FunctionNodeProjectPoint",
         )
-        #
-        VectorDot = []
+        combined_matrix = get_node_by_name(
+            gn_node_group.nodes,
+            "%s_CombineMatrix_%s" % (self.label, name),
+            "FunctionNodeCombineMatrix",
+        )
         for i in range(3):
-            tmp = get_node_by_name(
-                gn_node_group.nodes,
-                "%s_VectorDot%s_%s" % (self.label, i, name),
-                "ShaderNodeVectorMath",
-            )
-            tmp.operation = "DOT_PRODUCT"
-            VectorDot.append(tmp)
-            tmp.inputs[1].default_value = matrix[:, i]
-            gn_node_group.links.new(vector_output, tmp.inputs[0])
-            gn_node_group.links.new(tmp.outputs["Value"], CombineXYZ.inputs[i])
-        return CombineXYZ
+            for j in range(3):
+                index = i * 4 + j
+                combined_matrix.inputs[index].default_value = matrix[i, j]
+        gn_node_group.links.new(vector_output, project_point.inputs[0])
+        gn_node_group.links.new(combined_matrix.outputs[0], project_point.inputs[1])
+
+        return project_point
 
     def add_geometry_node(self):
         """
