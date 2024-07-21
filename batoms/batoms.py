@@ -416,13 +416,10 @@ class Batoms(BaseCollection, ObjectGN):
         )
         CompareSpecies.operation = "EQUAL"
         CompareSpecies.data_type = "INT"
-        output_socket = get_socket_by_identifier(
-            SpeciesIndexAttribute, "Attribute_Int", type="outputs"
-        )
         socket = get_socket_by_identifier(CompareSpecies, "B_INT")
         links.new(GroupInput.outputs["Species"], socket)
         compare_species_socket = get_socket_by_identifier(CompareSpecies, "A_INT")
-        links.new(output_socket, compare_species_socket)
+        links.new(SpeciesIndexAttribute.outputs["Attribute"], compare_species_socket)
         # SetPosition = get_node_by_name(nodes,
         # '%s_SetPosition' % self.label)
         InstanceOnPoint = get_node_by_name(
@@ -452,9 +449,6 @@ class Batoms(BaseCollection, ObjectGN):
         )
         ScaleAttribute.inputs["Name"].default_value = "scale"
         ScaleAttribute.data_type = "FLOAT"
-        scale_socket = get_socket_by_identifier(
-            ScaleAttribute, "Attribute_Float", type="outputs"
-        )
         ShowAttribute = get_node_by_name(
             nodes,
             "%s_NamedAttribute_show" % (self.label),
@@ -462,9 +456,6 @@ class Batoms(BaseCollection, ObjectGN):
         )
         ShowAttribute.inputs["Name"].default_value = "show"
         ShowAttribute.data_type = "INT"
-        show_socket = get_socket_by_identifier(
-            ShowAttribute, "Attribute_Int", type="outputs"
-        )
         # TODO select attribute is not used
         SelectAttribute = get_node_by_name(
             nodes,
@@ -475,9 +466,9 @@ class Batoms(BaseCollection, ObjectGN):
         SelectAttribute.data_type = "INT"
         get_socket_by_identifier(SelectAttribute, "Attribute_Int", type="outputs")
         #
-        links.new(show_socket, BoolShow.inputs[0])
+        links.new(ShowAttribute.outputs["Attribute"], BoolShow.inputs[0])
         links.new(GroupInput.outputs["Geometry"], InstanceOnPoint.inputs["Points"])
-        links.new(scale_socket, InstanceOnPoint.inputs["Scale"])
+        links.new(ScaleAttribute.outputs["Attribute"], InstanceOnPoint.inputs["Scale"])
         links.new(CompareSpecies.outputs[0], BoolShow.inputs[1])
         links.new(BoolShow.outputs["Boolean"], InstanceOnPoint.inputs["Selection"])
         links.new(ObjectInfo.outputs["Geometry"], InstanceOnPoint.inputs["Instance"])

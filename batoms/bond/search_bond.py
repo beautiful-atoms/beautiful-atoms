@@ -194,14 +194,14 @@ class SearchBond(ObjectGN):
         links.new(ObjectOffsets.outputs["Geometry"], TransferOffsets.inputs[0])
         links.new(PositionOffsets.outputs["Position"], TransferOffsets.inputs[1])
         OffsetNode = self.vectorDotMatrix(
-            self.gn_node_group, TransferOffsets.outputs[2], self.batoms.cell, ""
+            self.gn_node_group, TransferOffsets.outputs["Value"], self.batoms.cell, ""
         )
         # we need one add operation to get the positions with offset
         VectorAdd = get_node_by_name(
             nodes, "%s_VectorAdd" % (self.label), "ShaderNodeVectorMath"
         )
         VectorAdd.operation = "ADD"
-        links.new(TransferBatoms.outputs[2], VectorAdd.inputs[0])
+        links.new(TransferBatoms.outputs["Value"], VectorAdd.inputs[0])
         links.new(OffsetNode.outputs[0], VectorAdd.inputs[1])
         # set positions
         SetPosition = get_node_by_name(
@@ -269,7 +269,7 @@ class SearchBond(ObjectGN):
             TransferScale = get_node_by_name(
                 nodes, "%s_TransferScale" % (self.label), "GeometryNodeSampleIndex"
             )
-            links.new(TransferScale.outputs[2], InstanceOnPoint.inputs["Scale"])
+            links.new(TransferScale.outputs["Value"], InstanceOnPoint.inputs["Scale"])
         else:
             links.new(GroupInput.outputs[6], InstanceOnPoint.inputs["Scale"])
         links.new(CompareSpecies.outputs[0], BoolShow.inputs[1])
