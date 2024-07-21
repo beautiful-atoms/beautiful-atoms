@@ -178,7 +178,7 @@ class Boundary(ObjectGN):
         )
         TransferBatoms.data_type = "FLOAT_VECTOR"
         links.new(ObjectBatoms.outputs["Geometry"], TransferBatoms.inputs[0])
-        links.new(PositionBatoms.outputs["Position"], TransferBatoms.inputs[3])
+        links.new(PositionBatoms.outputs["Position"], TransferBatoms.inputs["Value"])
         links.new(GroupInput.outputs[1], TransferBatoms.inputs["Index"])
         # ------------------------------------------------------------------
         # calculate offset for boundary atoms
@@ -205,7 +205,7 @@ class Boundary(ObjectGN):
         # ------------------------------------------------------------------
         # add positions with offsets
         VectorAdd.operation = "ADD"
-        links.new(TransferBatoms.outputs[2], VectorAdd.inputs[0])
+        links.new(TransferBatoms.outputs["Value"], VectorAdd.inputs[0])
         links.new(dot_node.outputs[0], VectorAdd.inputs[1])
         # set positions
         SetPosition = get_node_by_name(
@@ -230,7 +230,7 @@ class Boundary(ObjectGN):
             )
             TransferScale.data_type = "FLOAT_VECTOR"
             links.new(ObjectBatoms.outputs["Geometry"], TransferScale.inputs[0])
-            links.new(ScaleBatoms.outputs["Attribute"], TransferScale.inputs[3])
+            links.new(ScaleBatoms.outputs["Attribute"], TransferScale.inputs["Value"])
             links.new(GroupInput.outputs[1], TransferScale.inputs["Index"])
 
     def vector_dot_cell(self, parent_tree):
@@ -295,7 +295,6 @@ class Boundary(ObjectGN):
     def get_cell_node(self, parent_tree):
         """Get the position of the cell."""
         from batoms.utils.butils import (
-            get_socket_by_identifier,
             get_node_by_name,
             create_node_tree,
         )
@@ -330,12 +329,10 @@ class Boundary(ObjectGN):
             PositionAtIndex.data_type = "FLOAT_VECTOR"
             PositionAtIndex.inputs["Index"].default_value = i + 1
             links.new(CellObject.outputs["Geometry"], PositionAtIndex.inputs[0])
-            input_socket = get_socket_by_identifier(PositionAtIndex, "Value_Vector")
-            links.new(Position.outputs["Position"], input_socket)
-            output_socket = get_socket_by_identifier(
-                PositionAtIndex, "Value_Vector", type="outputs"
+            links.new(Position.outputs["Position"], PositionAtIndex.outputs["Value"])
+            links.new(
+                PositionAtIndex.outputs["Value"], GroupOutput.inputs["A%d" % (i + 1)]
             )
-            links.new(output_socket, GroupOutput.inputs["A%d" % (i + 1)])
 
         return node
 
@@ -380,7 +377,7 @@ class Boundary(ObjectGN):
         TransferScale = get_node_by_name(
             nodes, "%s_TransferScale" % (self.label), "GeometryNodeSampleIndex"
         )
-        links.new(TransferScale.outputs[2], InstanceOnPoint.inputs["Scale"])
+        links.new(TransferScale.outputs["Value"], InstanceOnPoint.inputs["Scale"])
         links.new(CompareSpecies.outputs[0], BoolShow.inputs[1])
         links.new(BoolShow.outputs["Boolean"], InstanceOnPoint.inputs["Selection"])
         links.new(ObjectInfo.outputs["Geometry"], InstanceOnPoint.inputs["Instance"])
