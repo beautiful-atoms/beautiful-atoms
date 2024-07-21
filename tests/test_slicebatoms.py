@@ -4,7 +4,7 @@ def test_slicebatoms(ch4):
 
     # one atoms
     ch4.model_style = 1
-    assert ch4[0].species == "C"
+    assert ch4[0].species[0] == b"C"
     ch4[1].scale = 1
     assert ch4[1].scale == 1
     ch4[1].show = 0
