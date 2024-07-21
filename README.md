@@ -2,7 +2,7 @@
 [![Build beautiful_atoms main image](https://github.com/beautiful-atoms/beautiful-atoms/actions/workflows/build_main_image.yml/badge.svg)](https://github.com/beautiful-atoms/beautiful-atoms/actions/workflows/build_main_image.yml)
 [![Test batoms blender plugin](https://github.com/beautiful-atoms/beautiful-atoms/actions/workflows/batoms_plugin_test.yaml/badge.svg)](https://github.com/beautiful-atoms/beautiful-atoms/actions/workflows/batoms_plugin_test.yaml)
 
-Batoms is a Python package for editing and rendering atoms and molecules objects using blender. A Python interface that allows for automating workflows.
+Batoms is a Python package for editing and rendering atoms and molecule objects using Blender. A Python interface that allows for automating workflows.
 
 Features:
 
@@ -16,7 +16,7 @@ Features:
 * GUI
 * Support periodic boundary conditions
 * Support fetch structures from MaterialProject, Pubchem and RSCB
-* ``Flexible``: Python script, run interactively or in background.
+* ``Flexible``: Python script, run interactively or in the background.
 * ``High quality rendering``:  3D models
 * ``Free, Open Source``: Easy to download and install.
 * ``Cross-platform``: (Linux, Windows, macOS)
@@ -24,8 +24,10 @@ Features:
 
 ### How to use
 
-Please vist: https://beautiful-atoms.readthedocs.io/en/latest/
+Please visit: https://beautiful-atoms.readthedocs.io/en/latest/
 
+### View and edit structure in Jupyter Notebook
+Another package, [weas-widget](https://github.com/superstar54/weas-widget), allows users to visualize and edit with atomistic structures in Jupyter Notebook.
 
 ### How to contribute
 
