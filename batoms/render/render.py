@@ -43,7 +43,7 @@ class Render(BaseCollection):
         viewport: array
             The direction of the viewport windows.
         engine: str
-            enum in ['BLENDER_WORKBENCH', 'BLENDER_EEVEE', 'CYCLES']
+            enum in ['BLENDER_WORKBENCH', 'BLENDER_EEVEE_NEXT', 'CYCLES']
         output: str:
             filepath for the output image
         animation: bool
@@ -123,7 +123,7 @@ class Render(BaseCollection):
 
     def set_engine(self, engine):
         if engine.upper() == "EEVEE":
-            engine = "BLENDER_EEVEE"
+            engine = "BLENDER_EEVEE_NEXT"
         elif engine.upper() == "WORKBENCH":
             engine = "BLENDER_WORKBENCH"
         elif engine.upper() == "CYCLES":
@@ -266,7 +266,7 @@ class Render(BaseCollection):
 
     @property
     def use_motion_blur(self):
-        if self.engine == "BLENDER_EEVEE":
+        if self.engine == "BLENDER_EEVEE_NEXT":
             return bpy.context.scene.eevee.use_motion_blur
         elif self.engine == "BLENDER_CYCLES":
             return bpy.context.scene.cycles.use_motion_blur

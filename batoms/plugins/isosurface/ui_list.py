@@ -46,7 +46,7 @@ class BATOMS_PT_isosurface(Panel):
     bl_region_type = "UI"
     bl_options = {"DEFAULT_CLOSED"}
 
-    COMPAT_ENGINES = {"BLENDER_RENDER", "BLENDER_EEVEE", "BLENDER_WORKBENCH"}
+    COMPAT_ENGINES = {"BLENDER_RENDER", "BLENDER_EEVEE_NEXT", "BLENDER_WORKBENCH"}
 
     @classmethod
     def poll(cls, context):
