@@ -525,7 +525,7 @@ class BondSettings(Setting):
     @materials.setter
     def materials(self, node_inputs):
         for sp in self.keys():
-            self.set_material(sp, node_inputs)
+            self.set_material(sp, None, None, node_inputs)
 
     def __setitem__(self, index, setdict):
         """
