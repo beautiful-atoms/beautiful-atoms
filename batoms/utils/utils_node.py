@@ -1,4 +1,5 @@
 import bpy
+import numpy as np
 
 
 def get_node_by_name(nodes, name, type=None):
@@ -131,3 +132,55 @@ def get_cell_node(parent_tree, label):
         links.new(combined_matrix.outputs["Matrix"], GroupOutput.inputs["Matrix"])
 
     return node
+
+
+def get_projected_position(
+    node_tree: bpy.types.NodeTree,
+    position_socket: bpy.types.NodeSocket,
+    cell_obj: bpy.types.Object,
+    label: str,
+    scaled: bool = True,
+) -> bpy.types.Node:
+    """Get the projected position of the atom.
+    If scaled is True, the position is scaled by the cell.
+    If scaled is False, the scaled position is transformed to the cartesian position.
+    """
+    cell_node = get_cell_node(node_tree, label)
+    cell_node.inputs["Cell"].default_value = cell_obj
+    name = "%s_ProjectPoint_%s" % (label, "scaled" if scaled else "cartesian")
+    project_point = get_node_by_name(
+        node_tree.nodes,
+        name,
+        "FunctionNodeProjectPoint",
+    )
+    node_tree.links.new(position_socket, project_point.inputs[0])
+    key = "Invert" if scaled else "Matrix"
+    node_tree.links.new(cell_node.outputs[key], project_point.inputs[1])
+    return project_point
+
+
+def vectorDotMatrix(
+    node_tree: bpy.types.NodeTree,
+    vector_output: bpy.types.NodeSocket,
+    matrix: np.ndarray,
+    label: str,
+    name: str,
+) -> bpy.types.Node:
+    """Create a vector dot matrix operation."""
+    project_point = get_node_by_name(
+        node_tree.nodes,
+        "%s_ProjectPoint_%s" % (label, name),
+        "FunctionNodeProjectPoint",
+    )
+    combined_matrix = get_node_by_name(
+        node_tree.nodes,
+        "%s_CombineMatrix_%s" % (label, name),
+        "FunctionNodeCombineMatrix",
+    )
+    for i in range(3):
+        for j in range(3):
+            index = i * 4 + j
+            combined_matrix.inputs[index].default_value = matrix[i, j]
+    node_tree.links.new(vector_output, project_point.inputs[0])
+    node_tree.links.new(combined_matrix.outputs[0], project_point.inputs[1])
+    return project_point

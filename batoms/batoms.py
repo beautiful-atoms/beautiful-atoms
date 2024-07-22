@@ -279,7 +279,7 @@ class Batoms(BaseCollection, ObjectGN):
         self.build_atoms_node_group()
 
     def build_wrap_node_group(self):
-        from batoms.utils.utils_node import get_cell_node
+        from batoms.utils.utils_node import get_projected_position
 
         parent = self.gn_node_group
         default_interface = [
@@ -310,15 +310,9 @@ class Batoms(BaseCollection, ObjectGN):
 
         # ----------------------------------------------
         # get scaled position
-        cell_node = get_cell_node(node.node_tree, self.label)
-        cell_node.inputs["Cell"].default_value = self.cell.obj
-        project_point = get_node_by_name(
-            nodes,
-            "%s_ProjectPoint_%s" % (self.label, "scaled"),
-            "FunctionNodeProjectPoint",
+        project_point = get_projected_position(
+            node.node_tree, PositionBatoms.outputs[0], self.cell.obj, self.label
         )
-        links.new(PositionBatoms.outputs[0], project_point.inputs[0])
-        links.new(cell_node.outputs["Invert"], project_point.inputs[1])
         # ----------------------------------------------
         # wrap the position
         VectorWrap = get_node_by_name(
@@ -330,14 +324,15 @@ class Batoms(BaseCollection, ObjectGN):
         links.new(project_point.outputs[0], VectorWrap.inputs["Vector"])
         # ----------------------------------------------
         # get real position
-        project_point_2 = get_node_by_name(
-            nodes,
-            "%s_ProjectPoint_%s" % (self.label, ""),
-            "FunctionNodeProjectPoint",
+        project_point = get_projected_position(
+            node.node_tree,
+            VectorWrap.outputs[0],
+            self.cell.obj,
+            self.label,
+            scaled=False,
         )
-        links.new(VectorWrap.outputs[0], project_point_2.inputs[0])
-        links.new(cell_node.outputs["Matrix"], project_point_2.inputs[1])
-        links.new(project_point_2.outputs[0], SetPosition.inputs["Position"])
+        #
+        links.new(project_point.outputs[0], SetPosition.inputs["Position"])
         links.new(SetPosition.outputs[0], GroupOutput.inputs["Geometry"])
         self.wrap = self.pbc
 

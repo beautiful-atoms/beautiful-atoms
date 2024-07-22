@@ -152,7 +152,7 @@ class Boundary(ObjectGN):
 
     def build_geometry_node(self):
         """ """
-        from batoms.utils.utils_node import get_node_by_name, get_cell_node
+        from batoms.utils.utils_node import get_node_by_name, get_projected_position
 
         links = self.gn_node_group.links
         nodes = self.gn_node_group.nodes
@@ -189,17 +189,14 @@ class Boundary(ObjectGN):
         )
         OffsetAttribute.inputs["Name"].default_value = "boundary_offset"
         OffsetAttribute.data_type = "FLOAT_VECTOR"
-        # get arrays of cell
-        cell_node = get_cell_node(self.gn_node_group, self.label)
-        cell_node.inputs["Cell"].default_value = self.batoms.cell.obj
-        # offset multiply cell matrix to get real offset positions
-        project_point = get_node_by_name(
-            nodes,
-            "%s_ProjectPoint_%s" % (self.label, "offset"),
-            "FunctionNodeProjectPoint",
+        # get cartesian positions
+        project_point = get_projected_position(
+            self.gn_node_group,
+            OffsetAttribute.outputs[0],
+            self.batoms.cell.obj,
+            self.label,
+            scaled=False,
         )
-        links.new(OffsetAttribute.outputs[0], project_point.inputs[0])
-        links.new(cell_node.outputs["Matrix"], project_point.inputs[1])
         # we need one add operation to get the positions with offset
         VectorAdd = get_node_by_name(
             nodes, "%s_VectorAdd" % (self.label), "ShaderNodeVectorMath"

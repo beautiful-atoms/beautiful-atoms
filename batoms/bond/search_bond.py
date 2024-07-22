@@ -152,6 +152,8 @@ class SearchBond(ObjectGN):
 
     def build_geometry_node(self):
         """ """
+        from batoms.utils.utils_node import get_projected_position
+
         nodes = self.gn_node_group.nodes
         links = self.gn_node_group.links
         GroupInput = nodes[0]
@@ -194,8 +196,13 @@ class SearchBond(ObjectGN):
         TransferOffsets.data_type = "FLOAT_VECTOR"
         links.new(ObjectOffsets.outputs["Geometry"], TransferOffsets.inputs[0])
         links.new(PositionOffsets.outputs["Position"], TransferOffsets.inputs[1])
-        OffsetNode = self.vectorDotMatrix(
-            self.gn_node_group, TransferOffsets.outputs["Value"], self.batoms.cell, ""
+        # get cartesian positions
+        project_point = get_projected_position(
+            self.gn_node_group,
+            TransferOffsets.outputs["Value"],
+            self.batoms.cell.obj,
+            self.label,
+            scaled=False,
         )
         # we need one add operation to get the positions with offset
         VectorAdd = get_node_by_name(
@@ -203,7 +210,7 @@ class SearchBond(ObjectGN):
         )
         VectorAdd.operation = "ADD"
         links.new(TransferBatoms.outputs["Value"], VectorAdd.inputs[0])
-        links.new(OffsetNode.outputs[0], VectorAdd.inputs[1])
+        links.new(project_point.outputs[0], VectorAdd.inputs[1])
         # set positions
         SetPosition = get_node_by_name(
             nodes, "%s_SetPosition" % self.label, "GeometryNodeSetPosition"
