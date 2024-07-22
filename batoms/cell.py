@@ -72,7 +72,7 @@ class Bcell(ObjectGN):
 
     def build_geometry_node(self):
         """ """
-        from batoms.utils.butils import get_node_by_name
+        from batoms.utils.utils_node import get_node_by_name
 
         links = self.gn_node_group.links
         nodes = self.gn_node_group.nodes
@@ -211,7 +211,7 @@ class Bcell(ObjectGN):
 
     @width.setter
     def width(self, width):
-        from batoms.utils.butils import get_node_by_name
+        from batoms.utils.utils_node import get_node_by_name
 
         self.batoms.coll.batoms.cell.width = width
         Circle = get_node_by_name(
@@ -235,7 +235,7 @@ class Bcell(ObjectGN):
 
     @color.setter
     def color(self, color):
-        from batoms.utils.butils import get_node_by_name
+        from batoms.utils.utils_node import get_node_by_name
 
         if len(color) == 3:
             color = [color[0], color[1], color[2], 1]

@@ -152,7 +152,7 @@ class Boundary(ObjectGN):
 
     def build_geometry_node(self):
         """ """
-        from batoms.utils.butils import get_node_by_name
+        from batoms.utils.utils_node import get_node_by_name, get_cell_node
 
         links = self.gn_node_group.links
         nodes = self.gn_node_group.nodes
@@ -190,7 +190,7 @@ class Boundary(ObjectGN):
         OffsetAttribute.inputs["Name"].default_value = "boundary_offset"
         OffsetAttribute.data_type = "FLOAT_VECTOR"
         # get arrays of cell
-        cell_node = self.get_cell_node(self.gn_node_group)
+        cell_node = get_cell_node(self.gn_node_group, self.label)
         cell_node.inputs["Cell"].default_value = self.batoms.cell.obj
         dot_node = self.vector_dot_cell(self.gn_node_group)
         links.new(OffsetAttribute.outputs[0], dot_node.inputs["Vector"])
@@ -236,10 +236,7 @@ class Boundary(ObjectGN):
     def vector_dot_cell(self, parent_tree):
         """Dot product of a vector (1x3) and a cell (3x3).
         Note, the vector could be a vector field, (Nx3)"""
-        from batoms.utils.butils import (
-            get_node_by_name,
-            create_node_tree,
-        )
+        from batoms.utils.utils_node import get_node_by_name, create_node_tree
 
         default_interface = [
             ["Vector", "NodeSocketVector", "INPUT"],
@@ -292,53 +289,9 @@ class Boundary(ObjectGN):
         links.new(CombineXYZ.outputs["Vector"], GroupOutput.inputs["Vector"])
         return node
 
-    def get_cell_node(self, parent_tree):
-        """Get the position of the cell."""
-        from batoms.utils.butils import (
-            get_node_by_name,
-            create_node_tree,
-        )
-
-        default_interface = [
-            ["Cell", "NodeSocketObject", "INPUT"],
-            ["A1", "NodeSocketVector", "OUTPUT"],
-            ["A2", "NodeSocketVector", "OUTPUT"],
-            ["A3", "NodeSocketVector", "OUTPUT"],
-        ]
-        name = "Cell_Array_%s" % (self.label)
-        node = get_node_by_name(parent_tree.nodes, name=name, type="GeometryNodeGroup")
-        node_tree = create_node_tree(name=name, interface=default_interface)
-        node.node_tree = node_tree
-        nodes = node_tree.nodes
-        links = node_tree.links
-        GroupInput = nodes[0]
-        GroupOutput = nodes[1]
-        # link the input to parent node
-        # ------------------------------------------------------------------
-        CellObject = get_node_by_name(
-            nodes, f"{self.label}_CellObject", "GeometryNodeObjectInfo"
-        )
-        links.new(GroupInput.outputs["Cell"], CellObject.inputs["Object"])
-        Position = get_node_by_name(
-            nodes, "%s_Position" % (self.label), "GeometryNodeInputPosition"
-        )
-        for i in range(3):
-            PositionAtIndex = get_node_by_name(
-                nodes, f"{self.label}_PositionAtIndex_{i}", "GeometryNodeSampleIndex"
-            )
-            PositionAtIndex.data_type = "FLOAT_VECTOR"
-            PositionAtIndex.inputs["Index"].default_value = i + 1
-            links.new(CellObject.outputs["Geometry"], PositionAtIndex.inputs[0])
-            links.new(Position.outputs["Position"], PositionAtIndex.outputs["Value"])
-            links.new(
-                PositionAtIndex.outputs["Value"], GroupOutput.inputs["A%d" % (i + 1)]
-            )
-
-        return node
-
     def add_geometry_node(self, spname):
         """ """
-        from batoms.utils.butils import get_node_by_name
+        from batoms.utils.utils_node import get_node_by_name
 
         links = self.gn_node_group.links
         nodes = self.gn_node_group.nodes
@@ -431,7 +384,7 @@ class Boundary(ObjectGN):
         Args:
             spname (str): name of the species
         """
-        from batoms.utils.butils import get_node_by_name
+        from batoms.utils.utils_node import get_node_by_name
 
         # update  instancers
         ObjectInfo = get_node_by_name(
@@ -443,7 +396,7 @@ class Boundary(ObjectGN):
         logger.debug("update boundary instancer: {}".format(spname))
 
     def update_gn_cell(self):
-        from batoms.utils.butils import get_node_by_name
+        from batoms.utils.utils_node import get_node_by_name
 
         # update cell
         cell = self.batoms.cell.array

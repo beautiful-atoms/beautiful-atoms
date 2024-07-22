@@ -1,7 +1,8 @@
 import bpy
 import numpy as np
 from batoms.base.object import ObjectGN
-from batoms.utils.butils import object_mode, compareNodeType, get_node_by_name
+from batoms.utils.butils import object_mode, compareNodeType
+from batoms.utils.utils_node import get_node_by_name
 from batoms.utils import number2String, string2Number
 import logging
 
@@ -284,7 +285,7 @@ class SearchBond(ObjectGN):
         Args:
             spname (str): name of the species
         """
-        from batoms.utils.butils import get_node_by_name
+        from batoms.utils.utils_node import get_node_by_name
 
         # update  instancers
         ObjectInfo = get_node_by_name(

@@ -1,11 +1,11 @@
 import bpy
 import numpy as np
 from batoms.utils.butils import (
-    get_node_by_name,
     object_mode,
     set_look_at,
     update_object,
 )
+from batoms.utils.utils_node import get_node_by_name
 
 import bmesh
 import logging
