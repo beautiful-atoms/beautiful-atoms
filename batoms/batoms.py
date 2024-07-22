@@ -1081,7 +1081,6 @@ class Batoms(BaseCollection, ObjectGN):
         self.set_arrays(attributes)
         self.set_trajectory(trajectory_new)
         self.cell.repeat(m)
-        self.update_gn_cell()
         if self.volumetric_data is not None:
             self._volumetric_data *= m
         self.species.update_geometry_node()
@@ -1505,7 +1504,6 @@ class Batoms(BaseCollection, ObjectGN):
         """Use wrap node to wrap atoms."""
         wrap_node = self.gn_node_group.nodes[f"Wrap_{self.label}"]
         GroupInput = self.gn_node_group.nodes[0]
-        self.update_gn_cell()
         if isinstance(wrap, bool):
             wrap = [wrap] * 3
         self.coll.batoms.wrap = list(wrap)
@@ -1531,30 +1529,6 @@ class Batoms(BaseCollection, ObjectGN):
                 self.gn_node_group.links.new(wrap_node.outputs["Geometry"], socket)
         wrap_node.node_tree.update_tag()
         # TODO: support selection
-
-    def update_gn_cell(self):
-        # update cell
-        wrap_node = self.gn_node_group.nodes[f"Wrap_{self.label}"]
-        nodes = wrap_node.node_tree.nodes
-        cell = self.cell.array
-        if np.isclose(np.linalg.det(self.cell.array), 0):
-            cell = np.eye(3)
-        icell = np.linalg.inv(cell)
-        # set positions
-        for i in range(3):
-            tmp = get_node_by_name(
-                nodes, "%s_VectorDot%s_%s" % (self.label, i, ""), "ShaderNodeVectorMath"
-            )
-            tmp.operation = "DOT_PRODUCT"
-            tmp.inputs[1].default_value = cell[:, i]
-            # icell
-            tmp = get_node_by_name(
-                nodes,
-                "%s_VectorDot%s_%s" % (self.label, i, "scaled"),
-                "ShaderNodeVectorMath",
-            )
-            tmp.operation = "DOT_PRODUCT"
-            tmp.inputs[1].default_value = icell[:, i]
 
     def get_spacegroup_number(self, symprec=1e-5):
         """ """
@@ -1707,7 +1681,6 @@ class Batoms(BaseCollection, ObjectGN):
                 )
             elif len(boundary[0]) == 2:
                 boundary = np.array(boundary)
-        self.update_gn_cell()
         self.boundary[:] = boundary
 
     @property
