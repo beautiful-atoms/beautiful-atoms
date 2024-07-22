@@ -509,14 +509,18 @@ class BondSettings(Setting):
                             ] = mat
         return materials
 
-    def set_material(self, sp, node_inputs=None):
+    def set_material(self, sp, order=None, style=None, node_inputs=None):
         if isinstance(sp, tuple):
             sp = tuple2string(sp)
         if isinstance(sp, str):
             sp = self[sp].as_dict()
+        if order is None:
+            order = sp["order"]
+        if style is None:
+            style = sp["style"]
 
-        self.build_materials(sp, sp["order"], sp["style"], node_inputs)
-        self.assign_materials(sp, sp["order"], sp["style"])
+        self.build_materials(sp, order, style, node_inputs)
+        self.assign_materials(sp, order, style)
 
     @materials.setter
     def materials(self, node_inputs):
