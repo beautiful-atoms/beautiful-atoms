@@ -101,6 +101,31 @@ class Isosurface(BaseObject):
         )
         return mat
 
+    @property
+    def materials(self):
+        materials = {}
+        for key in self.settings.bpy_setting.keys():
+            name = f'{self.label}_isosurface_{key}'
+            if name in bpy.data.materials:
+                materials[key] = bpy.data.materials.get(name)
+        return materials
+
+    @materials.setter
+    def materials(self, node_inputs):
+        for key in self.settings.bpy_setting.keys():
+            name = f'{self.label}_isosurface_{key}'
+
+            # Remove the old material
+            obj = bpy.data.objects.get(name)
+            obj.data.materials.clear()
+
+            # Create the material
+            color = self.settings[key].color
+            mat = self.build_materials(name, color, node_inputs=node_inputs)
+
+            # Assign the material to the isosurface object
+            obj.data.materials.append(mat)
+
     def draw(self, isosurface_name="ALL"):
         """Draw isosurface."""
         from batoms.draw import draw_surface_from_vertices
