@@ -192,12 +192,14 @@ class Boundary(ObjectGN):
         # get arrays of cell
         cell_node = get_cell_node(self.gn_node_group, self.label)
         cell_node.inputs["Cell"].default_value = self.batoms.cell.obj
-        dot_node = self.vector_dot_cell(self.gn_node_group)
-        links.new(OffsetAttribute.outputs[0], dot_node.inputs["Vector"])
-        for i in range(3):
-            links.new(
-                cell_node.outputs["A%d" % (i + 1)], dot_node.inputs["Array%d" % (i + 1)]
-            )
+        # offset multiply cell matrix to get real offset positions
+        project_point = get_node_by_name(
+            nodes,
+            "%s_ProjectPoint_%s" % (self.label, "offset"),
+            "FunctionNodeProjectPoint",
+        )
+        links.new(OffsetAttribute.outputs[0], project_point.inputs[0])
+        links.new(cell_node.outputs["Matrix"], project_point.inputs[1])
         # we need one add operation to get the positions with offset
         VectorAdd = get_node_by_name(
             nodes, "%s_VectorAdd" % (self.label), "ShaderNodeVectorMath"
@@ -206,7 +208,7 @@ class Boundary(ObjectGN):
         # add positions with offsets
         VectorAdd.operation = "ADD"
         links.new(TransferBatoms.outputs["Value"], VectorAdd.inputs[0])
-        links.new(dot_node.outputs[0], VectorAdd.inputs[1])
+        links.new(project_point.outputs[0], VectorAdd.inputs[1])
         # set positions
         SetPosition = get_node_by_name(
             nodes, "%s_SetPosition" % self.label, "GeometryNodeSetPosition"
@@ -232,62 +234,6 @@ class Boundary(ObjectGN):
             links.new(ObjectBatoms.outputs["Geometry"], TransferScale.inputs[0])
             links.new(ScaleBatoms.outputs["Attribute"], TransferScale.inputs["Value"])
             links.new(GroupInput.outputs[1], TransferScale.inputs["Index"])
-
-    def vector_dot_cell(self, parent_tree):
-        """Dot product of a vector (1x3) and a cell (3x3).
-        Note, the vector could be a vector field, (Nx3)"""
-        from batoms.utils.utils_node import get_node_by_name, create_node_tree
-
-        default_interface = [
-            ["Vector", "NodeSocketVector", "INPUT"],
-            ["Array1", "NodeSocketVector", "INPUT"],
-            ["Array2", "NodeSocketVector", "INPUT"],
-            ["Array3", "NodeSocketVector", "INPUT"],
-            ["Vector", "NodeSocketVector", "OUTPUT"],
-        ]
-        name = "Vector_dot_cell_%s" % (self.label)
-        node = get_node_by_name(parent_tree.nodes, name=name, type="GeometryNodeGroup")
-        node_tree = create_node_tree(name=name, interface=default_interface)
-        node.node_tree = node_tree
-        nodes = node_tree.nodes
-        links = node_tree.links
-        GroupInput = nodes[0]
-        GroupOutput = nodes[1]
-        #
-        SeparateXYZs = []
-        CombineXYZs = []
-        DotProdcuts = []
-        for i in range(3):
-            # SeparateXYZ to get the transpose of the cell
-            SeparateXYZ = get_node_by_name(
-                nodes, f"{self.label}_SeparateXYZ_{i}", "ShaderNodeSeparateXYZ"
-            )
-            # Dot product of the vector and the array
-            DotProdcut = get_node_by_name(
-                nodes, f"{self.label}_DotProduct_{i}", "ShaderNodeVectorMath"
-            )
-            DotProdcut.operation = "DOT_PRODUCT"
-            # then combine the vectors, and output to the group output
-            CombineXYZ = get_node_by_name(
-                nodes, f"{self.label}_CombineXYZ_{i}", "ShaderNodeCombineXYZ"
-            )
-            links.new(GroupInput.outputs[f"Array{i + 1}"], SeparateXYZ.inputs["Vector"])
-            links.new(GroupInput.outputs["Vector"], DotProdcut.inputs[0])
-            links.new(CombineXYZ.outputs["Vector"], DotProdcut.inputs[1])
-            CombineXYZs.append(CombineXYZ)
-            SeparateXYZs.append(SeparateXYZ)
-            DotProdcuts.append(DotProdcut)
-        for i in range(3):
-            for j in range(3):
-                links.new(SeparateXYZs[i].outputs[j], CombineXYZs[j].inputs[i])
-        # output final vector
-        CombineXYZ = get_node_by_name(
-            nodes, f"{self.label}_CombineXYZ", "ShaderNodeCombineXYZ"
-        )
-        for i in range(3):
-            links.new(DotProdcuts[i].outputs["Value"], CombineXYZ.inputs[i])
-        links.new(CombineXYZ.outputs["Vector"], GroupOutput.inputs["Vector"])
-        return node
 
     def add_geometry_node(self, spname):
         """ """
