@@ -12,9 +12,9 @@ from batoms.bselect import Selects
 from batoms.base.collection import BaseCollection
 from batoms.base.object import ObjectGN
 from batoms.ribbon.ribbon import Ribbon
-from batoms.utils.butils import (
+from batoms.utils.butils import show_index
+from batoms.utils.utils_node import (
     get_node_with_node_tree_by_name,
-    show_index,
     get_node_by_name,
 )
 from batoms.utils import string2Number, read_from_others, deprecated
@@ -279,6 +279,8 @@ class Batoms(BaseCollection, ObjectGN):
         self.build_atoms_node_group()
 
     def build_wrap_node_group(self):
+        from batoms.utils.utils_node import get_projected_position
+
         parent = self.gn_node_group
         default_interface = [
             ["Geometry", "NodeSocketGeometry", "INPUT"],
@@ -305,25 +307,32 @@ class Batoms(BaseCollection, ObjectGN):
             nodes, "%s_SetPosition" % self.label, "GeometryNodeSetPosition"
         )
         links.new(GroupInput.outputs["Geometry"], SetPosition.inputs["Geometry"])
-        # TODO: use cell object directly.
-        cell = self.cell.array
-        if np.isclose(np.linalg.det(self.cell.array), 0):
-            cell = np.eye(3)
-        icell = np.linalg.inv(cell)
-        scaledPositionsNode = self.vectorDotMatrix(
-            node.node_tree, PositionBatoms.outputs[0], icell, "scaled"
+
+        # ----------------------------------------------
+        # get scaled position
+        project_point = get_projected_position(
+            node.node_tree, PositionBatoms.outputs[0], self.cell.obj, self.label
         )
+        # ----------------------------------------------
+        # wrap the position
         VectorWrap = get_node_by_name(
             nodes, "%s_VectorWrap" % (self.label), "ShaderNodeVectorMath"
         )
         VectorWrap.operation = "WRAP"
         VectorWrap.inputs[1].default_value = [1, 1, 1]
         VectorWrap.inputs[2].default_value = [0, 0, 0]
-        links.new(scaledPositionsNode.outputs[0], VectorWrap.inputs["Vector"])
-        PositionsNode = self.vectorDotMatrix(
-            node.node_tree, VectorWrap.outputs[0], cell, ""
+        links.new(project_point.outputs[0], VectorWrap.inputs["Vector"])
+        # ----------------------------------------------
+        # get real position
+        project_point = get_projected_position(
+            node.node_tree,
+            VectorWrap.outputs[0],
+            self.cell.obj,
+            self.label,
+            scaled=False,
         )
-        links.new(PositionsNode.outputs[0], SetPosition.inputs["Position"])
+        #
+        links.new(project_point.outputs[0], SetPosition.inputs["Position"])
         links.new(SetPosition.outputs[0], GroupOutput.inputs["Geometry"])
         self.wrap = self.pbc
 
@@ -367,7 +376,7 @@ class Batoms(BaseCollection, ObjectGN):
             instancer (bpy.data.object):
                 Object to be instanced
         """
-        from batoms.utils.butils import get_node_by_name
+        from batoms.utils.utils_node import get_node_by_name
 
         # Create Node Group if not exit
         nt = bpy.data.node_groups[f"Atoms_{self.label}"]
@@ -388,7 +397,7 @@ class Batoms(BaseCollection, ObjectGN):
 
     def create_geometry_node_for_species(self, spname):
         """Create geometry node for one species."""
-        from batoms.utils.butils import get_socket_by_identifier, create_node_tree
+        from batoms.utils.utils_node import get_socket_by_identifier, create_node_tree
 
         default_interface = [
             ["Geometry", "NodeSocketGeometry", "INPUT"],
@@ -1067,7 +1076,6 @@ class Batoms(BaseCollection, ObjectGN):
         self.set_arrays(attributes)
         self.set_trajectory(trajectory_new)
         self.cell.repeat(m)
-        self.update_gn_cell()
         if self.volumetric_data is not None:
             self._volumetric_data *= m
         self.species.update_geometry_node()
@@ -1491,7 +1499,6 @@ class Batoms(BaseCollection, ObjectGN):
         """Use wrap node to wrap atoms."""
         wrap_node = self.gn_node_group.nodes[f"Wrap_{self.label}"]
         GroupInput = self.gn_node_group.nodes[0]
-        self.update_gn_cell()
         if isinstance(wrap, bool):
             wrap = [wrap] * 3
         self.coll.batoms.wrap = list(wrap)
@@ -1517,30 +1524,6 @@ class Batoms(BaseCollection, ObjectGN):
                 self.gn_node_group.links.new(wrap_node.outputs["Geometry"], socket)
         wrap_node.node_tree.update_tag()
         # TODO: support selection
-
-    def update_gn_cell(self):
-        # update cell
-        wrap_node = self.gn_node_group.nodes[f"Wrap_{self.label}"]
-        nodes = wrap_node.node_tree.nodes
-        cell = self.cell.array
-        if np.isclose(np.linalg.det(self.cell.array), 0):
-            cell = np.eye(3)
-        icell = np.linalg.inv(cell)
-        # set positions
-        for i in range(3):
-            tmp = get_node_by_name(
-                nodes, "%s_VectorDot%s_%s" % (self.label, i, ""), "ShaderNodeVectorMath"
-            )
-            tmp.operation = "DOT_PRODUCT"
-            tmp.inputs[1].default_value = cell[:, i]
-            # icell
-            tmp = get_node_by_name(
-                nodes,
-                "%s_VectorDot%s_%s" % (self.label, i, "scaled"),
-                "ShaderNodeVectorMath",
-            )
-            tmp.operation = "DOT_PRODUCT"
-            tmp.inputs[1].default_value = icell[:, i]
 
     def get_spacegroup_number(self, symprec=1e-5):
         """ """
@@ -1693,7 +1676,6 @@ class Batoms(BaseCollection, ObjectGN):
                 )
             elif len(boundary[0]) == 2:
                 boundary = np.array(boundary)
-        self.update_gn_cell()
         self.boundary[:] = boundary
 
     @property

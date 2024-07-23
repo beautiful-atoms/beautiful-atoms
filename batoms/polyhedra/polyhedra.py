@@ -6,7 +6,8 @@ This module defines the polyhedras object in the Batoms package.
 
 import bpy
 from time import time
-from batoms.utils.butils import object_mode, compareNodeType, get_node_by_name
+from batoms.utils.butils import object_mode, compareNodeType
+from batoms.utils.utils_node import get_node_by_name
 from batoms.utils import string2Number
 import numpy as np
 from batoms.base.object import ObjectGN
@@ -180,7 +181,7 @@ class Polyhedra(ObjectGN):
         """
         Geometry node for everything!
         """
-        from batoms.utils.butils import get_node_by_name
+        from batoms.utils.utils_node import get_node_by_name
 
         tstart = time()
         links = self.gn_node_group.links
@@ -247,7 +248,7 @@ class Polyhedra(ObjectGN):
         logger.debug("Build geometry nodes for polyhedras: %s" % (time() - tstart))
 
     def add_geometry_node(self, sp):
-        from batoms.utils.butils import get_node_by_name
+        from batoms.utils.utils_node import get_node_by_name
 
         links = self.gn_node_group.links
         nodes = self.gn_node_group.nodes

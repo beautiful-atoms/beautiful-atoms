@@ -6,7 +6,8 @@ This module defines the Bond object in the Batoms package.
 
 import bpy
 from time import time
-from batoms.utils.butils import object_mode, get_node_by_name
+from batoms.utils.butils import object_mode
+from batoms.utils.utils_node import get_node_by_name
 from batoms.utils import string2Number, number2String
 import numpy as np
 from batoms.base.object import ObjectGN
@@ -92,7 +93,7 @@ class Bond(BaseCollection, ObjectGN):
     @property
     def bond_node(self):
         """Get the top level node of bond node group."""
-        from batoms.utils.butils import get_node_with_node_tree_by_name
+        from batoms.utils.utils_node import get_node_with_node_tree_by_name
 
         default_interface = [
             ["Geometry", "NodeSocketGeometry", "INPUT"],
@@ -107,7 +108,7 @@ class Bond(BaseCollection, ObjectGN):
     def get_bond_pair_node(self, name):
         """Get the node of bond pair node group.
         Create the node if not exist."""
-        from batoms.utils.butils import get_node_with_node_tree_by_name
+        from batoms.utils.utils_node import get_node_with_node_tree_by_name
 
         # create group input and output sockets
         default_interface = [
@@ -136,7 +137,7 @@ class Bond(BaseCollection, ObjectGN):
         len(v) < max_length
         v align euler
         """
-        from batoms.utils.butils import get_node_by_name
+        from batoms.utils.utils_node import get_node_by_name
 
         tstart = time()
         parent = self.gn_node_group
@@ -206,7 +207,7 @@ class Bond(BaseCollection, ObjectGN):
         2) Set the position of the points to the center of the bond.
         3) Calculate the bond vector and length.
         """
-        from batoms.utils.butils import (
+        from batoms.utils.utils_node import (
             get_node_by_name,
             create_node_tree,
         )
@@ -390,7 +391,7 @@ class Bond(BaseCollection, ObjectGN):
 
     def add_bond_pair_node(self, sp, order=None, style=None):
         """Add geometry node for the bond pair."""
-        from batoms.utils.butils import get_node_by_name, get_socket_by_identifier
+        from batoms.utils.utils_node import get_node_by_name, get_socket_by_identifier
 
         parent_tree = self.bond_node.node_tree
         # tstart = time()
