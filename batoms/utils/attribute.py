@@ -45,7 +45,10 @@ def get_mesh_attribute_bmesh(obj, key, index=None):
         domain.ensure_lookup_table()
         layer = get_bmesh_layer(domain, key, dtype)
         if index is not None:
-            return np.array([domain[index][layer]])
+            value = domain[index][layer]
+            if dtype == "STRING":
+                value = value.decode()
+            return np.array([value])
         # init attribute array
         attribute = np.zeros(n, dtype=type_blender_to_py(dtype, str="U20"))
         for i in range(n):
@@ -57,7 +60,10 @@ def get_mesh_attribute_bmesh(obj, key, index=None):
         domain.ensure_lookup_table()
         domain = get_bmesh_domain(bm, att)
         if index is not None:
-            return np.array([domain[index][layer]])
+            value = domain[index][layer]
+            if dtype == "STRING":
+                value = value.decode()
+            return np.array([value])
         n = len(domain)
         for i in range(n):
             attribute[i] = domain[i][layer]
@@ -95,7 +101,10 @@ def get_mesh_attribute(obj, key, index=None):
     dtype = att.data_type
     # get single attribute value
     if index is not None:
-        return np.array([att.data[index].value])
+        value = att.data[index].value
+        if dtype == "STRING":
+            value = value.decode()
+        return np.array([value])
     else:
         # get attribute length based on domain
         n = get_att_length(obj.data, att)

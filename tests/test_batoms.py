@@ -138,7 +138,7 @@ def test_replace(h2o):
     """replace"""
     h2o.replace([1], "C")
     assert len(h2o.species) == 3
-    assert h2o[1].species == "C"
+    assert h2o[1].species[0] == "C"
 
 
 def test_batoms_add(h2o):
@@ -292,6 +292,9 @@ def test_batoms_ops():
     assert len(au) == 1
 
 
+@pytest.mark.skipif(
+    not blender40, reason="In Blender>=4.0, export_scene.x3d is not working."
+)
 def test_export_mesh_x3d(c2h6so):
     from batoms.bio.bio import read
 
