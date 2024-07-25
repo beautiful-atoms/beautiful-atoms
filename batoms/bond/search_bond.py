@@ -16,6 +16,7 @@ default_attributes = [
     {"name": "select", "data_type": "INT"},
     {"name": "model_style", "data_type": "INT"},
     {"name": "scale", "data_type": "FLOAT"},
+    {"name": "offsets", "data_type": "FLOAT_VECTOR"},
 ]
 
 default_GroupInput = [
@@ -342,6 +343,7 @@ class SearchBond(ObjectGN):
                 "species_index": species_index,
                 "scale": arrays["scales"],
                 "show": arrays["shows"],
+                "offsets": arrays["offsets"],
             }
         )
         species = np.unique(arrays["species"])
@@ -476,8 +478,7 @@ class SearchBond(ObjectGN):
         species_indexs1 = arrays["species_index"][indices1]
         species1 = arrays["species"][indices1]
         offset_vectors1 = bondlists1[:, 1:4]
-        offsets1 = np.dot(offset_vectors1, cell)
-        positions1 = arrays["positions"][indices1] + offsets1
+        positions1 = arrays["positions"][indices1] + np.dot(offset_vectors1, cell)
         # ------------------------------------
         #
         bondlists2 = bondlists[indices2]
@@ -491,8 +492,7 @@ class SearchBond(ObjectGN):
         species_indexs2 = arrays["species_index"][indices2]
         species2 = arrays["species"][indices2]
         offset_vectors2 = bondlists2[:, 1:4]
-        offsets2 = np.dot(offset_vectors2, cell)
-        positions2 = arrays["positions"][indices2] + offsets2
+        positions2 = arrays["positions"][indices2] + np.dot(offset_vectors2, cell)
         #
         indices = np.append(indices1, indices2)
         species_indexs = np.append(species_indexs1, species_indexs2)
