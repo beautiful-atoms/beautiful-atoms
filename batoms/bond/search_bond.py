@@ -190,12 +190,16 @@ class SearchBond(ObjectGN):
         PositionOffsets = get_node_by_name(
             nodes, "%s_PositionOffsets" % (self.label), "GeometryNodeInputPosition"
         )
+        IndexOffsets = get_node_by_name(
+            nodes, "%s_IndexOffsets" % (self.label), "GeometryNodeInputIndex"
+        )
         TransferOffsets = get_node_by_name(
             nodes, "%s_TransferOffsets" % self.label, "GeometryNodeSampleIndex"
         )
         TransferOffsets.data_type = "FLOAT_VECTOR"
         links.new(ObjectOffsets.outputs["Geometry"], TransferOffsets.inputs[0])
         links.new(PositionOffsets.outputs["Position"], TransferOffsets.inputs[1])
+        links.new(IndexOffsets.outputs["Index"], TransferOffsets.inputs[2])
         # get cartesian positions
         project_point = get_projected_position(
             self.gn_node_group,
@@ -476,8 +480,7 @@ class SearchBond(ObjectGN):
         species_indexs1 = arrays["species_index"][indices1]
         species1 = arrays["species"][indices1]
         offset_vectors1 = bondlists1[:, 1:4]
-        offsets1 = np.dot(offset_vectors1, cell)
-        positions1 = arrays["positions"][indices1] + offsets1
+        positions1 = arrays["positions"][indices1] + np.dot(offset_vectors1, cell)
         # ------------------------------------
         #
         bondlists2 = bondlists[indices2]
@@ -491,8 +494,7 @@ class SearchBond(ObjectGN):
         species_indexs2 = arrays["species_index"][indices2]
         species2 = arrays["species"][indices2]
         offset_vectors2 = bondlists2[:, 1:4]
-        offsets2 = np.dot(offset_vectors2, cell)
-        positions2 = arrays["positions"][indices2] + offsets2
+        positions2 = arrays["positions"][indices2] + np.dot(offset_vectors2, cell)
         #
         indices = np.append(indices1, indices2)
         species_indexs = np.append(species_indexs1, species_indexs2)
