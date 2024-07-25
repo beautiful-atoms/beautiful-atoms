@@ -16,7 +16,6 @@ default_attributes = [
     {"name": "select", "data_type": "INT"},
     {"name": "model_style", "data_type": "INT"},
     {"name": "scale", "data_type": "FLOAT"},
-    {"name": "offsets", "data_type": "FLOAT_VECTOR"},
 ]
 
 default_GroupInput = [
@@ -191,12 +190,16 @@ class SearchBond(ObjectGN):
         PositionOffsets = get_node_by_name(
             nodes, "%s_PositionOffsets" % (self.label), "GeometryNodeInputPosition"
         )
+        IndexOffsets = get_node_by_name(
+            nodes, "%s_IndexOffsets" % (self.label), "GeometryNodeInputIndex"
+        )
         TransferOffsets = get_node_by_name(
             nodes, "%s_TransferOffsets" % self.label, "GeometryNodeSampleIndex"
         )
         TransferOffsets.data_type = "FLOAT_VECTOR"
         links.new(ObjectOffsets.outputs["Geometry"], TransferOffsets.inputs[0])
         links.new(PositionOffsets.outputs["Position"], TransferOffsets.inputs[1])
+        links.new(IndexOffsets.outputs["Index"], TransferOffsets.inputs[2])
         # get cartesian positions
         project_point = get_projected_position(
             self.gn_node_group,
@@ -343,7 +346,6 @@ class SearchBond(ObjectGN):
                 "species_index": species_index,
                 "scale": arrays["scales"],
                 "show": arrays["shows"],
-                "offsets": arrays["offsets"],
             }
         )
         species = np.unique(arrays["species"])
