@@ -3,6 +3,8 @@ This module defines abstract Operator classes.
 """
 
 from bpy.types import Operator
+# TODO: 4.2+ support
+from .. import __package__ as batoms
 from batoms import Batoms
 
 

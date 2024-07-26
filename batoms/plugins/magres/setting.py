@@ -6,6 +6,8 @@ Visualising tensors using ellipsoids.
 
 """
 import bpy
+# TODO: 4.2+ support
+from ... import __package__ as batoms
 from batoms.base.collection import Setting
 import logging
 

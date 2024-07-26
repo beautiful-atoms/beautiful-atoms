@@ -3,6 +3,8 @@
 import bpy
 import numpy as np
 from ase.cell import Cell
+# TODO: 4.2+ support
+from . import __package__ as batoms
 from batoms.utils.butils import object_mode
 from batoms.base.object import ObjectGN
 

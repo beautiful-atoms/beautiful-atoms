@@ -7,6 +7,8 @@ This module defines the Magres object in the Batoms package.
 import bpy
 from time import time
 import numpy as np
+# TODO: 4.2+ support
+from ... import __package__ as batoms
 from batoms.base.object import BaseObject
 from .setting import MagresSettings
 import logging

@@ -4,6 +4,8 @@
 
 import bpy
 from time import time
+# TODO: 4.2+ support
+from .. import __package__ as batoms
 from batoms.base.collection import Setting
 from batoms.base.object import BaseObject
 import logging

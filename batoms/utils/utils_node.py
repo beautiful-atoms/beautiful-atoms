@@ -1,5 +1,7 @@
 import bpy
 import numpy as np
+# TODO: 4.2+ support
+from .. import __package__ as batoms
 
 
 def get_node_by_name(nodes, name, type=None):

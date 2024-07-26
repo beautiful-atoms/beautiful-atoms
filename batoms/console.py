@@ -1,6 +1,8 @@
 import bpy
 import console_python
 import logging
+# TODO: 4.2+ support
+from . import __package__ as batoms
 
 logger = logging.getLogger(__name__)
 

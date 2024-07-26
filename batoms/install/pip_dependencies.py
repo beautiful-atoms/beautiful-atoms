@@ -8,6 +8,8 @@ from bpy.props import (
 )
 import logging
 
+# TODO: maybe obsolete now
+
 logger = logging.getLogger(__name__)
 
 dependencies = {

@@ -4,6 +4,8 @@ Camera setting
 """
 import bpy
 from mathutils import Vector
+# TODO: 4.2+ support
+from .. import __package__ as batoms
 from batoms.base.object import BaseObject
 import logging
 

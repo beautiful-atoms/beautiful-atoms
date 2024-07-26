@@ -1,6 +1,8 @@
 """
 """
 import bpy
+# TODO: 4.2+ support
+from .. import __package__ as batoms
 from batoms.base.collection import Setting, tuple2string
 from batoms.data import default_polyhedras
 

@@ -20,6 +20,8 @@ from batoms.utils.butils import (
     get_selected_vertices,
     object_mode,
 )
+# TODO: 4.2+ support
+from ... import __package__ as batoms
 from batoms import Batoms
 from .modal_rigid_body import mouse2positions
 from bpy.props import (

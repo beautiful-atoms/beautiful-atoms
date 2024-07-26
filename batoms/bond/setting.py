@@ -2,6 +2,8 @@
 """
 import bpy
 import numpy as np
+# TODO: 4.2+ support
+from .. import __package__ as batoms
 from batoms.utils import string2Number
 from batoms.base.collection import Setting, tuple2string
 

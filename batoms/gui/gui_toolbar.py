@@ -3,10 +3,12 @@ Adds an object mode tool to the toolbar.
 # TODO Not working in  background mode,
 fialed to register the keymaps.
 """
-
+# TODO: 4.2+ support
+from .. import __package__ as batoms
 from bpy.types import WorkSpaceTool
 
-
+# TODO: make sure reference to GUI id name is correct
+# Maybe using __package__
 class BatomsCell(WorkSpaceTool):
     bl_space_type = "VIEW_3D"
     bl_context_mode = "OBJECT"  # "OBJECT" or "EDIT_MESH"

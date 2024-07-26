@@ -6,6 +6,8 @@ This module defines the plugin object in the Batoms package.
 
 import bpy
 from time import time
+# TODO: 4.2+ support
+from ... import __package__ as batoms
 from batoms.plugins.base import PluginObject
 from .setting import TemplateSettings
 import logging

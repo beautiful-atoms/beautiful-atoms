@@ -5,6 +5,9 @@
 # TODO: add feature: cavity
 """
 import bpy
+# TODO: 4.2+ support
+from . import __package__ as batoms
+# TODO: check rel import works
 from batoms.bspecies import Bspecies
 from batoms.volumetric_data import VolumetricData
 from batoms.cell import Bcell

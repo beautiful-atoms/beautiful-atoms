@@ -6,6 +6,8 @@ from bpy.props import (
     FloatProperty,
     BoolProperty,
 )
+# TODO: 4.2+ support
+from .. import __package__ as batoms
 from batoms.utils.butils import get_selected_vertices
 from batoms.utils.attribute import get_mesh_attribute_bmesh, set_mesh_attribute_bmesh
 

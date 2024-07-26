@@ -9,6 +9,8 @@ from bpy.props import (
     FloatProperty,
     FloatVectorProperty,
 )
+# TODO: 4.2+ support
+from .. import __package__ as batoms
 from batoms.utils.butils import get_selected_batoms, get_selected_objects
 from batoms.batoms import Batoms
 

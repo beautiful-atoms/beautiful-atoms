@@ -5,6 +5,8 @@ Molecular surface:
 3) Solvent-excluded surface (SES) or Connolly surface
 """
 import bpy
+# TODO: 4.2+ support
+from ... import __package__ as batoms
 from batoms.base.collection import Setting
 import logging
 

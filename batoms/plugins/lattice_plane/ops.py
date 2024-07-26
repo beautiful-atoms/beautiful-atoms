@@ -1,5 +1,7 @@
 import bmesh
 from bpy.props import BoolProperty, FloatProperty, IntVectorProperty, StringProperty
+# TODO: 4.2+ support
+from ... import __package__ as batoms
 from batoms import Batoms
 from batoms.ops.base import OperatorBatoms
 

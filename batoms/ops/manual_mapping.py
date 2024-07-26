@@ -1,4 +1,5 @@
 # This allows you to right click on a button and link to documentation
+# TODO: make sure id to gui components are correct
 def batoms_manual_map():
     url_manual_prefix = "https://wiki.fysik.dtu.dk/ase/ase/"
     url_manual_mapping = (

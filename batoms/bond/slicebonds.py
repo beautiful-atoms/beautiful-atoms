@@ -1,4 +1,6 @@
 import numpy as np
+# TODO: 4.2+ support
+from .. import __package__ as batoms
 from batoms.utils import number2String
 from batoms.base.object import childObjectGN
 import logging

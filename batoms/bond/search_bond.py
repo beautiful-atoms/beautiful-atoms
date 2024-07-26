@@ -1,5 +1,7 @@
 import bpy
 import numpy as np
+# TODO: 4.2+ support
+from .. import __package__ as batoms
 from batoms.base.object import ObjectGN
 from batoms.utils.butils import object_mode, compareNodeType
 from batoms.utils.utils_node import get_node_by_name

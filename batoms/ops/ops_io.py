@@ -6,6 +6,8 @@ from bpy.props import (
     StringProperty,
     EnumProperty,
 )
+# TODO: 4.2+ support
+from .. import __package__ as batoms
 from batoms.batoms import Batoms
 from batoms.bio.bio import read
 

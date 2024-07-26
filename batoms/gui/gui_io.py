@@ -3,6 +3,8 @@
 import bpy
 from bpy.types import Panel, Operator
 from bpy.props import StringProperty
+# TODO: 4.2+ support
+from .. import __package__ as batoms
 
 
 class BatomsPropertiesIO(bpy.types.PropertyGroup):

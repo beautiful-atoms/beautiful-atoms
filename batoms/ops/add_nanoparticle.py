@@ -11,6 +11,8 @@ from bpy.props import (
     BoolProperty,
 )
 from ase.cluster import Decahedron, Icosahedron, Octahedron
+# TODO: 4.2+ support
+from .. import __package__ as batoms
 from batoms import Batoms
 
 

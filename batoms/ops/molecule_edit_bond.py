@@ -5,6 +5,8 @@ from bpy.props import (
     BoolProperty,
 )
 import bmesh
+# TODO: 4.2+ support
+from .. import __package__ as batoms
 from batoms import Batoms
 import numpy as np
 import logging

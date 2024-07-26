@@ -1,6 +1,8 @@
 import bmesh
 from bpy.types import Operator
 from bpy.props import BoolProperty, FloatProperty, StringProperty
+# TODO: 4.2+ support
+from ... import __package__ as batoms
 from batoms import Batoms
 from batoms.ops.base import OperatorBatoms
 

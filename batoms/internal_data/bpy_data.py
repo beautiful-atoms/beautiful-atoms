@@ -1,3 +1,4 @@
+# TODO: make sure batoms are correctly passed
 import bpy
 from bpy.props import (
     StringProperty,

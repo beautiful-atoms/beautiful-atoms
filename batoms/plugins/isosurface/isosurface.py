@@ -6,6 +6,8 @@ This module defines the isosurface object in the Batoms package.
 
 import bpy
 import numpy as np
+# TODO: 4.2+ support
+from ... import __package__ as batoms
 from batoms.base.object import BaseObject
 from .setting import IsosurfaceSettings
 import logging

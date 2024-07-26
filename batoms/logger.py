@@ -8,6 +8,7 @@ from pathlib import Path
 import logging
 import os
 
+# TODO: the batoms_dir is probably obsolete
 batoms_dir = os.path.dirname(Path(__file__).parent)
 
 
@@ -32,7 +33,7 @@ def set_logger(version):
     root_logger.info("Beautiful Atoms version: {} ".format(version))
     root_logger.info("Beautiful Atoms directory: {} ".format(batoms_dir))
 
-
+# TODO: do we really have batoms in the addons?
 def update_logging_level():
     if "batoms" not in bpy.context.preferences.addons:
         return

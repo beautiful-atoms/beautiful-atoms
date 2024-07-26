@@ -4,6 +4,8 @@ from bpy.props import (
     FloatProperty,
     EnumProperty,
 )
+# TODO: 4.2+ support
+from .. import __package__ as batoms
 from batoms.render.render import Render
 from batoms.gui.utils import get_attr, set_attr
 

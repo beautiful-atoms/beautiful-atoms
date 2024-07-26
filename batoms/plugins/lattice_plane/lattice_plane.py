@@ -7,6 +7,8 @@ This module defines the plane object in the Batoms package.
 import bpy
 import bmesh
 import numpy as np
+# TODO: 4.2+ support
+from ... import __package__ as batoms
 from batoms.plugins.base import PluginObject
 from .setting import LatticePlaneSettings
 from batoms.draw import draw_cylinder, draw_surface_from_vertices

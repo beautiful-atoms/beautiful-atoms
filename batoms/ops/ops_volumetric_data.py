@@ -1,6 +1,8 @@
 import bpy
 from bpy_extras.io_utils import ImportHelper
 from bpy.props import BoolProperty, StringProperty, EnumProperty
+# TODO: 4.2+ support
+from .. import __package__ as batoms
 from batoms import Batoms
 from batoms.ops.base import OperatorBatoms
 from batoms.internal_data.bpy_data import get_volumetric_data

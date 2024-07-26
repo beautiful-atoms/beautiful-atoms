@@ -1,6 +1,8 @@
 import os
 from ase import io
 from ase.io.cube import read_cube_data
+# TODO: 4.2+ support
+from .. import __package__ as batoms
 from batoms import Batoms
 
 # from time import time

@@ -3,6 +3,8 @@
 import bpy
 from bpy_extras import view3d_utils
 import bmesh
+# TODO: 4.2+ support
+from .. import __package__ as batoms
 from batoms import Batoms
 import blf
 import gpu

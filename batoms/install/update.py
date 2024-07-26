@@ -2,6 +2,8 @@
 update batoms
 """
 
+# TODO: obsolete. Refer to the update method in extensions
+
 import bpy
 import subprocess
 import os

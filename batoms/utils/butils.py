@@ -3,6 +3,8 @@ import bpy
 from mathutils import Vector, Matrix
 import numpy as np
 import logging
+# TODO: 4.2+ support
+from .. import __package__ as batoms
 
 # logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)

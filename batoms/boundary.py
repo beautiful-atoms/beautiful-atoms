@@ -8,6 +8,8 @@ from time import time
 import bpy
 import numpy as np
 from ase.geometry import complete_cell
+# TODO: 4.2+ support
+from . import __package__ as batoms
 from batoms.base.object import ObjectGN
 from batoms.utils import number2String, string2Number
 from batoms.utils.butils import compareNodeType

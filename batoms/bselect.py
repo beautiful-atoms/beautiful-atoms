@@ -4,6 +4,8 @@
 #TODO merge select and SliceBatoms
 """
 import bpy
+# TODO: 4.2+ support
+from . import __package__ as batoms
 from batoms.base.collection import Setting
 import numpy as np
 from batoms.utils import string2Number

@@ -2,6 +2,8 @@
 module for materials
 """
 import bpy
+# TODO: 4.2+ support
+from .. import __package__ as batoms
 
 material_styles_dict = {
     "default": {

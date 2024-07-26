@@ -1,3 +1,5 @@
+# TODO: 4.2+ support
+from .. import __package__ as batoms
 from batoms.draw import bond_source
 
 source = bond_source(8)

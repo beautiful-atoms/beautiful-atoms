@@ -6,6 +6,8 @@ This module defines the highlight object in the Batoms package.
 
 import bpy
 import numpy as np
+# TODO: 4.2+ support
+from ... import __package__ as batoms
 from batoms.base.object import ObjectGN
 from batoms.plugins.base import PluginObject
 from .setting import HighlightSettings

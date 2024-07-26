@@ -13,6 +13,9 @@ from bpy.props import (
     StringProperty,
     EnumProperty,
 )
+# TODO: 4.2+ support
+from . import __package__ as batoms
+# TODO: make sure install is still needed?
 from batoms.install.pip_dependencies import has_module
 from batoms.install import update
 from batoms.logger import update_logging_level

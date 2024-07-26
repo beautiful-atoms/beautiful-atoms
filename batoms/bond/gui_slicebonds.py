@@ -6,7 +6,8 @@ from bpy.props import (
     FloatProperty,
     EnumProperty,
 )
-
+# TODO: 4.2+ support
+from .. import __package__ as batoms
 from batoms.utils.butils import get_selected_edges
 from batoms.batoms import Batoms
 from batoms.gui.utils import get_enum_attr

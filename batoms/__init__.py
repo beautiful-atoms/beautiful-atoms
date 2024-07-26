@@ -1,22 +1,27 @@
-bl_info = {
-    "name": "Batoms toolbar",
-    "author": "Xing Wang",
-    "version": (2, 2, 0),
-    "blender": (3, 0, 0),
-    "location": "File -> Import -> Batoms (xyz, cif, pdb, ...)",
-    "description": """Python module for drawing and
-rendering atomic structures using blender.""",
-    "warning": "",
-    "category": "Import-Export",
-    "doc_url": "https://beautiful-atoms.readthedocs.io/en/latest/",
-    "tracker_url": "https://github.com/beautiful-atoms/beautiful-atoms/issues/new/choose",
-}
+# TODO: remove bl_info
+# bl_info = {
+#     "name": "Batoms toolbar",
+#     "author": "Xing Wang",
+#     "version": (2, 2, 0),
+#     "blender": (3, 0, 0),
+#     "location": "File -> Import -> Batoms (xyz, cif, pdb, ...)",
+#     "description": """Python module for drawing and
+# rendering atomic structures using blender.""",
+#     "warning": "",
+#     "category": "Import-Export",
+#     "doc_url": "https://beautiful-atoms.readthedocs.io/en/latest/",
+#     "tracker_url": "https://github.com/beautiful-atoms/beautiful-atoms/issues/new/choose",
+# }
 
 
+# TODO: install should not be used
 # install pip dependencies
-from .install import pip_dependencies  # noqa: E402
+# from .install import pip_dependencies  # noqa: E402
 
-pip_dependencies.install()
+# pip_dependencies.install()
+
+# TODO: we probably need this line for 4.2 afterwards
+from . import __package__ as batoms
 
 from batoms.batoms import Batoms  # noqa: E402
 
@@ -34,7 +39,7 @@ from . import (  # noqa: E402
     console,
 )
 
-logger.set_logger(bl_info["version"])
+# logger.set_logger(bl_info["version"])
 
 modules = ["bond", "polyhedra", "render", "ribbon"]
 
@@ -43,6 +48,7 @@ def enable_module():
     import importlib
 
     for key in modules:
+        # TODO: should we use batoms or something else?
         module = importlib.import_module("batoms.{}".format(key))
         module.register_class()
 
@@ -83,7 +89,7 @@ def register():
     logger.root_logger.info("Batoms init time: {:.2f}".format(time() - tstart0))
     logger.update_logging_level()
 
-
+# TODO: make sure unregister provides way to uninstall
 def unregister():
     # dependencies
     pip_dependencies.unregister_class()
@@ -104,6 +110,6 @@ def unregister():
     plugins.disable_plugin()
     preferences.unregister_class()
 
-
+# TODO: probably not needed
 if __name__ == "__main__":
     register()

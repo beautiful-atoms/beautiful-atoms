@@ -1,7 +1,7 @@
 import bpy
 import importlib
 
-
+# TODO: Make sure we do not use this type of plugin system?
 """
 import pathlib
 import os

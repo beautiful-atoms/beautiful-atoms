@@ -1,4 +1,6 @@
 import bpy
+# TODO: 4.2+ support
+from .. import __package__ as batoms
 from batoms.material import create_material
 import numpy as np
 import logging

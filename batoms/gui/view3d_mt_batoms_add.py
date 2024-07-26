@@ -3,6 +3,8 @@ please look at other menu classes in \\scripts\\startup\\bl_ui
 i.e. space_view3d.py
 """
 from bpy.types import Menu
+# TODO: 4.2+ support
+from .. import __package__ as batoms
 
 
 def menu_func(self, context):

@@ -6,6 +6,8 @@ This module defines the Bond object in the Batoms package.
 
 import bpy
 from time import time
+# TODO: 4.2+ support
+from .. import __package__ as batoms
 from batoms.utils.butils import object_mode
 from batoms.utils.utils_node import get_node_by_name
 from batoms.utils import string2Number, number2String
