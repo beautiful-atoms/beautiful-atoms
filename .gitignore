@@ -163,3 +163,7 @@ blender-*.tar.xz
 blender-*/
 *~
 **/beautiful-atoms/
+/*.zip
+/export/
+/build/
+wheel*/
