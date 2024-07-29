@@ -269,12 +269,15 @@ class Batoms(BaseCollection, ObjectGN):
             "%s_SeparateGeometry" % self.label,
             "GeometryNodeSeparateGeometry",
         )
-        links.new(GroupInput.outputs["Geometry"], SeparateGeometry.inputs["Geometry"])
         links.new(GroupInput.outputs["select"], SeparateGeometry.inputs["Selection"])
         links.new(SeparateGeometry.outputs[0], JoinGeometry.inputs["Geometry"])
         links.new(JoinGeometry.outputs["Geometry"], GroupOutput.inputs["Geometry"])
         # then create the nodes for the Wrap level
         self.build_wrap_node_group()
+        # then create the nodes for the trajectory level
+        node = self.build_trajectory_node_group()
+        links.new(GroupInput.outputs["Geometry"], node.inputs["Geometry"])
+        links.new(node.outputs["Geometry"], SeparateGeometry.inputs["Geometry"])
         # then create the nodes for the atoms level
         self.build_atoms_node_group()
 
@@ -336,6 +339,63 @@ class Batoms(BaseCollection, ObjectGN):
         links.new(SetPosition.outputs[0], GroupOutput.inputs["Geometry"])
         self.wrap = self.pbc
 
+    def build_trajectory_node_group(self):
+        parent = self.gn_node_group
+        default_interface = [
+            ["Geometry", "NodeSocketGeometry", "INPUT"],
+            ["Geometry", "NodeSocketGeometry", "OUTPUT"],
+        ]
+        name = f"Trajectory_{self.label}"
+        node = get_node_with_node_tree_by_name(
+            parent.nodes, name=name, interface=default_interface
+        )
+        nodes = node.node_tree.nodes
+        links = node.node_tree.links
+        GroupInput = nodes[0]
+        GroupOutput = nodes[1]
+        # link the input to parent node
+        parent.links.new(
+            parent.nodes["Group Input"].outputs["Geometry"], node.inputs["Geometry"]
+        )
+        # -------------------------------------------------------------
+        # set positions
+        SceneTime = get_node_by_name(
+            nodes, "%s_SceneTime" % (self.label), "GeometryNodeInputSceneTime"
+        )
+        ValueToString = get_node_by_name(
+            nodes, "%s_ValueToString" % (self.label), "FunctionNodeValueToString"
+        )
+        InputString = get_node_by_name(
+            nodes, "%s_InputString" % (self.label), "FunctionNodeInputString"
+        )
+        InputString.string = "trajectory_"
+        StringJoin = get_node_by_name(
+            nodes, "%s_StringJoin" % (self.label), "GeometryNodeStringJoin"
+        )
+        links.new(SceneTime.outputs["Frame"], ValueToString.inputs["Value"])
+        links.new(ValueToString.outputs[0], StringJoin.inputs[1])
+        links.new(InputString.outputs[0], StringJoin.inputs[1])
+
+        SetPosition = get_node_by_name(
+            nodes, "%s_SetPosition" % self.label, "GeometryNodeSetPosition"
+        )
+        links.new(GroupInput.outputs["Geometry"], SetPosition.inputs["Geometry"])
+
+        # ----------------------------------------------
+        TrajectoryAttribute = get_node_by_name(
+            nodes,
+            "%s_Attribute_trajectory" % (self.label),
+            "GeometryNodeInputNamedAttribute",
+        )
+        TrajectoryAttribute.inputs["Name"].default_value = "trajectory_0"
+        TrajectoryAttribute.data_type = "FLOAT_VECTOR"
+        # ----------------------------------------------
+        links.new(StringJoin.outputs[0], TrajectoryAttribute.inputs["Name"])
+        links.new(TrajectoryAttribute.outputs[0], SetPosition.inputs["Position"])
+        links.new(SetPosition.outputs[0], GroupOutput.inputs["Geometry"])
+        self.trajectory_node_group = node
+        return node
+
     def build_atoms_node_group(self):
         """Create node group for atoms"""
         # then create the nodes for the atoms level
@@ -357,7 +417,7 @@ class Batoms(BaseCollection, ObjectGN):
         GroupOutput = nodes[1]
         # link the input to parent node
         parent.links.new(
-            parent.nodes["Group Input"].outputs["Geometry"], node.inputs["Geometry"]
+            self.trajectory_node_group.outputs["Geometry"], node.inputs["Geometry"]
         )
         # link the outputs to parent node
         parent.links.new(node.outputs["Geometry"], JoinGeometry.inputs["Geometry"])
@@ -574,9 +634,15 @@ class Batoms(BaseCollection, ObjectGN):
         nframe = len(trajectory["positions"])
         if nframe == 0:
             return
-        name = self.label
-        obj = self.obj
-        self.set_shape_key(name, obj, trajectory["positions"], frame_start=frame_start)
+        # add attributes
+        for i in range(nframe):
+            name = f"trajectory_{i}"
+            att = {"name": name, "data_type": "FLOAT_VECTOR"}
+            self.add_attribute(**att)
+            self.set_attributes({name: trajectory["positions"][i]})
+        # name = self.label
+        # obj = self.obj
+        # self.set_shape_key(name, obj, trajectory["positions"], frame_start=frame_start)
 
     def set_arrays(self, arrays):
         """ """
