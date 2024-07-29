@@ -640,9 +640,6 @@ class Batoms(BaseCollection, ObjectGN):
             att = {"name": name, "data_type": "FLOAT_VECTOR"}
             self.add_attribute(**att)
             self.set_attributes({name: trajectory["positions"][i]})
-        # name = self.label
-        # obj = self.obj
-        # self.set_shape_key(name, obj, trajectory["positions"], frame_start=frame_start)
 
     def set_arrays(self, arrays):
         """ """

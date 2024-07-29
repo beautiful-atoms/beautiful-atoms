@@ -16,6 +16,7 @@ default_attributes = [
     {"name": "select", "data_type": "INT"},
     {"name": "model_style", "data_type": "INT"},
     {"name": "scale", "data_type": "FLOAT"},
+    {"name": "offsets", "data_type": "FLOAT_VECTOR"},
 ]
 
 default_GroupInput = [
@@ -110,6 +111,7 @@ class SearchBond(ObjectGN):
                 "model_style": datas["model_styles"],
                 "select": datas["selects"],
                 "scale": datas["scales"],
+                "offsets": offsets,
             }
         )
         name = "%s_search_bond" % self.label
@@ -127,20 +129,10 @@ class SearchBond(ObjectGN):
         obj.Bbond.label = self.batoms.label
         obj.parent = self.batoms.obj
         #
-        name = "%s_search_bond_offset" % self.label
-        self.delete_obj(name)
-        mesh = bpy.data.meshes.new(name)
-        mesh.from_pydata(offsets, [], [])
-        mesh.update()
-        obj = bpy.data.objects.new(name, mesh)
-        self.batoms.coll.objects.link(obj)
-        obj.hide_set(True)
-        obj.parent = self.obj
-        bpy.context.view_layer.update()
         self.set_attributes(attributes)
         self.init_geometry_node_modifier(default_GroupInput)
         self.build_geometry_node()
-        self.set_trajectory(self.trajectory)
+        # self.set_trajectory(self.trajectory)
         # print('boundary: build_object: {0:10.2f} s'.format(time() - tstart))
 
     def update(self, bondlist, mollists, moldatas, arrays, cell):
@@ -182,28 +174,17 @@ class SearchBond(ObjectGN):
         links.new(GroupInput.outputs[1], TransferBatoms.inputs["Index"])
         # ------------------------------------------------------------------
         # add positions with offsets
-        # transfer offsets from object self.obj_o
-        ObjectOffsets = get_node_by_name(
-            nodes, "%s_ObjectOffsets" % (self.label), "GeometryNodeObjectInfo"
+        OffsetsAttribute = get_node_by_name(
+            nodes,
+            "%s_NamedAttribute_search_bond_offsets" % (self.label),
+            "GeometryNodeInputNamedAttribute",
         )
-        ObjectOffsets.inputs["Object"].default_value = self.obj_o
-        PositionOffsets = get_node_by_name(
-            nodes, "%s_PositionOffsets" % (self.label), "GeometryNodeInputPosition"
-        )
-        IndexOffsets = get_node_by_name(
-            nodes, "%s_IndexOffsets" % (self.label), "GeometryNodeInputIndex"
-        )
-        TransferOffsets = get_node_by_name(
-            nodes, "%s_TransferOffsets" % self.label, "GeometryNodeSampleIndex"
-        )
-        TransferOffsets.data_type = "FLOAT_VECTOR"
-        links.new(ObjectOffsets.outputs["Geometry"], TransferOffsets.inputs[0])
-        links.new(PositionOffsets.outputs["Position"], TransferOffsets.inputs[1])
-        links.new(IndexOffsets.outputs["Index"], TransferOffsets.inputs[2])
+        OffsetsAttribute.inputs["Name"].default_value = "offsets"
+        OffsetsAttribute.data_type = "FLOAT_VECTOR"
         # get cartesian positions
         project_point = get_projected_position(
             self.gn_node_group,
-            TransferOffsets.outputs["Value"],
+            OffsetsAttribute.outputs[0],
             self.batoms.cell.obj,
             self.label,
             scaled=False,
@@ -307,17 +288,6 @@ class SearchBond(ObjectGN):
         ObjectInfo.inputs["Object"].default_value = instancer
         logger.debug("update boundary instancer: {}".format(spname))
 
-    @property
-    def obj_o(self):
-        return self.get_obj_o()
-
-    def get_obj_o(self):
-        name = "%s_search_bond_offset" % self.label
-        obj_o = bpy.data.objects.get(name)
-        if obj_o is None:
-            raise KeyError("%s object is not exist." % name)
-        return obj_o
-
     def get_search_bond(self):
         boundary = np.array(self.batoms.obj.batoms.boundary)
         return boundary.reshape(3, -1)
@@ -329,16 +299,14 @@ class SearchBond(ObjectGN):
         dnvert = len(arrays["species_index"]) - len(attributes["species_index"])
         if dnvert > 0:
             self.add_vertices_bmesh(dnvert)
-            self.add_vertices_bmesh(dnvert, self.obj_o)
         elif dnvert < 0:
             self.delete_vertices_bmesh(range(-dnvert))
-            self.delete_vertices_bmesh(range(-dnvert), self.obj_o)
         if len(self) == 0:
             self.update_mesh()
             return
         self.positions = arrays["positions"][0]
-        self.offsets = arrays["offsets"][0]
-        self.set_trajectory(arrays)
+        # self.offsets = arrays["offsets"][0]
+        # self.set_trajectory(arrays)
         species_index = [string2Number(sp) for sp in arrays["species"]]
         self.set_attributes(
             {
@@ -346,6 +314,7 @@ class SearchBond(ObjectGN):
                 "species_index": species_index,
                 "scale": arrays["scales"],
                 "show": arrays["shows"],
+                "offsets": arrays["offsets"][0],
             }
         )
         species = np.unique(arrays["species"])
@@ -396,41 +365,6 @@ class SearchBond(ObjectGN):
         return search_bond_data
 
     @property
-    def offsets(self):
-        return self.get_offsets()
-
-    def get_offsets(self):
-        """
-        using foreach_get and foreach_set to improve performance.
-        """
-        n = len(self)
-        offsets = np.empty(n * 3, dtype=int)
-        self.obj_o.data.vertices.foreach_get("co", offsets)
-        return offsets.reshape((n, 3))
-
-    @offsets.setter
-    def offsets(self, offsets):
-        self.set_offsets(offsets)
-
-    def set_offsets(self, offsets):
-        """
-        Set global offsets to local vertices
-        """
-        object_mode()
-        n = len(self.obj_o.data.vertices)
-        if len(offsets) != n:
-            raise ValueError("offsets has wrong shape %s != %s." % (len(offsets), n))
-        if n == 0:
-            return
-        offsets = offsets.reshape((n * 3, 1))
-        if self.obj_o.data.shape_keys is None and len(self) > 0:
-            base_name = "Basis_%s" % self.obj_o.name
-            self.obj_o.shape_key_add(name=base_name)
-        self.obj_o.data.shape_keys.key_blocks[0].data.foreach_set("co", offsets)
-        self.obj_o.data.update()
-        self.update_mesh(self.obj_o)
-
-    @property
     def bondlists(self):
         return self.get_bondlists()
 
@@ -442,7 +376,6 @@ class SearchBond(ObjectGN):
         """ """
         trajectory = {}
         trajectory["positions"] = self.get_obj_trajectory(self.obj)
-        trajectory["offsets"] = self.get_obj_trajectory(self.obj_o)
         return trajectory
 
     def set_trajectory(self, trajectory=None, frame_start=0):
@@ -451,13 +384,6 @@ class SearchBond(ObjectGN):
         nframe = len(trajectory)
         if nframe == 0:
             return
-        name = "%s_search_bond" % (self.label)
-        obj = self.obj
-        self.set_shape_key(name, obj, trajectory["positions"], frame_start=frame_start)
-        #
-        name = "%s_search_bond_offset" % (self.label)
-        obj = self.obj_o
-        self.set_shape_key(name, obj, trajectory["offsets"], frame_start=frame_start)
 
     def calc_search_bond_data(self, bondlists, mollists, moldatas, arrays, cell):
         """ """
