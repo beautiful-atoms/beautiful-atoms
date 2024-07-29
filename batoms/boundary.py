@@ -147,7 +147,7 @@ class Boundary(ObjectGN):
         self.set_attributes(attributes)
         self.init_geometry_node_modifier(default_GroupInput)
         self.build_geometry_node()
-        self.set_trajectory()
+        # self.set_trajectory()
         # print('boundary: build_object: {0:10.2f} s'.format(time() - tstart))
 
     def build_geometry_node(self):
@@ -405,7 +405,7 @@ class Boundary(ObjectGN):
         if len(arrays["positions"]) == 0:
             return
         self.positions = arrays["positions"][0]
-        self.set_trajectory(arrays)
+        # self.set_trajectory(arrays)
         self.update_mesh()
         species_index = [string2Number(sp) for sp in arrays["species"]]
         self.set_attributes(

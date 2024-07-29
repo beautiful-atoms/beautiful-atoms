@@ -552,6 +552,9 @@ class ObjectGN(BaseObject):
 
     def add_attribute(self, name, data_type="FLOAT", domain="POINT"):
         """Add an attribute to the mesh"""
+        # check if the attribute is already exist
+        if name in self.obj.data.attributes:
+            return True
         self.obj.data.attributes.new(name=name, type=data_type, domain=domain)
         return True
 
