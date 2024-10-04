@@ -724,16 +724,21 @@ class ObjectGN(BaseObject):
         return self.get_nframe()
 
     def get_nframe(self):
-        if self.obj.data.shape_keys is None:
-            return 0
-        nframe = len(self.obj.data.shape_keys.key_blocks)
+        if self.obj.data.shape_keys is not None:
+            nframe = len(self.obj.data.shape_keys.key_blocks)
+        else:
+            keys = [
+                key
+                for key in self.obj.data.attributes.keys()
+                if key.startswith("trajectory_")
+            ]
+            nframe = len(keys)
         return nframe
 
-    def get_shape_key(self, obj, local=True):
+    def get_shape_key(self, obj):
         """
         read shape key
         """
-        from batoms.utils import local2global
 
         n = len(self)
         nframe = self.nframe
@@ -743,13 +748,7 @@ class ObjectGN(BaseObject):
             sk = obj.data.shape_keys.key_blocks[i]
             sk.data.foreach_get("co", positions)
             local_positions = positions.reshape((n, 3))
-            if local:
-                trajectory[i] = local_positions
-            else:
-                global_positions = local2global(
-                    local_positions, np.array(self.obj.matrix_world)
-                )
-                trajectory[i] = global_positions
+            trajectory[i] = local_positions
         return trajectory
 
     def set_shape_key(self, name, obj, trajectory=None, frame_start=0):

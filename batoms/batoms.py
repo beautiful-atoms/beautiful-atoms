@@ -625,21 +625,59 @@ class Batoms(BaseCollection, ObjectGN):
 
     def get_trajectory(self, local=True):
         """ """
-        trajectory = {"positions": self.get_shape_key(self.obj, local=local)}
+        from batoms.utils import local2global
+
+        if self.obj.data.shape_keys is not None:
+            trajectory = {"positions": self.get_shape_key(self.obj)}
+        else:
+            natoms = len(self)
+            trajectory = {
+                "positions": np.empty((self.nframe, natoms, 3), dtype=np.float64)
+            }
+            for i in range(self.nframe):
+                name = f"trajectory_{i}"
+                positions = self.get_attribute(name)
+                trajectory["positions"].append(positions)
+
+        if not local:
+            for i in range(self.nframe):
+                trajectory["positions"][i] = local2global(
+                    trajectory["positions"][i], np.array(self.obj.matrix_world)
+                )
         return trajectory
 
-    def set_trajectory(self, trajectory=None, frame_start=0):
+    def set_trajectory(self, trajectory=None, frame_start=0, use_shape_key=False):
         if trajectory is None:
             trajectory = self._trajectory
         nframe = len(trajectory["positions"])
         if nframe == 0:
             return
-        # add attributes
-        for i in range(nframe):
-            name = f"trajectory_{i}"
-            att = {"name": name, "data_type": "FLOAT_VECTOR"}
-            self.add_attribute(**att)
-            self.set_attributes({name: trajectory["positions"][i]})
+        if use_shape_key:
+            name = self.label
+            obj = self.obj
+            self.set_shape_key(name, obj, trajectory["positions"], frame_start=0)
+        else:
+            # add attributes
+            for i in range(nframe):
+                name = f"trajectory_{i}"
+                att = {"name": name, "data_type": "FLOAT_VECTOR"}
+                self.add_attribute(**att)
+                self.set_attributes({name: trajectory["positions"][i]})
+
+    @property
+    def use_shape_key(self):
+        return self.obj.data.shape_keys is not None
+
+    @use_shape_key.setter
+    def use_shape_key(self, value):
+        trajectory = self.get_trajectory()
+        if value:
+            self.set_trajectory(trajectory, use_shape_key=True)
+        else:
+            bpy.context.view_layer.objects.active = self.obj
+            # remove shape key
+            if self.obj.data.shape_keys is not None:
+                bpy.ops.object.shape_key_remove(all=True)
 
     def set_arrays(self, arrays):
         """ """

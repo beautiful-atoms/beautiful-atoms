@@ -253,7 +253,7 @@ class Bcell(ObjectGN):
 
     def get_trajectory(self, local=True):
         """ """
-        trajectory = {"positions": self.get_shape_key(self.obj, local=local)}
+        trajectory = {"positions": self.get_shape_key(self.obj)}
         return trajectory
 
     def set_trajectory(self, trajectory=None, frame_start=0):
