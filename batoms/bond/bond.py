@@ -153,7 +153,8 @@ class Bond(BaseCollection, ObjectGN):
             "GeometryNodeJoinGeometry",
         )
         parent.links.new(
-            parent.nodes["Group Input"].outputs["Geometry"], node.inputs["Geometry"]
+            parent.nodes[f"Trajectory_{self.batoms.label}"].outputs["Geometry"],
+            node.inputs["Geometry"],
         )
         # link the outputs to parent node
         parent.links.new(node.outputs["Geometry"], JoinGeometry.inputs["Geometry"])

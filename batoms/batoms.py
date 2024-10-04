@@ -269,12 +269,15 @@ class Batoms(BaseCollection, ObjectGN):
             "%s_SeparateGeometry" % self.label,
             "GeometryNodeSeparateGeometry",
         )
-        links.new(GroupInput.outputs["Geometry"], SeparateGeometry.inputs["Geometry"])
         links.new(GroupInput.outputs["select"], SeparateGeometry.inputs["Selection"])
         links.new(SeparateGeometry.outputs[0], JoinGeometry.inputs["Geometry"])
         links.new(JoinGeometry.outputs["Geometry"], GroupOutput.inputs["Geometry"])
         # then create the nodes for the Wrap level
         self.build_wrap_node_group()
+        # then create the nodes for the trajectory level
+        node = self.build_trajectory_node_group()
+        links.new(GroupInput.outputs["Geometry"], node.inputs["Geometry"])
+        links.new(node.outputs["Geometry"], SeparateGeometry.inputs["Geometry"])
         # then create the nodes for the atoms level
         self.build_atoms_node_group()
 
@@ -336,6 +339,63 @@ class Batoms(BaseCollection, ObjectGN):
         links.new(SetPosition.outputs[0], GroupOutput.inputs["Geometry"])
         self.wrap = self.pbc
 
+    def build_trajectory_node_group(self):
+        parent = self.gn_node_group
+        default_interface = [
+            ["Geometry", "NodeSocketGeometry", "INPUT"],
+            ["Geometry", "NodeSocketGeometry", "OUTPUT"],
+        ]
+        name = f"Trajectory_{self.label}"
+        node = get_node_with_node_tree_by_name(
+            parent.nodes, name=name, interface=default_interface
+        )
+        nodes = node.node_tree.nodes
+        links = node.node_tree.links
+        GroupInput = nodes[0]
+        GroupOutput = nodes[1]
+        # link the input to parent node
+        parent.links.new(
+            parent.nodes["Group Input"].outputs["Geometry"], node.inputs["Geometry"]
+        )
+        # -------------------------------------------------------------
+        # set positions
+        SceneTime = get_node_by_name(
+            nodes, "%s_SceneTime" % (self.label), "GeometryNodeInputSceneTime"
+        )
+        ValueToString = get_node_by_name(
+            nodes, "%s_ValueToString" % (self.label), "FunctionNodeValueToString"
+        )
+        InputString = get_node_by_name(
+            nodes, "%s_InputString" % (self.label), "FunctionNodeInputString"
+        )
+        InputString.string = "trajectory_"
+        StringJoin = get_node_by_name(
+            nodes, "%s_StringJoin" % (self.label), "GeometryNodeStringJoin"
+        )
+        links.new(SceneTime.outputs["Frame"], ValueToString.inputs["Value"])
+        links.new(ValueToString.outputs[0], StringJoin.inputs[1])
+        links.new(InputString.outputs[0], StringJoin.inputs[1])
+
+        SetPosition = get_node_by_name(
+            nodes, "%s_SetPosition" % self.label, "GeometryNodeSetPosition"
+        )
+        links.new(GroupInput.outputs["Geometry"], SetPosition.inputs["Geometry"])
+
+        # ----------------------------------------------
+        TrajectoryAttribute = get_node_by_name(
+            nodes,
+            "%s_Attribute_trajectory" % (self.label),
+            "GeometryNodeInputNamedAttribute",
+        )
+        TrajectoryAttribute.inputs["Name"].default_value = "trajectory_0"
+        TrajectoryAttribute.data_type = "FLOAT_VECTOR"
+        # ----------------------------------------------
+        links.new(StringJoin.outputs[0], TrajectoryAttribute.inputs["Name"])
+        links.new(TrajectoryAttribute.outputs[0], SetPosition.inputs["Position"])
+        links.new(SetPosition.outputs[0], GroupOutput.inputs["Geometry"])
+        self.trajectory_node_group = node
+        return node
+
     def build_atoms_node_group(self):
         """Create node group for atoms"""
         # then create the nodes for the atoms level
@@ -357,7 +417,7 @@ class Batoms(BaseCollection, ObjectGN):
         GroupOutput = nodes[1]
         # link the input to parent node
         parent.links.new(
-            parent.nodes["Group Input"].outputs["Geometry"], node.inputs["Geometry"]
+            self.trajectory_node_group.outputs["Geometry"], node.inputs["Geometry"]
         )
         # link the outputs to parent node
         parent.links.new(node.outputs["Geometry"], JoinGeometry.inputs["Geometry"])
@@ -565,18 +625,59 @@ class Batoms(BaseCollection, ObjectGN):
 
     def get_trajectory(self, local=True):
         """ """
-        trajectory = {"positions": self.get_shape_key(self.obj, local=local)}
+        from batoms.utils import local2global
+
+        if self.obj.data.shape_keys is not None:
+            trajectory = {"positions": self.get_shape_key(self.obj)}
+        else:
+            natoms = len(self)
+            trajectory = {
+                "positions": np.empty((self.nframe, natoms, 3), dtype=np.float64)
+            }
+            for i in range(self.nframe):
+                name = f"trajectory_{i}"
+                positions = self.get_attribute(name)
+                trajectory["positions"].append(positions)
+
+        if not local:
+            for i in range(self.nframe):
+                trajectory["positions"][i] = local2global(
+                    trajectory["positions"][i], np.array(self.obj.matrix_world)
+                )
         return trajectory
 
-    def set_trajectory(self, trajectory=None, frame_start=0):
+    def set_trajectory(self, trajectory=None, frame_start=0, use_shape_key=False):
         if trajectory is None:
             trajectory = self._trajectory
         nframe = len(trajectory["positions"])
         if nframe == 0:
             return
-        name = self.label
-        obj = self.obj
-        self.set_shape_key(name, obj, trajectory["positions"], frame_start=frame_start)
+        if use_shape_key:
+            name = self.label
+            obj = self.obj
+            self.set_shape_key(name, obj, trajectory["positions"], frame_start=0)
+        else:
+            # add attributes
+            for i in range(nframe):
+                name = f"trajectory_{i}"
+                att = {"name": name, "data_type": "FLOAT_VECTOR"}
+                self.add_attribute(**att)
+                self.set_attributes({name: trajectory["positions"][i]})
+
+    @property
+    def use_shape_key(self):
+        return self.obj.data.shape_keys is not None
+
+    @use_shape_key.setter
+    def use_shape_key(self, value):
+        trajectory = self.get_trajectory()
+        if value:
+            self.set_trajectory(trajectory, use_shape_key=True)
+        else:
+            bpy.context.view_layer.objects.active = self.obj
+            # remove shape key
+            if self.obj.data.shape_keys is not None:
+                bpy.ops.object.shape_key_remove(all=True)
 
     def set_arrays(self, arrays):
         """ """
