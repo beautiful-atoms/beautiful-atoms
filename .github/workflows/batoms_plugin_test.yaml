@@ -1,98 +1,81 @@
-# Test the batoms plugin using test
-name: Test batoms blender plugin
+name: Test batoms plugin using linuxserver/blender
 
 on:
   push:
-    branches:
-      - main
-      - workflow
+    branches: [ "main", "workflow" ]
   pull_request:
-    branches:
-      - main
-      - workflow
+    branches: [ "main", "workflow" ]
   workflow_dispatch:
 
-env:
-  TEST_IMAGE_NAME: ghcr.io/beautiful-atoms/blender-env
-
 jobs:
-  unittests:
-    defaults:
-      run:
-        shell: bash
+  lint:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        # Manually change these to match the blender image versions
-        blender-version: ["3.6"]
-    container:
-      # env is not
-      image: ghcr.io/beautiful-atoms/blender-env:blender${{ matrix.blender-version }}
-      # Will need pytest installation
-      options: --user root
 
     steps:
-      - uses: actions/checkout@v2
-      - name: Copy addons to blender
+      - uses: actions/checkout@v4
+
+      # Install Python & pip in the container (if not already present)
+      - name: Install Python & pip
         run: |
-          mkdir -p $BLENDER_PATH/scripts/addons_contrib
-          cp -r batoms $BLENDER_PATH/scripts/addons_contrib/
-      - name: Enable blender addons
-        # Enable the blender blender addon and save user pref
+          apt-get update && apt-get install -y \
+            python3 python3-pip python3-setuptools
+          python3 --version
+          pip3 --version
+
+      # Install flake8 (and anything else needed for linting)
+      - name: Install lint dependencies
         run: |
-          blender -b --python-exit-code 1 --python-expr  "import bpy; import addon_utils; addon_utils.enable('batoms', default_set=True); bpy.ops.wm.save_userpref(); print('success')"
-      - name: Enable blender default preferences and startup files
-        run: |
-          blender -b --python-exit-code 1 --python-expr "import bpy; bpy.ops.batoms.use_batoms_preference(); bpy.ops.batoms.use_batoms_startup(); print('success')"
-      - name: Test blender path
-        # Test the sys.path contains the `addons_contrib` path
-        run: |
-          blender -b --python-exit-code 1 --python-expr "import sys; assert(any(['scripts/addons_contrib' in p for p in sys.path]))"
-      - name: Test import
-        run: |
-          blender -b --python-exit-code 1 --python-expr  "from batoms import Batoms; b = Batoms('O', ['O'], [[0, 0, 0]])"
-      - name: Install test dependencies
-        run: |
-          $BLENDERPY -m pip install pytest==6.2.5 flake8 pytest-blender
+          pip3 install --upgrade pip
+          pip3 install flake8
+
+      # Run flake8 lint
       - name: Lint with flake8
         run: |
-          # stop the build if there are Python syntax errors or undefined names
-          flake8 . --exclude=batoms/gui/,batoms/ops/,batoms/modal,batoms/__init__.py,batoms/custom_property.py,batoms/install/,batoms/preferences.py,ops*py,gui*.py,ui*.py,modal*py,bpy*.py --count --select=E9,F63,F7,F82 --show-source --statistics
-          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-          flake8 . --exclude=batoms/gui/,batoms/ops/,batoms/modal,batoms/__init__.py,batoms/custom_property.py,batoms/install/,batoms/preferences.py,ops*py,gui*.py,ui*.py,modal*py,bpy*.py --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-      - name: Run explicit test on default preference loading
-        run: |
-          cd tests
-          blender -b -P test_default_preference.py
-      - name: Run blender unittests
-        run: |
-          cd tests
-          pytest -svv --ignore=test_default_preference.py \
-                      --ignore=test_batomspy_shebang.py \
-                      --ignore=test_install_script.py
+          # Adjust excludes as you prefer
+          flake8 batoms \
+            --count --select=E9,F63,F7,F82 --show-source --statistics
 
-  shebang-test:
+  unittests:
+
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        blender-version: ["3.6"]
+        # Test multiple Blender versions if desired:
+        blender-version: ["4.2.3"]
+
     container:
-      image: ghcr.io/beautiful-atoms/beautiful-atoms:blender${{ matrix.blender-version }}
+      image: linuxserver/blender:${{ matrix.blender-version }}
       options: --user root
 
     steps:
-      - uses: actions/checkout@v2
-      - name: Copy addons to blender
+      - uses: actions/checkout@v4
+
+      - name: Install Python & pip
         run: |
-          mkdir -p $BLENDER_PATH/scripts/addons_contrib
-          cp -r batoms $BLENDER_PATH/scripts/addons_contrib/
-      - name: Enable blender addons
-        # Enable the blender blender addon and save user pref
-        run: |
-          blender -b --python-exit-code 1 --python-expr  "import bpy; import addon_utils; addon_utils.enable('batoms', default_set=True); bpy.ops.wm.save_userpref(); print('success')"
+          apt-get update && apt-get install -y \
+            python3 python3-pip python3-setuptools
+          python3 --version
+          pip3 --version
+
       - name: Install test dependencies
         run: |
-          python -m pip install pytest
-      - name: Run explicit test on shebang
+          python3 -m venv myenv
+          source myenv/bin/activate
+          pip3 install --upgrade pip
+          pip3 install pytest==6.2.5 pytest-blender
+          /blender/4.2/python/bin/python3.11 -m ensurepip
+          /blender/4.2/python/bin/python3.11 -m pip install --upgrade pip
+          /blender/4.2/python/bin/python3.11 -m pip install pytest
+
+      - name: Copy addons to blender
         run: |
-          pytest -svv tests/test_batomspy_shebang.py
+          cp -r batoms /blender/4.2/scripts/addons_core/
+
+      - name: Enable blender addons
+        run: |
+          blender -b --python-exit-code 1 --python scripts/enable_addon.py
+
+      - name: Run Blender-based tests
+        run: |
+          # Using pytest-blender
+          pytest --blender-executable blender -svv tests
