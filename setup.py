@@ -12,13 +12,13 @@ setup(
     author_email="xing.wang@gmail.com",
     url="https://github.com/beautiful-atoms/beautiful-atoms",
     install_requires=[
-        "bpy",
+        # "bpy",
         "ase",
     ],
     classifiers=[
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Programming Language :: Python :: 3",
     ],
-    python_requires="==3.10",
+    # python_requires="==3.10",
     entry_points={},
 )
