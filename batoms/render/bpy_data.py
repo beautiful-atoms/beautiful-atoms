@@ -41,7 +41,7 @@ class Render(bpy.types.PropertyGroup):
 
     flag: BoolProperty(name="flag", default=False)
     label: StringProperty(name="label", default="X")
-    engine: StringProperty(name="engine", default="BLENDER_EEVEE")
+    engine: StringProperty(name="engine", default="BLENDER_EEVEE_NEXT")
     compute_device_type: StringProperty(name="compute_device_type", default="CUDA")
     animation: BoolProperty(name="animation", default=False)
     run_render: BoolProperty(name="run_render", default=True)

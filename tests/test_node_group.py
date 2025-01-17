@@ -2,7 +2,7 @@ import bpy
 
 
 def test_create_node_group():
-    from batoms.utils.butils import get_node_with_node_tree_by_name
+    from batoms.utils.utils_node import get_node_with_node_tree_by_name
 
     parent = bpy.data.node_groups.new("node_group1", "GeometryNodeTree")
     node = get_node_with_node_tree_by_name(parent.nodes, "node_group2")

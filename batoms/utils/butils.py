@@ -331,62 +331,10 @@ def set_world(color=[0.2, 0.2, 0.2, 1.0]):
     node_tree.nodes["Background"].inputs["Color"].default_value = color
 
 
-def get_node_by_name(nodes, name, type=None):
-    node = nodes.get(name)
-    if node is None:
-        node = nodes.new(type)
-        node.name = name
-    return node
-
-
 def set_interface(node_tree, interface):
     """Set interface of a node_tree"""
     for i in interface:
         node_tree.interface.new_socket(name=i[0], socket_type=i[1], in_out=i[2])
-
-
-def create_node_tree(name, node_group_type="GeometryNodeTree", interface=[]):
-    """Create a node_tree by name and type.
-    Add default interface"""
-    # create a new node_tree if node_tree is None
-    node_tree = bpy.data.node_groups.get(name)
-    if node_tree is None:
-        node_tree = bpy.data.node_groups.new(name, type=node_group_type)
-        # add default interface if not exist
-        for i in interface:
-            if bpy.app.version_string >= "4.0.0":
-                node_tree.interface.new_socket(name=i[0], socket_type=i[1], in_out=i[2])
-            else:
-                if i[2] == "INPUT":
-                    node_tree.inputs.new(i[1], i[0])
-                elif i[2] == "OUTPUT":
-                    node_tree.outputs.new(i[1], i[0])
-        # create input and output node
-        node_tree.nodes.new("NodeGroupInput")
-        node_tree.nodes.new("NodeGroupOutput")
-    return node_tree
-
-
-def get_node_with_node_tree_by_name(
-    nodes,
-    name,
-    node_type="GeometryNodeGroup",
-    node_group_type="GeometryNodeTree",
-    interface=[],
-):
-    """Get the node with a node_tree by name.
-    If None, Create a new one based on type.
-    Return:
-        node (bpy.types.Node): A node with a node_tree
-    """
-    node = nodes.get(name)
-    # create a new node if node is None
-    if node is None:
-        node = nodes.new(type=node_type)
-        node.name = name
-    node_tree = create_node_tree(name, node_group_type, interface)
-    node.node_tree = node_tree
-    return node
 
 
 def clean_default(camera=False, light=True):
@@ -547,14 +495,6 @@ def set_vertex_color(obj, name, color):
                     loop[volume_layer] = color[v.index]
             bm.to_mesh(obj.data)
             bm.free()
-
-
-def get_socket_by_identifier(node, identifier, type="inputs"):
-    """Get sockets by identifier"""
-    for inp in getattr(node, type):
-        if inp.identifier == identifier:
-            return inp
-    return None
 
 
 # ========================================================

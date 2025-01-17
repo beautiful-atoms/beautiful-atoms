@@ -6,7 +6,8 @@ This module defines the polyhedras object in the Batoms package.
 
 import bpy
 from time import time
-from batoms.utils.butils import object_mode, compareNodeType, get_node_by_name
+from batoms.utils.butils import object_mode, compareNodeType
+from batoms.utils.utils_node import get_node_by_name
 from batoms.utils import string2Number
 import numpy as np
 from batoms.base.object import ObjectGN
@@ -180,7 +181,7 @@ class Polyhedra(ObjectGN):
         """
         Geometry node for everything!
         """
-        from batoms.utils.butils import get_node_by_name
+        from batoms.utils.utils_node import get_node_by_name
 
         tstart = time()
         links = self.gn_node_group.links
@@ -204,7 +205,7 @@ class Polyhedra(ObjectGN):
         )
         TransferBatoms.data_type = "FLOAT_VECTOR"
         links.new(ObjectBatoms.outputs["Geometry"], TransferBatoms.inputs[0])
-        links.new(PositionBatoms.outputs["Position"], TransferBatoms.inputs[3])
+        links.new(PositionBatoms.outputs["Position"], TransferBatoms.inputs["Value"])
         links.new(GroupInput.outputs[2], TransferBatoms.inputs["Index"])
         # ------------------------------------------------------------------
         # add positions with offsets
@@ -224,15 +225,15 @@ class Polyhedra(ObjectGN):
             nodes, "%s_InputIndex" % self.label, "GeometryNodeInputIndex"
         )
         links.new(ObjectOffsets.outputs["Geometry"], TransferOffsets.inputs[0])
-        links.new(PositionOffsets.outputs["Position"], TransferOffsets.inputs[3])
+        links.new(PositionOffsets.outputs["Position"], TransferOffsets.inputs["Value"])
         links.new(InputIndex.outputs[0], TransferOffsets.inputs["Index"])
         # we need one add operation to get the positions with offset
         VectorAdd = get_node_by_name(
             nodes, "%s_VectorAdd" % (self.label), "ShaderNodeVectorMath"
         )
         VectorAdd.operation = "ADD"
-        links.new(TransferBatoms.outputs[2], VectorAdd.inputs[0])
-        links.new(TransferOffsets.outputs[2], VectorAdd.inputs[1])
+        links.new(TransferBatoms.outputs["Value"], VectorAdd.inputs[0])
+        links.new(TransferOffsets.outputs["Value"], VectorAdd.inputs[1])
         # set positions
         SetPosition = get_node_by_name(
             nodes, "%s_SetPosition" % self.label, "GeometryNodeSetPosition"
@@ -247,7 +248,7 @@ class Polyhedra(ObjectGN):
         logger.debug("Build geometry nodes for polyhedras: %s" % (time() - tstart))
 
     def add_geometry_node(self, sp):
-        from batoms.utils.butils import get_node_by_name
+        from batoms.utils.utils_node import get_node_by_name
 
         links = self.gn_node_group.links
         nodes = self.gn_node_group.nodes

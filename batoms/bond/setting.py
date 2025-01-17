@@ -241,7 +241,7 @@ class BondSettings(Setting):
         Returns:
             _type_: _description_
         """
-        from batoms.utils.butils import get_node_by_name
+        from batoms.utils.utils_node import get_node_by_name
 
         # only build the needed one
         if not order:

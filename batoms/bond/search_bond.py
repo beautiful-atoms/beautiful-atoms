@@ -1,7 +1,8 @@
 import bpy
 import numpy as np
 from batoms.base.object import ObjectGN
-from batoms.utils.butils import object_mode, compareNodeType, get_node_by_name
+from batoms.utils.butils import object_mode, compareNodeType
+from batoms.utils.utils_node import get_node_by_name
 from batoms.utils import number2String, string2Number
 import logging
 
@@ -151,6 +152,8 @@ class SearchBond(ObjectGN):
 
     def build_geometry_node(self):
         """ """
+        from batoms.utils.utils_node import get_projected_position
+
         nodes = self.gn_node_group.nodes
         links = self.gn_node_group.links
         GroupInput = nodes[0]
@@ -187,22 +190,31 @@ class SearchBond(ObjectGN):
         PositionOffsets = get_node_by_name(
             nodes, "%s_PositionOffsets" % (self.label), "GeometryNodeInputPosition"
         )
+        IndexOffsets = get_node_by_name(
+            nodes, "%s_IndexOffsets" % (self.label), "GeometryNodeInputIndex"
+        )
         TransferOffsets = get_node_by_name(
             nodes, "%s_TransferOffsets" % self.label, "GeometryNodeSampleIndex"
         )
         TransferOffsets.data_type = "FLOAT_VECTOR"
         links.new(ObjectOffsets.outputs["Geometry"], TransferOffsets.inputs[0])
         links.new(PositionOffsets.outputs["Position"], TransferOffsets.inputs[1])
-        OffsetNode = self.vectorDotMatrix(
-            self.gn_node_group, TransferOffsets.outputs[2], self.batoms.cell, ""
+        links.new(IndexOffsets.outputs["Index"], TransferOffsets.inputs[2])
+        # get cartesian positions
+        project_point = get_projected_position(
+            self.gn_node_group,
+            TransferOffsets.outputs["Value"],
+            self.batoms.cell.obj,
+            self.label,
+            scaled=False,
         )
         # we need one add operation to get the positions with offset
         VectorAdd = get_node_by_name(
             nodes, "%s_VectorAdd" % (self.label), "ShaderNodeVectorMath"
         )
         VectorAdd.operation = "ADD"
-        links.new(TransferBatoms.outputs[2], VectorAdd.inputs[0])
-        links.new(OffsetNode.outputs[0], VectorAdd.inputs[1])
+        links.new(TransferBatoms.outputs["Value"], VectorAdd.inputs[0])
+        links.new(project_point.outputs[0], VectorAdd.inputs[1])
         # set positions
         SetPosition = get_node_by_name(
             nodes, "%s_SetPosition" % self.label, "GeometryNodeSetPosition"
@@ -269,7 +281,7 @@ class SearchBond(ObjectGN):
             TransferScale = get_node_by_name(
                 nodes, "%s_TransferScale" % (self.label), "GeometryNodeSampleIndex"
             )
-            links.new(TransferScale.outputs[2], InstanceOnPoint.inputs["Scale"])
+            links.new(TransferScale.outputs["Value"], InstanceOnPoint.inputs["Scale"])
         else:
             links.new(GroupInput.outputs[6], InstanceOnPoint.inputs["Scale"])
         links.new(CompareSpecies.outputs[0], BoolShow.inputs[1])
@@ -284,7 +296,7 @@ class SearchBond(ObjectGN):
         Args:
             spname (str): name of the species
         """
-        from batoms.utils.butils import get_node_by_name
+        from batoms.utils.utils_node import get_node_by_name
 
         # update  instancers
         ObjectInfo = get_node_by_name(
@@ -468,8 +480,7 @@ class SearchBond(ObjectGN):
         species_indexs1 = arrays["species_index"][indices1]
         species1 = arrays["species"][indices1]
         offset_vectors1 = bondlists1[:, 1:4]
-        offsets1 = np.dot(offset_vectors1, cell)
-        positions1 = arrays["positions"][indices1] + offsets1
+        positions1 = arrays["positions"][indices1] + np.dot(offset_vectors1, cell)
         # ------------------------------------
         #
         bondlists2 = bondlists[indices2]
@@ -483,8 +494,7 @@ class SearchBond(ObjectGN):
         species_indexs2 = arrays["species_index"][indices2]
         species2 = arrays["species"][indices2]
         offset_vectors2 = bondlists2[:, 1:4]
-        offsets2 = np.dot(offset_vectors2, cell)
-        positions2 = arrays["positions"][indices2] + offsets2
+        positions2 = arrays["positions"][indices2] + np.dot(offset_vectors2, cell)
         #
         indices = np.append(indices1, indices2)
         species_indexs = np.append(species_indexs1, species_indexs2)

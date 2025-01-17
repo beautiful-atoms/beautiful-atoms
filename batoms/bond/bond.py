@@ -6,7 +6,8 @@ This module defines the Bond object in the Batoms package.
 
 import bpy
 from time import time
-from batoms.utils.butils import object_mode, get_node_by_name
+from batoms.utils.butils import object_mode
+from batoms.utils.utils_node import get_node_by_name
 from batoms.utils import string2Number, number2String
 import numpy as np
 from batoms.base.object import ObjectGN
@@ -92,7 +93,7 @@ class Bond(BaseCollection, ObjectGN):
     @property
     def bond_node(self):
         """Get the top level node of bond node group."""
-        from batoms.utils.butils import get_node_with_node_tree_by_name
+        from batoms.utils.utils_node import get_node_with_node_tree_by_name
 
         default_interface = [
             ["Geometry", "NodeSocketGeometry", "INPUT"],
@@ -107,7 +108,7 @@ class Bond(BaseCollection, ObjectGN):
     def get_bond_pair_node(self, name):
         """Get the node of bond pair node group.
         Create the node if not exist."""
-        from batoms.utils.butils import get_node_with_node_tree_by_name
+        from batoms.utils.utils_node import get_node_with_node_tree_by_name
 
         # create group input and output sockets
         default_interface = [
@@ -136,7 +137,7 @@ class Bond(BaseCollection, ObjectGN):
         len(v) < max_length
         v align euler
         """
-        from batoms.utils.butils import get_node_by_name, get_socket_by_identifier
+        from batoms.utils.utils_node import get_node_by_name
 
         tstart = time()
         parent = self.gn_node_group
@@ -190,15 +191,13 @@ class Bond(BaseCollection, ObjectGN):
             SpeciesAtIndex.data_type = "INT"
             SpeciesAtIndexs.append(SpeciesAtIndex)
             links.new(GroupInput.outputs["Geometry"], SpeciesAtIndex.inputs["Geometry"])
-            output_socket = get_socket_by_identifier(
-                AtomsIndexAttribute, "Attribute_Int", type="outputs"
+            links.new(
+                AtomsIndexAttribute.outputs["Attribute"], SpeciesAtIndex.inputs["Index"]
             )
-            links.new(output_socket, SpeciesAtIndex.inputs["Index"])
-            input_socket = get_socket_by_identifier(SpeciesAtIndex, "Value_Int")
-            output_socket = get_socket_by_identifier(
-                SpeciesIndexAttribute, "Attribute_Int", type="outputs"
+            links.new(
+                SpeciesIndexAttribute.outputs["Attribute"],
+                SpeciesAtIndex.inputs["Value"],
             )
-            links.new(output_socket, input_socket)
         logger.debug("Build geometry nodes for bonds: %s" % (time() - tstart))
         #
 
@@ -208,8 +207,7 @@ class Bond(BaseCollection, ObjectGN):
         2) Set the position of the points to the center of the bond.
         3) Calculate the bond vector and length.
         """
-        from batoms.utils.butils import (
-            get_socket_by_identifier,
+        from batoms.utils.utils_node import (
             get_node_by_name,
             create_node_tree,
         )
@@ -261,12 +259,11 @@ class Bond(BaseCollection, ObjectGN):
             tmp.data_type = "INT"
             AtomsIndexAttributes.append(tmp)
         for i in range(4):
-            socket = get_socket_by_identifier(PositionsAtIndexs[i], "Value_Vector")
-            links.new(PositionBatoms.outputs[0], socket)
-            socket = get_socket_by_identifier(
-                AtomsIndexAttributes[i], "Attribute_Int", type="outputs"
+            links.new(PositionBatoms.outputs[0], PositionsAtIndexs[i].inputs["Value"])
+            links.new(
+                AtomsIndexAttributes[i].outputs["Attribute"],
+                PositionsAtIndexs[i].inputs["Index"],
             )
-            links.new(socket, PositionsAtIndexs[i].inputs["Index"])
         # ------------------------------------------------------------------
         # add positions with offsets
         # first step: get offsets from named attribute
@@ -291,10 +288,7 @@ class Bond(BaseCollection, ObjectGN):
             tmp.operation = "ADD"
             VectorAdd.append(tmp)
         for i in range(4):
-            socket = get_socket_by_identifier(
-                PositionsAtIndexs[i], "Value_Vector", type="outputs"
-            )
-            links.new(socket, VectorAdd[i].inputs[0])
+            links.new(PositionsAtIndexs[i].outputs[0], VectorAdd[i].inputs[0])
             links.new(OffsetsAttributes[i].outputs[0], VectorAdd[i].inputs[1])
         # divide by 2 to get the center
         VectorDivide = get_node_by_name(
@@ -397,7 +391,7 @@ class Bond(BaseCollection, ObjectGN):
 
     def add_bond_pair_node(self, sp, order=None, style=None):
         """Add geometry node for the bond pair."""
-        from batoms.utils.butils import get_node_by_name, get_socket_by_identifier
+        from batoms.utils.utils_node import get_node_by_name, get_socket_by_identifier
 
         parent_tree = self.bond_node.node_tree
         # tstart = time()
@@ -422,10 +416,9 @@ class Bond(BaseCollection, ObjectGN):
                 "%s_SpeciesAtIndex%s" % (self.label, i),
                 "GeometryNodeSampleIndex",
             )
-            output_socket = get_socket_by_identifier(
-                SpeciesAtIndex, "Value_Int", type="outputs"
+            parent_tree.links.new(
+                SpeciesAtIndex.outputs["Value"], node.inputs[f"Species_index{i}"]
             )
-            parent_tree.links.new(output_socket, node.inputs[f"Species_index{i}"])
             # e.g C-H bond, species0 is C, species1 is H
             tmp = get_node_by_name(
                 nodes,
@@ -481,11 +474,8 @@ class Bond(BaseCollection, ObjectGN):
         socket = get_socket_by_identifier(CompareOrder, "B_INT")
         links.new(GroupInput.outputs["Order"], socket)
         CompareOrder.inputs[1].default_value = order
-        output_socket = get_socket_by_identifier(
-            BondOrderAttribute, "Attribute_Int", type="outputs"
-        )
         input_socket = get_socket_by_identifier(CompareOrder, "A_INT")
-        links.new(output_socket, input_socket)
+        links.new(BondOrderAttribute.outputs["Attribute"], input_socket)
         # style
         BondStyleAttribute = get_node_by_name(
             nodes,
@@ -502,11 +492,8 @@ class Bond(BaseCollection, ObjectGN):
         socket = get_socket_by_identifier(CompareStyle, "B_INT")
         links.new(GroupInput.outputs["Style"], socket)
         CompareStyle.inputs[1].default_value = style
-        output_socket = get_socket_by_identifier(
-            BondStyleAttribute, "Attribute_Int", type="outputs"
-        )
         input_socket = get_socket_by_identifier(CompareStyle, "A_INT")
-        links.new(output_socket, input_socket)
+        links.new(BondStyleAttribute.outputs["Attribute"], input_socket)
         BoolSpecies = get_node_by_name(
             nodes, "%s_BooleanMath_species" % name, "FunctionNodeBooleanMath"
         )
@@ -548,10 +535,7 @@ class Bond(BaseCollection, ObjectGN):
         )
         BondShowAttribute.inputs["Name"].default_value = "bond_show"
         BondShowAttribute.data_type = "INT"
-        socket = get_socket_by_identifier(
-            BondShowAttribute, "Attribute_Int", type="outputs"
-        )
-        links.new(socket, BoolShow.inputs[0])
+        links.new(BondShowAttribute.outputs["Attribute"], BoolShow.inputs[0])
         # model style
         BondModelStyleAttribute = get_node_by_name(
             nodes,
@@ -560,10 +544,9 @@ class Bond(BaseCollection, ObjectGN):
         )
         BondModelStyleAttribute.inputs["Name"].default_value = "bond_model_style"
         BondModelStyleAttribute.data_type = "INT"
-        socket = get_socket_by_identifier(
-            BondModelStyleAttribute, "Attribute_Int", type="outputs"
+        links.new(
+            BondModelStyleAttribute.outputs["Attribute"], BoolModelStyle.inputs[0]
         )
-        links.new(socket, BoolModelStyle.inputs[0])
         for i in range(2):
             links.new(CompareSpecies[i].outputs[0], BoolSpecies.inputs[i])
         links.new(BoolSpecies.outputs[0], BoolOrder.inputs[0])

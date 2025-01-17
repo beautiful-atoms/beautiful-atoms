@@ -1,11 +1,11 @@
 import bpy
 import numpy as np
 from batoms.utils.butils import (
-    get_node_by_name,
     object_mode,
     set_look_at,
     update_object,
 )
+from batoms.utils.utils_node import get_node_by_name
 
 import bmesh
 import logging
@@ -352,28 +352,6 @@ class ObjectGN(BaseObject):
         name = "GeometryNodes_%s" % self.obj_name
         modifier = build_gn_modifier(self.obj, name)
         return modifier
-
-    def vectorDotMatrix(self, gn_node_group, vector_output, matrix, name):
-        """ """
-        CombineXYZ = get_node_by_name(
-            gn_node_group.nodes,
-            "%s_CombineXYZ_%s" % (self.label, name),
-            "ShaderNodeCombineXYZ",
-        )
-        #
-        VectorDot = []
-        for i in range(3):
-            tmp = get_node_by_name(
-                gn_node_group.nodes,
-                "%s_VectorDot%s_%s" % (self.label, i, name),
-                "ShaderNodeVectorMath",
-            )
-            tmp.operation = "DOT_PRODUCT"
-            VectorDot.append(tmp)
-            tmp.inputs[1].default_value = matrix[:, i]
-            gn_node_group.links.new(vector_output, tmp.inputs[0])
-            gn_node_group.links.new(tmp.outputs["Value"], CombineXYZ.inputs[i])
-        return CombineXYZ
 
     def add_geometry_node(self):
         """

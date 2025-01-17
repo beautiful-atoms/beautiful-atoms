@@ -152,7 +152,7 @@ class Boundary(ObjectGN):
 
     def build_geometry_node(self):
         """ """
-        from batoms.utils.butils import get_node_by_name
+        from batoms.utils.utils_node import get_node_by_name, get_projected_position
 
         links = self.gn_node_group.links
         nodes = self.gn_node_group.nodes
@@ -178,7 +178,7 @@ class Boundary(ObjectGN):
         )
         TransferBatoms.data_type = "FLOAT_VECTOR"
         links.new(ObjectBatoms.outputs["Geometry"], TransferBatoms.inputs[0])
-        links.new(PositionBatoms.outputs["Position"], TransferBatoms.inputs[3])
+        links.new(PositionBatoms.outputs["Position"], TransferBatoms.inputs["Value"])
         links.new(GroupInput.outputs[1], TransferBatoms.inputs["Index"])
         # ------------------------------------------------------------------
         # calculate offset for boundary atoms
@@ -189,15 +189,14 @@ class Boundary(ObjectGN):
         )
         OffsetAttribute.inputs["Name"].default_value = "boundary_offset"
         OffsetAttribute.data_type = "FLOAT_VECTOR"
-        # get arrays of cell
-        cell_node = self.get_cell_node(self.gn_node_group)
-        cell_node.inputs["Cell"].default_value = self.batoms.cell.obj
-        dot_node = self.vector_dot_cell(self.gn_node_group)
-        links.new(OffsetAttribute.outputs[0], dot_node.inputs["Vector"])
-        for i in range(3):
-            links.new(
-                cell_node.outputs["A%d" % (i + 1)], dot_node.inputs["Array%d" % (i + 1)]
-            )
+        # get cartesian positions
+        project_point = get_projected_position(
+            self.gn_node_group,
+            OffsetAttribute.outputs[0],
+            self.batoms.cell.obj,
+            self.label,
+            scaled=False,
+        )
         # we need one add operation to get the positions with offset
         VectorAdd = get_node_by_name(
             nodes, "%s_VectorAdd" % (self.label), "ShaderNodeVectorMath"
@@ -205,8 +204,8 @@ class Boundary(ObjectGN):
         # ------------------------------------------------------------------
         # add positions with offsets
         VectorAdd.operation = "ADD"
-        links.new(TransferBatoms.outputs[2], VectorAdd.inputs[0])
-        links.new(dot_node.outputs[0], VectorAdd.inputs[1])
+        links.new(TransferBatoms.outputs["Value"], VectorAdd.inputs[0])
+        links.new(project_point.outputs[0], VectorAdd.inputs[1])
         # set positions
         SetPosition = get_node_by_name(
             nodes, "%s_SetPosition" % self.label, "GeometryNodeSetPosition"
@@ -230,118 +229,12 @@ class Boundary(ObjectGN):
             )
             TransferScale.data_type = "FLOAT_VECTOR"
             links.new(ObjectBatoms.outputs["Geometry"], TransferScale.inputs[0])
-            links.new(ScaleBatoms.outputs["Attribute"], TransferScale.inputs[3])
+            links.new(ScaleBatoms.outputs["Attribute"], TransferScale.inputs["Value"])
             links.new(GroupInput.outputs[1], TransferScale.inputs["Index"])
-
-    def vector_dot_cell(self, parent_tree):
-        """Dot product of a vector (1x3) and a cell (3x3).
-        Note, the vector could be a vector field, (Nx3)"""
-        from batoms.utils.butils import (
-            get_node_by_name,
-            create_node_tree,
-        )
-
-        default_interface = [
-            ["Vector", "NodeSocketVector", "INPUT"],
-            ["Array1", "NodeSocketVector", "INPUT"],
-            ["Array2", "NodeSocketVector", "INPUT"],
-            ["Array3", "NodeSocketVector", "INPUT"],
-            ["Vector", "NodeSocketVector", "OUTPUT"],
-        ]
-        name = "Vector_dot_cell_%s" % (self.label)
-        node = get_node_by_name(parent_tree.nodes, name=name, type="GeometryNodeGroup")
-        node_tree = create_node_tree(name=name, interface=default_interface)
-        node.node_tree = node_tree
-        nodes = node_tree.nodes
-        links = node_tree.links
-        GroupInput = nodes[0]
-        GroupOutput = nodes[1]
-        #
-        SeparateXYZs = []
-        CombineXYZs = []
-        DotProdcuts = []
-        for i in range(3):
-            # SeparateXYZ to get the transpose of the cell
-            SeparateXYZ = get_node_by_name(
-                nodes, f"{self.label}_SeparateXYZ_{i}", "ShaderNodeSeparateXYZ"
-            )
-            # Dot product of the vector and the array
-            DotProdcut = get_node_by_name(
-                nodes, f"{self.label}_DotProduct_{i}", "ShaderNodeVectorMath"
-            )
-            DotProdcut.operation = "DOT_PRODUCT"
-            # then combine the vectors, and output to the group output
-            CombineXYZ = get_node_by_name(
-                nodes, f"{self.label}_CombineXYZ_{i}", "ShaderNodeCombineXYZ"
-            )
-            links.new(GroupInput.outputs[f"Array{i + 1}"], SeparateXYZ.inputs["Vector"])
-            links.new(GroupInput.outputs["Vector"], DotProdcut.inputs[0])
-            links.new(CombineXYZ.outputs["Vector"], DotProdcut.inputs[1])
-            CombineXYZs.append(CombineXYZ)
-            SeparateXYZs.append(SeparateXYZ)
-            DotProdcuts.append(DotProdcut)
-        for i in range(3):
-            for j in range(3):
-                links.new(SeparateXYZs[i].outputs[j], CombineXYZs[j].inputs[i])
-        # output final vector
-        CombineXYZ = get_node_by_name(
-            nodes, f"{self.label}_CombineXYZ", "ShaderNodeCombineXYZ"
-        )
-        for i in range(3):
-            links.new(DotProdcuts[i].outputs["Value"], CombineXYZ.inputs[i])
-        links.new(CombineXYZ.outputs["Vector"], GroupOutput.inputs["Vector"])
-        return node
-
-    def get_cell_node(self, parent_tree):
-        """Get the position of the cell."""
-        from batoms.utils.butils import (
-            get_socket_by_identifier,
-            get_node_by_name,
-            create_node_tree,
-        )
-
-        default_interface = [
-            ["Cell", "NodeSocketObject", "INPUT"],
-            ["A1", "NodeSocketVector", "OUTPUT"],
-            ["A2", "NodeSocketVector", "OUTPUT"],
-            ["A3", "NodeSocketVector", "OUTPUT"],
-        ]
-        name = "Cell_Array_%s" % (self.label)
-        node = get_node_by_name(parent_tree.nodes, name=name, type="GeometryNodeGroup")
-        node_tree = create_node_tree(name=name, interface=default_interface)
-        node.node_tree = node_tree
-        nodes = node_tree.nodes
-        links = node_tree.links
-        GroupInput = nodes[0]
-        GroupOutput = nodes[1]
-        # link the input to parent node
-        # ------------------------------------------------------------------
-        CellObject = get_node_by_name(
-            nodes, f"{self.label}_CellObject", "GeometryNodeObjectInfo"
-        )
-        links.new(GroupInput.outputs["Cell"], CellObject.inputs["Object"])
-        Position = get_node_by_name(
-            nodes, "%s_Position" % (self.label), "GeometryNodeInputPosition"
-        )
-        for i in range(3):
-            PositionAtIndex = get_node_by_name(
-                nodes, f"{self.label}_PositionAtIndex_{i}", "GeometryNodeSampleIndex"
-            )
-            PositionAtIndex.data_type = "FLOAT_VECTOR"
-            PositionAtIndex.inputs["Index"].default_value = i + 1
-            links.new(CellObject.outputs["Geometry"], PositionAtIndex.inputs[0])
-            input_socket = get_socket_by_identifier(PositionAtIndex, "Value_Vector")
-            links.new(Position.outputs["Position"], input_socket)
-            output_socket = get_socket_by_identifier(
-                PositionAtIndex, "Value_Vector", type="outputs"
-            )
-            links.new(output_socket, GroupOutput.inputs["A%d" % (i + 1)])
-
-        return node
 
     def add_geometry_node(self, spname):
         """ """
-        from batoms.utils.butils import get_node_by_name
+        from batoms.utils.utils_node import get_node_by_name
 
         links = self.gn_node_group.links
         nodes = self.gn_node_group.nodes
@@ -380,7 +273,7 @@ class Boundary(ObjectGN):
         TransferScale = get_node_by_name(
             nodes, "%s_TransferScale" % (self.label), "GeometryNodeSampleIndex"
         )
-        links.new(TransferScale.outputs[2], InstanceOnPoint.inputs["Scale"])
+        links.new(TransferScale.outputs["Value"], InstanceOnPoint.inputs["Scale"])
         links.new(CompareSpecies.outputs[0], BoolShow.inputs[1])
         links.new(BoolShow.outputs["Boolean"], InstanceOnPoint.inputs["Selection"])
         links.new(ObjectInfo.outputs["Geometry"], InstanceOnPoint.inputs["Instance"])
@@ -434,7 +327,7 @@ class Boundary(ObjectGN):
         Args:
             spname (str): name of the species
         """
-        from batoms.utils.butils import get_node_by_name
+        from batoms.utils.utils_node import get_node_by_name
 
         # update  instancers
         ObjectInfo = get_node_by_name(
@@ -444,20 +337,6 @@ class Boundary(ObjectGN):
         )
         ObjectInfo.inputs["Object"].default_value = instancer
         logger.debug("update boundary instancer: {}".format(spname))
-
-    def update_gn_cell(self):
-        from batoms.utils.butils import get_node_by_name
-
-        # update cell
-        cell = self.batoms.cell.array
-        # set positions
-        nodes = self.gn_node_group.nodes
-        for i in range(3):
-            tmp = get_node_by_name(
-                nodes, "%s_VectorDot%s_%s" % (self.label, i, ""), "ShaderNodeVectorMath"
-            )
-            tmp.operation = "DOT_PRODUCT"
-            tmp.inputs[1].default_value = cell[:, i]
 
     @property
     def obj(self):
