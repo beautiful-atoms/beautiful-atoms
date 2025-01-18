@@ -9,8 +9,9 @@ from bpy.props import (
     EnumProperty,
     StringProperty,
 )
+
 # TODO: 4.2+ support
-from .. import __package__ as batoms
+from .. import __package__ as batoms  # noqa
 from batoms import Batoms
 from batoms.gui.utils import (
     get_active_bpy_data,

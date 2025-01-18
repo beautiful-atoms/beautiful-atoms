@@ -5,8 +5,9 @@ from bpy_extras import view3d_utils
 from bpy.props import (
     StringProperty,
 )
+
 # TODO: 4.2+ support
-from .. import __package__ as batoms
+from .. import __package__ as batoms  # noqa
 from batoms import Batoms
 from batoms.ops.base import OperatorBatoms
 import blf

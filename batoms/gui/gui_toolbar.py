@@ -4,8 +4,9 @@ Adds an object mode tool to the toolbar.
 fialed to register the keymaps.
 """
 # TODO: 4.2+ support
-from .. import __package__ as batoms
+from .. import __package__ as batoms  # noqa
 from bpy.types import WorkSpaceTool
+
 
 # TODO: make sure reference to GUI id name is correct
 # Maybe using __package__

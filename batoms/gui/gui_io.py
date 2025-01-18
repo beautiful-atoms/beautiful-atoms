@@ -3,8 +3,9 @@
 import bpy
 from bpy.types import Panel, Operator
 from bpy.props import StringProperty
+
 # TODO: 4.2+ support
-from .. import __package__ as batoms
+from .. import __package__ as batoms  # noqa
 
 
 class BatomsPropertiesIO(bpy.types.PropertyGroup):

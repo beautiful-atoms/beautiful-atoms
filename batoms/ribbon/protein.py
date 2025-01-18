@@ -1,6 +1,7 @@
 import bpy
+
 # TODO: 4.2+ support
-from .. import __package__ as batoms
+from .. import __package__ as batoms  # noqa
 from batoms.ribbon.profile import ellipse, rectangle
 from batoms.base.collection import Setting
 from time import time

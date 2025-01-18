@@ -7,8 +7,9 @@ from bpy.props import (
     StringProperty,
     EnumProperty,
 )
+
 # TODO: 4.2+ support
-from .. import __package__ as batoms
+from .. import __package__ as batoms  # noqa
 from batoms.internal_data.bpy_data import get_volumetric_data
 
 

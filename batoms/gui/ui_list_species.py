@@ -3,8 +3,9 @@
 
 import bpy
 from bpy.types import Menu, Panel, UIList
+
 # TODO: 4.2+ support
-from .. import __package__ as batoms
+from .. import __package__ as batoms  # noqa
 
 
 class BATOMS_MT_species_context_menu(Menu):

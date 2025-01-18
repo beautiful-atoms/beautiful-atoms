@@ -11,8 +11,9 @@ from bpy.props import (
     BoolProperty,
 )
 from ase.build import graphene_nanoribbon
+
 # TODO: 4.2+ support
-from .. import __package__ as batoms
+from .. import __package__ as batoms  # noqa
 from batoms import Batoms
 
 

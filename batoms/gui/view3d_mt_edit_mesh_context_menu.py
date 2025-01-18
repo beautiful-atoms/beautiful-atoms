@@ -2,8 +2,9 @@
 """
 
 from bpy.types import Menu
+
 # TODO: 4.2+ support
-from .. import __package__ as batoms
+from .. import __package__ as batoms  # noqa
 
 
 def menu_func(self, context):

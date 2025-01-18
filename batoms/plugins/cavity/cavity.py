@@ -3,15 +3,14 @@
 This module defines the Cavity object in the Batoms package.
 
 """
-
+# TODO: 4.2+ support
+from ... import __package__ as batoms  # noqa
 import bpy
 import numpy as np
 from batoms.base.object import ObjectGN
 from batoms.plugins.base import PluginObject
 from .setting import CavitySettings
 from scipy import spatial
-# TODO: 4.2+ support
-from ... import __package__ as batoms
 from batoms.utils.utils_node import get_node_by_name
 from batoms.utils import string2Number
 import logging

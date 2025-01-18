@@ -1,6 +1,7 @@
 import bpy
+
 # TODO: 4.2+ support
-from .. import __package__ as batoms
+from .. import __package__ as batoms  # noqa
 from batoms.batoms import Batoms
 
 

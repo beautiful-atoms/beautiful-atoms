@@ -9,7 +9,7 @@ from bpy.props import (
 )
 
 # TODO: 4.2+ support
-from .. import __package__ as batoms
+from .. import __package__ as batoms  # noqa
 from batoms.gui.utils import (
     get_active_bpy_data,
     get_attr,

@@ -6,8 +6,9 @@ from bpy.props import (
     FloatVectorProperty,
     IntVectorProperty,
 )
+
 # TODO: 4.2+ support
-from .. import __package__ as batoms
+from .. import __package__ as batoms  # noqa
 from batoms import Batoms
 from batoms.gui.utils import (
     get_attr,

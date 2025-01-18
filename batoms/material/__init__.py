@@ -2,8 +2,9 @@
 module for materials
 """
 import bpy
+
 # TODO: 4.2+ support
-from .. import __package__ as batoms
+from .. import __package__ as batoms  # noqa
 
 material_styles_dict = {
     "default": {

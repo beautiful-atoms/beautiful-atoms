@@ -12,8 +12,9 @@ from bpy.props import (
 )
 from ase.build import molecule, bulk
 from ase import Atoms
+
 # TODO: 4.2+ support
-from .. import __package__ as batoms
+from .. import __package__ as batoms  # noqa
 from batoms import Batoms
 
 

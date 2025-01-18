@@ -1,6 +1,7 @@
 import urllib.request
+
 # TODO: 4.2+ support
-from .. import __package__ as batoms
+from .. import __package__ as batoms  # noqa
 from batoms import Batoms
 from batoms.pdbparser import read_pdb
 import logging

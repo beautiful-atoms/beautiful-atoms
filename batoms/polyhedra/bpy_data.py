@@ -6,8 +6,9 @@ from bpy.props import (
     FloatVectorProperty,
     CollectionProperty,
 )
+
 # TODO: 4.2+ support
-from .. import __package__ as batoms
+from .. import __package__ as batoms  # noqa
 from batoms.internal_data import Base
 
 
