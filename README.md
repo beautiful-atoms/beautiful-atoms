@@ -55,5 +55,13 @@ $ pre-commit install
 ```
 
 
+### Extension
+
+```
+pip download ase --dest ./wheels --only-binary=:all: --python-version=3.11
+pip download ase --dest ./wheels --only-binary=:all: --python-version=3.11 --platform=win_amd64
+pip download ase --dest ./wheels --only-binary=:all: --python-version=3.11 --platform=macosx_12_0_arm64
+```
+
 ### Contact
 * Xing Wang  <xingwang1991@gmail.com>
