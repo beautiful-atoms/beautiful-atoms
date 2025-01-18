@@ -1,0 +1,48 @@
+name: Test batoms plugin
+
+on:
+  push:
+    branches: [ "main", "workflow" ]
+  pull_request:
+    branches: [ "main", "workflow" ]
+  workflow_dispatch:
+
+jobs:
+  unittests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        blender-version: ["4.2.3", "4.3.2"]
+
+    container:
+      image: linuxserver/blender:${{ matrix.blender-version }}
+      options: --user root
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract Blender Major.Minor Version
+        id: extract_version
+        run: |
+          # Extract major.minor version (e.g., 4.2.3 → 4.2, 4.3.2 → 4.3)
+          BLENDER_MAJOR_MINOR=$(echo "${{ matrix.blender-version }}" | cut -d'.' -f1,2)
+          echo "BLENDER_MAJOR_MINOR=$BLENDER_MAJOR_MINOR" >> $GITHUB_ENV
+          echo "Blender Major.Minor version set to: $BLENDER_MAJOR_MINOR"
+
+      - name: Install test dependencies
+        run: |
+          /blender/$BLENDER_MAJOR_MINOR/python/bin/python3.11 -m ensurepip
+          /blender/$BLENDER_MAJOR_MINOR/python/bin/python3.11 -m pip install --upgrade pip
+          /blender/$BLENDER_MAJOR_MINOR/python/bin/python3.11 -m pip install pytest
+
+      - name: Copy addons to Blender
+        run: |
+          cp -r batoms /blender/$BLENDER_MAJOR_MINOR/scripts/addons_core/
+
+      - name: Enable Blender addons
+        run: |
+          blender -b -P scripts/enable_addon.py
+
+      - name: Run unittests
+        run: |
+          blender -b -P scripts/run_tests.py -- -vv tests

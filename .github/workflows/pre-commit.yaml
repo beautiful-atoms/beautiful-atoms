@@ -1,0 +1,31 @@
+name: ci
+
+on: [push, pull_request]
+
+jobs:
+
+    pre-commit:
+
+        runs-on: ubuntu-latest
+
+        steps:
+        -   uses: actions/checkout@v4
+
+        -   name: Cache Python dependencies
+            uses: actions/cache@v1
+            with:
+                path: ~/.cache/pip
+                key: pip-pre-commit-${{ hashFiles('**/setup.json') }}
+                restore-keys:
+                    pip-pre-commit-
+
+        -   name: Set up Python
+            uses: actions/setup-python@v2
+            with:
+                python-version: '3.11'
+
+        -   name: Install Python dependencies
+            run: pip install -e .[pre-commit]
+
+        -   name: Run pre-commit
+            run: pre-commit run --all-files || ( git status --short ; git diff ; exit 1 )

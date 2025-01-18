@@ -140,7 +140,7 @@ dictionary named 'cif_core.dic' version 2.4.1 from
 dictionary named 'cif_core.dic' version 2.4.1 from 2010-06-29.
 
 Automatic conversion script
-Id: cif_fix_enum 1527 2010-12-29 10:47:43Z saulius 
+Id: cif_fix_enum 1527 2010-12-29 10:47:43Z saulius
 
 The following automatic conversions were performed:
 
@@ -155,7 +155,7 @@ dictionary named 'cif_core.dic' version 2.4.1 from
 'cif_core.dic' version 2.4.1 from 2010-06-29.
 
 Automatic conversion script
-Id: cif_fix_values 1715 2011-07-08 13:25:40Z adriana 
+Id: cif_fix_values 1715 2011-07-08 13:25:40Z adriana
 ;
 _cod_database_code               2222163
 _cod_database_fobs_code          2222163
