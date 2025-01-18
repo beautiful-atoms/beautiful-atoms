@@ -2,19 +2,19 @@
 
 
 
- 
+
 #*********************************************************************************
 #
-# Crystallographic Information File for H-ZSM-5, monoclinic  
+# Crystallographic Information File for H-ZSM-5, monoclinic
 #
-# Reference : 
+# Reference :
 #   van Koningsveld, H., Jansen, J.C. and van Bekkum, H.
 #   Zeolites, 10, 235-242, (1990)
 #
 #
 # CIF downloaded from the IZA-SC Database of Zeolite Structures
 # Ch. Baerlocher and L.B. McCusker,
-# Database of Zeolite Structures: http://www.iza-structure.org/databases/ 
+# Database of Zeolite Structures: http://www.iza-structure.org/databases/
 #
 #**********************************************************************************
 
@@ -24,18 +24,18 @@ _chemical_name_systematic 'H-ZSM-5, monoclinic '
 
 _cell_length_a      19.879
 _cell_length_b      20.107
-_cell_length_c      13.369 
-_cell_angle_alpha   90 
-_cell_angle_beta    90.67 
+_cell_length_c      13.369
+_cell_angle_alpha   90
+_cell_angle_beta    90.67
 _cell_angle_gamma   90
 _cell_formula_units_Z   1
 
 _space_group.name_H-M_ref   'P 1 21/n 1'
 _symmetry_space_group_name_H-M   'P 1 21/n 1'
 _symmetry_space_group_name_Hall  '-P 2yn'
-_space_group.IT_number  14 
+_space_group.IT_number  14
 
- 
+
  loop_
 _atom_site_label
 _atom_site_type_symbol
@@ -118,7 +118,3 @@ O47  O  0.4576  -0.0039  -0.2104  0.66  1
 O48  O  0.6481  -0.0013  -0.212  0.71  1
 
 # End of data for H-ZSM-5_monoclinic_
-
-
-			
-	

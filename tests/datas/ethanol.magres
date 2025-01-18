@@ -3,7 +3,7 @@
 [calculation]
 calc_code CASTEP
 calc_code_version 7.0
-calc_comment 
+calc_comment
 calc_kpoint_mp_grid 1 1 1
 calc_code_hgversion 0d37235409d7+ magres-efg 2013-02-07
 calc_cutoffenergy 4.0000000000000000E+01

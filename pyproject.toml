@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "batoms"
+version = "2.3.0"
+description = "A Python package for creating, editing, and rendering atoms and molecules structures using Blender."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "GPL-3.0-or-later" }
+authors = [
+    { name = "Beautiful Atoms Team", email = "xing.wang@gmail.com" }
+]
+
+
+dependencies = [
+    "ase",
+]
+
+
+[project.urls]
+Documentation = "https://beautiful-atoms.readthedocs.io/en/latest/index.html"
+Source = "https://github.com/beautiful-atoms/beautiful-atoms"
+
+
+[project.optional-dependencies]
+pre-commit = [
+    "pre-commit~=2.2",
+    "pylint~=2.17.4",
+]
+tests = [
+    "pytest~=7.0",
+    "pytest-cov~=2.7,<2.11",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["batoms*"]
+
+[project.entry-points]
+# Define entry points here if needed, e.g.:
+# "console_scripts" = { "batoms-cli" = "batoms.cli:main" }
