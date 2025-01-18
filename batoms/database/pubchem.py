@@ -1,6 +1,6 @@
 """
 """
-from batoms import Batoms
+from ..batoms import Batoms
 import logging
 
 logger = logging.getLogger(__name__)

@@ -1,6 +1,6 @@
 import bpy
-from batoms.ribbon.profile import ellipse, rectangle
-from batoms.base.collection import Setting
+from ..ribbon.profile import ellipse, rectangle
+from ..base.collection import Setting
 from time import time
 import numpy as np
 import logging

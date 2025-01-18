@@ -169,9 +169,9 @@ def default_element_prop(element, radius_style="covalent", color_style="JMOL"):
     """
     Get color, radii for element.
     """
-    from batoms.data import covalent_radii, vdw_radii
+    from ..data import covalent_radii, vdw_radii
     from ase.data import chemical_symbols
-    from batoms.data import jmol_colors, cpk_colors, vesta_color
+    from ..data import jmol_colors, cpk_colors, vesta_color
 
     element_prop = {}
     number = chemical_symbols.index(element)

@@ -1,9 +1,9 @@
 import bpy
 import numpy as np
-from batoms.base.object import ObjectGN
-from batoms.utils.butils import object_mode, compareNodeType
-from batoms.utils.utils_node import get_node_by_name
-from batoms.utils import number2String, string2Number
+from ..base.object import ObjectGN
+from ..utils.butils import object_mode, compareNodeType
+from ..utils.utils_node import get_node_by_name
+from ..utils import number2String, string2Number
 import logging
 
 # logger = logging.getLogger('batoms')
@@ -152,7 +152,7 @@ class SearchBond(ObjectGN):
 
     def build_geometry_node(self):
         """ """
-        from batoms.utils.utils_node import get_projected_position
+        from ..utils.utils_node import get_projected_position
 
         nodes = self.gn_node_group.nodes
         links = self.gn_node_group.links
@@ -296,7 +296,7 @@ class SearchBond(ObjectGN):
         Args:
             spname (str): name of the species
         """
-        from batoms.utils.utils_node import get_node_by_name
+        from ..utils.utils_node import get_node_by_name
 
         # update  instancers
         ObjectInfo = get_node_by_name(

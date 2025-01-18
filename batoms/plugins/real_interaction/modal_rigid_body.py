@@ -13,9 +13,9 @@ Intermolecular: atomic radii.
 
 import bpy
 import numpy as np
-from batoms.utils.butils import get_selected_batoms, read_batoms_list
-from batoms import Batoms
-from batoms.data import covalent_radii
+from ...utils.butils import get_selected_batoms, read_batoms_list
+from ...batoms import Batoms
+from ...data import covalent_radii
 from bpy.props import (
     StringProperty,
     BoolProperty,

@@ -6,11 +6,11 @@ This module defines the polyhedras object in the Batoms package.
 
 import bpy
 from time import time
-from batoms.utils.butils import object_mode, compareNodeType
-from batoms.utils.utils_node import get_node_by_name
-from batoms.utils import string2Number
+from ..utils.butils import object_mode, compareNodeType
+from ..utils.utils_node import get_node_by_name
+from ..utils import string2Number
 import numpy as np
-from batoms.base.object import ObjectGN
+from ..base.object import ObjectGN
 from .setting import PolyhedraSettings
 import logging
 
@@ -83,7 +83,7 @@ class Polyhedra(ObjectGN):
 
     Examples:
 
-    >>> from batoms.bond import Bbond
+    >>> from ..bond import Bbond
     >>> c = Bbond('C', [[0, 0, 0], [1.2, 0, 0]])
 
     """
@@ -181,7 +181,7 @@ class Polyhedra(ObjectGN):
         """
         Geometry node for everything!
         """
-        from batoms.utils.utils_node import get_node_by_name
+        from ..utils.utils_node import get_node_by_name
 
         tstart = time()
         links = self.gn_node_group.links
@@ -248,7 +248,7 @@ class Polyhedra(ObjectGN):
         logger.debug("Build geometry nodes for polyhedras: %s" % (time() - tstart))
 
     def add_geometry_node(self, sp):
-        from batoms.utils.utils_node import get_node_by_name
+        from ..utils.utils_node import get_node_by_name
 
         links = self.gn_node_group.links
         nodes = self.gn_node_group.nodes
@@ -621,7 +621,7 @@ class Polyhedra(ObjectGN):
 
     @property
     def setting(self):
-        from batoms.utils import deprecated
+        from ..utils import deprecated
 
         """setting object."""
         deprecated(

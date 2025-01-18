@@ -9,8 +9,8 @@ from bpy.props import (
     FloatProperty,
     FloatVectorProperty,
 )
-from batoms.utils.butils import get_selected_batoms, get_selected_objects
-from batoms.batoms import Batoms
+from ..utils.butils import get_selected_batoms, get_selected_objects
+from ..batoms import Batoms
 
 
 # The panel.

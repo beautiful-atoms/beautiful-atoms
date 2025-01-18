@@ -4,8 +4,8 @@
 
 import bpy
 from time import time
-from batoms.base.collection import Setting
-from batoms.base.object import BaseObject
+from ..base.collection import Setting
+from ..base.object import BaseObject
 import logging
 
 logger = logging.getLogger(__name__)
@@ -71,7 +71,7 @@ class PluginObject(BaseObject):
         Returns:
             bpy.type.material: _description_
         """
-        from batoms.material import create_material
+        from ..material import create_material
 
         if name in bpy.data.materials:
             mat = bpy.data.materials.get(name)
@@ -87,7 +87,7 @@ class PluginObject(BaseObject):
         return mat
 
     def draw(self):
-        from batoms.utils.butils import clean_coll_object_by_type
+        from ..utils.butils import clean_coll_object_by_type
 
         # delete old object
         clean_coll_object_by_type(self.batoms.coll, "PLUGIN")

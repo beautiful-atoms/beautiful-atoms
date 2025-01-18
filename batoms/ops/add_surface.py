@@ -28,7 +28,7 @@ from ase.build import (
     diamond100,
     diamond111,
 )
-from batoms import Batoms
+from ..batoms import Batoms
 
 
 class BuildSurfaceFCC100(Operator):

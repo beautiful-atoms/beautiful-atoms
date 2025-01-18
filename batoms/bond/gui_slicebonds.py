@@ -7,9 +7,9 @@ from bpy.props import (
     EnumProperty,
 )
 
-from batoms.utils.butils import get_selected_edges
-from batoms.batoms import Batoms
-from batoms.gui.utils import get_enum_attr
+from ..utils.butils import get_selected_edges
+from ..batoms import Batoms
+from ..gui.utils import get_enum_attr
 
 
 # The panel.

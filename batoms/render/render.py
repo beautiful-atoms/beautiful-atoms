@@ -1,9 +1,9 @@
 import bpy
 import os
 import numpy as np
-from batoms.base.collection import BaseCollection
-from batoms.render.light import Lights
-from batoms.render.camera import Camera
+from ..base.collection import BaseCollection
+from ..render.light import Lights
+from ..render.camera import Camera
 import logging
 
 # logger = logging.getLogger('batoms')
@@ -325,7 +325,7 @@ class Render(BaseCollection):
         """
         Calculate canvas and direction
         """
-        from batoms.utils.butils import lock_to
+        from ..utils.butils import lock_to
 
         # plane
         # light
@@ -376,7 +376,7 @@ class Render(BaseCollection):
             self.export_xyz(filename)
 
     def render_move_camera(self, filename, loc1, loc2, n):
-        from batoms.utils import getEquidistantPoints
+        from ..utils import getEquidistantPoints
 
         locs = getEquidistantPoints(loc1, loc2, n)
         i = 0

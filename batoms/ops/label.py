@@ -5,8 +5,8 @@ from bpy_extras import view3d_utils
 from bpy.props import (
     StringProperty,
 )
-from batoms import Batoms
-from batoms.ops.base import OperatorBatoms
+from ..batoms import Batoms
+from ..ops.base import OperatorBatoms
 import blf
 import numpy as np
 

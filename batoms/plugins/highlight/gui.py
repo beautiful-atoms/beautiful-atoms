@@ -9,7 +9,7 @@ from bpy.props import (
 )
 
 
-from batoms.gui.utils import (
+from ...gui.utils import (
     get_active_bpy_data,
     get_attr,
     set_attr,

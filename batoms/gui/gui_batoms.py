@@ -9,8 +9,8 @@ from bpy.props import (
     EnumProperty,
     StringProperty,
 )
-from batoms import Batoms
-from batoms.gui.utils import (
+from ..batoms import Batoms
+from ..gui.utils import (
     get_active_bpy_data,
     get_attr,
     get_enum_attr,

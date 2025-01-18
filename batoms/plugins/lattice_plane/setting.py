@@ -5,7 +5,7 @@ Lattice Planes
 To insert lattice planes in structural models.
 """
 import bpy
-from batoms.base.collection import Setting, tuple2string
+from ...base.collection import Setting, tuple2string
 import logging
 
 logger = logging.getLogger(__name__)

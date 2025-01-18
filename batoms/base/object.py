@@ -1,11 +1,11 @@
 import bpy
 import numpy as np
-from batoms.utils.butils import (
+from ..utils.butils import (
     object_mode,
     set_look_at,
     update_object,
 )
-from batoms.utils.utils_node import get_node_by_name
+from ..utils.utils_node import get_node_by_name
 
 import bmesh
 import logging
@@ -323,7 +323,7 @@ class ObjectGN(BaseObject):
     def init_geometry_node_modifier(self, inputs=[]):
         """Init geometry node modifier"""
         # blender 4.0 use a interface to add sockets, both input and output
-        from batoms.utils.butils import build_gn_modifier
+        from ..utils.butils import build_gn_modifier
 
         name = "GeometryNodes_%s" % self.obj_name
         modifier = build_gn_modifier(self.obj, name)
@@ -347,7 +347,7 @@ class ObjectGN(BaseObject):
         """
         Geometry node for everything!
         """
-        from batoms.utils.butils import build_gn_modifier
+        from ..utils.butils import build_gn_modifier
 
         name = "GeometryNodes_%s" % self.obj_name
         modifier = build_gn_modifier(self.obj, name)
@@ -485,7 +485,7 @@ class ObjectGN(BaseObject):
         Returns:
             _type_: _description_
         """
-        from batoms.utils.attribute import get_mesh_attribute, get_mesh_attribute_bmesh
+        from ..utils.attribute import get_mesh_attribute, get_mesh_attribute_bmesh
 
         # get the mesh
         obj = self.obj
@@ -505,7 +505,7 @@ class ObjectGN(BaseObject):
 
     def add_attribute_from_array(self, name, data, domain="POINT"):
         """Add an attribute from array"""
-        from batoms.utils import type_py_to_blender
+        from ..utils import type_py_to_blender
 
         # check the type of the array, and convert it to blender type
         # only the first element is checked
@@ -603,7 +603,7 @@ class ObjectGN(BaseObject):
             key (str): name of the attribute
             array (np.array): value of the attribute
         """
-        from batoms.utils.attribute import set_mesh_attribute, set_mesh_attribute_bmesh
+        from ..utils.attribute import set_mesh_attribute, set_mesh_attribute_bmesh
 
         obj = self.obj
         me = obj.data
@@ -693,7 +693,7 @@ class ObjectGN(BaseObject):
         """
         Get global positions.
         """
-        from batoms.utils import local2global
+        from ..utils import local2global
 
         global_positions = local2global(self.positions, np.array(self.obj.matrix_world))
         return global_positions
@@ -703,7 +703,7 @@ class ObjectGN(BaseObject):
         Set global positions to local vertices
         """
         object_mode()
-        from batoms.utils import local2global
+        from ..utils import local2global
 
         natom = len(self)
         nposition = len(positions)
@@ -730,7 +730,7 @@ class ObjectGN(BaseObject):
         """
         read shape key
         """
-        from batoms.utils import local2global
+        from ..utils import local2global
 
         n = len(self)
         nframe = self.nframe
@@ -761,7 +761,7 @@ class ObjectGN(BaseObject):
         frame_start: int
             start frame
         """
-        from batoms.utils.butils import add_keyframe_to_shape_key
+        from ..utils.butils import add_keyframe_to_shape_key
 
         if trajectory is None:
             trajectory = self.trajectory
@@ -909,7 +909,7 @@ class childObjectGN:
         """
         Get global position.
         """
-        from batoms.utils import local2global
+        from ..utils import local2global
 
         position = local2global(
             np.array([self.local_position]), np.array(self.obj.matrix_world)
@@ -921,7 +921,7 @@ class childObjectGN:
         Set global position to local vertices
         """
         object_mode()
-        from batoms.utils import local2global
+        from ..utils import local2global
 
         position = np.array([value])
         position = local2global(

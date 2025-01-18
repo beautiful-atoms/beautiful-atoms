@@ -1,4 +1,4 @@
-from batoms.draw import bond_source
+from ..draw import bond_source
 
 source = bond_source(8)
 bond_source = {

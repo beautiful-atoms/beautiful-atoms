@@ -1,8 +1,8 @@
 import bmesh
 from bpy.types import Operator
 from bpy.props import BoolProperty, FloatProperty, StringProperty
-from batoms import Batoms
-from batoms.ops.base import OperatorBatoms
+from ..batoms import Batoms
+from ..ops.base import OperatorBatoms
 
 
 class PolyhedraAdd(OperatorBatoms):

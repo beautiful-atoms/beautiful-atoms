@@ -7,9 +7,9 @@ This module defines the plane object in the Batoms package.
 import bpy
 import bmesh
 import numpy as np
-from batoms.plugins.base import PluginObject
+from ...plugins.base import PluginObject
 from .setting import LatticePlaneSettings
-from batoms.draw import draw_cylinder, draw_surface_from_vertices
+from ...draw import draw_cylinder, draw_surface_from_vertices
 import logging
 
 logger = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ class LatticePlane(PluginObject):
         color_by_attribute=None,
     ):
         """ """
-        from batoms.material import create_material
+        from ...material import create_material
 
         if name in bpy.data.materials:
             mat = bpy.data.materials.get(name)
@@ -127,7 +127,7 @@ class LatticePlane(PluginObject):
         """
         from scipy import ndimage
         from ase.cell import Cell
-        from batoms.utils.attribute import set_mesh_attribute
+        from ...utils.attribute import set_mesh_attribute
 
         volume = self.batoms.volumetric_data[plane["color_by"]]
         cell = Cell(bcell.array)
@@ -276,7 +276,7 @@ class LatticePlane(PluginObject):
         include_center: bool
             include center of plane in the mesh
         """
-        from batoms.utils.butils import clean_coll_object_by_type
+        from ...utils.butils import clean_coll_object_by_type
 
         # delete old plane
         clean_coll_object_by_type(self.batoms.coll, "LATTICEPLANE")
@@ -334,7 +334,7 @@ class LatticePlane(PluginObject):
 
     @property
     def setting(self):
-        from batoms.utils import deprecated
+        from ...utils import deprecated
 
         """setting object."""
         deprecated(

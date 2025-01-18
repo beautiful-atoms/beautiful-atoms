@@ -1,6 +1,6 @@
-from batoms.render.render import Render
-from batoms.render.light import Light, Lights
-from batoms.render.camera import Camera
+from ..render.render import Render
+from ..render.light import Light, Lights
+from ..render.camera import Camera
 
 
 from . import (

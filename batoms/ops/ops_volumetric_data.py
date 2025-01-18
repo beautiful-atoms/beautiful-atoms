@@ -1,9 +1,9 @@
 import bpy
 from bpy_extras.io_utils import ImportHelper
 from bpy.props import BoolProperty, StringProperty, EnumProperty
-from batoms import Batoms
-from batoms.ops.base import OperatorBatoms
-from batoms.internal_data.bpy_data import get_volumetric_data
+from ..batoms import Batoms
+from ..ops.base import OperatorBatoms
+from ..internal_data.bpy_data import get_volumetric_data
 
 
 class VolumetricDataAdd(OperatorBatoms, ImportHelper):

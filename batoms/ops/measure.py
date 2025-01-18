@@ -3,7 +3,7 @@
 import bpy
 from bpy_extras import view3d_utils
 import bmesh
-from batoms import Batoms
+from ..batoms import Batoms
 import blf
 import gpu
 from gpu_extras.batch import batch_for_shader

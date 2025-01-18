@@ -4,9 +4,9 @@
 
 import bpy
 import numpy as np
-from batoms.plugins.base import PluginObject
+from ...plugins.base import PluginObject
 from .setting import CrystalShapeSettings
-from batoms.draw import draw_cylinder, draw_surface_from_vertices
+from ...draw import draw_cylinder, draw_surface_from_vertices
 import logging
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ class CrystalShape(PluginObject):
 
     def build_materials(self, name, color, node_inputs=None, material_style="default"):
         """ """
-        from batoms.material import create_material
+        from ...material import create_material
 
         if name in bpy.data.materials:
             mat = bpy.data.materials.get(name)
@@ -141,7 +141,7 @@ class CrystalShape(PluginObject):
         origin: xyz vector
             The center of cyrstal shape
         """
-        from batoms.utils.butils import clean_coll_object_by_type
+        from ...utils.butils import clean_coll_object_by_type
 
         # delete old plane
         clean_coll_object_by_type(self.batoms.coll, "CRYSTALSHAPE")
@@ -181,7 +181,7 @@ class CrystalShape(PluginObject):
 
     @property
     def setting(self):
-        from batoms.utils import deprecated
+        from ...utils import deprecated
 
         """setting object."""
         deprecated(

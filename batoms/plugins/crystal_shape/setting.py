@@ -1,7 +1,7 @@
 """
 """
 import bpy
-from batoms.base.collection import Setting, tuple2string
+from ...base.collection import Setting, tuple2string
 
 
 class CrystalShapeSettings(Setting):
@@ -66,7 +66,7 @@ class CrystalShapeSettings(Setting):
         return s
 
     def get_symmetry_indices(self):
-        from batoms.utils import get_equivalent_indices
+        from ...utils import get_equivalent_indices
 
         if self.no == 1:
             return

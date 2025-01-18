@@ -2,8 +2,8 @@
 """
 import bpy
 import numpy as np
-from batoms.utils import string2Number
-from batoms.base.collection import Setting, tuple2string
+from ..utils import string2Number
+from ..base.collection import Setting, tuple2string
 
 import logging
 
@@ -208,7 +208,7 @@ class BondSettings(Setting):
         self, sp, order=None, style=None, node_inputs=None, material_style="default"
     ):
         """ """
-        from batoms.material import create_material
+        from ..material import create_material
 
         if not order:
             order = sp["order"]
@@ -241,7 +241,7 @@ class BondSettings(Setting):
         Returns:
             _type_: _description_
         """
-        from batoms.utils.utils_node import get_node_by_name
+        from ..utils.utils_node import get_node_by_name
 
         # only build the needed one
         if not order:
@@ -571,7 +571,7 @@ class BondSettings(Setting):
             self_interaction (bool, optional): _description_. Defaults to True.
             only_default (bool, optional): _description_. Defaults to False.
         """
-        from batoms.data import default_bonds
+        from ..data import default_bonds
 
         species_props = self.batoms.species.species_props
         pairs = []
@@ -608,7 +608,7 @@ class BondSettings(Setting):
         self[key] = bond
 
     def copy(self, label):
-        from batoms.utils.butils import object_mode
+        from ..utils.butils import object_mode
 
         object_mode()
         bondsetting = self.__class__(label)
@@ -711,7 +711,7 @@ class BondSettings(Setting):
 
     def get_bondtable(self, pair, props, dcutoff=0.5):
         """ """
-        from batoms.data import default_bonds
+        from ..data import default_bonds
 
         sp1 = pair[0]
         sp2 = pair[1]

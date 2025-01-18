@@ -13,9 +13,9 @@ from bpy.props import (
     StringProperty,
     EnumProperty,
 )
-from batoms.install.pip_dependencies import has_module
-from batoms.install import update
-from batoms.logger import update_logging_level
+from .install.pip_dependencies import has_module
+from .install import update
+from .logger import update_logging_level
 import logging
 
 logger = logging.getLogger(__name__)

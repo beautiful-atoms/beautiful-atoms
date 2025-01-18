@@ -2,8 +2,8 @@ import bpy
 from bpy.props import (
     FloatVectorProperty,
 )
-from batoms import Batoms
-from batoms.ops.base import OperatorBatoms
+from ..batoms import Batoms
+from ..ops.base import OperatorBatoms
 
 
 class RenderAdd(OperatorBatoms):
@@ -30,7 +30,7 @@ class RenderAdd(OperatorBatoms):
     )
 
     def execute(self, context):
-        from batoms.render.render import Render
+        from ..render.render import Render
 
         batoms = Batoms(label=context.object.batoms.label)
         render = Render(

@@ -6,8 +6,8 @@ from bpy.props import (
     StringProperty,
     EnumProperty,
 )
-from batoms.batoms import Batoms
-from batoms.bio.bio import read
+from ..batoms import Batoms
+from ..bio.bio import read
 
 
 class IMPORT_OT_batoms(Operator, ImportHelper):

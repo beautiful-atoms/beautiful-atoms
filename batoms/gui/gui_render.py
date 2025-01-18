@@ -4,8 +4,8 @@ from bpy.props import (
     FloatProperty,
     EnumProperty,
 )
-from batoms.render.render import Render
-from batoms.gui.utils import get_attr, set_attr
+from ..render.render import Render
+from ..gui.utils import get_attr, set_attr
 
 
 class Render_PT_prepare(Panel):
@@ -52,7 +52,7 @@ class Render_PT_prepare(Panel):
 
 
 def modify_render_attr(context, key, value):
-    from batoms.batoms import Batoms
+    from ..batoms import Batoms
 
     if context.object and context.object.batoms.type != "OTHER":
         batoms = Batoms(label=context.object.batoms.label)
@@ -71,7 +71,7 @@ def set_light_attr(key, value):
         key (_type_): _description_
         value (_type_): _description_
     """
-    from batoms.batoms import Batoms
+    from ..batoms import Batoms
 
     if bpy.context.object and bpy.context.object.batoms.type != "OTHER":
         batoms = Batoms(label=bpy.context.object.batoms.label)
@@ -89,7 +89,7 @@ def set_camera_attr(key, value):
         key (_type_): _description_
         value (_type_): _description_
     """
-    from batoms.batoms import Batoms
+    from ..batoms import Batoms
 
     if bpy.context.object and bpy.context.object.batoms.type != "OTHER":
         batoms = Batoms(label=bpy.context.object.batoms.label)

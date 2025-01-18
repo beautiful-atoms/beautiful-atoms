@@ -1,8 +1,8 @@
 """
 """
 import bpy
-from batoms.base.collection import Setting, tuple2string
-from batoms.data import default_polyhedras
+from ..base.collection import Setting, tuple2string
+from ..data import default_polyhedras
 
 import logging
 
@@ -41,7 +41,7 @@ class PolyhedraSettings(Setting):
 
     def build_materials(self, sp, node_inputs=None):
         """ """
-        from batoms.material import create_material
+        from ..material import create_material
 
         name = "%s_%s" % (self.label, sp["species"])
         if name in bpy.data.materials:

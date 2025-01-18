@@ -1,7 +1,7 @@
 """
 """
 import bpy
-from batoms.base.collection import Setting
+from ...base.collection import Setting
 import logging
 
 logger = logging.getLogger(__name__)
@@ -109,7 +109,7 @@ class HighlightSettings(Setting):
 
     def build_materials(self, hl, node_inputs=None):
         """ """
-        from batoms.material import create_material
+        from ...material import create_material
 
         name = "highlight_%s_%s" % (self.label, hl["name"])
         if name in bpy.data.materials:

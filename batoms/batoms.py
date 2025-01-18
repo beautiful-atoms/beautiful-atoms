@@ -5,20 +5,20 @@
 # TODO: add feature: cavity
 """
 import bpy
-from batoms.bspecies import Bspecies
-from batoms.volumetric_data import VolumetricData
-from batoms.cell import Bcell
-from batoms.bselect import Selects
-from batoms.base.collection import BaseCollection
-from batoms.base.object import ObjectGN
-from batoms.ribbon.ribbon import Ribbon
-from batoms.utils.butils import show_index
-from batoms.utils.utils_node import (
+from .bspecies import Bspecies
+from .volumetric_data import VolumetricData
+from .cell import Bcell
+from .bselect import Selects
+from .base.collection import BaseCollection
+from .base.object import ObjectGN
+from .ribbon.ribbon import Ribbon
+from .utils.butils import show_index
+from .utils.utils_node import (
     get_node_with_node_tree_by_name,
     get_node_by_name,
 )
-from batoms.utils import string2Number, read_from_others, deprecated
-from batoms.plugins import plugin_info
+from .utils import string2Number, read_from_others, deprecated
+from .plugins import plugin_info
 
 import numpy as np
 from time import time
@@ -215,7 +215,7 @@ class Batoms(BaseCollection, ObjectGN):
 
     def hideOneLevel(self):
         """Hide one level of collecitons in the outline in Blender"""
-        # from batoms.utils.butils import hideOneLevel
+        # from .utils.butils import hideOneLevel
 
         # hideOneLevel()
         pass
@@ -231,7 +231,7 @@ class Batoms(BaseCollection, ObjectGN):
             location (list, optional):
                 Location of the object. Defaults to [0, 0, 0].
         """
-        from batoms.bond.bond import default_bond_attributes
+        from .bond.bond import default_bond_attributes
 
         self.delete_obj(label)
         mesh = bpy.data.meshes.new(label)
@@ -279,7 +279,7 @@ class Batoms(BaseCollection, ObjectGN):
         self.build_atoms_node_group()
 
     def build_wrap_node_group(self):
-        from batoms.utils.utils_node import get_projected_position
+        from .utils.utils_node import get_projected_position
 
         parent = self.gn_node_group
         default_interface = [
@@ -376,7 +376,7 @@ class Batoms(BaseCollection, ObjectGN):
             instancer (bpy.data.object):
                 Object to be instanced
         """
-        from batoms.utils.utils_node import get_node_by_name
+        from .utils.utils_node import get_node_by_name
 
         # Create Node Group if not exit
         nt = bpy.data.node_groups[f"Atoms_{self.label}"]
@@ -397,7 +397,7 @@ class Batoms(BaseCollection, ObjectGN):
 
     def create_geometry_node_for_species(self, spname):
         """Create geometry node for one species."""
-        from batoms.utils.utils_node import get_socket_by_identifier, create_node_tree
+        from .utils.utils_node import get_socket_by_identifier, create_node_tree
 
         default_interface = [
             ["Geometry", "NodeSocketGeometry", "INPUT"],
@@ -513,7 +513,7 @@ class Batoms(BaseCollection, ObjectGN):
             label (str):
                 Name of the Batoms
         """
-        from batoms.boundary import Boundary
+        from .boundary import Boundary
 
         print("Load batoms {}".format(label))
         self.coll_name = label
@@ -755,7 +755,7 @@ class Batoms(BaseCollection, ObjectGN):
 
     @radius_style.setter
     def radius_style(self, radius_style):
-        from batoms.utils import get_default_species_data
+        from .utils import get_default_species_data
 
         self.coll.batoms.radius_style = str(radius_style)
         for name, sp in self.species.items():
@@ -774,7 +774,7 @@ class Batoms(BaseCollection, ObjectGN):
 
     @color_style.setter
     def color_style(self, color_style):
-        from batoms.utils import get_default_species_data
+        from .utils import get_default_species_data
 
         self.coll.batoms.color_style = str(color_style)
         for name, sp in self.species.items():
@@ -1006,7 +1006,7 @@ class Batoms(BaseCollection, ObjectGN):
         #todo: this is slow for large system
 
         """
-        from batoms.slicebatoms import SliceBatoms
+        from .slicebatoms import SliceBatoms
 
         if isinstance(indices, str):
             bspecies = self.species[indices]
@@ -1049,7 +1049,7 @@ class Batoms(BaseCollection, ObjectGN):
         """
         In-place repeat of atoms.
 
-        >>> from batoms.batoms import Batoms
+        >>> from .batoms import Batoms
         >>> co = Batoms('co', ['C', 'O'], [[0, 0, 0], [1.2, 0, 0]])
         >>> co.cell = [3, 3, 3]
         >>> co *= [2, 2, 1]
@@ -1234,7 +1234,7 @@ class Batoms(BaseCollection, ObjectGN):
 
         # TODO remove species which is completely replaced.
         """
-        from batoms.utils import get_default_species_data
+        from .utils import get_default_species_data
 
         # if kind exists, merger, otherwise build a new kind and add.
         bpy.context.view_layer.objects.active = self.obj
@@ -1284,7 +1284,7 @@ class Batoms(BaseCollection, ObjectGN):
         Args:
             tol (float, optional): _description_. Defaults to 1e-5.
         """
-        from batoms.utils import get_equivalent_atoms
+        from .utils import get_equivalent_atoms
 
         equivalent_atoms = get_equivalent_atoms(self.as_ase(), tol)
         species = self.species
@@ -1311,7 +1311,7 @@ class Batoms(BaseCollection, ObjectGN):
         """Used to add small number of atoms
         Todo: find a fast way.
         """
-        from batoms.utils import local2global
+        from .utils import local2global
         import bmesh
 
         # object_mode()
@@ -1589,7 +1589,7 @@ class Batoms(BaseCollection, ObjectGN):
         Calculate the canvas box from [0, 0, 1] and other direction.
 
         """
-        from batoms.utils import get_canvas
+        from .utils import get_canvas
 
         vertices = self.get_all_vertices(coll=coll, cell=self.show_unit_cell)
         canvas = get_canvas(vertices, direction=direction, padding=padding)
@@ -1599,7 +1599,7 @@ class Batoms(BaseCollection, ObjectGN):
         return width, height, depth
 
     def lock_to_camera(self, obj):
-        from batoms.utils.butils import lock_to
+        from .utils.butils import lock_to
 
         for sp, instancer in self.species.instancers.items():
             lock_to(instancer, obj, location=False, rotation=True)
@@ -1613,7 +1613,7 @@ class Batoms(BaseCollection, ObjectGN):
     @property
     def bond(self):
         """bond object."""
-        from batoms.bond.bond import Bond
+        from .bond.bond import Bond
 
         if self._bond is not None:
             return self._bond
@@ -1636,7 +1636,7 @@ class Batoms(BaseCollection, ObjectGN):
     @property
     def polyhedra(self):
         """polyhedra object."""
-        from batoms.polyhedra.polyhedra import Polyhedra, default_polyhedra_datas
+        from .polyhedra.polyhedra import Polyhedra, default_polyhedra_datas
 
         if self._polyhedra is not None:
             return self._polyhedra
@@ -1653,7 +1653,7 @@ class Batoms(BaseCollection, ObjectGN):
     @property
     def boundary(self):
         """boundary object."""
-        from batoms.boundary import Boundary
+        from .boundary import Boundary
 
         if self._boundary is not None:
             return self._boundary
@@ -1697,7 +1697,7 @@ class Batoms(BaseCollection, ObjectGN):
     @property
     def render(self):
         """Render object."""
-        from batoms.render.render import Render
+        from .render.render import Render
 
         if self._render is not None:
             return self._render
@@ -1780,7 +1780,7 @@ class Batoms(BaseCollection, ObjectGN):
     def draw_ball_and_stick(self):
         mask = np.where(self.model_style_array >= 1, True, False)
         if not mask.any():
-            from batoms.bond.bond import default_bond_datas
+            from .bond.bond import default_bond_datas
 
             self.bond.set_arrays(default_bond_datas.copy())
             return
@@ -1792,7 +1792,7 @@ class Batoms(BaseCollection, ObjectGN):
     def draw_polyhedra(self):
         mask = np.where(self.model_style_array == 2, True, False)
         if not mask.any():
-            from batoms.polyhedra.polyhedra import default_polyhedra_datas
+            from .polyhedra.polyhedra import default_polyhedra_datas
 
             self.polyhedra.set_arrays(default_polyhedra_datas)
             return
@@ -1950,7 +1950,7 @@ class Batoms(BaseCollection, ObjectGN):
         """draw_text object.
         Shoud be a global variable.
         """
-        from batoms.draw.draw_screen import DrawText
+        from .draw.draw_screen import DrawText
 
         dns = bpy.app.driver_namespace
         if self.label in dns:
@@ -1989,7 +1989,7 @@ class Batoms(BaseCollection, ObjectGN):
         """
         from openbabel import openbabel as ob
 
-        # from batoms.utils import read_from_pybel
+        # from .utils import read_from_pybel
         mol = self.as_pybel()
         mol.localopt(forcefield, steps)
         positions = []

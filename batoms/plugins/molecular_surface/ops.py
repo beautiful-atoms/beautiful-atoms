@@ -1,7 +1,7 @@
 import bmesh
 from bpy.props import BoolProperty, FloatProperty, StringProperty
-from batoms import Batoms
-from batoms.ops.base import OperatorBatoms
+from ...batoms import Batoms
+from ...ops.base import OperatorBatoms
 
 
 class MolecularSurfaceAdd(OperatorBatoms):

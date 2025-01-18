@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 def console_hook():
     """add batoms to namespace of python console"""
-    from batoms.utils.butils import read_batoms_list
+    from .utils.butils import read_batoms_list
 
     items = read_batoms_list()
     for area in bpy.context.screen.areas:

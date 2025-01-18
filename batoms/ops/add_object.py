@@ -12,7 +12,7 @@ from bpy.props import (
 )
 from ase.build import molecule, bulk
 from ase import Atoms
-from batoms import Batoms
+from ..batoms import Batoms
 
 
 class AddMolecule(Operator):

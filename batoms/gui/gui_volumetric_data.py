@@ -8,7 +8,7 @@ from bpy.props import (
     EnumProperty,
 )
 
-from batoms.internal_data.bpy_data import get_volumetric_data
+from ..internal_data.bpy_data import get_volumetric_data
 
 
 class VolumetricDataProperties(bpy.types.PropertyGroup):

@@ -7,7 +7,7 @@ This module defines the plane object in the Batoms package.
 import bpy
 from time import time
 import numpy as np
-from batoms.base.object import BaseObject
+from ...base.object import BaseObject
 from .setting import MolecularSurfaceSettings
 import logging
 
@@ -46,7 +46,7 @@ class MolecularSurface(BaseObject):
         color_by_attribute=None,
     ):
         """ """
-        from batoms.material import create_material
+        from ...material import create_material
 
         if name in bpy.data.materials:
             mat = bpy.data.materials.get(name)
@@ -63,7 +63,7 @@ class MolecularSurface(BaseObject):
         return mat
 
     def draw(self, ms_name="ALL"):
-        from batoms.utils.butils import clean_coll_object_by_type
+        from ...utils.butils import clean_coll_object_by_type
 
         # delete old plane
         clean_coll_object_by_type(self.batoms.coll, "MS")
@@ -108,7 +108,7 @@ class MolecularSurface(BaseObject):
         """
         Find a minmum box contains all atoms
         """
-        from batoms.utils import get_box
+        from ...utils import get_box
 
         self.box = get_box(vertices, padding=padding)
         self.box_origin = self.box[:, 0]
@@ -118,7 +118,7 @@ class MolecularSurface(BaseObject):
         """
         generate gridpoints
         """
-        from batoms.utils import build_grid
+        from ...utils import build_grid
 
         self.meshgrids, self.shape = build_grid(self.box, resolution)
 
@@ -156,7 +156,7 @@ class MolecularSurface(BaseObject):
         2) Calculate power distance for grids
         3) Marching cube find isosurface = 5
         """
-        from batoms.draw import draw_surface_from_vertices
+        from ...draw import draw_surface_from_vertices
 
         resolution = ms.resolution
         probe = ms.probe
@@ -191,8 +191,8 @@ class MolecularSurface(BaseObject):
         #
         if ms.color_by != "None":
             from ase.cell import Cell
-            from batoms.utils import map_volumetric_data
-            from batoms.utils.attribute import set_mesh_attribute
+            from ...utils import map_volumetric_data
+            from ...utils.attribute import set_mesh_attribute
 
             if ms.color_by.upper() == "ELECTROSTATIC_POTENTIAL":
                 if "charges" not in self.batoms.obj.data.attributes:
@@ -244,7 +244,7 @@ class MolecularSurface(BaseObject):
         4) value outside SAS set a value smaller than 5
         5) Marching cube find isosurface = 5
         """
-        from batoms.draw import draw_surface_from_vertices
+        from ...draw import draw_surface_from_vertices
 
         resolution = ms.resolution
         probe = ms.probe
@@ -320,7 +320,7 @@ class MolecularSurface(BaseObject):
 
     def get_sasa(self, name):
         """ """
-        from batoms.utils.butils import get_area, get_volume
+        from ...utils.butils import get_area, get_volume
 
         me = self.sas_objs[name].data
         area = get_area(me)
@@ -350,7 +350,7 @@ class MolecularSurface(BaseObject):
 
     def get_sesa(self, name):
         """ """
-        from batoms.utils.butils import get_area, get_volume
+        from ...utils.butils import get_area, get_volume
 
         me = self.ses_objs[name].data
         area = get_area(me)
@@ -371,7 +371,7 @@ class MolecularSurface(BaseObject):
 
     def get_sasa_mb(self, frame_indices=[]):
         """ """
-        from batoms.utils.butils import get_area, get_volume
+        from ...utils.butils import get_area, get_volume
 
         if isinstance(frame_indices, int):
             frame_indices = [frame_indices]
@@ -578,8 +578,8 @@ class MolecularSurface(BaseObject):
         2) two sphere
         1) one sphere: contact surface
         """
-        from batoms.utils import check_origin_3, check_origin_2
-        from batoms.draw import draw_vertices
+        from ...utils import check_origin_3, check_origin_2
+        from ...draw import draw_vertices
 
         logger.debug("eps: ", eps)
         n = len(vertices)
@@ -779,7 +779,7 @@ class MolecularSurface(BaseObject):
 
     def get_sesa_mb(self):
         """ """
-        from batoms.utils.butils import get_area, get_volume
+        from ...utils.butils import get_area, get_volume
 
         me = self.ses_obj.data
         area = get_area(me)
@@ -857,7 +857,7 @@ class MolecularSurface(BaseObject):
 
     @property
     def setting(self):
-        from batoms.utils import deprecated
+        from ...utils import deprecated
 
         """setting object."""
         deprecated(

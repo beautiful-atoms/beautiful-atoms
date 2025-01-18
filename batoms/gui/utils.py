@@ -1,5 +1,5 @@
 import bpy
-from batoms.batoms import Batoms
+from ..batoms import Batoms
 
 
 def get_active_bpy_data(btype="cell"):

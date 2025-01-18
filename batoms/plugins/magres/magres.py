@@ -7,7 +7,7 @@ This module defines the Magres object in the Batoms package.
 import bpy
 from time import time
 import numpy as np
-from batoms.base.object import BaseObject
+from ...base.object import BaseObject
 from .setting import MagresSettings
 import logging
 
@@ -40,7 +40,7 @@ class Magres(BaseObject):
 
     def build_materials(self, name, color, node_inputs=None, material_style="default"):
         """ """
-        from batoms.material import create_material
+        from ...material import create_material
 
         if name in bpy.data.materials:
             mat = bpy.data.materials.get(name)
@@ -55,7 +55,7 @@ class Magres(BaseObject):
         return mat
 
     def draw(self, magres_name="ALL"):
-        from batoms.utils.butils import clean_coll_object_by_type
+        from ...utils.butils import clean_coll_object_by_type
 
         # delete old plane
         clean_coll_object_by_type(self.batoms.coll, "MAGRES")
@@ -182,7 +182,7 @@ class Magres(BaseObject):
 
     @property
     def setting(self):
-        from batoms.utils import deprecated
+        from ...utils import deprecated
 
         """setting object."""
         deprecated(

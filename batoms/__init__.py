@@ -13,12 +13,7 @@ rendering atomic structures using blender.""",
 }
 
 
-# install pip dependencies
-from .install import pip_dependencies  # noqa: E402
-
-pip_dependencies.install()
-
-from batoms.batoms import Batoms  # noqa: E402
+from .batoms import Batoms  # noqa: E402
 
 
 __all__ = ["Batoms"]
@@ -28,7 +23,6 @@ from . import (  # noqa: E402
     preferences,
     plugins,
     internal_data,
-    pip_dependencies,
     ops,
     gui,
     console,
@@ -36,23 +30,29 @@ from . import (  # noqa: E402
 
 logger.set_logger(bl_info["version"])
 
-modules = ["bond", "polyhedra", "render", "ribbon"]
-
 
 def enable_module():
-    import importlib
+    from .bond import register_class as register_bond_class
+    from .polyhedra import register_class as register_polyhedra_class
+    from .render import register_class as register_render_class
+    from .ribbon import register_class as register_ribbon_class
 
-    for key in modules:
-        module = importlib.import_module("batoms.{}".format(key))
-        module.register_class()
+    register_bond_class()
+    register_polyhedra_class()
+    register_render_class()
+    register_ribbon_class()
 
 
 def disable_module():
-    import importlib
+    from .bond import unregister_class as unregister_bond_class
+    from .polyhedra import unregister_class as unregister_polyhedra_class
+    from .render import unregister_class as unregister_render_class
+    from .ribbon import unregister_class as unregister_ribbon_class
 
-    for key in modules:
-        module = importlib.import_module("batoms.{}".format(key))
-        module.unregister_class()
+    unregister_bond_class()
+    unregister_polyhedra_class()
+    unregister_render_class()
+    unregister_ribbon_class()
 
 
 def register():
@@ -60,7 +60,6 @@ def register():
 
     tstart0 = time()
     # dependencies
-    pip_dependencies.register_class()
     preferences.register_class()
     # class
     internal_data.register_class()
@@ -86,7 +85,6 @@ def register():
 
 def unregister():
     # dependencies
-    pip_dependencies.unregister_class()
     # class
     internal_data.unregister_class()
     ops.unregister_class()

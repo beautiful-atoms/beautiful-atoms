@@ -64,7 +64,7 @@ def get_node_with_node_tree_by_name(
 
 def get_cell_node(parent_tree, label):
     """Get the position of the cell."""
-    from batoms.utils.utils_node import (
+    from ..utils.utils_node import (
         get_node_by_name,
         create_node_tree,
     )

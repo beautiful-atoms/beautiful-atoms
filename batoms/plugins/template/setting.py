@@ -1,7 +1,7 @@
 """
 """
 import bpy
-from batoms.base.collection import Setting
+from ...base.collection import Setting
 import logging
 
 logger = logging.getLogger(__name__)

@@ -12,7 +12,7 @@ from bpy.props import (
     BoolProperty,
 )
 from ase.build import nanotube
-from batoms import Batoms
+from ..batoms import Batoms
 
 
 class BuildNanotube(Operator):
