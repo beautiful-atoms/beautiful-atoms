@@ -1,0 +1,263 @@
+# Test the batoms plugin using test
+name: Test installation script
+
+on:
+  push:
+    branches:
+      - main
+      - workflow
+  pull_request:
+    branches:
+      - main
+      - workflow
+  workflow_dispatch:
+
+env:
+  BLENDER_DOWN_URL: "https://mirrors.ocf.berkeley.edu/blender/release"
+
+jobs:
+  unittest-linux:
+    defaults:
+      run:
+        shell: bash -l {0}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # For future tests we will only over 3 of the latest versions
+        blender_ver: ["3.6.4"]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: batoms
+          python-version: "3.10"
+          #mamba-version: "*"
+          miniforge-variant: Mambaforge # Fix according to https://github.com/nextstrain/cli/commit/4a764976519ca5c540c745463548a9d883eae079
+          channels: conda-forge,defaults
+      - name: Update libstdc++ and
+        run: |
+           sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test &&\
+           sudo apt-get update &&\
+           sudo apt-get install -y libxxf86vm1 libstdc++6
+      - name: Download portable blender
+        run: |
+          echo Currently install in $(pwd)
+          VER=${{ matrix.blender_ver }}
+          MAJ_VER=${VER%.*}
+          echo $VER $MAJ_VER
+          URL="${BLENDER_DOWN_URL}/Blender${MAJ_VER}/blender-${VER}-linux-x64.tar.xz"
+          mkdir -p ../blender && curl -O ${URL} && tar -xvf blender-*-linux-x64.tar.xz -C ../blender
+          echo "BLENDER_ROOT=../blender/blender-${VER}-linux-x64/${MAJ_VER}" >> $GITHUB_ENV
+      - name: Pytest and dependencies
+        run:  |
+            pip install pytest pyfakefs
+      - name: Run pytest
+        run:  |
+            pytest -svv tests/test_install_script.py
+  install-linux:
+    defaults:
+      run:
+        shell: bash -l {0}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # For future tests we will only over 3 of the latest versions
+        blender_ver: ["3.6.4"]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: batoms
+          python-version: "3.10"
+          #mamba-version: "*"
+          miniforge-variant: Mambaforge # Fix according to https://github.com/nextstrain/cli/commit/4a764976519ca5c540c745463548a9d883eae079
+          channels: conda-forge,defaults
+      - name: Update libstdc++ and
+        run: |
+           sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test &&\
+           sudo apt-get update &&\
+           sudo apt-get install -y libxxf86vm1 libstdc++6
+      - name: Download portable blender
+        run: |
+          echo Currently install in $(pwd)
+          VER=${{ matrix.blender_ver }}
+          MAJ_VER=${VER%.*}
+          echo $VER $MAJ_VER
+          URL="${BLENDER_DOWN_URL}/Blender${MAJ_VER}/blender-${VER}-linux-x64.tar.xz"
+          mkdir -p ../blender && curl -O ${URL} && tar -xvf blender-*-linux-x64.tar.xz -C ../blender
+          echo "BLENDER_ROOT=../blender/blender-${VER}-linux-x64/${MAJ_VER}" >> $GITHUB_ENV
+      - name: Run normal installation & uninstall script
+        run: |
+          echo Currently install in $(pwd)
+          echo Use blender root ${BLENDER_ROOT}
+          $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT}
+          command -v batomspy >/dev/null 2>&1 || { echo >&2 "No batomspy installed"; exit 1; }
+          # Test symlink blender
+          rm -rf ./blender-sl && ln -s ${BLENDER_ROOT}/../blender ./blender-sl
+          ./blender-sl -b >/dev/null 2>&1 || { echo >&2 "Symlinking blender doesn't work!"; exit 1; }
+          rm -rf /tmp/blender
+          $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
+          ! ( command -v batomspy >/dev/null 2>&1 ) || { echo >&2 "batomspy not removed"; exit 1; }
+      - name: Run installation script with startup and preferences
+        run: |
+          $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT}  --use-startup --use-preferences
+          python -m pip install pytest==6.2.5
+          ${BLENDER_ROOT}/../blender -b -P tests/test_default_preference.py
+          $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
+      - name: Run installation using develop mode
+        run: |
+          $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} --develop
+          readlink ${BLENDER_ROOT}/scripts/addons_contrib/batoms
+          $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
+          echo "blender root parent"
+          ls -alh ${BLENDER_ROOT}/..
+      # Disable version install as blender > 3.4 breaks
+      # - name: Run installation with version check and without local repo
+      #   run: |
+      #     BLENDER_ROOT=$(realpath ${BLENDER_ROOT})
+      #     cp install.py $HOME && cd $HOME
+      #     # echo "blender root parent"
+      #     ls -alh ${BLENDER_ROOT}/..
+      #     $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} -t
+      #     $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
+      #   if: ${{ matrix.blender_ver != '3.2.0' }}
+
+
+
+
+
+  install-macos:
+    defaults:
+      run:
+        shell: bash -l {0}
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        # Somehow the macos installers are throwing segfault, could we check?
+        blender_ver: ["3.4.1"]
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: batoms
+          python-version: "3.10"
+          #mamba-version: "*"
+          miniforge-variant: Mambaforge # Fix according to https://github.com/nextstrain/cli/commit/4a764976519ca5c540c745463548a9d883eae079
+          channels: conda-forge,defaults
+      - name: Download portable blender
+        run: |
+          echo Currently install in $(pwd)
+          VER=${{ matrix.blender_ver }}
+          MAJ_VER=${VER%.*}
+          echo $VER $MAJ_VER
+          URL="${BLENDER_DOWN_URL}/Blender${MAJ_VER}/blender-${VER}-macos-x64.dmg"
+          curl -O ${URL} && 7z x blender-*-macos-x64.dmg -o../ -y
+          ls ../Blender
+          cp -pr ../Blender/ $HOME/Applications/
+          ls $HOME/Applications
+          echo "BLENDER_ROOT=$HOME/Applications/Blender.app/Contents/Resources/${MAJ_VER}" >> $GITHUB_ENV
+          chmod -R u+x $HOME/Applications/Blender.app
+          # ls "$HOME/Library/Application Support/Blender/${MAJ_VER}/config/"
+      # Just debugger session
+      - name: try call macos blender
+        run: |
+          /Users/runner/Applications/Blender.app/Contents/MacOS/Blender -b || true
+          find /var/folders -name blender.crash.txt -exec cat {} \; || true
+      # - name: Setup upterm session
+      #   uses: lhotari/action-upterm@v1
+      - name: Run installation and uninstallation script
+        run: |
+          echo Currently install in $(pwd)
+          echo Use blender root ${BLENDER_ROOT}
+          $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT}
+          command -v batomspy >/dev/null 2>&1 || { echo >&2 "No batomspy installed"; exit 1; }
+          $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
+          ! ( command -v batomspy >/dev/null 2>&1 ) || { echo >&2 "batomspy not removed"; exit 1; }
+      - name: Run installation and uninstallation script with auto path infer
+        run: |
+          $CONDA_PYTHON_EXE install.py
+          $CONDA_PYTHON_EXE install.py --uninstall
+      - name: Run installation script with startup and preferences
+        run: |
+          $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} --use-startup --use-preferences
+          python -m pip install pytest==6.2.5
+          ${BLENDER_ROOT}/../../MacOS/Blender -b -P tests/test_default_preference.py
+          $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
+      - name: Run installation using develop mode
+        run: |
+          $CONDA_PYTHON_EXE install.py ${BLENDER_ROOT} --develop
+          readlink ${BLENDER_ROOT}/scripts/addons_contrib/batoms
+          $CONDA_PYTHON_EXE install.py --uninstall ${BLENDER_ROOT}
+      # - name: Run installation with version check and without local repo
+      #   run: |
+      #     # BLENDER_ROOT=$(readlink -f ${BLENDER_ROOT})
+      #     cp install.py $HOME
+      #     $CONDA_PYTHON_EXE ${HOME}/install.py ${BLENDER_ROOT} -t v2.1.0
+      #     $CONDA_PYTHON_EXE ${HOME}/install.py --uninstall ${BLENDER_ROOT}
+      #   if: ${{ matrix.blender_ver != '3.2.0' }}
+
+
+
+  install-windows:
+    defaults:
+      run:
+        shell: pwsh
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        blender_ver: ["3.6.4"]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: conda-incubator/setup-miniconda@v2
+      - name: Download portable blender
+        shell: bash -l {0}
+        run: |
+          echo Currently install in $(pwd)
+          VER=${{ matrix.blender_ver }}
+          MAJ_VER=${VER%.*}
+          echo $VER $MAJ_VER
+          URL="${BLENDER_DOWN_URL}/Blender${MAJ_VER}/blender-${VER}-windows-x64.zip"
+          curl -O ${URL} && unzip blender-*-windows-x64.zip -d ../
+          ls ../blender-${VER}-windows-x64/${MAJ_VER}
+          echo "BLENDER_ROOT=../blender-${VER}-windows-x64/${MAJ_VER}" >> $GITHUB_ENV
+      - name: Run installation / uninstall script
+        run: |
+          echo "Use blender root" $env:BLENDER_ROOT
+          conda info
+          conda list
+          python install.py --use-pip $env:BLENDER_ROOT
+          python install.py --uninstall --use-pip $env:BLENDER_ROOT
+      - name: Copy blender to program files
+        shell: bash -l {0}
+        run: |
+          VER=${{ matrix.blender_ver }}
+          MAJ_VER=${VER%.*}
+          mkdir -p "/c/Program Files/Blender Foundation/Blender ${MAJ_VER}"
+          cp -r ../blender-${VER}-windows-x64/* "/c/Program Files/Blender Foundation/Blender ${MAJ_VER}/"
+          ls "/c/Program Files/Blender Foundation/Blender ${MAJ_VER}/"
+      - name: Run installation / uninstall script with auto path infer
+        run: |
+          conda info
+          conda list
+          python install.py --use-pip
+          python install.py --uninstall --use-pip
+      - name: Run installation script with startup and preferences
+        run: |
+          python install.py --use-pip $env:BLENDER_ROOT --use-startup --use-preferences
+          python install.py --use-pip --uninstall $env:BLENDER_ROOT
+      - name: ls
+        shell: bash -l {0}
+        run: |
+          echo "blender root parent"
+          ls -alh ${{ env.BLENDER_ROOT }}/..
+      # - name: Run installation with version
+      #   shell: bash -l {0}
+      #   run: |
+      #     BLENDER_ROOT=$(realpath ${BLENDER_ROOT})
+      #     cp install.py ${HOME} && cd ${HOME}
+      #     echo "blender root parent"
+      #     ls -alh ${BLENDER_ROOT}/..
+      #     python install.py --use-pip ${BLENDER_ROOT} -t v2.1.0
+      #     python install.py --use-pip --uninstall ${BLENDER_ROOT}
+      #   if: ${{ matrix.blender_ver != '3.2.0' }}
