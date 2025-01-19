@@ -1,21 +1,6 @@
-bl_info = {
-    "name": "Batoms toolbar",
-    "author": "Xing Wang",
-    "version": (2, 2, 0),
-    "blender": (3, 0, 0),
-    "location": "File -> Import -> Batoms (xyz, cif, pdb, ...)",
-    "description": """Python module for drawing and
-rendering atomic structures using blender.""",
-    "warning": "",
-    "category": "Import-Export",
-    "doc_url": "https://beautiful-atoms.readthedocs.io/en/latest/",
-    "tracker_url": "https://github.com/beautiful-atoms/beautiful-atoms/issues/new/choose",
-}
-
-
 from .batoms import Batoms  # noqa: E402
 
-
+__version__ = "2.3.0"
 __all__ = ["Batoms"]
 
 from . import (  # noqa: E402
@@ -28,7 +13,7 @@ from . import (  # noqa: E402
     console,
 )
 
-logger.set_logger(bl_info["version"])
+logger.set_logger(__version__)
 
 
 def enable_module():
