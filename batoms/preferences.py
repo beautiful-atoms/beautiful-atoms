@@ -13,7 +13,6 @@ from bpy.props import (
     StringProperty,
     EnumProperty,
 )
-from .install.pip_dependencies import has_module
 from .install import update
 from .logger import update_logging_level
 import logging
@@ -338,22 +337,6 @@ class BatomsAddonPreferences(AddonPreferences):
             "batoms.use_batoms_preference", text="Use Preferences", icon="FILE_REFRESH"
         )
         layout.separator()
-
-        box = layout.box().column()
-        box.label(text="Dependencies:")
-        #
-        for package, modname in dependencies.items():
-            if not has_module(modname):
-                op = box.operator(
-                    "batoms.pip_install_package",
-                    icon="IMPORT",
-                    text="Install {}".format(package),
-                )
-                op.package = package
-                op.modname = modname
-            else:
-                setattr(self, modname, True)
-                box.prop(self, modname, text=package)
         #
         layout.separator()
         split = layout.split()
