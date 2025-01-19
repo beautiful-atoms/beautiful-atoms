@@ -58,7 +58,7 @@ $ pre-commit install
 ### Extension
 
 ```
-pip download ase --dest ./batoms/wheels --only-binary=:all: --python-version=3.11 --platform=manylinux_2_28_x86_64
+pip download ase --dest ./batoms/wheels --only-binary=:all: --python-version=3.11 --platform=manylinux_2_17_x86_64
 pip download ase --dest ./batoms/wheels --only-binary=:all: --python-version=3.11 --platform=win_amd64
 pip download ase --dest ./batoms/wheels --only-binary=:all: --python-version=3.11 --platform=macosx_12_0_arm64
 ```
