@@ -33,6 +33,11 @@ jobs:
           echo "BLENDER_PYTHON=/blender/$BLENDER_MAJOR_MINOR/python/bin/python3.11" >> $GITHUB_ENV
           echo "BLENDER_CMD=blender --command" >> $GITHUB_ENV
 
+      - name: Install Git
+        run: |
+          sudo apt update
+          sudo apt install -y git
+
       - name: Ensure pip is installed
         run: |
           $BLENDER_PYTHON -m ensurepip
@@ -54,7 +59,7 @@ jobs:
 
       - name: Run unittests
         run: |
-          blender -b -P scripts/run_tests.py -- -vv tests --cov-branch --cov-report=xml
+          blender -b -P scripts/run_tests.py -- -vv tests --cov --cov-report=xml
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
