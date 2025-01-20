@@ -1,6 +1,6 @@
-### Beautiful Atoms
+## Beautiful Atoms
 [![Build beautiful_atoms main image](https://github.com/beautiful-atoms/beautiful-atoms/actions/workflows/build_main_image.yml/badge.svg)](https://github.com/beautiful-atoms/beautiful-atoms/actions/workflows/build_main_image.yml)
-[![Unit test](https://github.com/beautiful-atoms/beautiful-atoms/actions/workflows/ci.yml/badge.svg)](https://github.com/beautiful-atoms/beautiful-atoms/actions/workflows/unittests.yml)
+[![Unit test](https://github.com/beautiful-atoms/beautiful-atoms/actions/workflows/ci.yml/badge.svg)](https://github.com/beautiful-atoms/beautiful-atoms/actions/workflows/unittests.yaml)
 [![codecov](https://codecov.io/gh/beautiful-atoms/beautiful-atoms/branch/main/graph/badge.svg)](https://codecov.io/gh/beautiful-atoms/beautiful-atoms)
 
 Batoms is a Python package for editing and rendering atoms and molecule objects using Blender. A Python interface that allows for automating workflows.
@@ -23,50 +23,62 @@ Features:
 * ``Cross-platform``: (Linux, Windows, macOS)
 
 
-### How to use
 
-Please visit: https://beautiful-atoms.readthedocs.io/en/latest/
+## How to use
+### **⚠️ Need Blender 4.2.0 or later.**
 
-### View and edit structure in Jupyter Notebook
+Please visit the [documentation](https://beautiful-atoms.readthedocs.io/en/latest/) for more information.
+
+## View and edit structure in Jupyter Notebook
 Another package, [weas-widget](https://github.com/superstar54/weas-widget), allows users to visualize and edit with atomistic structures in Jupyter Notebook.
 
-### How to contribute
-
-#### Editor
-We recommend using [Visual Studio Code](https://code.visualstudio.com/) with the [Blender extension](https://github.com/JacquesLucke/blender_vscode).
-
-#### Test
-We recommend using [pytest-blender](https://pypi.org/project/pytest-blender/). To run the tests, run:
-
-```console
-pip install pytest-blender
-blender_python="$(pytest-blender)"
-$blender_python -m ensurepip
-# Install the development dependencies:
-$blender_python -m pip install -r test-requirements.txt
-cd tests
-pytest
-```
-
-#### Pre-commit
-To install the pre-commit hooks, run:
-
-```console
-$ pre-commit install
-```
+## How to contribute
 
 
 ### Extension
+One can build the extension locally by following the steps below.
 
+Download wheels for ase and scikit-image:
 ```
 pip download ase scikit-image --dest ./batoms/wheels --only-binary=:all: --python-version=3.11 --platform=manylinux_2_17_x86_64
 pip download ase scikit-image --dest ./batoms/wheels --only-binary=:all: --python-version=3.11 --platform=win_amd64
 pip download ase scikit-image --dest ./batoms/wheels --only-binary=:all: --python-version=3.11 --platform=macosx_12_0_arm64
 ```
 
+Update the wheels in the `batoms/blender_manifest.toml` file.
+
+```console
+python scripts/update_wheels.py
+```
+
+Build the extension.
 ```
 blender --command extension build --source-dir batoms --output-dir .
 ```
 
-### Contact
+### Editor
+We recommend using [Visual Studio Code](https://code.visualstudio.com/) with the [Blender extension](https://github.com/JacquesLucke/blender_vscode).
+
+In order to develop it inside VSCode, you need at least update the wheel file in the `batoms/blender_manifest.toml` file using the steps above.
+
+### Test
+To run the tests, run:
+
+```console
+# install pytest
+~/apps/blender-4.3.2-linux-x64/4.3/python/bin/python3.11 -m pip install pytest
+# run all tests
+~/apps/blender-4.3.2-linux-x64/blender -b -P scripts/run_tests.py -- -vv tests
+# run a specific test
+~/apps/blender-4.3.2-linux-x64/blender -b -P scripts/run_tests.py -- -vv tests/test_batoms.py
+```
+
+### Pre-commit
+To install the pre-commit hooks, run:
+
+```console
+$ pre-commit install
+```
+
+## Contact
 * Xing Wang  <xingwang1991@gmail.com>
