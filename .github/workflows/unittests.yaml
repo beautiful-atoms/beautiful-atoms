@@ -29,19 +29,24 @@ jobs:
           echo "BLENDER_MAJOR_MINOR=$BLENDER_MAJOR_MINOR" >> $GITHUB_ENV
           echo "Blender Major.Minor version set to: $BLENDER_MAJOR_MINOR"
 
+          # Define a shorter path for Python inside Blender
+          echo "BLENDER_PYTHON=/blender/$BLENDER_MAJOR_MINOR/python/bin/python3.11" >> $GITHUB_ENV
+          echo "BLENDER_CMD=blender --command" >> $GITHUB_ENV
+
       - name: Ensure pip is installed
         run: |
-          /blender/$BLENDER_MAJOR_MINOR/python/bin/python3.11 -m ensurepip
-          /blender/$BLENDER_MAJOR_MINOR/python/bin/python3.11 -m pip install --upgrade pip
+          $BLENDER_PYTHON -m ensurepip
+          $BLENDER_PYTHON -m pip install --upgrade pip
 
       - name: Build the extension
         run: |
-          /blender/$BLENDER_MAJOR_MINOR/python/bin/python3.11 -m pip download ase --dest ./batoms/wheels --only-binary=:all: --python-version=3.11 --platform=manylinux_2_17_x86_64
-          blender --command extension build --source-dir batoms --output-dir .
+          $BLENDER_PYTHON -m pip download ase --dest ./batoms/wheels --only-binary=:all: --python-version=3.11 --platform=manylinux_2_17_x86_64
+          $BLENDER_PYTHON scripts/update_wheels.py
+          $BLENDER_CMD extension build --source-dir batoms --output-dir .
 
       - name: Install and enable the extension
         run: |
-          blender --command extension install-file -r user_default --enable batoms-2.3.0-linux_x64.zip
+          $BLENDER_CMD extension install-file -r user_default --enable batoms-2.3.0-linux_x64.zip
 
       - name: Run unittests
         run: |
