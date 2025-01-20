@@ -2,9 +2,24 @@ import numpy as np
 import math
 from time import time
 import logging
+import subprocess
 
 # logger = logging.getLogger('batoms')
 logger = logging.getLogger(__name__)
+
+
+def subprocess_run(cmds):
+    try:
+        p = subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        stdout, stderr = p.communicate()
+        if p.returncode == 0:
+            return True
+        else:
+            logger.critical(stdout, stderr)
+    except (OSError, Exception) as exception:
+        logger.critical(exception)
+        return False
+    return False
 
 
 def map_volumetric_data(volumetric_data, coordinates):
