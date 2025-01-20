@@ -54,4 +54,9 @@ jobs:
 
       - name: Run unittests
         run: |
-          blender -b -P scripts/run_tests.py -- -vv tests
+          blender -b -P scripts/run_tests.py -- -vv tests --cov-branch --cov-report=xml
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
