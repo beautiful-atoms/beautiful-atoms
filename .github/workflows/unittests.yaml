@@ -46,7 +46,11 @@ jobs:
 
       - name: Install and enable the extension
         run: |
-          $BLENDER_CMD extension install-file -r user_default --enable batoms-2.3.0-linux_x64.zip
+          $BLENDER_CMD extension install-file -r user_default --enable batoms-2.3.0.zip
+
+      - name: Install python dependencies
+        run: |
+          $BLENDER_PYTHON -m pip install -r test-requirements.txt
 
       - name: Run unittests
         run: |
