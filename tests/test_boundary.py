@@ -1,6 +1,9 @@
 import bpy
 from batoms import Batoms
 import numpy as np
+import os
+
+path = os.path.dirname(os.path.abspath(__file__))
 
 
 def test_boundary():
@@ -40,7 +43,7 @@ def test_boundary_animation():
     from ase.io import read
 
     bpy.ops.batoms.delete()
-    tio2 = read("../tests/datas/tio2_10.xyz", ":")
+    tio2 = read(os.path.join(path, "datas/tio2_10.xyz"), ":")
     tio2 = Batoms("tio2", from_ase=tio2, load_trajectory=True)
     tio2.boundary = 0.01
     assert len(tio2.boundary.obj.data.vertices) == 9

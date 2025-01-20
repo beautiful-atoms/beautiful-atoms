@@ -3,10 +3,17 @@
 import os
 
 
-def has_display():
-    """Detect display, should work in linux systems; windows not tested"""
-    display_string = os.environ.get("DISPLAY", "")
-    return len(display_string) > 0
+def use_cycles():
+    """Use environment variable to set Cycles as a boolean.
+
+    export USE_CYCLES=1  # Enable Cycles
+    export USE_CYCLES=0  # Disable Cycles
+
+    github action
+    env:
+        USE_CYCLES: "1"
+    """
+    return os.environ.get("USE_CYCLES", "0").lower() in ("1", "true", "yes")
 
 
 # Very bad resolution only for cycles output

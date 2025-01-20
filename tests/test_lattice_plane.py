@@ -5,10 +5,13 @@ from batoms import Batoms
 from batoms.bio.bio import read
 import os
 
-try:
-    from _common_helpers import has_display, set_cycles_res
+path = os.path.dirname(os.path.abspath(__file__))
 
-    use_cycles = not has_display()
+
+try:
+    from _common_helpers import use_cycles, set_cycles_res
+
+    use_cycles = not use_cycles()
 except ImportError:
     use_cycles = False
 
@@ -36,7 +39,7 @@ def test_boundary():
     if skip_test:
         pytest.skip("Skip tests on cube files since $NOTEST_CUBE provided.")
     bpy.ops.batoms.delete()
-    h2o = read("../tests/datas/h2o-homo.cube")
+    h2o = read(os.path.join(path, "datas/h2o-homo.cube"))
     h2o.lattice_plane.settings[(0, 0, 1)] = {"distance": 6, "boundary": True}
     h2o.lattice_plane.settings[(0, 0, -1)] = {"distance": -5, "boundary": True}
     h2o.lattice_plane.draw()

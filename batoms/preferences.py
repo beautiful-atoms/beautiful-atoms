@@ -13,9 +13,9 @@ from bpy.props import (
     StringProperty,
     EnumProperty,
 )
-from .install import update
 from .logger import update_logging_level
 import logging
+from .utils import subprocess_run
 
 logger = logging.getLogger(__name__)
 
@@ -195,37 +195,7 @@ class BatomsAddonPreferences(AddonPreferences):
             cmds = ["export", "BATOMS_SETTING_PATH={}".format(self.batoms_setting_path)]
         if os.name == "nt":  # Windows
             cmds = ["setx", "BATOMS_SETTING_PATH {}".format(self.batoms_setting_path)]
-        logger.debug(update.subprocess_run(cmds))
-
-    ase: BoolProperty(
-        name="ASE installed",
-        description="ASE package installed",
-        default=False,
-    )
-
-    skimage: BoolProperty(
-        name="scikit-image installed",
-        description="scikit-image package installed",
-        default=False,
-    )
-
-    spglib: BoolProperty(
-        name="spglib installed",
-        description="spglib package installed",
-        default=False,
-    )
-
-    pymatgen: BoolProperty(
-        name="pymatgen installed",
-        description="pymatgen package installed",
-        default=False,
-    )
-
-    openbabel: BoolProperty(
-        name="Openbabel installed",
-        description="openbabel package installed",
-        default=False,
-    )
+        logger.debug(subprocess_run(cmds))
 
     batoms_setting_path: StringProperty(
         name="Custom Setting Path",
@@ -324,9 +294,6 @@ class BatomsAddonPreferences(AddonPreferences):
             box = layout.box().column()
             box.label(text="Warning: Batoms need Blender version > 3.0.0.")
 
-        box = layout.box().column()
-        row = box.row(align=True)
-        row.operator("batoms.update", icon="FILE_REFRESH")
         layout.label(text="Use default setting.")
         box = layout.box().column()
         row = box.row(align=True)
@@ -364,7 +331,6 @@ classes = [
     BatomsDefaultPreference,
     BatomsDefaultStartup,
     BatomsAddonPreferences,
-    update.BatomsUpdateButton,
 ]
 
 

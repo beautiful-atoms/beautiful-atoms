@@ -127,7 +127,7 @@ class VolumetricData(Setting):
         obj.data.vertices.foreach_get("co", volume)
         volume = volume.reshape(-1, 1)
         shape = setting.shape
-        npoint = np.product(shape)
+        npoint = np.prod(shape)
         volume = volume[:npoint]
         volume = volume.reshape(shape)
         # print('Read volume: {0:1.2f}'.format(time() - tstart))

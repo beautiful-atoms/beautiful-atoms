@@ -153,7 +153,7 @@ class Battribute(Base):
     def natt(self) -> int:
         import numpy as np
 
-        return np.product(self.shape)
+        return np.prod(self.shape)
 
     @property
     def sub_name(self) -> int:

@@ -1,4 +1,16 @@
 import pytest
+import bpy
+import os
+
+path = os.path.dirname(os.path.abspath(__file__))
+
+
+@pytest.fixture
+def preferences():
+    package = "batoms"
+    addon = bpy.context.preferences.addons[package]
+    preferences = addon.preferences
+    return preferences
 
 
 @pytest.fixture
@@ -54,7 +66,7 @@ def tio2():
     import bpy
     from batoms.bio.bio import read
 
-    tio2 = read("../tests/datas/tio2.cif")
+    tio2 = read(os.path.join(path, "datas/tio2.cif"))
     yield tio2
     bpy.ops.batoms.delete()
 
@@ -64,6 +76,6 @@ def h2o_homo():
     import bpy
     from batoms.bio.bio import read
 
-    h2o_homo = read("../tests/datas/h2o-homo.cube")
+    h2o_homo = read(os.path.join(path, "datas/h2o-homo.cube"))
     yield h2o_homo
     bpy.ops.batoms.delete()

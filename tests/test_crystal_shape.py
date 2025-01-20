@@ -3,9 +3,9 @@ import pytest
 import os
 
 try:
-    from _common_helpers import has_display, set_cycles_res
+    from _common_helpers import use_cycles, set_cycles_res
 
-    use_cycles = not has_display()
+    use_cycles = not use_cycles()
 except ImportError:
     use_cycles = False
 
@@ -14,6 +14,7 @@ skip_test = bool(os.environ.get("NOTEST_CUBE", 0))
 
 
 def test_crystal_shape(au):
+    pytest.importorskip("spglib")
     au.crystal_shape.settings[(1, 1, 1)] = {
         "distance": 3,
         "crystal": True,

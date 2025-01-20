@@ -1,4 +1,7 @@
 import bpy
+import os
+
+path = os.path.dirname(os.path.abspath(__file__))
 
 
 def test_magres():
@@ -6,7 +9,7 @@ def test_magres():
     from ase.io import read
 
     bpy.ops.batoms.delete()
-    atoms = read("../tests/datas/ethanol.magres")
+    atoms = read(os.path.join(path, "datas/ethanol.magres"))
     ms_array = atoms.arrays.pop("ms")
     print(ms_array.shape)
     for i in range(3):
@@ -30,7 +33,7 @@ def test_magres_uilist():
     from ase.io import read
 
     bpy.ops.batoms.delete()
-    atoms = read("../tests/datas/ethanol.magres")
+    atoms = read(os.path.join(path, "datas/ethanol.magres"))
     ethanol = Batoms("ethanol", from_ase=atoms)
     bpy.context.view_layer.objects.active = ethanol.obj
     assert ethanol.coll.Bmagres.ui_list_index == 0

@@ -1,6 +1,7 @@
 ### Beautiful Atoms
 [![Build beautiful_atoms main image](https://github.com/beautiful-atoms/beautiful-atoms/actions/workflows/build_main_image.yml/badge.svg)](https://github.com/beautiful-atoms/beautiful-atoms/actions/workflows/build_main_image.yml)
-[![Test batoms blender plugin](https://github.com/beautiful-atoms/beautiful-atoms/actions/workflows/batoms_plugin_test.yaml/badge.svg)](https://github.com/beautiful-atoms/beautiful-atoms/actions/workflows/batoms_plugin_test.yaml)
+[![Unit test](https://github.com/beautiful-atoms/beautiful-atoms/actions/workflows/ci.yml/badge.svg)](https://github.com/beautiful-atoms/beautiful-atoms/actions/workflows/unittests.yml)
+[![codecov](https://codecov.io/gh/beautiful-atoms/beautiful-atoms/branch/main/graph/badge.svg)](https://codecov.io/gh/beautiful-atoms/beautiful-atoms)
 
 Batoms is a Python package for editing and rendering atoms and molecule objects using Blender. A Python interface that allows for automating workflows.
 
@@ -58,9 +59,9 @@ $ pre-commit install
 ### Extension
 
 ```
-pip download ase --dest ./batoms/wheels --only-binary=:all: --python-version=3.11 --platform=manylinux_2_17_x86_64
-pip download ase --dest ./batoms/wheels --only-binary=:all: --python-version=3.11 --platform=win_amd64
-pip download ase --dest ./batoms/wheels --only-binary=:all: --python-version=3.11 --platform=macosx_12_0_arm64
+pip download ase scikit-image --dest ./batoms/wheels --only-binary=:all: --python-version=3.11 --platform=manylinux_2_17_x86_64
+pip download ase scikit-image --dest ./batoms/wheels --only-binary=:all: --python-version=3.11 --platform=win_amd64
+pip download ase scikit-image --dest ./batoms/wheels --only-binary=:all: --python-version=3.11 --platform=macosx_12_0_arm64
 ```
 
 ```

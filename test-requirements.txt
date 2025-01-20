@@ -1,2 +1,2 @@
-pyfakefs
 pytest
+pytest-cov

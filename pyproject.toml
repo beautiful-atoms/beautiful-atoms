@@ -16,6 +16,7 @@ authors = [
 
 dependencies = [
     "ase",
+    "scikit-image",
 ]
 
 
@@ -28,6 +29,9 @@ Source = "https://github.com/beautiful-atoms/beautiful-atoms"
 pre-commit = [
     "pre-commit~=2.2",
     "pylint~=2.17.4",
+]
+dev = [
+    "toml",
 ]
 tests = [
     "pytest~=7.0",

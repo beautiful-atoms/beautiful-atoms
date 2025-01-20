@@ -4,11 +4,14 @@ from ase.build import molecule, bulk
 from batoms.bio.bio import read
 from time import time
 import numpy as np
+import os
+
+path = os.path.dirname(os.path.abspath(__file__))
 
 try:
-    from _common_helpers import has_display, set_cycles_res
+    from _common_helpers import use_cycles, set_cycles_res
 
-    use_cycles = not has_display()
+    use_cycles = not use_cycles()
 except ImportError:
     use_cycles = False
 
@@ -146,7 +149,7 @@ def test_bond_search_bond_0(tio2):
 
 def test_bond_search_bond_1():
     bpy.ops.batoms.delete()
-    mol = read("../tests/datas/anthraquinone.cif")
+    mol = read(os.path.join(path, "datas/anthraquinone.cif"))
     mol.boundary = 0.01
     mol.model_style = 1
     mol.bond.show_search = True
@@ -157,7 +160,7 @@ def test_bond_search_bond_1():
 
 def test_bond_search_bond_2():
     bpy.ops.batoms.delete()
-    mof = read("../tests/datas/mof-5.cif")
+    mof = read(os.path.join(path, "datas/mof-5.cif"))
     mof.boundary = 0.01
     mof.bond.settings[("Zn", "O")].polyhedra = True
     mof.model_style = 1

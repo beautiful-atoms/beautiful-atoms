@@ -1,6 +1,9 @@
 import bpy
 from batoms.batoms import Batoms
 import numpy as np
+import os
+
+path = os.path.dirname(os.path.abspath(__file__))
 
 
 def test_settings(ch4):
@@ -40,7 +43,7 @@ def test_select_protein():
     from batoms.pdbparser import read_pdb
 
     bpy.ops.batoms.delete()
-    atoms = read_pdb("../tests/datas/1ema.pdb")  # 1tim
+    atoms = read_pdb(os.path.join(path, "datas/1ema.pdb"))  # 1tim
     batoms = Batoms("protein", from_ase=atoms)
     batoms.ribbon.draw()
     sel1 = batoms.selects.add("sel1", np.where(batoms.arrays["types"] == "HETATM")[0])

@@ -29,20 +29,41 @@ jobs:
           echo "BLENDER_MAJOR_MINOR=$BLENDER_MAJOR_MINOR" >> $GITHUB_ENV
           echo "Blender Major.Minor version set to: $BLENDER_MAJOR_MINOR"
 
-      - name: Install test dependencies
-        run: |
-          /blender/$BLENDER_MAJOR_MINOR/python/bin/python3.11 -m ensurepip
-          /blender/$BLENDER_MAJOR_MINOR/python/bin/python3.11 -m pip install --upgrade pip
-          /blender/$BLENDER_MAJOR_MINOR/python/bin/python3.11 -m pip install pytest
+          # Define a shorter path for Python inside Blender
+          echo "BLENDER_PYTHON=/blender/$BLENDER_MAJOR_MINOR/python/bin/python3.11" >> $GITHUB_ENV
+          echo "BLENDER_CMD=blender --command" >> $GITHUB_ENV
 
-      - name: Copy addons to Blender
+      - name: Install Git
         run: |
-          cp -r batoms /blender/$BLENDER_MAJOR_MINOR/scripts/addons_core/
+          sudo apt update
+          sudo apt install -y git
 
-      - name: Enable Blender addons
+      - name: Ensure pip is installed
         run: |
-          blender -b -P scripts/enable_addon.py
+          $BLENDER_PYTHON -m ensurepip
+          $BLENDER_PYTHON -m pip install --upgrade pip
+
+      - name: Build the extension
+        run: |
+          $BLENDER_PYTHON -m pip download ase scikit-image --dest ./batoms/wheels --only-binary=:all: --python-version=3.11 --platform=manylinux_2_17_x86_64
+          $BLENDER_PYTHON scripts/update_wheels.py
+          $BLENDER_CMD extension build --source-dir batoms --output-dir .
+
+      - name: Install and enable the extension
+        run: |
+          $BLENDER_CMD extension install-file -r user_default --enable batoms-2.3.0.zip
+
+      - name: Install python dependencies
+        run: |
+          $BLENDER_PYTHON -m pip install -r test-requirements.txt
 
       - name: Run unittests
         run: |
-          blender -b -P scripts/run_tests.py -- -vv tests
+          blender -b -P scripts/run_tests.py -- -vv tests --cov
+
+      # the test cover is wrong, because it also inclue all the dependent packages, e.g., ase,
+      # so we don't upload it
+      # - name: Upload coverage reports to Codecov
+      #   uses: codecov/codecov-action@v5
+      #   with:
+      #     token: ${{ secrets.CODECOV_TOKEN }}

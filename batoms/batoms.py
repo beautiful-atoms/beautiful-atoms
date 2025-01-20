@@ -1033,7 +1033,7 @@ class Batoms(BaseCollection, ObjectGN):
         cell: 3x3 matrix
         m: 3x1 vector
         """
-        M = np.product(m)
+        M = np.prod(m)
         n = len(positions)
         positions = np.tile(positions, (M,) + (1,) * (len(positions.shape) - 1))
         i0 = 0
@@ -1060,7 +1060,7 @@ class Batoms(BaseCollection, ObjectGN):
         for x, vec in zip(m, cell):
             if x != 1 and not vec.any():
                 raise ValueError("Cannot repeat along undefined lattice " "vector")
-        M = np.product(m)
+        M = np.prod(m)
         attributes = self.attributes
         for key, data in attributes.items():
             attributes[key] = np.tile(data, (M,) + (1,) * (len(data.shape) - 1))

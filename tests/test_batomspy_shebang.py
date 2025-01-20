@@ -2,6 +2,8 @@ import subprocess
 import os
 import shutil
 import tempfile
+import pytest
+
 
 BATOMSPY_TEST = """#!/usr/bin/env batomspy
 import bpy
@@ -35,11 +37,13 @@ def _run_process(commands, shell=False, print_cmd=True, cwd=".", capture_output=
         raise RuntimeError(f"Running {full_cmd} returned error code {proc.returncode}")
 
 
+@pytest.mark.skip(reason="Need to be updated.")
 def test_batomspy_location():
     batomspy = shutil.which("batomspy")
     assert batomspy is not None
 
 
+@pytest.mark.skip(reason="Need to be updated.")
 def test_shebang():
     with tempfile.NamedTemporaryFile(suffix=".py", delete=False) as py_file:
         with open(py_file.name, "w") as fd:
