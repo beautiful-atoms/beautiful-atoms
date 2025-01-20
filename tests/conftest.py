@@ -1,4 +1,13 @@
 import pytest
+import bpy
+
+
+@pytest.fixture
+def preferences():
+    package = "batoms"
+    addon = bpy.context.preferences.addons[package]
+    preferences = addon.preferences
+    return preferences
 
 
 @pytest.fixture

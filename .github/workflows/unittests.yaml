@@ -29,19 +29,19 @@ jobs:
           echo "BLENDER_MAJOR_MINOR=$BLENDER_MAJOR_MINOR" >> $GITHUB_ENV
           echo "Blender Major.Minor version set to: $BLENDER_MAJOR_MINOR"
 
-      - name: Install test dependencies
+      - name: Ensure pip is installed
         run: |
           /blender/$BLENDER_MAJOR_MINOR/python/bin/python3.11 -m ensurepip
           /blender/$BLENDER_MAJOR_MINOR/python/bin/python3.11 -m pip install --upgrade pip
-          /blender/$BLENDER_MAJOR_MINOR/python/bin/python3.11 -m pip install pytest
 
-      - name: Copy addons to Blender
+      - name: Build the extension
         run: |
-          cp -r batoms /blender/$BLENDER_MAJOR_MINOR/scripts/addons_core/
+          /blender/$BLENDER_MAJOR_MINOR/python/bin/python3.11 -m pip download ase --dest ./batoms/wheels --only-binary=:all: --python-version=3.11 --platform=manylinux_2_17_x86_64
+          blender --command extension build --source-dir batoms --output-dir .
 
-      - name: Enable Blender addons
+      - name: Install and enable the extension
         run: |
-          blender -b -P scripts/enable_addon.py
+          blender --command extension install-file -r user_default --enable batoms-2.3.0-linux_x64.zip
 
       - name: Run unittests
         run: |

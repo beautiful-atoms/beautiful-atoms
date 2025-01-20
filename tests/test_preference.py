@@ -4,12 +4,7 @@ import importlib
 import pkgutil
 
 
-package = "batoms"
-addon = bpy.context.preferences.addons[package]
-preferences = addon.preferences
-
-
-def test_enable_disable_plugin():
+def test_enable_disable_plugin(preferences):
     from bpy.types import Collection
 
     assert preferences.magres is True
@@ -76,7 +71,7 @@ def test_child_loggers():
             continue
 
 
-def test_logging_level():
+def test_logging_level(preferences):
     """logging level.
     Since now all the child loggers are "delegation to the parent"
     https://docs.python.org/3/library/logging.html#logging.Logger.setLevel,
@@ -94,7 +89,7 @@ def test_logging_level():
     # assert(logger.level == 30)
 
 
-def test_logging_level_emit():
+def test_logging_level_emit(preferences):
     """Test if setting logging level hierachically works
     Set the logging level to INFO, adding Batoms shows the timing info
     Set the level to WARNING and higher, timing info is supressed
