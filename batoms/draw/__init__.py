@@ -1,5 +1,5 @@
 import bpy
-from batoms.material import create_material
+from ..material import create_material
 import numpy as np
 import logging
 
@@ -34,7 +34,7 @@ def draw_cylinder(
     """
     Draw cylinder.
     """
-    from batoms.data.source_data import bond_source
+    from ..data.source_data import bond_source
 
     # materials
     material = create_material(

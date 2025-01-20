@@ -9,9 +9,9 @@ from bpy.props import (
     IntVectorProperty,
     EnumProperty,
 )
-from batoms import Batoms
-from batoms.ops.base import OperatorBatoms, OperatorBatomsEdit
-from batoms.utils.butils import get_selected_vertices
+from ..batoms import Batoms
+from ..ops.base import OperatorBatoms, OperatorBatomsEdit
+from ..utils.butils import get_selected_vertices
 
 
 class ApplyCell(OperatorBatoms):
@@ -227,7 +227,7 @@ class BatomsJoin(OperatorBatoms):
     label: StringProperty(name="Label", default="", description="Label")
 
     def execute(self, context):
-        from batoms.utils.butils import get_selected_batoms
+        from ..utils.butils import get_selected_batoms
 
         batoms_list = get_selected_batoms()
         if len(batoms_list) < 2:
@@ -269,7 +269,7 @@ class deleteBatoms(Operator):
     label: StringProperty(name="Label", default="", description="Label")
 
     def execute(self, context):
-        from batoms.utils.butils import remove_collection, read_batoms_list
+        from ..utils.butils import remove_collection, read_batoms_list
 
         if self.label != "":
             remove_collection(self.label, keep_batom=False)
@@ -287,7 +287,7 @@ class deleteSelectedBatoms(OperatorBatoms):
     bl_description = "Delete selected batoms"
 
     def execute(self, context):
-        from batoms.utils.butils import get_selected_batoms, remove_collection
+        from ..utils.butils import get_selected_batoms, remove_collection
 
         batoms_list = get_selected_batoms()
         for label in batoms_list:

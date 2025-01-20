@@ -5,7 +5,7 @@ from bpy.props import (
     BoolProperty,
 )
 import bmesh
-from batoms import Batoms
+from ..batoms import Batoms
 import numpy as np
 import logging
 

@@ -11,7 +11,7 @@ from bpy.props import (
     BoolProperty,
 )
 from ase.build import graphene_nanoribbon
-from batoms import Batoms
+from ..batoms import Batoms
 
 
 class BuildNanoribbon(Operator):

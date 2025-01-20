@@ -6,7 +6,7 @@ This module defines the isosurface object in the Batoms package.
 
 import bpy
 import numpy as np
-from batoms.base.object import BaseObject
+from ...base.object import BaseObject
 from .setting import IsosurfaceSettings
 import logging
 
@@ -47,7 +47,7 @@ class Isosurface(BaseObject):
             scaled_verts, faces = calc_isosurface(volume, cell, iso.level)
             # color by another volumetric data
             if iso.color_by != "None":
-                from batoms.utils import map_volumetric_data
+                from ...utils import map_volumetric_data
 
                 data = map_volumetric_data(
                     self.batoms.volumetric_data[iso.color_by], scaled_verts
@@ -86,7 +86,7 @@ class Isosurface(BaseObject):
         color_by_attribute=None,
     ):
         """ """
-        from batoms.material import create_material
+        from ...material import create_material
 
         if name in bpy.data.materials:
             mat = bpy.data.materials.get(name)
@@ -103,8 +103,8 @@ class Isosurface(BaseObject):
 
     def draw(self, isosurface_name="ALL"):
         """Draw isosurface."""
-        from batoms.draw import draw_surface_from_vertices
-        from batoms.utils.butils import clean_coll_object_by_type
+        from ...draw import draw_surface_from_vertices
+        from ...utils.butils import clean_coll_object_by_type
 
         # delete old isosurface
         clean_coll_object_by_type(self.batoms.coll, "ISOSURFACE")
@@ -123,7 +123,7 @@ class Isosurface(BaseObject):
             obj.batoms.label = self.label
             obj.parent = self.batoms.obj
             if isosurface_data["attribute_data"] is not None:
-                from batoms.utils.attribute import set_mesh_attribute
+                from ...utils.attribute import set_mesh_attribute
 
                 obj.data.attributes.new(
                     name=isosurface_data["color_by_attribute"]["attribute_name"],
@@ -146,7 +146,7 @@ class Isosurface(BaseObject):
 
     @property
     def setting(self):
-        from batoms.utils import deprecated
+        from ...utils import deprecated
 
         """setting object."""
         deprecated(

@@ -23,7 +23,7 @@ class Batoms_IO_search_material_project(Operator):
     bl_description = "Search structure by id"
 
     def execute(self, context):
-        from batoms.database.mp import mp_search
+        from ..database.mp import mp_search
 
         io = context.scene.batoms.io
         mp_search(io.mp_key, io.mp_id)
@@ -55,7 +55,7 @@ class Batoms_IO_search_pubchem(Operator):
     bl_description = "Search structure by id"
 
     def execute(self, context):
-        from batoms.database.pubchem import pubchem_search
+        from ..database.pubchem import pubchem_search
 
         io = context.scene.batoms.io
         pubchem_search(io.pubchem_cid)
@@ -86,7 +86,7 @@ class Batoms_IO_search_RSCB(Operator):
     bl_description = "Import pdb by name"
 
     def execute(self, context):
-        from batoms.database.rscb import rscb_import
+        from ..database.rscb import rscb_import
 
         io = context.scene.batoms.io
         batoms = rscb_import(io.rscb_name)

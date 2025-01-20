@@ -3,8 +3,8 @@
 import bpy
 import numpy as np
 from ase.cell import Cell
-from batoms.utils.butils import object_mode
-from batoms.base.object import ObjectGN
+from .utils.butils import object_mode
+from .base.object import ObjectGN
 
 
 class Bcell(ObjectGN):
@@ -72,7 +72,7 @@ class Bcell(ObjectGN):
 
     def build_geometry_node(self):
         """ """
-        from batoms.utils.utils_node import get_node_by_name
+        from .utils.utils_node import get_node_by_name
 
         links = self.gn_node_group.links
         nodes = self.gn_node_group.nodes
@@ -209,7 +209,7 @@ class Bcell(ObjectGN):
 
     @width.setter
     def width(self, width):
-        from batoms.utils.utils_node import get_node_by_name
+        from .utils.utils_node import get_node_by_name
 
         self.batoms.coll.batoms.cell.width = width
         Circle = get_node_by_name(
@@ -233,7 +233,7 @@ class Bcell(ObjectGN):
 
     @color.setter
     def color(self, color):
-        from batoms.utils.utils_node import get_node_by_name
+        from .utils.utils_node import get_node_by_name
 
         if len(color) == 3:
             color = [color[0], color[1], color[2], 1]
@@ -393,7 +393,7 @@ class Bcell(ObjectGN):
         backface_culling=True,
     ):
         """ """
-        from batoms.material import create_material
+        from .material import create_material
 
         name = "%s_cell" % (label)
         if color is None:
@@ -413,7 +413,7 @@ class Bcell(ObjectGN):
         """draw_crystal_axes object.
         Shoud be a global variable.
         """
-        from batoms.draw.draw_screen import DrawCrystalAxes
+        from .draw.draw_screen import DrawCrystalAxes
 
         dns = bpy.app.driver_namespace
         name = "{}_crystal_axes".format(self.label)
@@ -439,7 +439,7 @@ class Bcell(ObjectGN):
             self.draw_crystal_axes.add_handle(positions)
 
     def draw(self):
-        from batoms.utils import deprecated
+        from .utils import deprecated
 
         deprecated(
             '"draw" will be deprecated in the furture. The cell is drawn automaticely now.'

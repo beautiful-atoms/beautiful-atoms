@@ -1,6 +1,6 @@
 from bpy.props import BoolProperty, StringProperty
-from batoms import Batoms
-from batoms.ops.base import OperatorBatoms
+from ...batoms import Batoms
+from ...ops.base import OperatorBatoms
 
 
 class MagresAdd(OperatorBatoms):

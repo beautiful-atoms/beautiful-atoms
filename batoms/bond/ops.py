@@ -7,8 +7,8 @@ from bpy.props import (
     IntProperty,
     StringProperty,
 )
-from batoms import Batoms
-from batoms.ops.base import OperatorBatoms
+from ..batoms import Batoms
+from ..ops.base import OperatorBatoms
 
 
 class BondPairAdd(OperatorBatoms):

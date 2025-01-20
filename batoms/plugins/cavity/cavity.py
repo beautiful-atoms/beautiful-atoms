@@ -6,12 +6,12 @@ This module defines the Cavity object in the Batoms package.
 
 import bpy
 import numpy as np
-from batoms.base.object import ObjectGN
-from batoms.plugins.base import PluginObject
+from ...base.object import ObjectGN
+from ...plugins.base import PluginObject
 from .setting import CavitySettings
 from scipy import spatial
-from batoms.utils.utils_node import get_node_by_name
-from batoms.utils import string2Number
+from ...utils.utils_node import get_node_by_name
+from ...utils import string2Number
 import logging
 
 # logger = logging.getLogger('batoms')
@@ -77,7 +77,7 @@ class Cavity(ObjectGN, PluginObject):
 
     def build_materials(self, name, color, node_inputs=None, material_style="default"):
         """ """
-        from batoms.material import create_material
+        from ...material import create_material
 
         if name in bpy.data.materials:
             mat = bpy.data.materials.get(name)
@@ -165,7 +165,7 @@ class Cavity(ObjectGN, PluginObject):
         Returns:
             _type_: _description_
         """
-        from batoms.data import basic_colors
+        from ...data import basic_colors
 
         arrays = self.batoms.arrays
         cell = self.batoms.cell
@@ -272,7 +272,7 @@ class Cavity(ObjectGN, PluginObject):
         """Remove sphere contact with boundary
         distance to cell < radius
         """
-        from batoms.neighborlist import pointCellDistance
+        from ...neighborlist import pointCellDistance
 
         centers = []
         radii = []
@@ -391,7 +391,7 @@ class Cavity(ObjectGN, PluginObject):
             instancer (bpy.data.object):
                 Object to be instanced
         """
-        from batoms.utils.butils import compareNodeType
+        from ...utils.butils import compareNodeType
 
         nodes = self.gn_node_group.nodes
         links = self.gn_node_group.links
@@ -472,7 +472,7 @@ class Cavity(ObjectGN, PluginObject):
 
     @property
     def setting(self):
-        from batoms.utils import deprecated
+        from ...utils import deprecated
 
         """setting object."""
         deprecated(

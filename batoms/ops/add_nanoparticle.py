@@ -11,7 +11,7 @@ from bpy.props import (
     BoolProperty,
 )
 from ase.cluster import Decahedron, Icosahedron, Octahedron
-from batoms import Batoms
+from ..batoms import Batoms
 
 
 class BuildDecahedron(Operator):

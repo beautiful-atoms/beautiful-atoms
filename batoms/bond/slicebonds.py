@@ -1,6 +1,6 @@
 import numpy as np
-from batoms.utils import number2String
-from batoms.base.object import childObjectGN
+from ..utils import number2String
+from ..base.object import childObjectGN
 import logging
 
 logger = logging.getLogger(__name__)

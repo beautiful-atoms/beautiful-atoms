@@ -5,7 +5,7 @@ Wrapper functions for ASE build
 """
 
 from ase import build
-from batoms.batoms import Batoms
+from .batoms import Batoms
 
 
 def molecule(label, symbol, **kwargs):

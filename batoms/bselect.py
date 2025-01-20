@@ -4,9 +4,9 @@
 #TODO merge select and SliceBatoms
 """
 import bpy
-from batoms.base.collection import Setting
+from .base.collection import Setting
 import numpy as np
-from batoms.utils import string2Number
+from .utils import string2Number
 
 # from time import time
 import logging

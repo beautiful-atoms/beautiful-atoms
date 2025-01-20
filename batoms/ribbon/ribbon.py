@@ -14,7 +14,7 @@ doi:10.1016/0263-7855(86)80010-8.
 import bpy
 from time import time
 import numpy as np
-from batoms.ribbon.protein import Protein
+from ..ribbon.protein import Protein
 import logging
 
 # logger = logging.getLogger('batoms')
@@ -34,7 +34,7 @@ def draw_curve_from_vertices_bezier(
     backface_culling=True,
 ):
     """ """
-    from batoms.material import create_material
+    from ..material import create_material
 
     vertices = data["vertices"]
     crv = bpy.data.curves.new(name, "CURVE")
@@ -86,7 +86,7 @@ def draw_rope_from_vertices_nurbs(
     backface_culling=True,
 ):
     """ """
-    from batoms.material import create_material
+    from ..material import create_material
 
     vertices = data["vertices"]
     crv = bpy.data.curves.new(name, "CURVE")
@@ -170,8 +170,8 @@ def draw_sheet_from_vertices_spline(
     shade_smooth=True,
 ):
     """ """
-    from batoms.material import create_material
-    from batoms.ribbon.profile import build_mesh
+    from ..material import create_material
+    from ..ribbon.profile import build_mesh
 
     vertices = curve2mesh(
         "%s-vertices" % name, data["vertices"], data["resolution"], coll

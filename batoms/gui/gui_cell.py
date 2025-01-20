@@ -7,8 +7,8 @@ from bpy.props import (
     IntVectorProperty,
 )
 
-from batoms import Batoms
-from batoms.gui.utils import (
+from ..batoms import Batoms
+from ..gui.utils import (
     get_attr,
     set_attr,
     get_active_bpy_data_batoms,

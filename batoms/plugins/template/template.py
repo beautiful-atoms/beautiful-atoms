@@ -6,7 +6,7 @@ This module defines the plugin object in the Batoms package.
 
 import bpy
 from time import time
-from batoms.plugins.base import PluginObject
+from ...plugins.base import PluginObject
 from .setting import TemplateSettings
 import logging
 
@@ -51,7 +51,7 @@ class Template(PluginObject):
         Returns:
             bpy.type.material: _description_
         """
-        from batoms.material import create_material
+        from ...material import create_material
 
         if name in bpy.data.materials:
             mat = bpy.data.materials.get(name)
@@ -66,7 +66,7 @@ class Template(PluginObject):
         return mat
 
     def draw(self):
-        from batoms.utils.butils import clean_coll_object_by_type
+        from ...utils.butils import clean_coll_object_by_type
 
         # delete old object
         clean_coll_object_by_type(self.batoms.coll, "TEMPLATE")

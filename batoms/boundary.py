@@ -8,9 +8,9 @@ from time import time
 import bpy
 import numpy as np
 from ase.geometry import complete_cell
-from batoms.base.object import ObjectGN
-from batoms.utils import number2String, string2Number
-from batoms.utils.butils import compareNodeType
+from .base.object import ObjectGN
+from .utils import number2String, string2Number
+from .utils.butils import compareNodeType
 import logging
 
 # logger = logging.getLogger('batoms')
@@ -152,7 +152,7 @@ class Boundary(ObjectGN):
 
     def build_geometry_node(self):
         """ """
-        from batoms.utils.utils_node import get_node_by_name, get_projected_position
+        from .utils.utils_node import get_node_by_name, get_projected_position
 
         links = self.gn_node_group.links
         nodes = self.gn_node_group.nodes
@@ -234,7 +234,7 @@ class Boundary(ObjectGN):
 
     def add_geometry_node(self, spname):
         """ """
-        from batoms.utils.utils_node import get_node_by_name
+        from .utils.utils_node import get_node_by_name
 
         links = self.gn_node_group.links
         nodes = self.gn_node_group.nodes
@@ -327,7 +327,7 @@ class Boundary(ObjectGN):
         Args:
             spname (str): name of the species
         """
-        from batoms.utils.utils_node import get_node_by_name
+        from .utils.utils_node import get_node_by_name
 
         # update  instancers
         ObjectInfo = get_node_by_name(

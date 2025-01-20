@@ -6,8 +6,8 @@ from bpy.props import (
     FloatProperty,
     BoolProperty,
 )
-from batoms.utils.butils import get_selected_vertices
-from batoms.utils.attribute import get_mesh_attribute_bmesh, set_mesh_attribute_bmesh
+from ..utils.butils import get_selected_vertices
+from ..utils.attribute import get_mesh_attribute_bmesh, set_mesh_attribute_bmesh
 
 
 class Batom_PT_prepare(Panel):

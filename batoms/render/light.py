@@ -5,8 +5,8 @@ Light setting
 import bpy
 from mathutils import Vector
 import numpy as np
-from batoms.base.collection import BaseCollection
-from batoms.base.object import BaseObject
+from ..base.collection import BaseCollection
+from ..base.object import BaseObject
 import logging
 
 # logger = logging.getLogger('batoms')
@@ -94,7 +94,7 @@ class Light(BaseObject):
         return self.obj.Blight.direction[:]
 
     def set_direction(self, direction):
-        from batoms.utils import rotate_frame
+        from ..utils import rotate_frame
 
         self.lock_to_camera = False
         self.obj.Blight.direction = direction

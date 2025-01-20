@@ -6,14 +6,14 @@ This module defines the Bond object in the Batoms package.
 
 import bpy
 from time import time
-from batoms.utils.butils import object_mode
-from batoms.utils.utils_node import get_node_by_name
-from batoms.utils import string2Number, number2String
+from ..utils.butils import object_mode
+from ..utils.utils_node import get_node_by_name
+from ..utils import string2Number, number2String
 import numpy as np
-from batoms.base.object import ObjectGN
-from batoms.base.collection import BaseCollection
+from ..base.object import ObjectGN
+from ..base.collection import BaseCollection
 from .setting import BondSettings
-from batoms.bond.search_bond import SearchBond, default_search_bond_datas
+from ..bond.search_bond import SearchBond, default_search_bond_datas
 
 import logging
 
@@ -93,7 +93,7 @@ class Bond(BaseCollection, ObjectGN):
     @property
     def bond_node(self):
         """Get the top level node of bond node group."""
-        from batoms.utils.utils_node import get_node_with_node_tree_by_name
+        from ..utils.utils_node import get_node_with_node_tree_by_name
 
         default_interface = [
             ["Geometry", "NodeSocketGeometry", "INPUT"],
@@ -108,7 +108,7 @@ class Bond(BaseCollection, ObjectGN):
     def get_bond_pair_node(self, name):
         """Get the node of bond pair node group.
         Create the node if not exist."""
-        from batoms.utils.utils_node import get_node_with_node_tree_by_name
+        from ..utils.utils_node import get_node_with_node_tree_by_name
 
         # create group input and output sockets
         default_interface = [
@@ -137,7 +137,7 @@ class Bond(BaseCollection, ObjectGN):
         len(v) < max_length
         v align euler
         """
-        from batoms.utils.utils_node import get_node_by_name
+        from ..utils.utils_node import get_node_by_name
 
         tstart = time()
         parent = self.gn_node_group
@@ -207,7 +207,7 @@ class Bond(BaseCollection, ObjectGN):
         2) Set the position of the points to the center of the bond.
         3) Calculate the bond vector and length.
         """
-        from batoms.utils.utils_node import (
+        from ..utils.utils_node import (
             get_node_by_name,
             create_node_tree,
         )
@@ -391,7 +391,7 @@ class Bond(BaseCollection, ObjectGN):
 
     def add_bond_pair_node(self, sp, order=None, style=None):
         """Add geometry node for the bond pair."""
-        from batoms.utils.utils_node import get_node_by_name, get_socket_by_identifier
+        from ..utils.utils_node import get_node_by_name, get_socket_by_identifier
 
         parent_tree = self.bond_node.node_tree
         # tstart = time()
@@ -821,7 +821,7 @@ class Bond(BaseCollection, ObjectGN):
         #todo: this is slow for large system
 
         """
-        from batoms.bond.slicebonds import SliceBonds
+        from ..bond.slicebonds import SliceBonds
 
         slicebonds = SliceBonds(self.label, indices, bonds=self)
         return slicebonds
@@ -842,7 +842,7 @@ class Bond(BaseCollection, ObjectGN):
         """
         In-place repeat of atoms.
 
-        >>> from batoms.bond import Bbond
+        >>> from ..bond import Bbond
         >>> c = Bbond('co', 'C', [[0, 0, 0], [1.2, 0, 0]])
         >>> c.repeat([3, 3, 3], np.array([[5, 0, 0], [0, 5, 0], [0, 0, 5]]))
         """
@@ -892,7 +892,7 @@ class Bond(BaseCollection, ObjectGN):
         """
         Extend bbond object by appending bbond from *other*.
 
-        >>> from batoms.bonds import Bbond
+        >>> from ..bonds import Bbond
         >>> h1 = Bbond('h2o', 'H_1', [[0, 0, 0], [2, 0, 0]])
         >>> h2 = Bbond('h2o', 'H_2', [[0, 0, 2], [2, 0, 2]])
         >>> h = h1 + h2
@@ -938,7 +938,7 @@ class Bond(BaseCollection, ObjectGN):
         3 add bondlist related with molecule
 
         """
-        from batoms.neighborlist import bondlist_kdtree
+        from ..neighborlist import bondlist_kdtree
 
         bondlists = np.zeros((0, 11), dtype=int)
         bonddatas = {}
@@ -1512,7 +1512,7 @@ class Bond(BaseCollection, ObjectGN):
 
     @property
     def setting(self):
-        from batoms.utils import deprecated
+        from ..utils import deprecated
 
         """setting object."""
         deprecated(

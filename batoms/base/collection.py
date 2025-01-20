@@ -1,6 +1,6 @@
 import bpy
 import numpy as np
-from batoms.utils.butils import object_mode
+from ..utils.butils import object_mode
 
 # from time import time
 

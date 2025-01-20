@@ -25,8 +25,8 @@ def get_mesh_attribute_bmesh(obj, key, index=None):
         array: _description_
     """
     import bmesh
-    from batoms.utils.butils import get_att_length, get_bmesh_layer, get_bmesh_domain
-    from batoms.utils import type_blender_to_py
+    from ..utils.butils import get_att_length, get_bmesh_layer, get_bmesh_domain
+    from ..utils import type_blender_to_py
 
     # get the mesh
     me = obj.data
@@ -88,8 +88,8 @@ def get_mesh_attribute(obj, key, index=None):
     Returns:
         array: _description_
     """
-    from batoms.utils.butils import get_att_length
-    from batoms.utils import type_blender_to_py
+    from ..utils.butils import get_att_length
+    from ..utils import type_blender_to_py
 
     # get the mesh
     me = obj.data
@@ -147,7 +147,7 @@ def set_mesh_attribute_bmesh(obj, key, value, index=None):
         index (bool, int): index of the data, used to set singe attribute value
     """
     import bmesh
-    from batoms.utils.butils import get_bmesh_domain, get_bmesh_layer
+    from ..utils.butils import get_bmesh_domain, get_bmesh_layer
 
     me = obj.data
     # get attribute type
@@ -193,7 +193,7 @@ def set_mesh_attribute(obj, key, value, index=None):
         value (np.array): value of the attribute
         index (bool, int): index of the data, used to set singe attribute value
     """
-    from batoms.utils.butils import get_att_length
+    from ..utils.butils import get_att_length
 
     me = obj.data
     # get attribute

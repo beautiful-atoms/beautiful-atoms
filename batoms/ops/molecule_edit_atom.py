@@ -5,7 +5,7 @@ from bpy.props import (
     IntProperty,
 )
 import bmesh
-from batoms import Batoms
+from ..batoms import Batoms
 from ase import Atoms
 from ase.build.rotate import rotation_matrix_from_points
 from ase.build import rotate

@@ -1,26 +1,6 @@
-bl_info = {
-    "name": "Batoms toolbar",
-    "author": "Xing Wang",
-    "version": (2, 2, 0),
-    "blender": (3, 0, 0),
-    "location": "File -> Import -> Batoms (xyz, cif, pdb, ...)",
-    "description": """Python module for drawing and
-rendering atomic structures using blender.""",
-    "warning": "",
-    "category": "Import-Export",
-    "doc_url": "https://beautiful-atoms.readthedocs.io/en/latest/",
-    "tracker_url": "https://github.com/beautiful-atoms/beautiful-atoms/issues/new/choose",
-}
+from .batoms import Batoms  # noqa: E402
 
-
-# install pip dependencies
-from .install import pip_dependencies  # noqa: E402
-
-pip_dependencies.install()
-
-from batoms.batoms import Batoms  # noqa: E402
-
-
+__version__ = "2.3.0"
 __all__ = ["Batoms"]
 
 from . import (  # noqa: E402
@@ -28,39 +8,50 @@ from . import (  # noqa: E402
     preferences,
     plugins,
     internal_data,
-    pip_dependencies,
     ops,
     gui,
     console,
 )
 
-logger.set_logger(bl_info["version"])
-
-modules = ["bond", "polyhedra", "render", "ribbon"]
+logger.set_logger(__version__)
 
 
 def enable_module():
-    import importlib
+    from .bond import register_class as register_bond_class
+    from .polyhedra import register_class as register_polyhedra_class
+    from .render import register_class as register_render_class
+    from .ribbon import register_class as register_ribbon_class
 
-    for key in modules:
-        module = importlib.import_module("batoms.{}".format(key))
-        module.register_class()
+    register_bond_class()
+    register_polyhedra_class()
+    register_render_class()
+    register_ribbon_class()
 
 
 def disable_module():
-    import importlib
+    from .bond import unregister_class as unregister_bond_class
+    from .polyhedra import unregister_class as unregister_polyhedra_class
+    from .render import unregister_class as unregister_render_class
+    from .ribbon import unregister_class as unregister_ribbon_class
 
-    for key in modules:
-        module = importlib.import_module("batoms.{}".format(key))
-        module.unregister_class()
+    unregister_bond_class()
+    unregister_polyhedra_class()
+    unregister_render_class()
+    unregister_ribbon_class()
 
 
 def register():
     from time import time
+    from pathlib import Path
+    import sys
+
+    # add the extension path to sys.path
+    # this is nessary for the extension to be used in the script
+    # but may result in module name conflicts if
+    sys.path.append(str(Path(__file__).resolve().parent.parent))
 
     tstart0 = time()
     # dependencies
-    pip_dependencies.register_class()
     preferences.register_class()
     # class
     internal_data.register_class()
@@ -86,7 +77,6 @@ def register():
 
 def unregister():
     # dependencies
-    pip_dependencies.unregister_class()
     # class
     internal_data.unregister_class()
     ops.unregister_class()

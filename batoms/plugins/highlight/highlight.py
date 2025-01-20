@@ -6,11 +6,11 @@ This module defines the highlight object in the Batoms package.
 
 import bpy
 import numpy as np
-from batoms.base.object import ObjectGN
-from batoms.plugins.base import PluginObject
+from ...base.object import ObjectGN
+from ...plugins.base import PluginObject
 from .setting import HighlightSettings
-from batoms.utils.utils_node import get_node_by_name
-from batoms.utils import string2Number
+from ...utils.utils_node import get_node_by_name
+from ...utils import string2Number
 import logging
 
 logger = logging.getLogger(__name__)
@@ -72,7 +72,7 @@ class Highlight(ObjectGN, PluginObject):
 
     def build_materials(self, name, color, node_inputs=None, material_style="default"):
         """ """
-        from batoms.material import create_material
+        from ...material import create_material
 
         if name in bpy.data.materials:
             mat = bpy.data.materials.get(name)
@@ -234,7 +234,7 @@ class Highlight(ObjectGN, PluginObject):
             instancer (bpy.data.object):
                 Object to be instanced
         """
-        from batoms.utils.butils import compareNodeType
+        from ...utils.butils import compareNodeType
 
         nodes = self.gn_node_group.nodes
         links = self.gn_node_group.links
@@ -318,7 +318,7 @@ class Highlight(ObjectGN, PluginObject):
 
     @property
     def setting(self):
-        from batoms.utils import deprecated
+        from ...utils import deprecated
 
         """setting object."""
         deprecated(

@@ -1,3 +1,3 @@
-from batoms.bio.bio import read
+from ..bio.bio import read
 
 __all__ = ["read"]

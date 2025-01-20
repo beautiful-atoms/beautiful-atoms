@@ -1,7 +1,7 @@
 import bpy
 import numpy as np
-from batoms.base.collection import Setting
-from batoms.base.object import BaseObject
+from .base.collection import Setting
+from .base.object import BaseObject
 
 
 class Species(BaseObject):
@@ -141,7 +141,7 @@ class Species(BaseObject):
             material_style (str, optional):
                 Materials style. Defaults to 'default'.
         """
-        from batoms.material import create_material
+        from .material import create_material
 
         mesh = self.obj.data
         mesh.materials.clear()
@@ -521,7 +521,7 @@ class Bspecies(Setting):
 
     def add(self, props, instancer=None):
         """ """
-        from batoms.utils import get_default_species_data
+        from .utils import get_default_species_data
 
         if props is None:
             return

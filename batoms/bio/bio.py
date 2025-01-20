@@ -1,7 +1,7 @@
 import os
 from ase import io
 from ase.io.cube import read_cube_data
-from batoms import Batoms
+from ..batoms import Batoms
 
 # from time import time
 

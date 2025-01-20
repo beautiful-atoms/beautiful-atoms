@@ -1,4 +1,4 @@
-from batoms.base.object import childObjectGN
+from .base.object import childObjectGN
 import numpy as np
 import logging
 

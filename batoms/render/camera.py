@@ -4,7 +4,7 @@ Camera setting
 """
 import bpy
 from mathutils import Vector
-from batoms.base.object import BaseObject
+from ..base.object import BaseObject
 import logging
 
 # logger = logging.getLogger('batoms')

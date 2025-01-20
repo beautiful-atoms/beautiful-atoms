@@ -3,7 +3,7 @@ This module defines abstract Operator classes.
 """
 
 from bpy.types import Operator
-from batoms import Batoms
+from ..batoms import Batoms
 
 
 class OperatorBatoms(Operator):
