@@ -59,15 +59,11 @@ jobs:
 
       - name: Run unittests
         run: |
-          blender -b -P scripts/run_tests.py -- -vv tests --cov --durations=0
+          blender -b -P scripts/run_tests.py -- -vv tests --cov
 
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Upload coverage report as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: coverage.xml
+      # the test cover is wrong, because it also inclue all the dependent packages, e.g., ase,
+      # so we don't upload it
+      # - name: Upload coverage reports to Codecov
+      #   uses: codecov/codecov-action@v5
+      #   with:
+      #     token: ${{ secrets.CODECOV_TOKEN }}
