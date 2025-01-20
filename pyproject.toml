@@ -16,7 +16,7 @@ authors = [
 
 dependencies = [
     "ase",
-    "skimage",
+    "scikit-image",
 ]
 
 

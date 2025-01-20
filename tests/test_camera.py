@@ -4,9 +4,9 @@ from batoms.render import Camera
 from ase.build import fcc111
 
 try:
-    from _common_helpers import has_display, set_cycles_res
+    from _common_helpers import use_cycles, set_cycles_res
 
-    use_cycles = not has_display()
+    use_cycles = not use_cycles()
 except ImportError:
     use_cycles = False
 

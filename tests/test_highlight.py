@@ -1,7 +1,7 @@
 try:
-    from _common_helpers import has_display
+    from _common_helpers import use_cycles
 
-    use_cycles = not has_display()
+    use_cycles = not use_cycles()
 except ImportError:
     use_cycles = False
 

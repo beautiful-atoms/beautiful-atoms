@@ -2,9 +2,9 @@ import bpy
 
 # assume on github test
 try:
-    from _common_helpers import has_display
+    from _common_helpers import use_cycles
 
-    update = not has_display()
+    update = not use_cycles()
 except ImportError:
     update = False
 
