@@ -851,7 +851,7 @@ class Bond(BaseCollection, ObjectGN):
         for x, vec in zip(m, cell):
             if x != 1 and not vec.any():
                 raise ValueError("Cannot repeat along undefined lattice " "vector")
-        M = np.product(m)
+        M = np.prod(m)
         n = len(self)
         positions = np.tile(
             self.positions, (M,) + (1,) * (len(self.positions.shape) - 1)

@@ -40,7 +40,7 @@ jobs:
 
       - name: Build the extension
         run: |
-          $BLENDER_PYTHON -m pip download ase --dest ./batoms/wheels --only-binary=:all: --python-version=3.11 --platform=manylinux_2_17_x86_64
+          $BLENDER_PYTHON -m pip download ase scikit-image --dest ./batoms/wheels --only-binary=:all: --python-version=3.11 --platform=manylinux_2_17_x86_64
           $BLENDER_PYTHON scripts/update_wheels.py
           $BLENDER_CMD extension build --source-dir batoms --output-dir .
 

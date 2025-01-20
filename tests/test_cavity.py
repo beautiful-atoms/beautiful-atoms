@@ -1,6 +1,10 @@
 import bpy
 import numpy as np
 from batoms.bio.bio import read
+import os
+
+path = os.path.dirname(os.path.abspath(__file__))
+
 
 try:
     from _common_helpers import has_display, set_cycles_res
@@ -27,7 +31,7 @@ def test_cavity_zsm():
     from batoms.bio.bio import read
 
     bpy.ops.batoms.delete()
-    mof = read("../tests/datas/zsm-5.cif")
+    mof = read(os.path.join(path, "datas/zsm-5.cif"))
     mof.boundary = 0.01
     mof.cavity.resolution = 1
     # mof.cavity.build_cavity()
@@ -42,7 +46,7 @@ def test_cavity_mof():
     from batoms.bio.bio import read
 
     bpy.ops.batoms.delete()
-    mof = read("../tests/datas/mof-5.cif")
+    mof = read(os.path.join(path, "datas/mof-5.cif"))
     mof.boundary = 0.01
     mof.cavity.resolution = 1
     # mof.cavity.build_cavity()
@@ -55,7 +59,7 @@ def test_cavity_mof():
 
 def test_cavity_ops():
     bpy.ops.batoms.delete()
-    mof = read("../tests/datas/mof-5.cif")
+    mof = read(os.path.join(path, "datas/mof-5.cif"))
     mof.cavity.resolution = 0.5
     bpy.context.view_layer.objects.active = mof.obj
     bpy.ops.surface.cavity_draw()
@@ -70,7 +74,7 @@ def test_gui():
     from batoms.bio.bio import read
 
     bpy.ops.batoms.delete()
-    mof = read("../tests/datas/mof-5.cif")
+    mof = read(os.path.join(path, "datas/mof-5.cif"))
     bpy.context.view_layer.objects.active = mof.obj
     assert bpy.context.scene.Bcavity.show is True
     bpy.context.scene.Bcavity.show = False

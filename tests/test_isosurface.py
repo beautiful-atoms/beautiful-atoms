@@ -1,5 +1,8 @@
 import bpy
 import numpy as np
+import os
+
+path = os.path.dirname(os.path.abspath(__file__))
 
 try:
     from _common_helpers import has_display, set_cycles_res
@@ -25,7 +28,7 @@ def test_settings(h2o_homo):
 
 # def test_slice():
 #     bpy.ops.batoms.delete()
-#     h2o = read("../tests/datas/h2o-homo.cube")
+#     h2o = read(os.path.join(path, "datas/h2o-homo.cube"))
 #     h2o.isosurface.settings["1"] = {"level": -0.001}
 #     h2o.isosurface.settings["2"] = {"level": 0.001, "color": [0, 0, 0.8, 0.5]}
 #     h2o.isosurface.draw()
@@ -41,7 +44,7 @@ def test_color_by(h2o_homo):
 
     h2o = h2o_homo
     bpy.context.view_layer.objects.active = h2o.obj
-    hartree, _atoms = read_cube_data("../tests/datas/h2o-hartree.cube")
+    hartree, _atoms = read_cube_data(os.path.join(path, "datas/h2o-hartree.cube"))
     h2o.volumetric_data["hartree"] = -hartree
     bpy.ops.surface.isosurface_add(name="positive")
     h2o.isosurface.settings["positive"].level = 0.001

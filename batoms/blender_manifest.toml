@@ -1,28 +1,17 @@
 schema_version = "1.0.0"
-
 id = "batoms"
 version = "2.3.0"
 name = "Beautiful Atoms"
 tagline = "Draw and render beautiful atoms and molecules using Blender"
 maintainer = "Beautiful Atoms Team <xing.wang@gmail.com>"
 type = "add-on"
-
 website = "https://beautiful-atoms.readthedocs.io/en/latest/index.html"
-
-tags = ["Geometry Nodes", "Import-Export"]
-
+tags = [ "Geometry Nodes", "Import-Export",]
 blender_version_min = "4.2.0"
-
-license = [
-  "SPDX:GPL-3.0-or-later",
-]
-copyright = [
-  "2020-2025 Xing Wang",
-]
-
-platforms = ["windows-x64", "macos-arm64", "linux-x64"]
-
-wheels = []
+license = [ "SPDX:GPL-3.0-or-later",]
+copyright = [ "2020-2025 Xing Wang",]
+platforms = [ "windows-x64", "macos-arm64", "linux-x64",]
+wheels = [ "./wheels/pillow-11.1.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", "./wheels/tifffile-2025.1.10-py3-none-any.whl", "./wheels/numpy-2.2.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", "./wheels/scipy-1.15.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", "./wheels/cycler-0.12.1-py3-none-any.whl", "./wheels/pyparsing-3.2.1-py3-none-any.whl", "./wheels/python_dateutil-2.9.0.post0-py2.py3-none-any.whl", "./wheels/kiwisolver-1.4.8-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", "./wheels/networkx-3.4.2-py3-none-any.whl", "./wheels/contourpy-1.3.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", "./wheels/packaging-24.2-py3-none-any.whl", "./wheels/fonttools-4.55.3-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", "./wheels/six-1.17.0-py2.py3-none-any.whl", "./wheels/ase-3.24.0-py3-none-any.whl", "./wheels/matplotlib-3.10.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", "./wheels/lazy_loader-0.4-py3-none-any.whl", "./wheels/scikit_image-0.25.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", "./wheels/imageio-2.37.0-py3-none-any.whl",]
 
 [permissions]
 network = "Need to download structures from online database"

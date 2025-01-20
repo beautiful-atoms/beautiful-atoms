@@ -3,6 +3,9 @@ import pytest
 from time import time
 from batoms.pdbparser import read_pdb
 from batoms import Batoms
+import os
+
+path = os.path.dirname(os.path.abspath(__file__))
 
 try:
     from _common_helpers import has_display, set_cycles_res
@@ -61,7 +64,7 @@ def test_colored_by_volumetric_datas():
     from batoms import Batoms
     from ase.io.cube import read_cube_data
 
-    hartree, atoms = read_cube_data("../tests/datas/h2o-hartree.cube")
+    hartree, atoms = read_cube_data(os.path.join(path, "datas/h2o-hartree.cube"))
     bpy.ops.batoms.delete()
     h2o = Batoms("h2o", from_ase=atoms)
     h2o.volumetric_data["hartree"] = -hartree
@@ -122,7 +125,7 @@ def test_molecule_surface_uilist(ch4):
 def test_SAS_protein():
     """ """
     bpy.ops.batoms.delete()
-    prot = read_pdb("../tests/datas/1ema.pdb")  # 1tim
+    prot = read_pdb(os.path.join(path, "datas/1ema.pdb"))  # 1tim
     prot = Batoms("1ema", from_ase=prot)
     prot.molecular_surface.settings["1"] = {"resolution": 0.4}
     prot.molecular_surface.draw()
@@ -144,7 +147,7 @@ def test_SES_protein():
             area                    volume
     """
     bpy.ops.batoms.delete()
-    prot = read_pdb("../tests/datas/1ema.pdb")
+    prot = read_pdb(os.path.join(path, "datas/1ema.pdb"))
     prot = Batoms("prot", from_ase=prot)
     tstart = time()
     prot.molecular_surface.settings["1"].type = "SES"

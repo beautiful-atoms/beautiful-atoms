@@ -14,6 +14,7 @@ skip_test = bool(os.environ.get("NOTEST_CUBE", 0))
 
 
 def test_crystal_shape(au):
+    pytest.importorskip("spglib")
     au.crystal_shape.settings[(1, 1, 1)] = {
         "distance": 3,
         "crystal": True,

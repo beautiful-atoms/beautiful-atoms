@@ -2,6 +2,9 @@ import bpy
 from batoms import Batoms
 import numpy as np
 import pytest
+import os
+
+path = os.path.dirname(os.path.abspath(__file__))
 
 if bpy.app.version_string >= "4.0.0":
     blender40 = False
@@ -225,14 +228,14 @@ def test_set_arrays_precision():
     from batoms.bio.bio import read
     import ase.io
 
-    atoms_ase = ase.io.read("../tests/datas/ch4_int_flag.extxyz")
+    atoms_ase = ase.io.read(os.path.join(path, "datas/ch4_int_flag.extxyz"))
     # ASE treats additional I-field as np.int32,
     # but on most recent platforms default int is np.int64
     # this may cause error in loading Batoms
     assert atoms_ase.arrays["some_int_flag"].dtype in (np.int32, np.int64)
     assert atoms_ase.arrays["positions"].dtype == np.float64
     # Without patch following will throw error
-    atoms_bl = read("../tests/datas/ch4_int_flag.extxyz")
+    atoms_bl = read(os.path.join(path, "datas/ch4_int_flag.extxyz"))
     # Change the array to float32 should also work
     atoms_ase2 = atoms_ase.copy()
     atoms_ase2.arrays["some_int_flag"] = np.array(
@@ -302,7 +305,7 @@ def test_export_mesh_x3d(c2h6so):
     c2h6so.model_style = 1
     c2h6so.export_mesh("c2h6so.x3d", with_cell=True, with_bond=True)
     bpy.ops.batoms.delete()
-    tio2 = read("../tests/datas/tio2.cif")
+    tio2 = read(os.path.join(path, "datas/tio2.cif"))
     tio2.boundary = 0.01
     tio2.model_style = 2
     tio2.bond.show_search = True
