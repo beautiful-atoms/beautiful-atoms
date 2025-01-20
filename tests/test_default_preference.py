@@ -3,8 +3,10 @@ This test assumes the user has initialized the Blender environment with default 
 """
 import bpy
 import numpy as np
+import pytest
 
 
+@pytest.mark.skip(reason="Need to figure out how to use it in the extension system.")
 def test_pref_load():
     """Test several preference settings that are significantly
     from factory Blender
@@ -31,6 +33,7 @@ def test_pref_load():
     return
 
 
+@pytest.mark.skip(reason="Need to figure out how to use it in the extension system.")
 def test_startup_load():
     # Check Layout
     # Check Scene unit system
