@@ -1,0 +1,15 @@
+
+[report]
+omit =
+    */tests/*
+    PIL
+    ase
+    blender_version_mincycle
+    dateutil
+    github
+    kiwisolver
+    lazy_loader
+    matplotlib
+    mpl_tookits
+    numpy
+    scipy
