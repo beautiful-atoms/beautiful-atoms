@@ -42,13 +42,6 @@ def disable_module():
 
 def register():
     from time import time
-    from pathlib import Path
-    import sys
-
-    # add the extension path to sys.path
-    # this is nessary for the extension to be used in the script
-    # but may result in module name conflicts if
-    sys.path.append(str(Path(__file__).resolve().parent.parent))
 
     tstart0 = time()
     # dependencies
