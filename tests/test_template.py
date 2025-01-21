@@ -64,8 +64,3 @@ def test_gui_uilist():
     bpy.ops.template.template_add(name="test1")
     bpy.ops.template.template_add(name="test2")
     assert au.coll.Btemplate.ui_list_index == 1
-
-
-if __name__ == "__main__":
-    test_template()
-    print("\n Template: All pass! \n")

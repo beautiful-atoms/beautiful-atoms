@@ -15,7 +15,3 @@ def rscb_import(name):
     batoms = Batoms("pdb_%s" % name[0:-4], from_ase=atoms)
     batoms.ribbon.draw()
     return batoms
-
-
-if __name__ == "__main__":
-    rscb_import("1ema")

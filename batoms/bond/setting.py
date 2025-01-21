@@ -748,7 +748,3 @@ class BondSettings(Setting):
             bond["color1"] = [0.1, 0.1, 0.1, 1.0]
             bond["bond_style"] = "2"
         return bond
-
-
-if __name__ == "__main__":
-    pass

@@ -69,12 +69,3 @@ def build_mesh(vertices, normals, sides, profile, scales=None):
     faces.append([(i + 1) * n - 1 for i in range(m)])
     # print('build mesh: %s'%(time() - tstart))
     return vertices, faces
-
-
-if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-
-    # profile = ellipse(16, 1, 1)
-    profile = rectangle(1, 1)
-    plt.plot(profile[:, 0], profile[:, 1])
-    plt.show()

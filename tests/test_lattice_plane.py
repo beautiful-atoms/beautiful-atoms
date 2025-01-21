@@ -89,9 +89,3 @@ def test_gui_uilist():
     bpy.ops.plane.lattice_plane_add(indices=(1, 1, 1))
     bpy.ops.plane.lattice_plane_add(indices=(1, 0, 0))
     assert au.coll.Blatticeplane.ui_list_index == 1
-
-
-if __name__ == "__main__":
-    test_lattice_plane()
-    test_boundary()
-    print("\n Lattice plane: All pass! \n")
