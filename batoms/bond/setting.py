@@ -403,7 +403,7 @@ class BondSettings(Setting):
         crv.bevel_object = bevel_control
         crv.bevel_mode = "OBJECT"
         obj = bpy.data.objects.new("spring", crv)
-        bpy.data.collections["Collection"].objects.link(obj)
+        self.batoms.coll.children["%s_instancer" % self.label].objects.link(obj)
         depsgraph = bpy.context.evaluated_depsgraph_get()
         object_eval = obj.evaluated_get(depsgraph)
         mesh = bpy.data.meshes.new_from_object(object_eval)

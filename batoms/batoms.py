@@ -153,7 +153,7 @@ class Batoms(BaseCollection, ObjectGN):
             self.set_collection(
                 label, color_style=color_style, radius_style=radius_style
             )
-            self._cell = Bcell(label, cell, batoms=self)
+            self._cell = Bcell(batoms=self, array=cell)
             positions = np.array(positions)
             if len(positions.shape) == 3:
                 self._trajectory = {"positions": positions}
@@ -518,7 +518,7 @@ class Batoms(BaseCollection, ObjectGN):
         print("Load batoms {}".format(label))
         self.coll_name = label
         self.obj_name = label
-        self._cell = Bcell(label=label, batoms=self)
+        self._cell = Bcell(batoms=self)
         self._boundary = Boundary(label, batoms=self, load=True)
         self._species = Bspecies(label, {}, self)
         self._volumetric_data = VolumetricData(label, None, self)

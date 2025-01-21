@@ -10,9 +10,8 @@ from .base.object import ObjectGN
 class Bcell(ObjectGN):
     def __init__(
         self,
-        label,
+        batoms,
         array=None,
-        batoms=None,
         location=np.array([0, 0, 0]),
     ) -> None:
         """
@@ -20,10 +19,12 @@ class Bcell(ObjectGN):
         ver: 3x3 verlike object
           The three cell vectors: cell[0], cell[1], and cell[2].
         """
-        self.label = label
         name = "cell"
+        if batoms is None:
+            raise Exception("Cell should be attached to a Batoms object.")
         self.batoms = batoms
-        ObjectGN.__init__(self, label, name)
+        self.label = batoms.label
+        ObjectGN.__init__(self, self.label, name)
         if array is not None:
             self.build_object(array, location)
         # if self.show_axes:
@@ -58,10 +59,7 @@ class Bcell(ObjectGN):
         obj.location = location
         obj.batoms.type = "CELL"
         obj.batoms.label = self.label
-        if self.batoms is not None:
-            self.batoms.coll.objects.link(obj)
-        else:
-            bpy.data.collections["Collection"].objects.link(obj)
+        self.batoms.coll.objects.link(obj)
         # materials
         mat = self.build_materials(self.label, color=self.color)
         obj.data.materials.append(mat)
@@ -351,9 +349,7 @@ class Bcell(ObjectGN):
 
     def copy(self, label):
         object_mode()
-        cell = Bcell(
-            label, batoms=self.batoms, array=self.array, location=self.obj.location
-        )
+        cell = Bcell(batoms=self.batoms, array=self.array, location=self.obj.location)
         return cell
 
     def repeat(self, m):

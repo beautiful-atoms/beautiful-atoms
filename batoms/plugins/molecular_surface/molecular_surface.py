@@ -29,7 +29,12 @@ class MolecularSurface(BaseObject):
             batoms (_type_, optional): _description_. Defaults to None.
         """
         #
+        if batoms is None:
+            raise ValueError(
+                "The molecular surface object must be associated with a Batoms object."
+            )
         self.batoms = batoms
+        self.coll = self.batoms.coll.children["%s_surface" % self.batoms.coll_name]
         self.label = label
         name = "plane"
         BaseObject.__init__(self, label, name)
@@ -182,11 +187,10 @@ class MolecularSurface(BaseObject):
         logger.debug("Vertices: %s" % len(isosurface["vertices"]))
         sas_name = "%s_%s_sas" % (self.label, ms.name)
         self.delete_obj(sas_name)
-        coll = self.batoms.coll.children["%s_surface" % self.batoms.coll_name]
         obj = draw_surface_from_vertices(
             sas_name,
             datas=isosurface,
-            coll=coll,
+            coll=self.coll,
         )
         #
         if ms.color_by != "None":
@@ -607,7 +611,7 @@ class MolecularSurface(BaseObject):
         indices3 = indices3[indices31]
         mask3 = np.zeros(n, dtype=bool)
         mask3[indices3] = True
-        draw_vertices("origin3", origins_probe3)
+        draw_vertices("origin3", origins_probe3, collection=self.coll)
         # two spheres
         indices2 = np.where((delta0 < eps))[0]
         origins0 = positions[indices[:, 0][indices2]]
@@ -625,7 +629,7 @@ class MolecularSurface(BaseObject):
         indices2 = indices2[indices21]
         mask2 = np.zeros(n, dtype=bool)
         mask2[indices2] = True
-        draw_vertices("origin2", origins_probe2)
+        draw_vertices("origin2", origins_probe2, collection=self.coll)
         # ---------------------------
         mask1 = np.where(delta0 > eps, True, False)
         logger.debug(
