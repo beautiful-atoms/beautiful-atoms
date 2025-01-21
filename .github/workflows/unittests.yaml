@@ -43,6 +43,16 @@ jobs:
           $BLENDER_PYTHON -m ensurepip
           $BLENDER_PYTHON -m pip install --upgrade pip
 
+      - name: Build batoms wheel and copy it to the batoms/wheels directory
+        run: |
+          # The extension path is not in the system path, but we need batoms for the tests
+          # install the batoms package
+          $BLENDER_PYTHON -m pip install build
+          $BLENDER_PYTHON -m build
+          # copy the batoms package to the batoms/wheels directory
+          mkdir -p batoms/wheels
+          cp -r dist/batoms* batoms/wheels
+
       - name: Build the extension
         run: |
           $BLENDER_PYTHON -m pip download ase scikit-image --dest ./batoms/wheels --only-binary=:all: --python-version=3.11 --platform=manylinux_2_17_x86_64
@@ -52,9 +62,6 @@ jobs:
       - name: Install and enable the extension
         run: |
           $BLENDER_CMD extension install-file -r user_default --enable batoms-2.3.0.zip
-          # The extension path is not in the system path, but we need batoms for the tests
-          # install the batoms package
-          $BLENDER_PYTHON -m pip install -e .
 
       - name: Install python dependencies
         run: |
@@ -62,11 +69,11 @@ jobs:
 
       - name: Run unittests
         run: |
-          blender -b -P scripts/run_tests.py -- -vv tests --cov
+          blender -b -P scripts/run_tests.py -- -vv tests --cov --cov-report=xml
 
       # the test cover is wrong, because it also inclue all the dependent packages, e.g., ase,
       # so we don't upload it
-      # - name: Upload coverage reports to Codecov
-      #   uses: codecov/codecov-action@v5
-      #   with:
-      #     token: ${{ secrets.CODECOV_TOKEN }}
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
