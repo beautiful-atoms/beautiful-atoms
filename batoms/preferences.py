@@ -71,7 +71,7 @@ def set_plugin(key):
         import importlib
 
         self[key] = value
-        plugin = importlib.import_module("batoms.plugins.{}".format(key))
+        plugin = importlib.import_module(".plugins.{}".format(key), package=__package__)
         if value:
             plugin.register_class()
             logger.info("Enable {} plugin.".format(key))

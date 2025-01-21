@@ -2155,7 +2155,9 @@ def hook_plugins(cls, plugin_info):
             else:
                 logger.debug("Does not have plugin: {}".format(name))
                 plugin_module = getattr(
-                    importlib.import_module("batoms.plugins.{}".format(data[0])),
+                    importlib.import_module(
+                        ".plugins.{}".format(data[0]), package=__package__
+                    ),
                     data[1],
                 )
                 plugin = plugin_module(self.label, batoms=self)
