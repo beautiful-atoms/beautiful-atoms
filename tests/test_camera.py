@@ -50,10 +50,3 @@ def test_camera_persp():
     if use_cycles:
         set_cycles_res(au111)
     au111.get_image([1, 0, 0], output="camera-persp.png", **extras)
-
-
-if __name__ == "__main__":
-    test_camera()
-    test_camera_ortho()
-    test_camera_persp()
-    print("\n camera: All pass! \n")

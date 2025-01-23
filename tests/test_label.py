@@ -15,8 +15,3 @@ def test_batoms_label_element():
     ch4.show_label = "elements"
     ch4.set_attributes({"charges": np.zeros(5)})
     ch4.show_label = "charges"
-
-
-if __name__ == "__main__":
-    test_batoms_label_element()
-    print("\n Label: All pass! \n")

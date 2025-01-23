@@ -243,10 +243,3 @@ def read_pdb(fileobj, index=-1, read_arrays=True):
         atoms = build_atoms()
         images.append(atoms)
     return images[index]
-
-
-if __name__ == "__main__":
-    images = read_pdb("test/datas/1tim.pdb")
-    # images = read_pdb('test/datas/2piw.pdb')
-    print(images.arrays.keys())
-    print(images.info["helix"])

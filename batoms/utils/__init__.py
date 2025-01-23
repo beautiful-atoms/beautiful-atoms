@@ -630,28 +630,6 @@ def type_py_to_blender(dtype):
     return dtype
 
 
-if __name__ == "__main__":
-    # V = heron4(6, 7, 8, 9, 10, 11)
-    # V3 = heron4(2.59, 2.92, 2.59, 0.96, 1.52, 0.96)
-    # print(V, V2, V3)
-    p0 = np.array([[-2.5, 0, 0], [0, 0.7632, -0.4770]])
-    p1 = np.array([[0, -0.7632, -0.4770], [0, 0, 0.11926]])
-    p2 = np.array([[0, 0, 0.11926], [0, -0.7632, -0.4770]])
-    r0 = np.array([1.2, 1.2])
-    r1 = np.array([1.2, 1.52])
-    r2 = np.array([1.52, 1.2])
-    r = 1.4
-    p = np.array(
-        [[0.89120579, 0.98369867, -0.53714401], [-0.89120579, -0.98369867, 0.53714401]]
-    )
-    p = np.array(
-        [[-0.63896561, 0.47235048, -1.45207691], [-0.80025041, 0.32016024, -1.3009696]]
-    )
-    # origin = calc_origin(p, p0, p1, r0, r1, r)
-    origin = calc_origin_3(p, p0, p1, p2, r0, r1, r2, r)
-    print(origin)
-
-
 def deprecated(msg):
     """Helper function print deprecating warning."""
     logger.warning(msg)

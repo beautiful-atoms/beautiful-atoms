@@ -640,10 +640,10 @@ class Bspecies(Setting):
         """
         for sp, instancer in self.instancers.items():
             instancer = instancer.copy()
-            bpy.data.collections["Collection"].objects.link(instancer)
+            bpy.data.collections["%s_instancer" % self.label].objects.link(instancer)
             instancer.hide_set(True)
             instancer.name = "%s_%s_instancer" % (label, sp)
-        bspecies = self.__class__(label, label, species={}, batoms=None)
+        bspecies = self.__class__(label, species={}, batoms=None)
         return bspecies
 
     def extend(self, other):

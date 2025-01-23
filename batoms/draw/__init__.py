@@ -95,7 +95,7 @@ def draw_surface_from_vertices(name, datas, coll=None, use_smooth=True):
     return obj
 
 
-def draw_vertices(name, vertices):
+def draw_vertices(name, vertices, collection):
     datas = {
         "vertices": vertices,
         "edges": [],
@@ -103,8 +103,7 @@ def draw_vertices(name, vertices):
         "color": [0.5, 0.5, 0.5, 1.0],
         "battr_inputs": {},
     }
-    coll = bpy.data.collections["Collection"]
-    draw_surface_from_vertices(name, datas, coll)
+    draw_surface_from_vertices(name, datas, collection)
 
 
 def draw_text(coll_text=None, atoms=None, type=None):

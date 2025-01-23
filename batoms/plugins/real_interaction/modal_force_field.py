@@ -227,10 +227,3 @@ def register():
 def unregister():
     bpy.utils.unregister_class(Force_Field_Operator)
     bpy.utils.unregister_class(Force_Field_Modal_Panel)
-
-
-if __name__ == "__main__":
-    register()
-
-    # test call
-    bpy.ops.object.modal_operator("INVOKE_DEFAULT")

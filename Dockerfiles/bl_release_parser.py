@@ -72,7 +72,3 @@ def main():
     print(f"Downloading python source of {python_version}")
     extract_python_source(blender_root, python_version)
     return
-
-
-if __name__ == "__main__":
-    main()

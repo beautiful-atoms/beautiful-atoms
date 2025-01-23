@@ -51,9 +51,3 @@ def test_shebang():
         os.chmod(py_file.name, 0o755)
     proc = _run_process([py_file.name])
     assert proc.returncode == 0
-
-
-if __name__ == "__main__":
-    test_batomspy_location()
-    test_shebang()
-    print("\n Shebang test: All pass! \n")
