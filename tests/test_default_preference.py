@@ -3,14 +3,14 @@ This test assumes the user has initialized the Blender environment with default 
 """
 import bpy
 import numpy as np
-import pytest
 
 
-@pytest.mark.skip(reason="Need to figure out how to use it in the extension system.")
 def test_pref_load():
     """Test several preference settings that are significantly
     from factory Blender
     """
+    from batoms.utils.butils import get_preferences_addon
+
     bpy.ops.batoms.use_batoms_startup()
     bpy.ops.batoms.use_batoms_preference()
     # Default gradiant for theme
@@ -27,13 +27,12 @@ def test_pref_load():
     assert np.isclose(hi_gradient, CUSTOM_HI_GRAD, atol=0.08)
     assert np.isclose(gradient, CUSTOM_GRAD, atol=0.08)
     # Batoms-related
-    assert "batoms" in bpy.context.preferences.addons
-    addon = bpy.context.preferences.addons["batoms"]
+    assert get_preferences_addon() is not None
+    addon = get_preferences_addon()
     assert addon.preferences.logging_level == "WARNING"
     return
 
 
-@pytest.mark.skip(reason="Need to figure out how to use it in the extension system.")
 def test_startup_load():
     # Check Layout
     # Check Scene unit system

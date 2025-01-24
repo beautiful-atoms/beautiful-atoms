@@ -16,6 +16,7 @@ from bpy.props import (
 from .logger import update_logging_level
 import logging
 from .utils import subprocess_run
+from .utils.butils import get_preferences_addon
 
 logger = logging.getLogger(__name__)
 
@@ -124,7 +125,7 @@ class BatomsDefaultPreference(bpy.types.Operator):
         )
         bpy.ops.wm.save_userpref()
         # logger
-        bpy.context.preferences.addons["batoms"].preferences.logging_level = "WARNING"
+        get_preferences_addon().preferences.logging_level = "WARNING"
         # asset_libraries
         if "Batoms" not in bpy.context.preferences.filepaths.asset_libraries.keys():
             bpy.ops.preferences.asset_library_add(directory=batoms_asset_dir)

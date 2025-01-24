@@ -1,5 +1,6 @@
 # import bpy
 import importlib
+from ..utils.butils import get_preferences_addon
 
 plugin_info = {
     "highlight": ["highlight", "Highlight", "Bhighlight"],
@@ -15,18 +16,18 @@ plugin_info = {
 
 def enable_plugin():
     # Check if "batoms" add-on is enabled in Blender preferences
-    # if "batoms" not in bpy.context.preferences.addons:
-    #     return
+    if not get_preferences_addon():
+        return
     for key in plugin_info.keys():
-        # if getattr(bpy.context.preferences.addons["batoms"].preferences, key):
-        plugin = importlib.import_module(f".{key}", package=__name__)
-        plugin.register_class()
+        if getattr(get_preferences_addon().preferences, key):
+            plugin = importlib.import_module(f".{key}", package=__name__)
+            plugin.register_class()
 
 
 def disable_plugin():
-    # if "batoms" not in bpy.context.preferences.addons:
-    #     return
+    if not get_preferences_addon():
+        return
     for key in plugin_info.keys():
-        # if getattr(bpy.context.preferences.addons["batoms"].preferences, key):
-        plugin = importlib.import_module(f".{key}", package=__name__)
-        plugin.unregister_class()
+        if getattr(get_preferences_addon().preferences, key):
+            plugin = importlib.import_module(f".{key}", package=__name__)
+            plugin.unregister_class()

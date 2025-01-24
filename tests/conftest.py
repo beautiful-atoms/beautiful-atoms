@@ -7,15 +7,13 @@ path = os.path.dirname(os.path.abspath(__file__))
 
 @pytest.fixture
 def preferences():
-    package = "batoms"
-    addon = bpy.context.preferences.addons[package]
-    preferences = addon.preferences
-    return preferences
+    from batoms.utils.butils import get_preferences_addon
+
+    return get_preferences_addon().preferences
 
 
 @pytest.fixture
 def h2o():
-    import bpy
     from batoms import Batoms
     from ase.build import molecule
 
@@ -28,7 +26,6 @@ def h2o():
 
 @pytest.fixture
 def c2h6so():
-    import bpy
     from ase.build import molecule
     from batoms import Batoms
 
@@ -40,7 +37,6 @@ def c2h6so():
 
 @pytest.fixture
 def ch4():
-    import bpy
     from ase.build import molecule
     from batoms import Batoms
 
@@ -52,7 +48,6 @@ def ch4():
 
 @pytest.fixture
 def au():
-    import bpy
     from batoms import Batoms
     from ase.build import bulk
 
@@ -63,7 +58,6 @@ def au():
 
 @pytest.fixture
 def tio2():
-    import bpy
     from batoms.bio.bio import read
 
     tio2 = read(os.path.join(path, "datas/tio2.cif"))
@@ -73,7 +67,6 @@ def tio2():
 
 @pytest.fixture
 def h2o_homo():
-    import bpy
     from batoms.bio.bio import read
 
     h2o_homo = read(os.path.join(path, "datas/h2o-homo.cube"))
