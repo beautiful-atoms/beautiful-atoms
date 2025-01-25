@@ -5,7 +5,6 @@ import pkgutil
 import pytest
 
 
-@pytest.mark.skip(reason="Need to figure out how to use it in the extension system.")
 def test_enable_disable_plugin(preferences):
     from bpy.types import Collection
 

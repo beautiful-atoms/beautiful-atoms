@@ -7,7 +7,6 @@ from . import (
     gui_slicebatoms,
     gui_toolbar,
     gui_cell,
-    gui_plane,
     gui_render,
     gui_volumetric_data,
     ui_list_species,
@@ -25,7 +24,6 @@ class BatomsCollection(bpy.types.PropertyGroup):
     batoms: PointerProperty(type=gui_batoms.BatomsProperties)
     batom: PointerProperty(type=gui_slicebatoms.BatomProperties)
     cell: PointerProperty(type=gui_cell.CellProperties)
-    plane: PointerProperty(type=gui_plane.PlaneProperties)
     render: PointerProperty(type=gui_render.RenderProperties)
     io: PointerProperty(type=gui_io.BatomsPropertiesIO)
     volumetric_data: PointerProperty(type=gui_volumetric_data.VolumetricDataProperties)
@@ -38,9 +36,6 @@ classes = [
     gui_slicebatoms.BatomProperties,
     gui_cell.Cell_PT_prepare,
     gui_cell.CellProperties,
-    gui_plane.Plane_PT_prepare,
-    gui_plane.PlaneProperties,
-    gui_plane.AddButton,
     gui_render.Render_PT_prepare,
     gui_render.RenderProperties,
     view3d_mt_batoms_add.VIEW3D_MT_batoms_add,

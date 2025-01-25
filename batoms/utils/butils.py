@@ -8,6 +8,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def get_preferences_addon(addon="batoms"):
+    keys = [key for key in bpy.context.preferences.addons.keys() if addon in key]
+    if len(keys) == 0:
+        return None
+    return bpy.context.preferences.addons[keys[0]]
+
+
 def get_selected_vertices_bmesh(obj):
     """_summary_
 

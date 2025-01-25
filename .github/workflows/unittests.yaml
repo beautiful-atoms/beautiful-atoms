@@ -50,8 +50,10 @@ jobs:
           $BLENDER_PYTHON -m pip install build
           $BLENDER_PYTHON -m build
           # copy the batoms package to the batoms/wheels directory
-          mkdir -p batoms/wheels
-          cp -r dist/batoms* batoms/wheels
+          # we skip this step, because we install the batoms package directly for the tests
+          # mkdir -p batoms/wheels
+          # cp -r dist/batoms* batoms/wheels
+          $BLENDER_PYTHON -m pip install -e .
 
       - name: Build the extension
         run: |
@@ -69,7 +71,7 @@ jobs:
 
       - name: Run unittests
         run: |
-          blender -b -P scripts/run_tests.py -- -vv tests --cov --cov-report=xml
+          blender -b -P scripts/run_tests.py -- -vv tests --cov=./batoms --cov-report=xml
 
       # the test cover is wrong, because it also inclue all the dependent packages, e.g., ase,
       # so we don't upload it

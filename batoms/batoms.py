@@ -1313,10 +1313,14 @@ class Batoms(BaseCollection, ObjectGN):
         """
         from .utils import local2global
         import bmesh
+        import numpy as np
 
         # object_mode()
         n0 = len(self)
         positions = arrays.pop("positions")
+        # if positions is not np.array, convert it to np.array
+        if not isinstance(positions, np.ndarray):
+            positions = np.array(positions)
         n1 = n0 + len(positions)
         # add positions
         positions = local2global(
@@ -1357,9 +1361,9 @@ class Batoms(BaseCollection, ObjectGN):
                     sp3 = self.bond.settings.find(pair1)
                     sp4 = self.bond.settings.find(pair2)
                     if sp3:
-                        self.bond.update_geometry_node_instancer(sp3.as_dict())
+                        self.bond.update_geometry_node_instancer()
                     if sp4:
-                        self.bond.update_geometry_node_instancer(sp4.as_dict())
+                        self.bond.update_geometry_node_instancer()
 
     def get_cell(self):
         if self.label not in bpy.data.collections:
